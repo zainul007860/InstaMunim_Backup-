@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InstaMunim - Official User Manual</title>
+    <style>
+        :root {
+            --primary: #f97316;
+            --primary-dark: #ea580c;
+            --bg-color: #f8fafc;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: var(--text-main);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+        }
+        .header-banner {
+            background: linear-gradient(135deg, #1e293b, #0f172a);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+        .header-banner h1 { margin: 0; font-size: 2.5rem; color: var(--primary); }
+        .header-banner p { font-size: 1.2rem; opacity: 0.9; margin-top: 10px; }
+        
+        .container {
+            max-width: 900px;
+            margin: -30px auto 40px auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            padding: 40px;
+        }
+        
+        h2 { color: var(--primary-dark); border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; margin-top: 40px; }
+        h3 { color: #334155; margin-top: 25px; }
+        
+        .step-box {
+            background: #fff7ed;
+            border-left: 4px solid var(--primary);
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .step-box h4 { margin: 0 0 10px 0; color: var(--primary-dark); font-size: 1.1rem; }
+        .step-box p { margin: 0; color: #475569; }
+
+        ul, ol { padding-left: 20px; color: #475569; }
+        li { margin-bottom: 10px; }
+        strong { color: #0f172a; }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 40px;
+            margin-top: 30px;
+        }
+        @media (min-width: 768px) {
+            .feature-grid { grid-template-columns: 1fr 1fr; }
+        }
+        .feature-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .feature-card img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .feature-card .content { padding: 20px; }
+        .feature-card h3 { margin-top: 0; font-size: 1.2rem; }
+        
+        .note {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .note::before { content: "💡"; font-size: 1.5rem; }
+    </style>
+</head>
+<body>
+
+    <div class="header-banner">
+        <h1>InstaMunim</h1>
+        <p>- Beyond Billing - Complete User Manual</p>
+    </div>
+
+    <div class="container">
+        <p>Welcome to InstaMunim! This manual will guide you step-by-step through every single feature of the application, from logging in to tracking your daily net profit and marketing to your customers via WhatsApp.</p>
+
+        <!-- Section 1 -->
+        <h2>1. Getting Started & Security</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <img src="C:/Users/Admin/.gemini/antigravity/brain/5b8329fb-3d2d-4681-bc7f-a926b1bce822/brd_login_screen_1778140957091.png" alt="Login Screen">
+                <div class="content">
+                    <h3>Logging In</h3>
+                    <p>Open the app. You will be greeted by the secure login screen.</p>
+                    <ol>
+                        <li>Enter your registered <strong>Mobile Number</strong>.</li>
+                        <li>Enter your <strong>Password</strong>. You can tap the <strong>Eye Icon</strong> to reveal the password while typing to avoid mistakes.</li>
+                        <li>Tap <strong>Login</strong>. The app will remember you for future sessions.</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <img src="C:/Users/Admin/.gemini/antigravity/brain/5b8329fb-3d2d-4681-bc7f-a926b1bce822/brd_exit_dialog_1778141017891.png" alt="Exit Protection">
+                <div class="content">
+                    <h3>App Navigation & Exit Protection</h3>
+                    <p>Use the bottom navigation bar to switch between Dashboard, Cart, Customers, and Settings.</p>
+                    <ul>
+                        <li><strong>Safe Back Button:</strong> If you are in Settings or Cart and press your phone's back button, the app will safely take you back to the Dashboard.</li>
+                        <li><strong>Exit Confirmation:</strong> If you press back on the Dashboard, the app will ask "Are you sure you want to exit?" to prevent you from accidentally closing the app during billing.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2 -->
+        <h2>2. Billing & The Smart Voice Cashier</h2>
+        <p>This app features an advanced Voice Assistant that acts like a digital cashier, allowing you to bill customers hands-free.</p>
+
+        <div class="step-box">
+            <h4>How to use Voice Billing (Mic Button)</h4>
+            <p>1. Tap the big red/orange <strong>Microphone icon</strong> on the Dashboard.<br>
+               2. The app will start listening continuously. <br>
+               3. Simply speak the customer's order. Example: <em>"Ek chicken burger lagao, do momos aur ek pepsi."</em><br>
+               4. You can also say the customer's name and number: <em>"Naam Rahul hai, number 9876543210."</em><br>
+               5. The app will automatically add these items to the cart and save the customer's details!</p>
+        </div>
+
+        <div class="note">
+            The Voice Assistant is <strong>continuous</strong>. If you pause to take money, it will automatically restart listening without you having to press the mic button again. Press the red mic button again to manually stop it.
+        </div>
+
+        <!-- Section 3 -->
+        <h2>3. Cart, Checkout, and Change Calculation</h2>
+        <p>Once items are added to the cart (manually by tapping or via Voice), you proceed to checkout.</p>
+        
+        <ol>
+            <li>Review the items in the cart. You can increase/decrease quantities using the + and - buttons.</li>
+            <li>Select the payment method: <strong>Cash</strong>, <strong>Digital (UPI)</strong>, or <strong>Udhaar (Credit)</strong>.</li>
+            <li><strong>Cash Entry Feature:</strong> If the customer gives you a ₹500 note for a ₹120 bill, tap on the "Cash Given" field and enter 500. The app will instantly show you exactly how much <strong>Change (₹380)</strong> you need to return.</li>
+            <li>Tap <strong>Complete Order</strong>.</li>
+        </ol>
+
+        <!-- Section 4 -->
+        <h2>4. WhatsApp Invoicing & Receipts</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <img src="C:/Users/Admin/.gemini/antigravity/brain/5b8329fb-3d2d-4681-bc7f-a926b1bce822/brd_whatsapp_invoice_1778141608545.png" alt="WhatsApp Invoice">
+                <div class="content">
+                    <h3>Sending Bills via WhatsApp</h3>
+                    <p>Stop printing paper bills! After an order is completed, a success screen appears.</p>
+                    <ul>
+                        <li>If a customer mobile number was provided, tap the <strong>Send WhatsApp Receipt</strong> button.</li>
+                        <li>WhatsApp will automatically open with a beautifully formatted text bill containing your Shop Name, Items, Prices, and Total.</li>
+                        <li>Just press send!</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5 -->
+        <h2>5. Financial Analytics & Dashboard Tracking</h2>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <img src="C:/Users/Admin/.gemini/antigravity/brain/5b8329fb-3d2d-4681-bc7f-a926b1bce822/brd_analytics_dash_1778141570713.png" alt="Analytics Dashboard">
+                <div class="content">
+                    <h3>Sales, Expenses & Net Profit</h3>
+                    <p>The top of your Dashboard shows your daily business health in real-time.</p>
+                    <ul>
+                        <li><strong>Gross Sales:</strong> Total revenue generated today.</li>
+                        <li><strong>Aggregator Commissions:</strong> Automatic deductions for Swiggy/Zomato orders.</li>
+                        <li><strong>Daily Expenses:</strong> Tap 'Add Expense' to log things like raw material costs or electricity.</li>
+                        <li><strong>Net Profit:</strong> The most important number. Automatically calculated as: <em>(Gross Sales - Commissions - Expenses)</em>.</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="feature-card">
+                <img src="C:/Users/Admin/.gemini/antigravity/brain/5b8329fb-3d2d-4681-bc7f-a926b1bce822/brd_pull_refresh_1778140999378.png" alt="Pull to Refresh">
+                <div class="content">
+                    <h3>Pull-to-Refresh Syncing</h3>
+                    <p>Your data is backed up to the cloud. To ensure you have the latest data (especially if you use the app on multiple devices):</p>
+                    <p>Go to the Dashboard, touch the top of the screen, and <strong>Swipe Down</strong>. A loading spinner will appear, and your sales, expenses, and Udhaar data will instantly sync with the cloud database.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 6 -->
+        <h2>6. Udhaar (Credit) Management</h2>
+        <p>Managing informal credit is crucial for local businesses. The app handles this automatically.</p>
+
+        <div class="step-box">
+            <h4>How to manage Udhaar</h4>
+            <p>1. During Checkout, select <strong>Udhaar</strong> as the payment method.<br>
+               2. Go to the <strong>Customers</strong> tab from the bottom menu.<br>
+               3. You will see a list of all customers who owe you money, along with their total outstanding balance.<br>
+               4. When a customer comes to pay their debt, find their name and tap the <strong>Mark as Paid</strong> button.<br>
+               5. The balance clears to zero, and the money is added to today's Sales!</p>
+        </div>
+
+        <!-- Section 7 -->
+        <h2>7. WhatsApp Promotional Marketing</h2>
+        <p>Turn your customer database into a marketing tool to increase repeat sales.</p>
+        
+        <ul>
+            <li>Navigate to the <strong>Marketing</strong> tab.</li>
+            <li>Here, you can type a custom promotional message or choose from templates (e.g., "Get 20% off this Sunday!" or "Happy Diwali from our shop!").</li>
+            <li>The app uses the customer phone numbers you saved during billing.</li>
+            <li>Clicking send will allow you to broadcast these offers directly to your customers' WhatsApp, acting as a free mini-CRM system.</li>
+        </ul>
+
+        <!-- Section 8 -->
+        <h2>8. Settings & Customization</h2>
+        <p>Make the app truly yours by configuring the settings.</p>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <img src="C:/Users/Admin/.gemini/antigravity/brain/5b8329fb-3d2d-4681-bc7f-a926b1bce822/brd_settings_profile_1778141625145.png" alt="Settings Screen">
+                <div class="content">
+                    <h3>Personalizing Your Shop</h3>
+                    <ul>
+                        <li><strong>Business Profile:</strong> Update your Shop Name, Owner Name, and Contact info. This name appears on all WhatsApp bills.</li>
+                        <li><strong>Logo Upload:</strong> Upload a picture of your shop's logo to personalize the app's interface.</li>
+                        <li><strong>Cloud Status:</strong> View the last time your data was successfully backed up to the secure cloud.</li>
+                        <li><strong>Logout:</strong> Securely sign out of your device.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <br>
+        <hr>
+        <p style="text-align: center; color: #94a3b8; font-size: 0.9rem;">InstaMunim System v2.0 - End of User Manual</p>
+
+    </div>
+
+</body>
+</html>
