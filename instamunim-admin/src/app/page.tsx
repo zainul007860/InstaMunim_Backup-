@@ -22,6 +22,7 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [updatingStoreId, setUpdatingStoreId] = useState<string | null>(null);
   
   // Sales Filters
   const [selectedMerchant, setSelectedMerchant] = useState("all");
@@ -78,14 +79,52 @@ export default function AdminDashboard() {
   };
 
   const addSubscriptionDays = async (store: any, days: number) => {
-    const currentExpiry = store.subscription_expiry ? new Date(store.subscription_expiry) : new Date();
+    const now = new Date();
+    const currentExpiry = (store.subscription_expiry && isAfter(new Date(store.subscription_expiry), now)) 
+      ? new Date(store.subscription_expiry) 
+      : now;
     const newExpiry = addDays(currentExpiry, days);
-    if (!confirm(`Add ${days} days?`)) return;
+    
+    // Immediate Feedback
+    if (!confirm(`Confirm: Extend ${store.store_name} by ${days} days?`)) return;
+    
+    setUpdatingStoreId(store.id);
     try {
-      await supabase.from('stores').update({ subscription_expiry: newExpiry.toISOString(), status: 'active' }).eq('id', store.id);
-      fetchAdminData();
-    } catch (err) {
+      const { error } = await supabase.from('stores').update({ 
+        subscription_expiry: newExpiry.toISOString()
+      }).eq('id', store.id);
+      
+      if (error) throw error;
+      
+      alert(`SUCCESS: ${store.store_name} updated. Expiry: ${format(newExpiry, "MMM dd, yyyy")}`);
+      await fetchAdminData();
+    } catch (err: any) {
       console.error(err);
+      alert("Sync Error: " + (err.message || JSON.stringify(err) || "Unknown error"));
+    } finally {
+      setUpdatingStoreId(null);
+    }
+  };
+
+  const deactivateSubscription = async (store: any) => {
+    if (!confirm(`ARE YOU SURE? This will LOCK the app for ${store.store_name} immediately.`)) return;
+    
+    setUpdatingStoreId(store.id);
+    try {
+      const yesterday = subDays(new Date(), 1);
+      const { error } = await supabase.from('stores').update({ 
+        subscription_expiry: yesterday.toISOString()
+      }).eq('id', store.id);
+      
+      if (error) throw error;
+      
+      alert(`SUCCESS: ${store.store_name} has been deactivated.`);
+      await fetchAdminData();
+    } catch (err: any) {
+      console.error(err);
+      alert("Sync Error: " + (err.message || JSON.stringify(err) || "Unknown error"));
+    } finally {
+      setUpdatingStoreId(null);
     }
   };
 
@@ -224,12 +263,30 @@ export default function AdminDashboard() {
             </div>
             <div className="data-table-container">
                <div className="table-header"><h4 style={{ fontSize: '16px', fontWeight: 900, color: 'white' }}>RECENT ONBOARDING</h4></div>
-               <table className="table-content">
-                  <thead><tr><th>Store</th><th>Contact</th><th>Expiry</th></tr></thead>
-                  <tbody>{stores.slice(0, 5).map(s => (
-                    <tr key={s.id}><td>{s.store_name}</td><td>{s.owner_mobile}</td><td style={{ color: getStatusColor(s), fontWeight: 700 }}>{s.subscription_expiry ? format(new Date(s.subscription_expiry), "MMM dd") : 'Trial'}</td></tr>
-                  ))}</tbody>
-               </table>
+                <table className="table-content">
+                  <thead><tr><th>Store</th><th>Contact</th><th>Status</th><th>Expiry</th></tr></thead>
+                  <tbody>{stores.slice(0, 10).map(s => {
+                    const now = new Date();
+                    const expiry = s.subscription_expiry ? new Date(s.subscription_expiry) : null;
+                    const isActive = expiry && isAfter(expiry, now);
+                    return (
+                      <tr key={s.id}>
+                        <td>{s.store_name}</td>
+                        <td>{s.owner_mobile}</td>
+                        <td>
+                          {!expiry ? (
+                            <span style={{ padding: '4px 8px', background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', borderRadius: '6px', fontSize: '10px', fontWeight: 900 }}>TRIAL</span>
+                          ) : isActive ? (
+                            <span style={{ padding: '4px 8px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '6px', fontSize: '10px', fontWeight: 900 }}>ACTIVE</span>
+                          ) : (
+                            <span style={{ padding: '4px 8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '6px', fontSize: '10px', fontWeight: 900 }}>EXPIRED</span>
+                          )}
+                        </td>
+                        <td style={{ color: getStatusColor(s), fontWeight: 700 }}>{s.subscription_expiry ? format(new Date(s.subscription_expiry), "MMM dd") : 'Trial'}</td>
+                      </tr>
+                    );
+                  })}</tbody>
+                </table>
             </div>
           </div>
         )}
@@ -264,14 +321,48 @@ export default function AdminDashboard() {
           <div className="data-table-container animate-fade-in">
              <div className="table-header"><h4 style={{ color: 'white' }}>SUBSCRIPTIONS</h4></div>
              <table className="table-content">
-                <thead><tr><th>Merchant</th><th>Expiry</th><th>Action</th></tr></thead>
-                <tbody>{filteredStores.map(s => (
-                  <tr key={s.id}>
-                    <td>{s.store_name}</td>
-                    <td style={{ color: getStatusColor(s), fontWeight: 700 }}>{s.subscription_expiry ? format(new Date(s.subscription_expiry), "MMM dd, yyyy") : 'TRIAL'}</td>
-                    <td><button onClick={() => addSubscriptionDays(s, 30)} style={{ padding: '8px 12px', background: '#f97316', color: 'white', borderRadius: '10px', border: 'none', fontWeight: 900, cursor: 'pointer' }}>+ 30 DAYS</button></td>
-                  </tr>
-                ))}</tbody>
+                <thead><tr><th>Merchant</th><th>Expiry</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody>{filteredStores.map(s => {
+                  const now = new Date();
+                  const expiry = s.subscription_expiry ? new Date(s.subscription_expiry) : null;
+                  const isActive = expiry && isAfter(expiry, now);
+                  const isTrial = !expiry;
+                  
+                  return (
+                    <tr key={s.id}>
+                      <td>{s.store_name}</td>
+                      <td style={{ color: getStatusColor(s), fontWeight: 700 }}>{s.subscription_expiry ? format(new Date(s.subscription_expiry), "MMM dd, yyyy") : 'TRIAL'}</td>
+                      <td>
+                        {isTrial ? (
+                          <span style={{ padding: '4px 8px', background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', borderRadius: '6px', fontSize: '10px', fontWeight: 900 }}>TRIAL</span>
+                        ) : isActive ? (
+                          <span style={{ padding: '4px 8px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '6px', fontSize: '10px', fontWeight: 900 }}>ACTIVE</span>
+                        ) : (
+                          <span style={{ padding: '4px 8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '6px', fontSize: '10px', fontWeight: 900 }}>EXPIRED</span>
+                        )}
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button 
+                            disabled={updatingStoreId === s.id}
+                            onClick={() => addSubscriptionDays(s, 30)} 
+                            style={{ padding: '8px 12px', background: '#f97316', color: 'white', borderRadius: '10px', border: 'none', fontWeight: 900, cursor: 'pointer', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '6px', opacity: updatingStoreId === s.id ? 0.5 : 1 }}
+                          >
+                            {updatingStoreId === s.id ? <Loader2 className="animate-spin" size={12} /> : null}
+                            {updatingStoreId === s.id ? 'WAIT...' : '+ 30 DAYS'}
+                          </button>
+                          <button 
+                            disabled={updatingStoreId === s.id}
+                            onClick={() => deactivateSubscription(s)} 
+                            style={{ padding: '8px 12px', background: '#ef4444', color: 'white', borderRadius: '10px', border: 'none', fontWeight: 900, cursor: 'pointer', fontSize: '10px', opacity: updatingStoreId === s.id ? 0.5 : 1 }}
+                          >
+                            {updatingStoreId === s.id ? '...' : 'DEACTIVATE'}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}</tbody>
              </table>
           </div>
         )}

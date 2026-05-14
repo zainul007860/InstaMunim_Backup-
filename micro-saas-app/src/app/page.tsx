@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { format } from "date-fns";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { format, isBefore, isAfter } from "date-fns";
 import { 
   LayoutDashboard, FileText, Settings, LogOut, Search,
   PlusCircle, Loader2, Book, Trash2, Send, ShoppingCart, Package,
@@ -100,6 +100,8 @@ export default function Dashboard() {
   const [isThermalPrinterEnabled, setIsThermalPrinterEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [storeCreatedAt, setStoreCreatedAt] = useState<string | null>(null);
+  const [subscriptionExpiry, setSubscriptionExpiry] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<"synced" | "pending" | "error">("synced");
   const [whatsappInvoiceTemplate, setWhatsappInvoiceTemplate] = useState(`━━━━━━━━━━━━━━━━━━━━━
 🌟 *ORDER RECEIPT* 🌟
@@ -363,10 +365,14 @@ Stay safe & eat healthy! 🍕
         if (savedZomatoType) setZomatoCommType(savedZomatoType);
         // Auto-fetch from cloud for existing sessions
         const autoSync = async () => {
-          const { data } = await supabase.from('stores').select('id, store_name, monthly_rent').eq('owner_mobile', savedOwnerMobile).single();
+          const { data } = await supabase.from('stores').select('*').eq('owner_mobile', savedOwnerMobile).single();
           if (data) {
             setRestaurantName(data.store_name);
             setMonthlyRent(data.monthly_rent || 0);
+            setStoreCreatedAt(data.created_at);
+            setSubscriptionExpiry(data.subscription_expiry);
+            localStorage.setItem("saas_store_created_at", data.created_at || "");
+            localStorage.setItem("saas_store_expiry", data.subscription_expiry || "");
             await fetchStoreData(data.id);
           }
         };
@@ -415,6 +421,8 @@ Stay safe & eat healthy! 🍕
       localStorage.setItem("saas_rent", monthlyRent.toString());
       localStorage.setItem("saas_dark_mode", isDarkMode.toString());
       localStorage.setItem("saas_thermal_printer", isThermalPrinterEnabled.toString());
+      if (storeCreatedAt) localStorage.setItem("saas_store_created_at", storeCreatedAt);
+      if (subscriptionExpiry) localStorage.setItem("saas_store_expiry", subscriptionExpiry);
     }
   }, [sales, expenses, menuItems, restaurantName, monthlyRent, isDarkMode, dataLoaded, mounted]);
 
@@ -452,6 +460,11 @@ Stay safe & eat healthy! 🍕
             localStorage.removeItem("saas_rem_pass");
           }
 
+          setStoreCreatedAt(data.created_at);
+          setSubscriptionExpiry(data.subscription_expiry);
+          localStorage.setItem("saas_store_created_at", data.created_at || "");
+          localStorage.setItem("saas_store_expiry", data.subscription_expiry || "");
+
           await fetchStoreData(data.id);
         }
       } else {
@@ -472,8 +485,12 @@ Stay safe & eat healthy! 🍕
           setIsLoggedIn(true);
           setOwnerMobile(loginMobile);
           setRestaurantName(signupStoreName);
+          setStoreCreatedAt(data.created_at);
+          setSubscriptionExpiry(data.subscription_expiry);
           localStorage.setItem("saas_is_logged_in", "true");
           localStorage.setItem("saas_owner_mobile", loginMobile);
+          localStorage.setItem("saas_store_created_at", data.created_at || "");
+          localStorage.setItem("saas_store_expiry", data.subscription_expiry || "");
 
           await fetchStoreData(data.id);
         }
@@ -488,12 +505,23 @@ Stay safe & eat healthy! 🍕
   const fetchStoreData = async (storeId: string) => {
     setIsSyncing(true);
     try {
-      // 0. Fetch Store Profile Info
-      const { data: storeInfo } = await supabase.from('stores').select('*').eq('id', storeId).single();
+      // Fetch all data in parallel for maximum speed
+      const [
+        { data: storeInfo },
+        { data: salesData },
+        { data: expData },
+        { data: menuData }
+      ] = await Promise.all([
+        supabase.from('stores').select('*').eq('id', storeId).single(),
+        supabase.from('sales').select('*').eq('store_id', storeId).order('sale_date', { ascending: false }),
+        supabase.from('expenses').select('*').eq('store_id', storeId).order('expense_date', { ascending: false }),
+        supabase.from('menu_items').select('*').eq('store_id', storeId)
+      ]);
+
+      // 0. Update Store Profile Info
       if (storeInfo) {
         setRestaurantName(storeInfo.store_name || storeInfo.name || localStorage.getItem("saas_store_name") || "");
         
-        // Use cloud logo if exists, else fallback to localStorage
         const cloudLogo = storeInfo.logo || storeInfo.store_logo || storeInfo.image;
         if (cloudLogo) {
           setStoreLogo(cloudLogo);
@@ -506,10 +534,14 @@ Stay safe & eat healthy! 🍕
         setMonthlyRent(storeInfo.monthly_rent || storeInfo.rent || Number(localStorage.getItem("saas_monthly_rent")) || 0);
         setSwiggyCommission(storeInfo.swiggy_commission || Number(localStorage.getItem("saas_swiggy_comm")) || 0);
         setZomatoCommission(storeInfo.zomato_commission || Number(localStorage.getItem("saas_zomato_comm")) || 0);
+        
+        setStoreCreatedAt(storeInfo.created_at);
+        setSubscriptionExpiry(storeInfo.subscription_expiry);
+        localStorage.setItem("saas_store_created_at", storeInfo.created_at || "");
+        localStorage.setItem("saas_store_expiry", storeInfo.subscription_expiry || "");
       }
 
-      // 1. Fetch Sales
-      const { data: salesData } = await supabase.from('sales').select('*').eq('store_id', storeId).order('sale_date', { ascending: false });
+      // 1. Update Sales
       if (salesData) {
         setSales(salesData.map((s: any) => {
           const commMatch = s.items?.match(/\[COMM:(\d+(\.\d+)?)\]/);
@@ -517,7 +549,7 @@ Stay safe & eat healthy! 🍕
           return {
             id: s.id,
             name: s.customer_name,
-            item: s.items?.replace(/\[COMM:(\d+(\.\d+)?)\]/, "").trim(), // Hide metadata from UI
+            item: s.items?.replace(/\[COMM:(\d+(\.\d+)?)\]/, "").trim(),
             mobile: s.mobile,
             price: s.total_price,
             type: s.payment_type,
@@ -529,14 +561,12 @@ Stay safe & eat healthy! 🍕
         setSales([]);
       }
 
-      // 2. Fetch Expenses
-      const { data: expData } = await supabase.from('expenses').select('*').eq('store_id', storeId).order('expense_date', { ascending: false });
+      // 2. Update Expenses
       setExpenses(expData ? expData.map(e => ({ 
         id: e.id, title: e.title, amount: e.amount, date: new Date(e.expense_date) 
       })) : []);
 
-      // 3. Fetch Menu
-      const { data: menuData } = await supabase.from('menu_items').select('*').eq('store_id', storeId);
+      // 3. Update Menu
       setMenuItems(menuData ? menuData.map(m => ({ 
         id: m.id, name: m.name, price: m.price, category: m.category 
       })) : []);
@@ -705,21 +735,21 @@ Stay safe & eat healthy! 🍕
     });
   };
 
-  const filteredSales = sales.filter(s => format(new Date(s.date), "yyyy-MM") === selectedMonth);
-  const filteredExpenses = expenses.filter(e => format(new Date(e.date), "yyyy-MM") === selectedMonth);
+  const filteredSales = useMemo(() => sales.filter(s => format(new Date(s.date), "yyyy-MM") === selectedMonth), [sales, selectedMonth]);
+  const filteredExpenses = useMemo(() => expenses.filter(e => format(new Date(e.date), "yyyy-MM") === selectedMonth), [expenses, selectedMonth]);
   
-  const totalSales = filteredSales.reduce((sum, s) => sum + s.price, 0);
-  const totalExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const totalSales = useMemo(() => filteredSales.reduce((sum, s) => sum + s.price, 0), [filteredSales]);
+  const totalExpenses = useMemo(() => filteredExpenses.reduce((sum, e) => sum + e.amount, 0), [filteredExpenses]);
   
-  const totalCommissions = filteredSales.reduce((sum, s) => sum + (s.commission || 0), 0);
+  const totalCommissions = useMemo(() => filteredSales.reduce((sum, s) => sum + (s.commission || 0), 0), [filteredSales]);
 
-  const totalUdhaar = filteredSales.filter(s => s.type === "Udhaar" && s.status !== "Paid").reduce((sum, s) => sum + s.price, 0);
+  const totalUdhaar = useMemo(() => filteredSales.filter(s => s.type === "Udhaar" && s.status !== "Paid").reduce((sum, s) => sum + s.price, 0), [filteredSales]);
 
-  const netProfit = totalSales - totalExpenses - totalCommissions;
+  const netProfit = useMemo(() => totalSales - totalExpenses - totalCommissions, [totalSales, totalExpenses, totalCommissions]);
 
-  const uniqueCustomers = Array.from(new Set(sales.filter(s => s.mobile !== "N/A").map(s => s.mobile)));
+  const uniqueCustomers = useMemo(() => Array.from(new Set(sales.filter(s => s.mobile !== "N/A").map(s => s.mobile))), [sales]);
 
-  const getRentTargetData = () => {
+  const rentTargetData = useMemo(() => {
     const dailyBase = Math.round(monthlyRent / 30);
     const today = new Date();
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -738,7 +768,7 @@ Stay safe & eat healthy! 🍕
       .reduce((sum, s) => sum + s.price, 0);
 
     return { dailyBase, carryOver, todaysTarget, todayActual, remaining: Math.max(0, todaysTarget - todayActual) };
-  };
+  }, [monthlyRent, sales]);
 
   const handleAddItem = async () => {
     if (!newItemName || !newItemPrice) return;
@@ -928,8 +958,75 @@ Stay safe & eat healthy! 🍕
     );
   }
 
+  // Subscription Logic
+  const checkSubscription = () => {
+    if (!storeCreatedAt) return true; // Loading state safety
+    
+    const now = new Date();
+    const created = new Date(storeCreatedAt);
+    const trialEnds = new Date(created.getTime() + (24 * 60 * 60 * 1000)); // 24 Hours Trial
+    
+    // If active subscription exists
+    if (subscriptionExpiry) {
+      const expiry = new Date(subscriptionExpiry);
+      return isAfter(expiry, now);
+    }
+    
+    // Check if within trial period
+    return isBefore(now, trialEnds);
+  };
+
+  const isSubscribed = checkSubscription();
+
   return (
     <div className={`min-h-screen flex flex-col font-sans selection:bg-orange-500/30 ${isDarkMode ? 'dark bg-zinc-950 text-white' : 'bg-[#fafafa] text-zinc-900'}`}>
+      
+      {!isSubscribed && (
+        <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6 overflow-y-auto">
+          <Card className="w-full max-w-[400px] bg-zinc-900 border-zinc-800 p-8 rounded-[2.5rem] shadow-[0_0_50px_rgba(249,115,22,0.2)] text-center space-y-8 animate-in zoom-in-95 duration-500">
+            <div className="w-20 h-20 bg-orange-500 rounded-3xl flex items-center justify-center mx-auto shadow-2xl shadow-orange-500/20">
+              <Clock className="h-10 w-10 text-white animate-pulse" />
+            </div>
+            
+            <div className="space-y-2">
+              <h2 className="text-3xl font-black tracking-tighter text-white uppercase">Trial Expired</h2>
+              <p className="text-zinc-400 font-bold text-xs leading-relaxed uppercase tracking-tighter">
+                Your free trial is over.<br/>Please scan the QR code and pay to continue using the app.
+              </p>
+            </div>
+
+            <div className="bg-white p-4 rounded-3xl shadow-inner group">
+              <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-3">Scan to Pay via UPI</p>
+              <div className="aspect-square w-full max-w-[200px] mx-auto bg-zinc-100 rounded-2xl flex items-center justify-center border-2 border-zinc-100 overflow-hidden">
+                <img src="/pay-qr.png" alt="Payment QR" className="w-full h-full object-contain" />
+              </div>
+              <p className="mt-3 font-black text-zinc-900 text-sm">₹399 <span className="text-[10px] text-zinc-400 uppercase">/ Month</span></p>
+            </div>
+
+            <div className="space-y-3">
+              <Button 
+                onClick={() => window.open(`https://wa.me/917838229178?text=${encodeURIComponent(`Hi Zainul, I have paid ₹399 for InstaMunim. My Store: ${restaurantName} (${ownerMobile}). Please activate my account.`)}`, "_blank")}
+                className="w-full h-14 bg-[#00c875] hover:bg-[#00b067] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all"
+              >
+                <MessageCircle className="h-5 w-5" /> After Payment Click Here
+              </Button>
+              <button 
+                onClick={() => handleLogout()}
+                className="text-[9px] font-black text-zinc-500 hover:text-white uppercase tracking-widest transition-colors py-2"
+              >
+                Logout Account
+              </button>
+            </div>
+            
+            <div className="pt-2">
+              <div className="flex items-center justify-center gap-2 text-zinc-500">
+                <ShieldCheck className="h-3 w-3" />
+                <span className="text-[8px] font-black uppercase tracking-widest">Secured Payment Gateway</span>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
       <main className="flex-1 pb-24 overflow-y-auto">
         <div className="max-w-full px-2 sm:px-4 py-8">
           
@@ -1302,16 +1399,16 @@ Stay safe & eat healthy! 🍕
               <Card className="bg-blue-600 text-white p-10 rounded-[3rem] border-0 relative overflow-hidden shadow-2xl shadow-blue-600/30">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl" />
                 <Badge className="bg-white text-blue-600 border-0 font-black px-4 py-1.5 mb-6 rounded-full shadow-lg">MISSION TARGET</Badge>
-                <h3 className="text-7xl font-black tracking-tighter mb-2">₹{getRentTargetData().todaysTarget}</h3>
+                <h3 className="text-7xl font-black tracking-tighter mb-2">₹{rentTargetData.todaysTarget}</h3>
                 <p className="text-lg font-bold opacity-80 uppercase tracking-[0.2em]">Remaining Today</p>
                 
                 <div className="mt-12 space-y-4">
                   <div className="flex justify-between items-end text-xs font-black uppercase tracking-widest">
                     <span>Performance</span>
-                    <span className="text-xl">{Math.min(100, Math.round((getRentTargetData().todayActual / getRentTargetData().todaysTarget) * 100 || 0))}%</span>
+                    <span className="text-xl">{Math.min(100, Math.round((rentTargetData.todayActual / rentTargetData.todaysTarget) * 100 || 0))}%</span>
                   </div>
                   <div className="w-full h-4 bg-white/20 rounded-full overflow-hidden p-1">
-                    <div className="h-full bg-white rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(255,255,255,0.5)]" style={{ width: `${Math.min(100, (getRentTargetData().todayActual / getRentTargetData().todaysTarget) * 100 || 0)}%` }} />
+                    <div className="h-full bg-white rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(255,255,255,0.5)]" style={{ width: `${Math.min(100, (rentTargetData.todayActual / rentTargetData.todaysTarget) * 100 || 0)}%` }} />
                   </div>
                 </div>
               </Card>
@@ -1320,14 +1417,14 @@ Stay safe & eat healthy! 🍕
                 <Card className="p-8 rounded-2xl bg-white dark:bg-zinc-900 border-0 shadow-sm relative overflow-hidden">
                   <div className="absolute left-0 top-0 w-1.5 h-full bg-zinc-200 dark:bg-zinc-800" />
                   <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Fixed Cost</p>
-                  <h4 className="text-3xl font-black">₹{getRentTargetData().dailyBase}</h4>
+                  <h4 className="text-3xl font-black">₹{rentTargetData.dailyBase}</h4>
                   <p className="text-[9px] font-bold text-zinc-400 mt-2 italic">Base daily rent</p>
                 </Card>
                 <Card className="p-8 rounded-2xl bg-white dark:bg-zinc-900 border-0 shadow-sm relative overflow-hidden">
-                  <div className={`absolute left-0 top-0 w-1.5 h-full ${getRentTargetData().carryOver > 0 ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                  <div className={`absolute left-0 top-0 w-1.5 h-full ${rentTargetData.carryOver > 0 ? 'bg-red-500' : 'bg-emerald-500'}`} />
                   <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">History Impact</p>
-                  <h4 className={`text-3xl font-black ${getRentTargetData().carryOver > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
-                    {getRentTargetData().carryOver > 0 ? `+₹${getRentTargetData().carryOver}` : `-₹${Math.abs(getRentTargetData().carryOver)}`}
+                  <h4 className={`text-3xl font-black ${rentTargetData.carryOver > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                    {rentTargetData.carryOver > 0 ? `+₹${rentTargetData.carryOver}` : `-₹${Math.abs(rentTargetData.carryOver)}`}
                   </h4>
                   <p className="text-[9px] font-bold text-zinc-400 mt-2 italic">Carry-over data</p>
                 </Card>
@@ -1336,7 +1433,7 @@ Stay safe & eat healthy! 🍕
               <div className="p-6 bg-zinc-900 text-white rounded-2xl flex items-center justify-between">
                  <div className="flex items-center gap-4">
                    <div className="p-3 bg-blue-500 rounded-2xl"><PieChart className="h-6 w-6" /></div>
-                   <div><h5 className="font-black">Finance Check</h5><p className="text-[10px] font-bold opacity-60">Status: {getRentTargetData().remaining === 0 ? "Profit Zone 🚀" : "Cost Recovery 💪"}</p></div>
+                   <div><h5 className="font-black">Finance Check</h5><p className="text-[10px] font-bold opacity-60">Status: {rentTargetData.remaining === 0 ? "Profit Zone 🚀" : "Cost Recovery 💪"}</p></div>
                  </div>
                  <div className="text-right"><p className="text-[8px] font-black opacity-40 uppercase">Est. Monthly Profit</p><p className="text-xl font-black">₹{netProfit}</p></div>
               </div>
