@@ -964,7 +964,7 @@ Stay safe & eat healthy! 🍕
     
     const now = new Date();
     const created = new Date(storeCreatedAt);
-    const trialEnds = new Date(created.getTime() + (24 * 60 * 60 * 1000)); // 24 Hours Trial
+    const trialEnds = new Date(created.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 Days Trial
     
     // If active subscription exists
     if (subscriptionExpiry) {
