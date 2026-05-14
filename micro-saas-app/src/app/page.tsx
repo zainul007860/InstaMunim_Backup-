@@ -116,6 +116,21 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* MAKE IN INDIA BANNER */}
+      <section className="py-10 bg-gradient-to-r from-orange-600 to-red-700 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6 text-center">
+            <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
+              MAKE IN INDIA 🇮🇳
+            </div>
+            <h2 className="text-2xl md:text-5xl font-black italic tracking-tighter text-white uppercase leading-none">
+              AB INDIA KA HAR DUKANDAR <span className="text-black">BANEGA DIGITAL</span>
+            </h2>
+          </div>
+        </div>
+      </section>
+
       {/* FEATURES SECTION */}
       <section id="features" className="py-32 bg-zinc-950 relative">
         <div className="container mx-auto px-6">
