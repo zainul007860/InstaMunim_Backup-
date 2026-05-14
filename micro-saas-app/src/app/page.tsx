@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { 
   Zap, Shield, Smartphone, BarChart3, ChevronRight, 
   Download, CheckCircle2, MessageSquare, Star, ArrowRight,
-  LayoutDashboard, ShoppingCart, Users, Globe
+  LayoutDashboard, ShoppingCart, Users, Globe,
+  Instagram, Facebook, Youtube, Link2
 } from "lucide-react";
 
 export default function LandingPage() {
@@ -17,86 +18,72 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-orange-500 selection:text-white">
+    <div className="min-h-screen bg-black text-white font-sans selection:bg-orange-500 selection:text-white scroll-smooth">
       {/* Navigation */}
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? "bg-black/80 backdrop-blur-md border-b border-white/10 py-4" : "bg-transparent py-6"}`}>
-        <div className="container mx-auto px-6 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center rotate-3 shadow-lg shadow-orange-500/20">
-              <Zap className="text-white fill-white" size={24} />
-            </div>
-            <span className="text-2xl font-black tracking-tighter italic">INSTAMUNIM</span>
+      <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled ? "bg-black/90 backdrop-blur-xl border-b border-white/5 py-3" : "bg-transparent py-6"}`}>
+        <div className="container mx-auto px-4 md:px-6 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+             <img src="/assets/logo-dark.png" alt="InstaMunim" className="w-10 h-10 object-contain" />
+            <span className="text-xl md:text-2xl font-black tracking-tighter italic bg-gradient-to-r from-white to-zinc-500 bg-clip-text text-transparent">INSTAMUNIM</span>
           </div>
           
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-zinc-400">
-            <a href="#features" className="hover:text-orange-500 transition-colors">Features</a>
-            <a href="#pricing" className="hover:text-orange-500 transition-colors">Pricing</a>
-            <a href="#about" className="hover:text-orange-500 transition-colors">About</a>
+          <div className="hidden lg:flex items-center gap-8 text-[13px] font-bold tracking-widest text-zinc-400">
+            <a href="#features" className="hover:text-orange-500 transition-colors uppercase">Features</a>
+            <a href="#trust" className="hover:text-orange-500 transition-colors uppercase">Network</a>
+            <a href="#pricing" className="hover:text-orange-500 transition-colors uppercase">Pricing</a>
           </div>
 
-          <div className="flex items-center gap-4">
-            <a href="/dashboard" className="hidden sm:block text-sm font-bold hover:text-orange-500 transition-colors">MERCHANT LOGIN</a>
+          <div className="flex items-center gap-3 md:gap-5">
+            <a href="/dashboard" className="hidden sm:block text-[11px] font-black tracking-widest hover:text-orange-500 transition-colors uppercase border-b border-orange-500/0 hover:border-orange-500">LOGIN</a>
             <a 
               href="/InstaMunimSmartPOS_v1.1.apk" 
-              download
-              className="bg-orange-500 hover:bg-orange-600 px-6 py-2.5 rounded-full font-bold text-sm transition-all hover:scale-105 active:scale-95 flex items-center gap-2"
+              className="bg-orange-500 hover:bg-orange-600 px-5 md:px-7 py-2.5 rounded-full font-black text-[12px] md:text-[13px] transition-all hover:scale-105 active:scale-95 flex items-center gap-2 shadow-lg shadow-orange-500/20"
             >
-              <Download size={18} /> DOWNLOAD APK
+              <Download size={16} /> DOWNLOAD APK
             </a>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-40 pb-20 overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-orange-500/10 via-transparent to-transparent -z-10" />
+      <section className="relative pt-32 md:pt-48 pb-20 overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gradient-to-b from-orange-500/10 via-transparent to-transparent -z-10" />
         
         <div className="container mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 px-4 py-2 rounded-full text-orange-500 text-xs font-black tracking-widest mb-8 animate-bounce">
-            <Star size={14} className="fill-orange-500" /> #1 SMART POS FOR SMALL BUSINESS
+          <div className="inline-flex items-center gap-2 bg-zinc-900/50 border border-zinc-800 px-5 py-2.5 rounded-full text-orange-500 text-[10px] md:text-[11px] font-black tracking-[0.2em] mb-10 backdrop-blur-sm">
+            <Star size={14} className="fill-orange-500" /> JOIN 100+ SMART MERCHANTS
           </div>
           
-          <h1 className="text-5xl md:text-8xl font-black tracking-tighter leading-[0.9] mb-8">
-            BILLING FAST <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-300 italic">BUSINESS SMART.</span>
+          <h1 className="text-5xl md:text-9xl font-black tracking-tighter leading-[0.85] mb-10">
+            BILLING <span className="italic text-transparent bg-clip-text bg-gradient-to-b from-orange-400 to-orange-600">FAST</span> <br />
+            BUSINESS <span className="italic">PRO.</span>
           </h1>
           
-          <p className="max-w-2xl mx-auto text-zinc-400 text-lg md:text-xl mb-12 font-medium">
-            Transform your shop with India's most powerful Smart POS. No bulky hardware needed. Just your phone and InstaMunim.
+          <p className="max-w-2xl mx-auto text-zinc-400 text-base md:text-xl mb-14 font-medium leading-relaxed px-4">
+            India's most powerful Smart POS. No bulky hardware needed. Turn your smartphone into a high-speed billing machine.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-20">
+          <div className="flex flex-col sm:flex-row gap-5 justify-center items-center mb-24 px-6">
              <a 
               href="/InstaMunimSmartPOS_v1.1.apk" 
-              download
-              className="w-full sm:w-auto bg-white text-black hover:bg-orange-500 hover:text-white px-10 py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3 group"
+              className="w-full sm:w-auto bg-white text-black hover:bg-orange-500 hover:text-white px-10 py-5 rounded-2xl font-black text-lg md:text-xl transition-all flex items-center justify-center gap-3 group shadow-2xl"
             >
-              DOWNLOAD FREE TRIAL <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+              GET STARTED FREE <ArrowRight className="group-hover:translate-x-1 transition-transform" />
             </a>
-            <button className="w-full sm:w-auto bg-zinc-900 border border-zinc-800 hover:border-zinc-700 px-10 py-5 rounded-2xl font-black text-lg transition-all flex items-center justify-center gap-3">
-              WATCH DEMO <MessageSquare size={20} className="text-orange-500" />
-            </button>
+            <a 
+              href="https://wa.me/917838229178"
+              className="w-full sm:w-auto bg-zinc-900 border border-zinc-800 hover:border-zinc-700 px-10 py-5 rounded-2xl font-black text-lg md:text-xl transition-all flex items-center justify-center gap-3"
+            >
+              WATCH DEMO <MessageSquare size={22} className="text-orange-500" />
+            </a>
           </div>
 
-          {/* App Preview Mockup */}
-          <div className="relative max-w-5xl mx-auto">
-            <div className="absolute -inset-1 bg-gradient-to-r from-orange-500 to-orange-300 rounded-[40px] blur-2xl opacity-20 -z-10 animate-pulse" />
-            <div className="bg-zinc-900 border border-zinc-800 rounded-[32px] p-4 shadow-2xl overflow-hidden aspect-video relative">
-              <div className="w-full h-full bg-black rounded-[20px] flex items-center justify-center border border-zinc-800 relative overflow-hidden group">
-                <img 
-                  src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=2000" 
-                  alt="Dashboard Preview" 
-                  className="w-full h-full object-cover opacity-50 group-hover:scale-105 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
-                <div className="absolute bottom-10 left-10 text-left">
-                  <div className="flex gap-2 mb-4">
-                    {[1,2,3].map(i => <div key={i} className="w-32 h-4 bg-orange-500/20 rounded-full animate-pulse" style={{ animationDelay: `${i*200}ms` }} />)}
-                  </div>
-                  <h3 className="text-3xl font-black italic">COMMAND CENTER LIVE</h3>
-                </div>
-              </div>
-            </div>
+          {/* Social Proof Bar */}
+          <div id="trust" className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 border-y border-white/5 py-10 opacity-50 grayscale hover:grayscale-0 transition-all duration-700">
+            <div className="flex flex-col items-center gap-1"><span className="text-3xl font-black italic">100+</span><span className="text-[10px] font-black tracking-widest text-zinc-500 uppercase">Merchants</span></div>
+            <div className="flex flex-col items-center gap-1"><span className="text-3xl font-black italic">50K+</span><span className="text-[10px] font-black tracking-widest text-zinc-500 uppercase">Bills Daily</span></div>
+            <div className="flex flex-col items-center gap-1"><span className="text-3xl font-black italic">4.9/5</span><span className="text-[10px] font-black tracking-widest text-zinc-500 uppercase">User Rating</span></div>
+            <div className="flex flex-col items-center gap-1"><span className="text-3xl font-black italic">99.9%</span><span className="text-[10px] font-black tracking-widest text-zinc-500 uppercase">Uptime</span></div>
           </div>
         </div>
       </section>
@@ -104,29 +91,26 @@ export default function LandingPage() {
       {/* Features Grid */}
       <section id="features" className="py-32 bg-zinc-950 relative">
         <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
-            <div className="max-w-xl">
-              <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-6 italic">POWER IN YOUR POCKET.</h2>
-              <p className="text-zinc-400 text-lg font-medium">Everything you need to run your store like a pro, minus the complexity and high costs.</p>
-            </div>
-            <div className="bg-orange-500 px-6 py-3 rounded-2xl font-black text-black rotate-2 shadow-xl shadow-orange-500/20">MADE IN INDIA 🇮🇳</div>
+          <div className="text-center max-w-2xl mx-auto mb-20">
+            <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-6 italic">SMARTER BILLING.</h2>
+            <p className="text-zinc-500 text-lg font-medium">Everything you need to run your store like a pro, minus the complexity.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
             {[
-              { icon: Zap, title: "Lightning Billing", desc: "Create invoices in under 5 seconds. Speed is our superpower." },
-              { icon: BarChart3, title: "Deep Insights", desc: "Daily, Weekly, Monthly sales reports. Know your profit, instantly." },
-              { icon: Smartphone, title: "Pure Mobile", desc: "No PC needed. Manage your entire shop from any Android phone." },
-              { icon: Shield, title: "Cloud Security", desc: "Your data is encrypted and backed up 24/7 on our secure servers." },
-              { icon: Users, title: "Staff Roles", desc: "Add staff with limited permissions. Secure and accountable." },
-              { icon: Globe, title: "Multi-Store", desc: "Manage multiple outlets from a single master dashboard." }
+              { icon: Zap, title: "Lightning Billing", desc: "Create professional invoices in under 5 seconds. Speed is our DNA." },
+              { icon: BarChart3, title: "Profit Analytics", desc: "Daily and monthly sales reports. Know your profit margins instantly." },
+              { icon: Smartphone, title: "Purely Mobile", desc: "Manage your entire shop from any Android phone. Truly portable." },
+              { icon: Shield, title: "Secure Cloud", desc: "Your data is encrypted and backed up 24/7. Never lose a record again." },
+              { icon: Users, title: "Staff Control", desc: "Add staff with limited permissions. Keep your business secure." },
+              { icon: Globe, title: "Global Access", desc: "Monitor your shop from anywhere in the world, in real-time." }
             ].map((f, i) => (
-              <div key={i} className="bg-zinc-900/50 border border-zinc-800 p-8 rounded-3xl hover:bg-zinc-900 transition-all hover:-translate-y-2 group">
-                <div className="w-14 h-14 bg-orange-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-orange-500 transition-colors duration-300">
-                  <f.icon className="text-orange-500 group-hover:text-white transition-colors" size={28} />
+              <div key={i} className="bg-zinc-900/30 border border-white/5 p-8 md:p-10 rounded-[32px] hover:bg-zinc-900 transition-all hover:-translate-y-2 group">
+                <div className="w-16 h-16 bg-orange-500/10 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-orange-500 transition-all duration-500">
+                  <f.icon className="text-orange-500 group-hover:text-white transition-colors" size={32} />
                 </div>
-                <h4 className="text-xl font-black mb-3 italic">{f.title}</h4>
-                <p className="text-zinc-400 font-medium leading-relaxed">{f.desc}</p>
+                <h4 className="text-2xl font-black mb-4 italic tracking-tight">{f.title}</h4>
+                <p className="text-zinc-500 font-semibold leading-relaxed text-sm md:text-base">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -134,97 +118,89 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-32 relative">
+      <section id="pricing" className="py-32 relative overflow-hidden">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-6xl font-black tracking-tighter mb-6 italic">NO HIDDEN FEES.</h2>
-            <p className="text-zinc-400 text-lg font-medium">Simple, honest pricing for honest business owners.</p>
+          <div className="text-center mb-24">
+            <h2 className="text-5xl md:text-7xl font-black tracking-tighter mb-6 italic underline decoration-orange-500 decoration-8 underline-offset-[10px]">SIMPLE PRICING.</h2>
           </div>
 
-          <div className="max-w-lg mx-auto bg-zinc-900 border-2 border-orange-500 p-10 rounded-[40px] relative shadow-2xl shadow-orange-500/10">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-orange-500 text-black px-6 py-2 rounded-full font-black text-sm uppercase tracking-widest">MOST POPULAR</div>
+          <div className="max-w-xl mx-auto bg-gradient-to-b from-zinc-900 to-black border border-white/10 p-10 md:p-16 rounded-[50px] relative shadow-2xl">
+            <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-orange-500 text-black px-8 py-3 rounded-full font-black text-[12px] uppercase tracking-[0.2em] shadow-xl">ELITE BUSINESS</div>
             
-            <div className="text-center mb-10">
-              <h4 className="text-zinc-400 font-black mb-4 tracking-widest">SMART BUSINESS</h4>
-              <div className="flex justify-center items-end gap-2">
-                <span className="text-6xl font-black italic tracking-tighter">₹399</span>
-                <span className="text-zinc-400 font-bold text-xl mb-2">/month</span>
+            <div className="text-center mb-12">
+              <div className="flex justify-center items-end gap-2 mb-2">
+                <span className="text-7xl md:text-9xl font-black italic tracking-tighter italic">₹399</span>
+                <span className="text-zinc-500 font-bold text-2xl mb-4">/mo</span>
               </div>
+              <p className="text-orange-500 font-black tracking-widest text-xs uppercase">Billed Monthly • No Commitment</p>
             </div>
 
-            <div className="space-y-4 mb-10">
+            <div className="space-y-5 mb-14">
               {[
-                "Unlimited Billing",
-                "Advanced Inventory Manager",
-                "Expense Tracking",
-                "Rent Target Tracker",
-                "Staff Management",
-                "WhatsApp Support",
-                "Automated Cloud Backup"
+                "Unlimited Digital Invoicing",
+                "Advanced Inventory Control",
+                "Expense & Profit Tracker",
+                "Staff Management System",
+                "24/7 WhatsApp Priority Support",
+                "Automatic Cloud Backup"
               ].map((item, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <CheckCircle2 size={18} className="text-orange-500 flex-shrink-0" />
-                  <span className="font-bold text-zinc-300">{item}</span>
+                <div key={i} className="flex items-center gap-4 group">
+                  <div className="w-6 h-6 rounded-full bg-orange-500/20 flex items-center justify-center group-hover:bg-orange-500 transition-all">
+                    <CheckCircle2 size={14} className="text-orange-500 group-hover:text-white" />
+                  </div>
+                  <span className="font-bold text-zinc-300 text-base md:text-lg">{item}</span>
                 </div>
               ))}
             </div>
 
             <a 
-              href="https://wa.me/917838229178?text=Hello,%20I%20want%20to%20buy%20InstaMunim%20Subscription!" 
-              target="_blank"
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white py-5 rounded-2xl font-black text-xl transition-all flex items-center justify-center gap-3"
+              href="https://wa.me/917838229178?text=Hello,%20I%20want%20to%20activate%20my%20InstaMunim%20Subscription!" 
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white py-6 rounded-3xl font-black text-xl md:text-2xl transition-all flex items-center justify-center gap-4 shadow-xl shadow-orange-500/20"
             >
-              GET STARTED NOW <ChevronRight size={20} />
+              ACTIVATE NOW <ChevronRight size={24} />
             </a>
-            <p className="text-center text-zinc-500 mt-6 text-sm font-bold tracking-tight">FREE 7-DAY TRIAL • NO CREDIT CARD NEEDED</p>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-32 overflow-hidden relative">
-        <div className="container mx-auto px-6 bg-orange-500 rounded-[50px] p-20 relative overflow-hidden text-center text-black">
-          <div className="absolute top-0 left-0 w-full h-full opacity-10">
-            <div className="absolute top-10 left-10 rotate-12"><LayoutDashboard size={100} /></div>
-            <div className="absolute bottom-10 right-10 -rotate-12"><ShoppingCart size={100} /></div>
-          </div>
-          
-          <h2 className="text-5xl md:text-8xl font-black tracking-tighter leading-[0.8] mb-10">
-            STOP STRESSING.<br />
-            START SELLING.
-          </h2>
-          
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-            <a 
-              href="/InstaMunimSmartPOS_v1.1.apk" 
-              download
-              className="w-full sm:w-auto bg-black text-white hover:bg-zinc-900 px-12 py-6 rounded-3xl font-black text-2xl transition-all shadow-2xl"
-            >
-              DOWNLOAD APP 📱
-            </a>
-            <a 
-              href="https://wa.me/917838229178" 
-              target="_blank"
-              className="w-full sm:w-auto bg-white/20 backdrop-blur-md border border-black/10 hover:bg-white/30 px-12 py-6 rounded-3xl font-black text-2xl transition-all"
-            >
-              CONTACT SALES 💬
-            </a>
+            <p className="text-center text-zinc-500 mt-8 text-[11px] font-black tracking-widest uppercase">7-DAY FREE TRIAL INCLUDED • NO CARDS</p>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t border-white/5">
-        <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex items-center gap-2 grayscale">
-            <Zap className="text-white fill-white" size={24} />
-            <span className="text-xl font-black tracking-tighter italic">INSTAMUNIM</span>
+      <footer className="pt-24 pb-12 border-t border-white/5 bg-zinc-950">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-16 mb-20 text-center md:text-left">
+            <div>
+              <div className="flex items-center justify-center md:justify-start gap-3 mb-6">
+                <img src="/assets/logo-dark.png" alt="InstaMunim" className="w-10 h-10 grayscale brightness-200" />
+                <span className="text-2xl font-black tracking-tighter italic">INSTAMUNIM</span>
+              </div>
+              <p className="text-zinc-500 font-bold leading-relaxed">The future of retail management in the palm of your hand. Built for the modern Indian merchant.</p>
+            </div>
+            
+            <div className="flex flex-col items-center">
+              <h5 className="font-black tracking-widest text-[11px] text-zinc-500 uppercase mb-8">Follow Our Journey</h5>
+              <div className="flex gap-6">
+                <a href="#" className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all duration-300"><Instagram size={24} /></a>
+                <a href="#" className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all duration-300"><Facebook size={24} /></a>
+                <a href="#" className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all duration-300"><Youtube size={24} /></a>
+                <a href="#" className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all duration-300"><Link2 size={24} /></a>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center md:items-end">
+               <h5 className="font-black tracking-widest text-[11px] text-zinc-500 uppercase mb-8">Ready to Scale?</h5>
+               <a href="/InstaMunimSmartPOS_v1.1.apk" className="flex items-center gap-3 bg-white text-black px-8 py-4 rounded-2xl font-black hover:bg-orange-500 hover:text-white transition-all">
+                  <Download size={20} /> GET THE APP
+               </a>
+            </div>
           </div>
-          <p className="text-zinc-500 font-bold text-sm">© 2026 INSTAMUNIM SMART POS. BEYOND BILLING.</p>
-          <div className="flex gap-6 text-sm font-black text-zinc-400">
-            <a href="#" className="hover:text-orange-500">PRIVACY</a>
-            <a href="#" className="hover:text-orange-500">TERMS</a>
-            <a href="#" className="hover:text-orange-500">SUPPORT</a>
+
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 border-t border-white/5 pt-12">
+            <p className="text-zinc-600 font-bold text-xs">© 2026 INSTAMUNIM SMART POS. ALL RIGHTS RESERVED.</p>
+            <div className="flex gap-8 text-[11px] font-black text-zinc-500 tracking-widest uppercase">
+              <a href="#" className="hover:text-orange-500 transition-colors">Privacy</a>
+              <a href="#" className="hover:text-orange-500 transition-colors">Terms</a>
+              <a href="#" className="hover:text-orange-500 transition-colors">Support</a>
+            </div>
           </div>
         </div>
       </footer>
