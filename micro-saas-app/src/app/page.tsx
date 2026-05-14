@@ -199,7 +199,7 @@ export default function LandingPage() {
 
             <div className="flex justify-center">
               <a 
-                href="https://wa.me/917838229178" 
+                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Smart Business Plan (₹399/mo) for my store. 🚀\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. 📈")}`}
                 className="w-auto bg-orange-500 hover:bg-orange-600 text-white px-8 md:px-12 py-5 md:py-6 rounded-3xl font-black text-lg md:text-2xl transition-all flex items-center justify-center gap-4 shadow-2xl shadow-orange-500/30"
               >
                 ACTIVATE NOW <ChevronRight size={24} />
