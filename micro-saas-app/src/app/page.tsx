@@ -5,7 +5,7 @@ import {
   Zap, Shield, Smartphone, BarChart3, ChevronRight, 
   Download, CheckCircle2, MessageSquare, Star, ArrowRight,
   LayoutDashboard, ShoppingCart, Users, Globe,
-  Instagram, Facebook, Youtube, Link2
+  Camera, Play, MapPin
 } from "lucide-react";
 
 export default function LandingPage() {
@@ -179,10 +179,10 @@ export default function LandingPage() {
             <div className="flex flex-col items-center">
               <h5 className="font-black tracking-widest text-[11px] text-zinc-500 uppercase mb-8">Follow Our Journey</h5>
               <div className="flex gap-6">
-                <a href="#" className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all duration-300"><Instagram size={24} /></a>
-                <a href="#" className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all duration-300"><Facebook size={24} /></a>
-                <a href="#" className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all duration-300"><Youtube size={24} /></a>
-                <a href="#" className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all duration-300"><Link2 size={24} /></a>
+                <a href="#" className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all duration-300"><Camera size={24} /></a>
+                <a href="#" className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all duration-300"><MessageSquare size={24} /></a>
+                <a href="#" className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all duration-300"><Play size={24} /></a>
+                <a href="#" className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-orange-500 hover:text-white transition-all duration-300"><MapPin size={24} /></a>
               </div>
             </div>
 
