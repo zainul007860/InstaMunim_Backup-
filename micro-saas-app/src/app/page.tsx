@@ -13,6 +13,11 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
+    // If running inside the mobile app (Capacitor), redirect to dashboard
+    if (typeof window !== "undefined" && (window as any).Capacitor?.isNativePlatform) {
+      window.location.href = "/dashboard";
+    }
+    
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
