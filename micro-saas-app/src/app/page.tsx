@@ -12,16 +12,22 @@ import {
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
 
+  const [isApp, setIsApp] = useState<boolean | null>(null);
+
   useEffect(() => {
-    // If running inside the mobile app (Capacitor), redirect to dashboard
-    if (typeof window !== "undefined" && (window as any).Capacitor?.isNativePlatform) {
+    const checkApp = typeof window !== "undefined" && (window as any).Capacitor?.isNativePlatform;
+    if (checkApp) {
       window.location.href = "/dashboard";
+    } else {
+      setIsApp(false);
     }
     
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  if (isApp === null) return <div className="bg-black min-h-screen" />; // Black screen during check
 
   return (
     <div className="bg-black text-white font-sans selection:bg-orange-500 selection:text-white scroll-smooth overflow-x-hidden min-h-screen">
