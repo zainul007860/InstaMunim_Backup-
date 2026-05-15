@@ -24,6 +24,9 @@ function InvoiceContent() {
   const storeWeb = searchParams.get("w") || "www.khankitchen.com";
   const storeGs = searchParams.get("g") || "07AABCU1234F1Z5";
   const ownerMobile = searchParams.get("o") || "";
+  
+  const extraChargeName = searchParams.get("ecn") || "";
+  const extraChargeAmount = Number(searchParams.get("eca")) || 0;
 
   const logoFromUrl = searchParams.get("logo") || "";
 
@@ -58,10 +61,10 @@ function InvoiceContent() {
   }).filter(i => i.name !== "Item" || i.price !== "0");
 
   const total = Number(price);
-  const gstTotal = (total * 0.05).toFixed(2);
+  const gstTotal = ((total - extraChargeAmount) * 0.05).toFixed(2);
   const cgst = (Number(gstTotal) / 2).toFixed(2);
   const sgst = (Number(gstTotal) / 2).toFixed(2);
-  const subtotal = (total - Number(gstTotal)).toFixed(2);
+  const subtotal = (total - Number(gstTotal) - extraChargeAmount).toFixed(2);
 
   return (
     <div className="min-h-screen bg-zinc-100 flex justify-center py-0 sm:py-10 px-0 sm:px-4 font-sans print:bg-white print:p-0 overflow-y-auto">
@@ -160,6 +163,16 @@ function InvoiceContent() {
                   <p className="text-md font-black text-zinc-900">₹{item.price}.00</p>
                 </div>
               ))}
+
+              {extraChargeName && extraChargeAmount > 0 && (
+                <div className="flex justify-between items-start gap-4 border-t border-zinc-50 pt-6">
+                  <div className="flex-1">
+                    <p className="text-md font-black text-zinc-900 tracking-tight leading-tight uppercase">{extraChargeName}</p>
+                    <p className="text-[9px] font-bold text-zinc-400 mt-1 uppercase">Additional Service</p>
+                  </div>
+                  <p className="text-md font-black text-zinc-900">₹{extraChargeAmount}.00</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -177,6 +190,12 @@ function InvoiceContent() {
               <span>SGST (2.5%)</span>
               <span>₹{sgst}</span>
             </div>
+            {extraChargeAmount > 0 && (
+              <div className="flex justify-between text-[10px] font-bold text-orange-500 uppercase tracking-widest">
+                <span>{extraChargeName}</span>
+                <span>₹{extraChargeAmount}.00</span>
+              </div>
+            )}
             <div className="pt-4 border-t border-white/10 flex justify-between items-center">
               <span className="text-xs font-black uppercase tracking-[0.2em] text-orange-500">Total Amount</span>
               <span className="text-4xl font-black tracking-tighter">₹{total}.00</span>

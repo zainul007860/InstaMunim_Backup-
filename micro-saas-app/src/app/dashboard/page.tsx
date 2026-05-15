@@ -18,6 +18,9 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 
 export default function Dashboard() {
+  const [extraChargeName, setExtraChargeName] = useState("");
+  const [extraChargeAmount, setExtraChargeAmount] = useState("");
+
   const [mounted, setMounted] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -643,7 +646,9 @@ Stay safe & eat healthy! 🍕
       if (!store) throw new Error("Store ID not found");
 
       const cartDescription = cart.map(c => `${c.qty} x ${c.name} (₹${c.price * c.qty})`).join("\n");
-      const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      const cartTotalBase = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      const extraAmt = Number(extraChargeAmount) || 0;
+      const cartTotal = cartTotalBase + extraAmt;
       
       let commAmount = 0;
       if (newType === "Swiggy") {
@@ -652,8 +657,11 @@ Stay safe & eat healthy! 🍕
         commAmount = zomatoCommType === "percent" ? (cartTotal * (zomatoCommission / 100)) : zomatoCommission;
       }
 
-      // Embed commission in items string for persistence without schema change
-      const itemsWithMetadata = `${cartDescription}\n[COMM:${commAmount}]`;
+      // Embed commission and extra charges in items string
+      let itemsWithMetadata = `${cartDescription}\n[COMM:${commAmount}]`;
+      if (extraChargeName && extraAmt > 0) {
+        itemsWithMetadata += `\n[EXTRA:${extraChargeName}:${extraAmt}]`;
+      }
 
       const { data: newSale, error } = await supabase
         .from('sales')
@@ -687,6 +695,8 @@ Stay safe & eat healthy! 🍕
       setCart([]); 
       setNewName(""); 
       setNewMobile("");
+      setExtraChargeName("");
+      setExtraChargeAmount("");
     } catch (err: any) {
       alert("Cloud Sync Error: " + (err.message || "Unknown error"));
     } finally {
@@ -706,13 +716,22 @@ Stay safe & eat healthy! 🍕
       return null;
     }).filter(Boolean).join(",");
 
+    const extraMatch = (lastOrderDetails.item || "").match(/\[EXTRA:(.+):(\d+)\]/);
+    const extraPart = extraMatch ? `&ecn=${encodeURIComponent(extraMatch[1])}&eca=${extraMatch[2]}` : "";
+
     const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-    const invoiceUrl = `${baseUrl}/invoice?n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${lastOrderDetails.price}&d=${encodeURIComponent(lastOrderDetails.date.toISOString())}&t=${lastOrderDetails.type}&id=${lastOrderDetails.id}&m=${lastOrderDetails.mobile}&cn=${encodeURIComponent(lastOrderDetails.name)}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}`;
+    const invoiceUrl = `${baseUrl}/invoice?n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${lastOrderDetails.price}&d=${encodeURIComponent(lastOrderDetails.date.toISOString())}&t=${lastOrderDetails.type}&id=${lastOrderDetails.id}&m=${lastOrderDetails.mobile}&cn=${encodeURIComponent(lastOrderDetails.name)}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}${extraPart}`;
+
+    let displayItems = (lastOrderDetails.item || "").split("[COMM:")[0].trim();
+    if (extraMatch) {
+      displayItems = displayItems.split("[EXTRA:")[0].trim();
+      displayItems += `\n${extraMatch[1]}: ₹${extraMatch[2]}`;
+    }
 
     const msg = whatsappInvoiceTemplate
       .replace("[NAME]", lastOrderDetails.name)
       .replace("[SHOP]", restaurantName)
-      .replace("[ITEMS]", lastOrderDetails.item)
+      .replace("[ITEMS]", displayItems)
       .replace("[TOTAL]", lastOrderDetails.price.toString())
       .replace("[LINK]", invoiceUrl);
       
@@ -1127,11 +1146,31 @@ Stay safe & eat healthy! 🍕
                         </div>
                       )}
                    </div>
+                    <div className="space-y-2 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                      <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest px-1">Extra Charges (Delivery/Packing)</p>
+                      <div className="flex gap-2">
+                        <Input 
+                          placeholder="e.g. Delivery" 
+                          value={extraChargeName} 
+                          onChange={e => setExtraChargeName(e.target.value)} 
+                          className="h-9 flex-1 rounded-xl bg-white dark:bg-zinc-800 border-0 font-bold px-4 text-[11px]" 
+                        />
+                        <Input 
+                          type="number" 
+                          placeholder="Amount" 
+                          value={extraChargeAmount} 
+                          onChange={e => setExtraChargeAmount(e.target.value)} 
+                          className="h-9 w-20 rounded-xl bg-white dark:bg-zinc-800 border-0 font-bold px-3 text-[11px] text-center" 
+                        />
+                      </div>
+                    </div>
 
                    <div className="flex justify-end">
                       <div className="text-right">
                         <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Grand Total</p>
-                        <h3 className="text-4xl font-black tracking-tighter text-zinc-900 dark:text-white">₹{cart.reduce((s,i) => s + (i.price*i.qty), 0)}</h3>
+                        <h3 className="text-4xl font-black tracking-tighter text-zinc-900 dark:text-white">
+                          ₹{cart.reduce((s,i) => s + (i.price*i.qty), 0) + (Number(extraChargeAmount) || 0)}
+                        </h3>
                       </div>
                    </div>
 
