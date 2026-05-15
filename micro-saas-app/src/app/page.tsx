@@ -82,7 +82,7 @@ export default function LandingPage() {
               href="/InstaMunimSmartPOS_v1.1.apk" 
               className="w-full sm:w-auto bg-white text-black hover:bg-orange-500 hover:text-white px-12 py-6 rounded-3xl font-black text-xl md:text-2xl transition-all flex items-center justify-center gap-4 group"
             >
-              GET APK <ArrowRight className="group-hover:translate-x-2 transition-transform" />
+              DOWNLOAD APP <ArrowRight className="group-hover:translate-x-2 transition-transform" />
             </a>
             <a 
               href="https://wa.me/917838229178"
