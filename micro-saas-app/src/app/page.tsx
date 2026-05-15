@@ -48,14 +48,7 @@ export default function LandingPage() {
             <a href="#about" className="hover:text-orange-500 transition-colors uppercase">About</a>
           </div>
 
-          <div className="flex items-center gap-4">
-            <a 
-              href="/dashboard" 
-              className="bg-orange-500 hover:bg-orange-600 px-6 md:px-8 py-2.5 md:py-3.5 rounded-full font-black text-[12px] md:text-[14px] transition-all hover:scale-105 active:scale-95 flex items-center gap-2 shadow-xl shadow-orange-500/20"
-            >
-              <Download size={18} /> DOWNLOAD APP
-            </a>
-          </div>
+          {/* Header Button Removed */}
         </div>
       </nav>
 
