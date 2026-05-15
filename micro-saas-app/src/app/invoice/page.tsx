@@ -165,12 +165,11 @@ function InvoiceContent() {
               ))}
 
               {extraChargeName && extraChargeAmount > 0 && (
-                <div className="flex justify-between items-start gap-4 border-t border-zinc-50 pt-6">
-                  <div className="flex-1">
-                    <p className="text-md font-black text-zinc-900 tracking-tight leading-tight uppercase">{extraChargeName}</p>
-                    <p className="text-[9px] font-bold text-zinc-400 mt-1 uppercase">Additional Service</p>
-                  </div>
-                  <p className="text-md font-black text-zinc-900">₹{extraChargeAmount}.00</p>
+                <div className="flex justify-between items-center gap-4 pt-6 border-t border-zinc-50">
+                  <p className="text-lg font-black text-zinc-900 tracking-tight uppercase">
+                    {extraChargeName} Charge - {extraChargeAmount}
+                  </p>
+                  <p className="text-lg font-black text-zinc-900">₹{extraChargeAmount}.00</p>
                 </div>
               )}
             </div>

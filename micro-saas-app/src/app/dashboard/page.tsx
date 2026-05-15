@@ -1201,7 +1201,7 @@ Stay safe & eat healthy! 🍕
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest pl-1">Return Change</span>
                             <span className="text-lg font-black text-emerald-600">
-                              ₹{Math.max(0, Number(cashReceived) - cart.reduce((s,i) => s + (i.price*i.qty), 0))}
+                              ₹{Math.max(0, Number(cashReceived) - (cart.reduce((s,i) => s + (i.price*i.qty), 0) + (Number(extraChargeAmount) || 0)))}
                             </span>
                           </div>
                         </div>
