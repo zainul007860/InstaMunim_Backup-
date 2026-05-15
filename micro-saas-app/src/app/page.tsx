@@ -48,6 +48,7 @@ export default function LandingPage() {
             <a href="#about" className="hover:text-orange-500 transition-colors uppercase">About</a>
           </div>
 
+<<<<<<< HEAD
           <div className="flex items-center gap-4">
             <a 
               href="/InstaMunimSmartPOS_v1.1.apk" 
@@ -56,6 +57,9 @@ export default function LandingPage() {
               <ArrowRight size={18} /> <span className="hidden sm:inline">OPEN</span> DEV APP
             </a>
           </div>
+=======
+          {/* Header Button Removed */}
+>>>>>>> dev
         </div>
       </nav>
 
