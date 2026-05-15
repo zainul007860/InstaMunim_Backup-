@@ -162,7 +162,34 @@ Stay safe & eat healthy! 🍕
   }, [menuItems, voicePhase, cart, newName, newMobile]);
   // AI-SMART HINGLISH VOICE CASHIER (With Transliteration)
   useEffect(() => {
-    const handleVoiceResult = (text: string, isFinal: boolean) => {
+    // BACK BUTTON HANDLING FOR MOBILE APP
+  useEffect(() => {
+    let backListener: any;
+    
+    const initBackListener = async () => {
+      try {
+        const { App } = await import('@capacitor/app');
+        backListener = await App.addListener('backButton', ({ canGoBack }) => {
+          if (activeTab !== "Dashboard") {
+            setActiveTab("Dashboard");
+          } else if (isSaleOpen) {
+            setIsSaleOpen(false);
+          } else {
+            // Let the app handle the standard exit if on dashboard
+          }
+        });
+      } catch (e) {
+        console.log("Not running in Capacitor, back button listener skipped.");
+      }
+    };
+
+    initBackListener();
+    return () => {
+      if (backListener) backListener.remove();
+    };
+  }, [activeTab, isSaleOpen]);
+
+  const handleVoiceResult = (text: string, isFinal: boolean) => {
       if (!text) return;
       const cleanText = text.toLowerCase().trim();
       const { menuItems: currentMenu } = latestStateRef.current;
@@ -598,22 +625,29 @@ Stay safe & eat healthy! 🍕
   };
 
   const generateAIInsight = () => {
-    // Basic AI logic based on data
-    const insights = [
-      "Based on trends, your top item will be in high demand tomorrow. Keep 15% extra stock.",
-      "Smart Tip: Wednesday sales are usually 20% higher for Roll items. Prepare in advance.",
-      "Inventory Alert: Your stock levels are healthy. Good job on management!",
-      "Profit Insight: Online orders are increasing. Consider a special weekend combo.",
-      "Customer Trend: Most users are paying via Online. Ensure your QR is accessible."
-    ];
-    
-    // Pick based on some simple logic
-    if (sales.length > 5) {
-      setAiInsightText(insights[0]);
-    } else {
-      setAiInsightText(insights[1]);
-    }
     setIsAIDialogOpen(true);
+    setAiInsightText("Analyzing your business data... 🧠");
+
+    const outOfStockCount = menuItems.filter(i => (i.stock || 0) === 0).length;
+    const totalUdhaarAmt = sales.filter(s => s.type === "Udhaar").reduce((sum, s) => sum + s.price, 0);
+    const totalExpensesAmt = expenses.reduce((sum, e) => sum + e.amount, 0);
+
+    setTimeout(() => {
+      let insight = "";
+      if (filteredSales.length === 0) {
+        insight = "Bhai, aaj abhi tak koi sale nahi hui hai. Social media par 'Make in India' banner ke saath ek post daliye ya purane customers ko CRM se message bhejiye! 🚀";
+      } else if (outOfStockCount > 0) {
+        insight = `Aapke ${outOfStockCount} items out of stock hain. Ye aapki potential sale rok rahe hain. Turant inventory refill kijiye! 📦`;
+      } else if (totalUdhaarAmt > 3000) {
+        insight = `Aapka udhaar ₹${totalUdhaarAmt} pahunch gaya hai. Aaj ka din 'Recovery Day' banaiye aur pending customers ko WhatsApp reminder bhejiye. 💸`;
+      } else if (totalExpensesAmt > (totalSales * 0.4) && totalSales > 0) {
+        insight = "Aapke operational expenses (kharcha) thode zyada hain. Menu pricing revise karne ya daily cost control par dhyan dene ki zaroorat hai. 📉";
+      } else {
+        const avgTicket = Math.round(totalSales / (filteredSales.length || 1));
+        insight = `Aapka business track par hai! Aaj ki average sale ₹${avgTicket} per bill hai. Ise badhane ke liye 'Combos' ya 'Extra Items' suggest kijiye. ✨`;
+      }
+      setAiInsightText(insight);
+    }, 800);
   };
 
   const handleLogout = () => {
@@ -1488,7 +1522,16 @@ Stay safe & eat healthy! 🍕
                 <p className="text-sm font-bold text-zinc-400 mt-2 leading-relaxed">Comprehensive view of your store's performance.</p>
               </header>
 
-              <Button onClick={() => window.print()} className="w-full h-14 bg-zinc-900 hover:bg-black text-white font-bold rounded-full text-sm shadow-xl flex items-center justify-center gap-3 uppercase tracking-widest active:scale-95 transition-all">
+              <Button 
+                onClick={() => {
+                  try {
+                    window.print();
+                  } catch (e) {
+                    alert("Printing not supported in this view. Try opening in a browser.");
+                  }
+                }} 
+                className="w-full h-14 bg-zinc-900 hover:bg-black text-white font-bold rounded-full text-sm shadow-xl flex items-center justify-center gap-3 uppercase tracking-widest active:scale-95 transition-all"
+              >
                 <Printer className="h-4 w-4" /> PRINT FULL REPORT
               </Button>
 
