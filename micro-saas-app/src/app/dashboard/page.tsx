@@ -160,22 +160,18 @@ Stay safe & eat healthy! 🍕
   useEffect(() => {
     latestStateRef.current = { menuItems, voicePhase, cart, newName, newMobile };
   }, [menuItems, voicePhase, cart, newName, newMobile]);
-  // AI-SMART HINGLISH VOICE CASHIER (With Transliteration)
-  useEffect(() => {
-    // BACK BUTTON HANDLING FOR MOBILE APP
+  // BACK BUTTON HANDLING FOR MOBILE APP
   useEffect(() => {
     let backListener: any;
     
     const initBackListener = async () => {
       try {
         const { App } = await import('@capacitor/app');
-        backListener = await App.addListener('backButton', ({ canGoBack }) => {
+        backListener = await App.addListener('backButton', () => {
           if (activeTab !== "Dashboard") {
             setActiveTab("Dashboard");
           } else if (isSaleOpen) {
             setIsSaleOpen(false);
-          } else {
-            // Let the app handle the standard exit if on dashboard
           }
         });
       } catch (e) {
@@ -189,7 +185,9 @@ Stay safe & eat healthy! 🍕
     };
   }, [activeTab, isSaleOpen]);
 
-  const handleVoiceResult = (text: string, isFinal: boolean) => {
+  // AI-SMART HINGLISH VOICE CASHIER (With Transliteration)
+  useEffect(() => {
+    const handleVoiceResult = (text: string, isFinal: boolean) => {
       if (!text) return;
       const cleanText = text.toLowerCase().trim();
       const { menuItems: currentMenu } = latestStateRef.current;
