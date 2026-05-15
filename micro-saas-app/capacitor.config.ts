@@ -1,11 +1,12 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.zainul.smartpos',
-  appName: 'InstaMunim',
+  appId: 'com.zainul.smartpos.dev',
+  appName: 'InstaMunim DEV',
   webDir: 'out',
   server: {
-    androidScheme: 'https'
+    url: 'https://instamunimapp-git-dev-zainul007860.vercel.app',
+    cleartext: true
   }
 };
 
