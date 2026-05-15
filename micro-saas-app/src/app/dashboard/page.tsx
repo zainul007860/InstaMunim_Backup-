@@ -632,20 +632,20 @@ Stay safe & eat healthy! 🍕
 
     setTimeout(() => {
       let insight = "";
+      // Only show inventory advice if actually used
+      const isInventoryUsed = menuItems.some(i => (i.stock || 0) > 0);
+      
       if (filteredSales.length === 0) {
-        insight = "Bhai, aaj abhi tak koi sale nahi hui hai. Social media par 'Make in India' banner ke saath ek post daliye ya purane customers ko CRM se message bhejiye! 🚀";
-      } else if (outOfStockCount > 0) {
-        insight = `Aapke ${outOfStockCount} items out of stock hain. Ye aapki potential sale rok rahe hain. Turant inventory refill kijiye! 📦`;
-      } else if (totalUdhaarAmt > 3000) {
-        insight = `Aapka udhaar ₹${totalUdhaarAmt} pahunch gaya hai. Aaj ka din 'Recovery Day' banaiye aur pending customers ko WhatsApp reminder bhejiye. 💸`;
-      } else if (totalExpensesAmt > (totalSales * 0.4) && totalSales > 0) {
-        insight = "Aapke operational expenses (kharcha) thode zyada hain. Menu pricing revise karne ya daily cost control par dhyan dene ki zaroorat hai. 📉";
+        insight = "Bhai, aaj abhi tak koi sale nahi hui hai. Ek 'Combo Offer' banaiye aur WhatsApp par share kijiye! 🚀";
+      } else if (isInventoryUsed && outOfStockCount > 0) {
+        insight = `Aapke ${outOfStockCount} items out of stock hain. Inhe refill kijiye sale badhane ke liye! 📦`;
+      } else if (totalUdhaarAmt > 2000) {
+        insight = `Udhaar ₹${totalUdhaarAmt} ho gaya hai. Aaj recovery ka din banaiye! 💸`;
       } else {
-        const avgTicket = Math.round(totalSales / (filteredSales.length || 1));
-        insight = `Aapka business track par hai! Aaj ki average sale ₹${avgTicket} per bill hai. Ise badhane ke liye 'Combos' ya 'Extra Items' suggest kijiye. ✨`;
+        insight = "Business badhiya chal raha hai! Naye products add karke menu ko fresh rakhiye. ✨";
       }
       setAiInsightText(insight);
-    }, 800);
+    }, 600);
   };
 
   const handleLogout = () => {

@@ -60,11 +60,12 @@ function InvoiceContent() {
     return { name: parts[0] || "Item", price: parts[1] || "0" };
   }).filter(i => i.name !== "Item" || i.price !== "0");
 
-  const total = Number(price);
-  const gstTotal = ((total - extraChargeAmount) * 0.05).toFixed(2);
-  const cgst = (Number(gstTotal) / 2).toFixed(2);
-  const sgst = (Number(gstTotal) / 2).toFixed(2);
-  const subtotal = (total - Number(gstTotal) - extraChargeAmount).toFixed(2);
+  const totalBase = Number(price) || 0;
+  const gstTotal = ((totalBase - extraChargeAmount) * 0.05);
+  const cgst = (gstTotal / 2).toFixed(2);
+  const sgst = (gstTotal / 2).toFixed(2);
+  const subtotal = (totalBase - gstTotal - extraChargeAmount).toFixed(2);
+  const finalTotal = totalBase; // Since 'price' from dashboard already includes extraChargeAmount
 
   return (
     <div className="min-h-screen bg-zinc-100 flex justify-center py-0 sm:py-10 px-0 sm:px-4 font-sans print:bg-white print:p-0 overflow-y-auto">
@@ -180,15 +181,17 @@ function InvoiceContent() {
               <span>SGST (2.5%)</span>
               <span>₹{sgst}</span>
             </div>
+            
             {extraChargeAmount > 0 && (
-              <div className="flex justify-between text-[10px] font-bold text-orange-500 uppercase tracking-widest">
-                <span>{extraChargeName}</span>
-                <span>₹{extraChargeAmount}.00</span>
+              <div className="flex justify-between text-[10px] font-black text-orange-400 uppercase tracking-widest pt-2">
+                <span>{extraChargeName || "Extra Charge"}</span>
+                <span>₹{extraChargeAmount.toFixed(2)}</span>
               </div>
             )}
+
             <div className="pt-4 border-t border-white/10 flex justify-between items-center">
               <span className="text-xs font-black uppercase tracking-[0.2em] text-orange-500">Total Amount</span>
-              <span className="text-4xl font-black tracking-tighter">₹{total}.00</span>
+              <span className="text-4xl font-black tracking-tighter">₹{finalTotal.toFixed(2)}</span>
             </div>
           </div>
 
