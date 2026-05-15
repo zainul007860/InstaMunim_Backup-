@@ -50,10 +50,10 @@ export default function LandingPage() {
 
           <div className="flex items-center gap-4">
             <a 
-              href="/InstaMunimSmartPOS_v1.1.apk" 
+              href="/dashboard" 
               className="bg-orange-500 hover:bg-orange-600 px-6 md:px-8 py-2.5 md:py-3.5 rounded-full font-black text-[12px] md:text-[14px] transition-all hover:scale-105 active:scale-95 flex items-center gap-2 shadow-xl shadow-orange-500/20"
             >
-              <Download size={18} /> <span className="hidden sm:inline">GET</span> APK
+              <ArrowRight size={18} /> <span className="hidden sm:inline">OPEN</span> DEV APP
             </a>
           </div>
         </div>
@@ -79,10 +79,10 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-32">
              <a 
-              href="/InstaMunimSmartPOS_v1.1.apk" 
+              href="/dashboard" 
               className="w-full sm:w-auto bg-white text-black hover:bg-orange-500 hover:text-white px-12 py-6 rounded-3xl font-black text-xl md:text-2xl transition-all flex items-center justify-center gap-4 group"
             >
-              FREE DOWNLOAD <ArrowRight className="group-hover:translate-x-2 transition-transform" />
+              OPEN DEV APP <ArrowRight className="group-hover:translate-x-2 transition-transform" />
             </a>
             <a 
               href="https://wa.me/917838229178"
