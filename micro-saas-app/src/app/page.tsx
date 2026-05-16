@@ -1,4 +1,5 @@
 "use client";
+// v1.1.2 - Character encoding fix
 
 import { useState, useEffect } from "react";
 import { 
