@@ -59,7 +59,7 @@ export default function LandingPage() {
         
         <div className="container mx-auto px-6 text-center">
           <div className="inline-flex items-center gap-2 bg-orange-500 text-black px-6 py-2 rounded-full font-black text-[10px] md:text-[12px] uppercase tracking-widest mb-10 shadow-[0_0_30px_rgba(249,115,22,0.3)]">
-             7 DAYS FREE TRIAL â€¢ NO CREDIT CARD
+             7 DAYS FREE TRIAL {"\u2022"} NO CREDIT CARD
           </div>
 
           <h1 className="text-5xl md:text-[120px] font-black tracking-tighter leading-[0.8] mb-12">
@@ -111,7 +111,7 @@ export default function LandingPage() {
       </section>
 
             <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
-              MAKE IN INDIA 🇮🇳
+              MAKE IN INDIA {"\uD83C\uDDEE\uD83C\uDDF3"}
             </div>
       <section className="py-10 bg-gradient-to-r from-orange-600 to-red-700 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
@@ -138,7 +138,7 @@ export default function LandingPage() {
               <p className="text-zinc-500 text-xl font-medium">Manage billing, stock, and staff from anywhere.</p>
             </div>
             <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
-              MAKE IN INDIA 🇮🇳
+              MAKE IN INDIA {"\uD83C\uDDEE\uD83C\uDDF3"}
             </div>
           </div>
 
@@ -175,7 +175,7 @@ export default function LandingPage() {
             
             <div className="text-center mb-12">
               <div className="flex justify-center items-end gap-3 mb-4">
-                <span className="text-7xl md:text-[120px] font-black italic tracking-tighter leading-none">â‚¹399</span>
+                <span className="text-7xl md:text-[120px] font-black italic tracking-tighter leading-none">{"\u20B9"}399</span>
                 <span className="text-zinc-500 font-black text-xl md:text-2xl mb-4 md:mb-6">/mo</span>
               </div>
             </div>
@@ -199,7 +199,7 @@ export default function LandingPage() {
 
             <div className="flex justify-center">
               <a 
-                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Smart Business Plan (â‚¹399/mo) for my store. Ã°Å¸Å¡â‚¬\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. Ã°Å¸â€œË†")}`}
+                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Smart Business Plan (\u20B9399/mo) for my store. \uD83D\uDE80\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. \uD83D\uDCC8")}`}
                 className="w-auto bg-orange-500 hover:bg-orange-600 text-white px-8 md:px-12 py-5 md:py-6 rounded-3xl font-black text-lg md:text-2xl transition-all flex items-center justify-center gap-4 shadow-2xl shadow-orange-500/30"
               >
                 ACTIVATE NOW <ChevronRight size={24} />
