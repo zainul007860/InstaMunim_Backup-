@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 // v1.1.2 - Character encoding fix
 
 import { useState, useEffect } from "react";
@@ -59,7 +59,9 @@ export default function LandingPage() {
         
         <div className="container mx-auto px-6 text-center">
           <div className="inline-flex items-center gap-2 bg-orange-500 text-black px-6 py-2 rounded-full font-black text-[10px] md:text-[12px] uppercase tracking-widest mb-10 shadow-[0_0_30px_rgba(249,115,22,0.3)]">
-             7 DAYS FREE TRIAL • NO CREDIT CARD
+          <div className="inline-flex items-center gap-2 bg-orange-500 text-black px-6 py-2 rounded-full font-black text-[10px] md:text-[12px] uppercase tracking-widest mb-10 shadow-[0_0_30px_rgba(249,115,22,0.3)]">
+             7 DAYS FREE TRIAL - NO CREDIT CARD
+          </div>
           </div>
 
           <h1 className="text-5xl md:text-[120px] font-black tracking-tighter leading-[0.8] mb-12">
@@ -110,13 +112,17 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* MAKE IN INDIA BANNER */}
+            <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
+              MAKE IN INDIA 🇮🇳
+            </div>
       <section className="py-10 bg-gradient-to-r from-orange-600 to-red-700 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
         <div className="container mx-auto px-6 relative z-10">
           <div className="flex flex-col md:flex-row items-center justify-center gap-6 text-center">
             <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
+            <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
               MAKE IN INDIA 🇮🇳
+            </div>
             </div>
             <h2 className="text-2xl md:text-5xl font-black italic tracking-tighter text-white uppercase leading-none">
               AB INDIA KA HAR DUKANDAR <span className="text-black">BANEGA DIGITAL</span>
@@ -133,7 +139,9 @@ export default function LandingPage() {
               <h2 className="text-5xl md:text-8xl font-black tracking-tighter mb-8 italic leading-none">SHOP CONTROL.</h2>
               <p className="text-zinc-500 text-xl font-medium">Manage billing, stock, and staff from anywhere.</p>
             </div>
-            <div className="bg-orange-500 px-10 py-5 rounded-3xl font-black text-black text-xl shadow-2xl shadow-orange-500/20 uppercase tracking-widest">MAKE IN INDIA ðŸ‡®ðŸ‡³</div>
+            <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
+              MAKE IN INDIA 🇮🇳
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -169,7 +177,7 @@ export default function LandingPage() {
             
             <div className="text-center mb-12">
               <div className="flex justify-center items-end gap-3 mb-4">
-                <span className="text-7xl md:text-[120px] font-black italic tracking-tighter leading-none">₹399</span>
+                <span className="text-7xl md:text-[120px] font-black italic tracking-tighter leading-none">â‚¹399</span>
                 <span className="text-zinc-500 font-black text-xl md:text-2xl mb-4 md:mb-6">/mo</span>
               </div>
             </div>
@@ -193,13 +201,15 @@ export default function LandingPage() {
 
             <div className="flex justify-center">
               <a 
-                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Smart Business Plan (₹399/mo) for my store. ðŸš€\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. ðŸ“ˆ")}`}
+                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Smart Business Plan (â‚¹399/mo) for my store. ðŸš€\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. ðŸ“ˆ")}`}
                 className="w-auto bg-orange-500 hover:bg-orange-600 text-white px-8 md:px-12 py-5 md:py-6 rounded-3xl font-black text-lg md:text-2xl transition-all flex items-center justify-center gap-4 shadow-2xl shadow-orange-500/30"
               >
                 ACTIVATE NOW <ChevronRight size={24} />
               </a>
             </div>
-            <p className="text-center text-orange-500 mt-8 font-black text-sm tracking-widest italic animate-pulse">7 DAYS FREE TRIAL AVAILABLE</p>
+          <div className="inline-flex items-center gap-2 bg-orange-500 text-black px-6 py-2 rounded-full font-black text-[10px] md:text-[12px] uppercase tracking-widest mb-10 shadow-[0_0_30px_rgba(249,115,22,0.3)]">
+             7 DAYS FREE TRIAL - NO CREDIT CARD
+          </div>
           </div>
         </div>
       </section>
@@ -243,7 +253,7 @@ export default function LandingPage() {
           </div>
 
           <div className="flex flex-col md:flex-row justify-between items-center gap-8 border-t border-white/10 pt-10">
-            <p className="text-white font-black text-[11px] tracking-widest uppercase italic">Â© 2026 INSTAMUNIM SMART POS â€¢ BEYOND BILLING â€¢ ALL RIGHTS RESERVED</p>
+            <p className="text-white font-black text-[11px] tracking-widest uppercase italic">© 2026 INSTAMUNIM SMART POS - BEYOND BILLING - ALL RIGHTS RESERVED</p>
             <div className="flex gap-10 text-[10px] font-black text-zinc-500 tracking-widest uppercase italic">
               <a href="#" className="hover:text-orange-500 transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-orange-500 transition-colors">Terms of Use</a>
