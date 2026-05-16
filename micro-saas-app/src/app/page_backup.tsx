@@ -1,5 +1,4 @@
-"use client";
-// v1.1.2 - Character encoding fix
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { 
@@ -49,7 +48,18 @@ export default function LandingPage() {
             <a href="#about" className="hover:text-orange-500 transition-colors uppercase">About</a>
           </div>
 
+<<<<<<< HEAD
+          <div className="flex items-center gap-4">
+            <a 
+              href="/InstaMunimSmartPOS_v1.1.apk" 
+              className="bg-orange-500 hover:bg-orange-600 px-6 md:px-8 py-2.5 md:py-3.5 rounded-full font-black text-[12px] md:text-[14px] transition-all hover:scale-105 active:scale-95 flex items-center gap-2 shadow-xl shadow-orange-500/20"
+            >
+              <ArrowRight size={18} /> <span className="hidden sm:inline">OPEN</span> DEV APP
+            </a>
+          </div>
+=======
           {/* Header Button Removed */}
+>>>>>>> dev
         </div>
       </nav>
 
@@ -59,7 +69,7 @@ export default function LandingPage() {
         
         <div className="container mx-auto px-6 text-center">
           <div className="inline-flex items-center gap-2 bg-orange-500 text-black px-6 py-2 rounded-full font-black text-[10px] md:text-[12px] uppercase tracking-widest mb-10 shadow-[0_0_30px_rgba(249,115,22,0.3)]">
-             7 DAYS FREE TRIAL • NO CREDIT CARD
+             7 DAYS FREE TRIAL â€¢ NO CREDIT CARD
           </div>
 
           <h1 className="text-5xl md:text-[120px] font-black tracking-tighter leading-[0.8] mb-12">
@@ -73,7 +83,7 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-32">
              <a 
-              href="/dashboard" 
+              href="/InstaMunimSmartPOS_v1.1.apk" 
               className="w-full sm:w-auto bg-white text-black hover:bg-orange-500 hover:text-white px-12 py-6 rounded-3xl font-black text-xl md:text-2xl transition-all flex items-center justify-center gap-4 group"
             >
               DOWNLOAD APP <ArrowRight className="group-hover:translate-x-2 transition-transform" />
@@ -116,7 +126,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-6 relative z-10">
           <div className="flex flex-col md:flex-row items-center justify-center gap-6 text-center">
             <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
-              MAKE IN INDIA 🇮🇳
+              MAKE IN INDIA ðŸ‡®ðŸ‡³
             </div>
             <h2 className="text-2xl md:text-5xl font-black italic tracking-tighter text-white uppercase leading-none">
               AB INDIA KA HAR DUKANDAR <span className="text-black">BANEGA DIGITAL</span>
@@ -169,7 +179,7 @@ export default function LandingPage() {
             
             <div className="text-center mb-12">
               <div className="flex justify-center items-end gap-3 mb-4">
-                <span className="text-7xl md:text-[120px] font-black italic tracking-tighter leading-none">₹399</span>
+                <span className="text-7xl md:text-[120px] font-black italic tracking-tighter leading-none">â‚¹399</span>
                 <span className="text-zinc-500 font-black text-xl md:text-2xl mb-4 md:mb-6">/mo</span>
               </div>
             </div>
@@ -193,7 +203,7 @@ export default function LandingPage() {
 
             <div className="flex justify-center">
               <a 
-                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Smart Business Plan (₹399/mo) for my store. ðŸš€\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. ðŸ“ˆ")}`}
+                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Smart Business Plan (â‚¹399/mo) for my store. ðŸš€\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. ðŸ“ˆ")}`}
                 className="w-auto bg-orange-500 hover:bg-orange-600 text-white px-8 md:px-12 py-5 md:py-6 rounded-3xl font-black text-lg md:text-2xl transition-all flex items-center justify-center gap-4 shadow-2xl shadow-orange-500/30"
               >
                 ACTIVATE NOW <ChevronRight size={24} />
