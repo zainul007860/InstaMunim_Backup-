@@ -59,9 +59,7 @@ export default function LandingPage() {
         
         <div className="container mx-auto px-6 text-center">
           <div className="inline-flex items-center gap-2 bg-orange-500 text-black px-6 py-2 rounded-full font-black text-[10px] md:text-[12px] uppercase tracking-widest mb-10 shadow-[0_0_30px_rgba(249,115,22,0.3)]">
-          <div className="inline-flex items-center gap-2 bg-orange-500 text-black px-6 py-2 rounded-full font-black text-[10px] md:text-[12px] uppercase tracking-widest mb-10 shadow-[0_0_30px_rgba(249,115,22,0.3)]">
-             7 DAYS FREE TRIAL - NO CREDIT CARD
-          </div>
+             7 DAYS FREE TRIAL â€¢ NO CREDIT CARD
           </div>
 
           <h1 className="text-5xl md:text-[120px] font-black tracking-tighter leading-[0.8] mb-12">
@@ -201,15 +199,13 @@ export default function LandingPage() {
 
             <div className="flex justify-center">
               <a 
-                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Smart Business Plan (â‚¹399/mo) for my store. ðŸš€\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. ðŸ“ˆ")}`}
+                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Smart Business Plan (â‚¹399/mo) for my store. Ã°Å¸Å¡â‚¬\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. Ã°Å¸â€œË†")}`}
                 className="w-auto bg-orange-500 hover:bg-orange-600 text-white px-8 md:px-12 py-5 md:py-6 rounded-3xl font-black text-lg md:text-2xl transition-all flex items-center justify-center gap-4 shadow-2xl shadow-orange-500/30"
               >
                 ACTIVATE NOW <ChevronRight size={24} />
               </a>
             </div>
-          <div className="inline-flex items-center gap-2 bg-orange-500 text-black px-6 py-2 rounded-full font-black text-[10px] md:text-[12px] uppercase tracking-widest mb-10 shadow-[0_0_30px_rgba(249,115,22,0.3)]">
-             7 DAYS FREE TRIAL - NO CREDIT CARD
-          </div>
+            <p className="text-center text-orange-500 mt-8 font-black text-sm tracking-widest italic animate-pulse">7 DAYS FREE TRIAL AVAILABLE</p>
           </div>
         </div>
       </section>
