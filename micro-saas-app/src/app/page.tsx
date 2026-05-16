@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 // v1.1.2 - Character encoding fix
 
 import { useState, useEffect } from "react";
@@ -119,7 +119,7 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row items-center justify-center gap-6 text-center">
             <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
             <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
-              MAKE IN INDIA 🇮🇳
+              MAKE IN INDIA {"\uD83C\uDDEE\uD83C\uDDF3"}
             </div>
             </div>
             <h2 className="text-2xl md:text-5xl font-black italic tracking-tighter text-white uppercase leading-none">
@@ -249,7 +249,7 @@ export default function LandingPage() {
           </div>
 
           <div className="flex flex-col md:flex-row justify-between items-center gap-8 border-t border-white/10 pt-10">
-            <p className="text-white font-black text-[11px] tracking-widest uppercase italic">© 2026 INSTAMUNIM SMART POS - BEYOND BILLING - ALL RIGHTS RESERVED</p>
+            <p className="text-white font-black text-[11px] tracking-widest uppercase italic">{"\u00A9"} 2026 INSTAMUNIM SMART POS {"\u2022"} BEYOND BILLING {"\u2022"} ALL RIGHTS RESERVED</p>
             <div className="flex gap-10 text-[10px] font-black text-zinc-500 tracking-widest uppercase italic">
               <a href="#" className="hover:text-orange-500 transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-orange-500 transition-colors">Terms of Use</a>
