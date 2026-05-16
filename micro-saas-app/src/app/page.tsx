@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 // v1.1.2 - Character encoding fix
 
 import { useState, useEffect } from "react";
@@ -73,7 +73,7 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-32">
              <a 
-              href="/dashboard" 
+              href="/InstaMunimSmartPOS_v1.1.apk" 
               className="w-full sm:w-auto bg-white text-black hover:bg-orange-500 hover:text-white px-12 py-6 rounded-3xl font-black text-xl md:text-2xl transition-all flex items-center justify-center gap-4 group"
             >
               DOWNLOAD APP <ArrowRight className="group-hover:translate-x-2 transition-transform" />
