@@ -34,7 +34,7 @@ export default function LandingPage() {
     <div className="bg-black text-white font-sans selection:bg-orange-500 selection:text-white scroll-smooth overflow-x-hidden min-h-screen">
       {/* Navigation */}
       <nav className={`fixed top-0 w-full z-[100] transition-all duration-300 ${scrolled ? "bg-zinc-950 border-b border-white/10 py-2 shadow-2xl" : "bg-transparent py-4"}`}>
-        <div className="container mx-auto px-6 flex justify-between items-center">
+        <div className="max-w-6xl mx-auto px-6 flex justify-between items-center">
           <div className="flex items-center gap-3">
              <img src="/assets/instamunim-logo-main.png" alt="InstaMunim" className="w-16 h-16 md:w-24 md:h-24 object-contain" />
              <div className="flex flex-col -ml-2">
@@ -57,7 +57,7 @@ export default function LandingPage() {
       <section className="relative pt-48 md:pt-60 pb-20 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1000px] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-orange-500/10 via-transparent to-transparent -z-10" />
         
-        <div className="container mx-auto px-6 text-center">
+        <div className="max-w-6xl mx-auto px-6 text-center">
           <div className="inline-flex items-center gap-2 bg-orange-500 text-black px-6 py-2 rounded-full font-black text-[10px] md:text-[12px] uppercase tracking-widest mb-10 shadow-[0_0_30px_rgba(249,115,22,0.3)]">
              7 DAYS FREE TRIAL {"\u2022"} NO CREDIT CARD
           </div>
@@ -73,7 +73,7 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-32">
              <a 
-              href="/InstaMunimSmartPOS_v1.1.apk" 
+              href="/dashboard" 
               className="w-full sm:w-auto bg-white text-black hover:bg-orange-500 hover:text-white px-12 py-6 rounded-3xl font-black text-xl md:text-2xl transition-all flex items-center justify-center gap-4 group"
             >
               DOWNLOAD APP <ArrowRight className="group-hover:translate-x-2 transition-transform" />
@@ -115,7 +115,7 @@ export default function LandingPage() {
             </div>
       <section className="py-10 bg-gradient-to-r from-orange-600 to-red-700 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-        <div className="container mx-auto px-6 relative z-10">
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
           <div className="flex flex-col md:flex-row items-center justify-center gap-6 text-center">
             <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
             <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
@@ -131,7 +131,7 @@ export default function LandingPage() {
 
       {/* FEATURES SECTION */}
       <section id="features" className="py-32 bg-zinc-950 relative">
-        <div className="container mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center mb-24 gap-10">
             <div className="max-w-2xl text-center md:text-left">
               <h2 className="text-5xl md:text-8xl font-black tracking-tighter mb-8 italic leading-none">SHOP CONTROL.</h2>
@@ -165,7 +165,7 @@ export default function LandingPage() {
 
       {/* PLANS SECTION */}
       <section id="plans" className="py-32 relative overflow-hidden bg-black">
-        <div className="container mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-6">
           <div className="text-center mb-24">
             <h2 className="text-5xl md:text-8xl font-black tracking-tighter mb-8 italic underline decoration-orange-500 decoration-8 underline-offset-8 uppercase">PLANS.</h2>
           </div>
@@ -212,7 +212,7 @@ export default function LandingPage() {
 
       {/* LIGHT COOL FOOTER */}
       <footer id="about" className="py-20 bg-zinc-950 border-t border-white/5">
-        <div className="container mx-auto px-6">
+        <div className="max-w-6xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-start gap-16 mb-20">
             <div className="max-w-sm">
               <div className="flex items-center gap-4 mb-6">
