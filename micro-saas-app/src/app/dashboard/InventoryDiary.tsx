@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { supabase } from "@/lib/supabase";
-import { Package, Plus, Moon, CheckCircle2, AlertCircle, Trash2, Save, ShoppingCart } from "lucide-react";
+import { Plus, Moon, CheckCircle2, Save, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
