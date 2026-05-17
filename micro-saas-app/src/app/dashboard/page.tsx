@@ -16,6 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
+import InventoryDiary from "./InventoryDiary";
 
 export default function Dashboard() {
   const [extraChargeName, setExtraChargeName] = useState("");
@@ -1990,125 +1991,6 @@ Stay safe & eat healthy! 🍕
             </div>
           )}
 
-          {activeTab === "Inventory" && (
-            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-28 px-2 sm:px-4 max-w-full">
-              <header className="px-2 pt-4 flex justify-between items-end">
-                <div>
-                  <h2 className="text-4xl font-black tracking-tighter">Inventory Control</h2>
-                  <p className="text-zinc-500 font-bold mt-1 uppercase tracking-widest text-[10px]">Manage stock levels and supplies</p>
-                </div>
-                <Button className="bg-zinc-900 text-white rounded-xl font-black text-[10px] px-6 h-12 uppercase tracking-widest active:scale-95 transition-all shadow-xl shadow-zinc-900/20">
-                  <Plus className="h-4 w-4 mr-2" /> New Supply
-                </Button>
-              </header>
-
-              {/* INVENTORY SUMMARY */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Card className="p-6 rounded-[2rem] bg-white dark:bg-zinc-900 border-0 shadow-sm relative overflow-hidden">
-                  <div className="absolute left-0 top-0 w-1.5 h-full bg-blue-500" />
-                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Total Items</p>
-                  <h4 className="text-3xl font-black">{menuItems.length}</h4>
-                  <p className="text-[9px] font-bold text-zinc-400 mt-2 uppercase tracking-tight">Active menu items</p>
-                </Card>
-                <Card className="p-6 rounded-[2rem] bg-white dark:bg-zinc-900 border-0 shadow-sm relative overflow-hidden">
-                  <div className="absolute left-0 top-0 w-1.5 h-full bg-orange-500" />
-                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Low Stock</p>
-                  <h4 className="text-3xl font-black text-orange-500">
-                    {menuItems.filter(i => (i.stock || 0) <= (i.minStock || 5) && (i.stock || 0) > 0).length}
-                  </h4>
-                  <p className="text-[9px] font-bold text-zinc-400 mt-2 uppercase tracking-tight">Need urgent refill</p>
-                </Card>
-                <Card className="p-6 rounded-[2rem] bg-white dark:bg-zinc-900 border-0 shadow-sm relative overflow-hidden">
-                  <div className="absolute left-0 top-0 w-1.5 h-full bg-red-600" />
-                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Out of Stock</p>
-                  <h4 className="text-3xl font-black text-red-600">
-                    {menuItems.filter(i => (i.stock || 0) === 0).length}
-                  </h4>
-                  <p className="text-[9px] font-bold text-zinc-400 mt-2 uppercase tracking-tight">Critical status</p>
-                </Card>
-              </div>
-
-              {/* STOCK TABLE */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between px-2">
-                  <div className="relative w-full max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-300" />
-                    <Input placeholder="Search inventory..." className="h-12 pl-10 rounded-2xl bg-white dark:bg-zinc-900 border-0 shadow-sm font-bold text-sm" />
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" className="rounded-xl font-bold text-[10px] h-12 uppercase tracking-widest border-zinc-100 dark:border-zinc-800">Export</Button>
-                    <Button variant="outline" className="rounded-xl font-bold text-[10px] h-12 uppercase tracking-widest border-zinc-100 dark:border-zinc-800">Filter</Button>
-                  </div>
-                </div>
-
-                <Card className="rounded-[2.5rem] border-0 shadow-xl overflow-hidden bg-white dark:bg-zinc-900">
-                  <div className="overflow-x-auto scrollbar-hide">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-zinc-50/50 dark:bg-zinc-800/50 border-b dark:border-zinc-800">
-                          <th className="py-5 px-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Item Details</th>
-                          <th className="py-5 px-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">Status</th>
-                          <th className="py-5 px-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">In Stock</th>
-                          <th className="py-5 px-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">Reorder Lvl</th>
-                          <th className="py-5 px-8 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y dark:divide-zinc-800">
-                        {menuItems.map(item => {
-                          const stock = item.stock || 0;
-                          const minStock = item.minStock || 5;
-                          const isLow = stock <= minStock && stock > 0;
-                          const isOut = stock === 0;
-
-                          return (
-                            <tr key={item.id} className="group hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-all">
-                              <td className="py-6 px-8">
-                                <div className="flex items-center gap-4">
-                                  <div className="w-12 h-12 rounded-2xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center font-black text-zinc-500">
-                                    {item.name.charAt(0)}
-                                  </div>
-                                  <div>
-                                    <p className="font-black text-lg tracking-tight text-zinc-900 dark:text-white uppercase">{item.name}</p>
-                                    <p className="text-[10px] font-bold text-zinc-400">Category: {item.category || "General"}</p>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="py-6 px-8 text-center">
-                                {isOut ? (
-                                  <Badge className="bg-red-600 text-white border-0 font-black text-[9px] uppercase px-3 py-1 rounded-lg">OUT OF STOCK</Badge>
-                                ) : isLow ? (
-                                  <Badge className="bg-orange-500 text-white border-0 font-black text-[9px] uppercase px-3 py-1 rounded-lg">LOW STOCK</Badge>
-                                ) : (
-                                  <Badge className="bg-emerald-500 text-white border-0 font-black text-[9px] uppercase px-3 py-1 rounded-lg">HEALTHY</Badge>
-                                )}
-                              </td>
-                              <td className="py-6 px-8 text-center">
-                                <div className="flex items-center justify-center gap-3">
-                                  <button className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:bg-zinc-900 hover:text-white transition-all"><Minus className="h-3 w-3" /></button>
-                                  <span className={`text-xl font-black ${isOut ? 'text-red-600' : isLow ? 'text-orange-500' : 'text-zinc-900 dark:text-white'}`}>{stock}</span>
-                                  <button className="w-8 h-8 rounded-lg bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center text-zinc-500 hover:bg-zinc-900 hover:text-white transition-all"><Plus className="h-3 w-3" /></button>
-                                </div>
-                              </td>
-                              <td className="py-6 px-8 text-center">
-                                <span className="font-black text-zinc-400 text-sm">{minStock} units</span>
-                              </td>
-                              <td className="py-6 px-8 text-right">
-                                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                                  <Button variant="ghost" size="icon" className="rounded-xl hover:bg-blue-50 text-blue-600"><Settings className="h-4 w-4" /></Button>
-                                  <Button variant="ghost" size="icon" className="rounded-xl hover:bg-red-50 text-red-600"><Trash2 className="h-4 w-4" /></Button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </Card>
-              </div>
-            </div>
-          )}
-
           {activeTab === "Support" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-28 px-4">
               <header className="flex flex-col items-center text-center px-2 pt-8">
@@ -2254,6 +2136,7 @@ Stay safe & eat healthy! 🍕
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { id: "Settings", label: "STORE SETTINGS", icon: Settings, color: "text-zinc-600", bg: "bg-zinc-50" },
+                  { id: "Inventory", label: "DAILY STOCK", icon: Package, color: "text-orange-500", bg: "bg-orange-50" },
                   { id: "Rent", label: "RENT TRACKER", icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-50" },
                   { id: "Khata", label: "UDHAAR KHATA", icon: Book, color: "text-orange-500", bg: "bg-orange-50" },
                   { id: "Marketing", label: "SMART CRM", icon: Send, color: "text-indigo-500", bg: "bg-indigo-50" },
@@ -2285,6 +2168,8 @@ Stay safe & eat healthy! 🍕
               </div>
             </div>
           )}
+
+          {activeTab === "Inventory" && <InventoryDiary />}
 
           {activeTab === "Settings" && (
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 pb-28 px-4 pt-4">
@@ -2662,8 +2547,8 @@ Stay safe & eat healthy! 🍕
           <span className="text-[8px] font-bold uppercase tracking-tighter">Stats</span>
         </button>
 
-        <button onClick={() => setActiveTab("MoreMenu")} className={`flex flex-col items-center gap-1 transition-all ${['MoreMenu', 'Settings', 'Rent', 'Support', 'Khata', 'Menu'].includes(activeTab) ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
-          <div className={`p-1.5 rounded-xl ${['MoreMenu', 'Settings', 'Rent', 'Support', 'Khata', 'Menu'].includes(activeTab) ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><Settings className="h-5 w-5" /></div>
+        <button onClick={() => setActiveTab("MoreMenu")} className={`flex flex-col items-center gap-1 transition-all ${['MoreMenu', 'Settings', 'Rent', 'Support', 'Khata', 'Menu', 'Inventory'].includes(activeTab) ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
+          <div className={`p-1.5 rounded-xl ${['MoreMenu', 'Settings', 'Rent', 'Support', 'Khata', 'Menu', 'Inventory'].includes(activeTab) ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><Settings className="h-5 w-5" /></div>
           <span className="text-[8px] font-bold uppercase tracking-tighter">More</span>
         </button>
       </nav>

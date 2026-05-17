@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 // v1.1.2 - Character encoding fix
 
 import { useState, useEffect } from "react";
@@ -79,10 +79,10 @@ export default function LandingPage() {
               DOWNLOAD APP <ArrowRight className="group-hover:translate-x-2 transition-transform" />
             </a>
             <a 
-              href="https://wa.me/917838229178"
-              className="w-full sm:w-auto bg-zinc-900 border-2 border-zinc-800 hover:border-orange-500 px-12 py-6 rounded-3xl font-black text-xl md:text-2xl transition-all flex items-center justify-center gap-4"
+              href="/dashboard"
+              className="w-full sm:w-auto bg-zinc-900 border-2 border-zinc-800 hover:border-orange-500 px-12 py-6 rounded-3xl font-black text-xl md:text-2xl transition-all flex items-center justify-center gap-4 text-white"
             >
-              WATCH DEMO <MessageSquare size={24} className="text-orange-500" />
+              LOGIN (WEB) <LayoutDashboard size={24} className="text-orange-500" />
             </a>
           </div>
 
