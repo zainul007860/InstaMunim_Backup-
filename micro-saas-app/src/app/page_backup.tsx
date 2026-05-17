@@ -1,5 +1,4 @@
 ﻿"use client";
-// v1.1.2 - Character encoding fix
 
 import { useState, useEffect } from "react";
 import { 
@@ -34,7 +33,7 @@ export default function LandingPage() {
     <div className="bg-black text-white font-sans selection:bg-orange-500 selection:text-white scroll-smooth overflow-x-hidden min-h-screen">
       {/* Navigation */}
       <nav className={`fixed top-0 w-full z-[100] transition-all duration-300 ${scrolled ? "bg-zinc-950 border-b border-white/10 py-2 shadow-2xl" : "bg-transparent py-4"}`}>
-        <div className="max-w-6xl mx-auto px-6 flex justify-between items-center">
+        <div className="container mx-auto px-6 flex justify-between items-center">
           <div className="flex items-center gap-3">
              <img src="/assets/instamunim-logo-main.png" alt="InstaMunim" className="w-16 h-16 md:w-24 md:h-24 object-contain" />
              <div className="flex flex-col -ml-2">
@@ -49,7 +48,18 @@ export default function LandingPage() {
             <a href="#about" className="hover:text-orange-500 transition-colors uppercase">About</a>
           </div>
 
+<<<<<<< HEAD
+          <div className="flex items-center gap-4">
+            <a 
+              href="/InstaMunimSmartPOS_v1.1.apk" 
+              className="bg-orange-500 hover:bg-orange-600 px-6 md:px-8 py-2.5 md:py-3.5 rounded-full font-black text-[12px] md:text-[14px] transition-all hover:scale-105 active:scale-95 flex items-center gap-2 shadow-xl shadow-orange-500/20"
+            >
+              <ArrowRight size={18} /> <span className="hidden sm:inline">OPEN</span> DEV APP
+            </a>
+          </div>
+=======
           {/* Header Button Removed */}
+>>>>>>> dev
         </div>
       </nav>
 
@@ -57,9 +67,9 @@ export default function LandingPage() {
       <section className="relative pt-48 md:pt-60 pb-20 overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1000px] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-orange-500/10 via-transparent to-transparent -z-10" />
         
-        <div className="max-w-6xl mx-auto px-6 text-center">
+        <div className="container mx-auto px-6 text-center">
           <div className="inline-flex items-center gap-2 bg-orange-500 text-black px-6 py-2 rounded-full font-black text-[10px] md:text-[12px] uppercase tracking-widest mb-10 shadow-[0_0_30px_rgba(249,115,22,0.3)]">
-             7 DAYS FREE TRIAL {"\u2022"} NO CREDIT CARD
+             7 DAYS FREE TRIAL â€¢ NO CREDIT CARD
           </div>
 
           <h1 className="text-5xl md:text-[120px] font-black tracking-tighter leading-[0.8] mb-12">
@@ -79,10 +89,10 @@ export default function LandingPage() {
               DOWNLOAD APP <ArrowRight className="group-hover:translate-x-2 transition-transform" />
             </a>
             <a 
-              href="/dashboard"
-              className="w-full sm:w-auto bg-zinc-900 border-2 border-zinc-800 hover:border-orange-500 px-12 py-6 rounded-3xl font-black text-xl md:text-2xl transition-all flex items-center justify-center gap-4 text-white"
+              href="https://wa.me/917838229178"
+              className="w-full sm:w-auto bg-zinc-900 border-2 border-zinc-800 hover:border-orange-500 px-12 py-6 rounded-3xl font-black text-xl md:text-2xl transition-all flex items-center justify-center gap-4"
             >
-              LOGIN (WEB) <LayoutDashboard size={24} className="text-orange-500" />
+              WATCH DEMO <MessageSquare size={24} className="text-orange-500" />
             </a>
           </div>
 
@@ -110,17 +120,13 @@ export default function LandingPage() {
         </div>
       </section>
 
-            <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
-              MAKE IN INDIA {"\uD83C\uDDEE\uD83C\uDDF3"}
-            </div>
+      {/* MAKE IN INDIA BANNER */}
       <section className="py-10 bg-gradient-to-r from-orange-600 to-red-700 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-        <div className="max-w-6xl mx-auto px-6 relative z-10">
+        <div className="container mx-auto px-6 relative z-10">
           <div className="flex flex-col md:flex-row items-center justify-center gap-6 text-center">
             <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
-            <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
-              MAKE IN INDIA {"\uD83C\uDDEE\uD83C\uDDF3"}
-            </div>
+              MAKE IN INDIA ðŸ‡®ðŸ‡³
             </div>
             <h2 className="text-2xl md:text-5xl font-black italic tracking-tighter text-white uppercase leading-none">
               AB INDIA KA HAR DUKANDAR <span className="text-black">BANEGA DIGITAL</span>
@@ -131,15 +137,13 @@ export default function LandingPage() {
 
       {/* FEATURES SECTION */}
       <section id="features" className="py-32 bg-zinc-950 relative">
-        <div className="max-w-6xl mx-auto px-6">
+        <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center mb-24 gap-10">
             <div className="max-w-2xl text-center md:text-left">
               <h2 className="text-5xl md:text-8xl font-black tracking-tighter mb-8 italic leading-none">SHOP CONTROL.</h2>
               <p className="text-zinc-500 text-xl font-medium">Manage billing, stock, and staff from anywhere.</p>
             </div>
-            <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
-              MAKE IN INDIA {"\uD83C\uDDEE\uD83C\uDDF3"}
-            </div>
+            <div className="bg-orange-500 px-10 py-5 rounded-3xl font-black text-black text-xl shadow-2xl shadow-orange-500/20 uppercase tracking-widest">MAKE IN INDIA ðŸ‡®ðŸ‡³</div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -165,7 +169,7 @@ export default function LandingPage() {
 
       {/* PLANS SECTION */}
       <section id="plans" className="py-32 relative overflow-hidden bg-black">
-        <div className="max-w-6xl mx-auto px-6">
+        <div className="container mx-auto px-6">
           <div className="text-center mb-24">
             <h2 className="text-5xl md:text-8xl font-black tracking-tighter mb-8 italic underline decoration-orange-500 decoration-8 underline-offset-8 uppercase">PLANS.</h2>
           </div>
@@ -175,7 +179,7 @@ export default function LandingPage() {
             
             <div className="text-center mb-12">
               <div className="flex justify-center items-end gap-3 mb-4">
-                <span className="text-7xl md:text-[120px] font-black italic tracking-tighter leading-none">{"\u20B9"}399</span>
+                <span className="text-7xl md:text-[120px] font-black italic tracking-tighter leading-none">â‚¹399</span>
                 <span className="text-zinc-500 font-black text-xl md:text-2xl mb-4 md:mb-6">/mo</span>
               </div>
             </div>
@@ -199,7 +203,7 @@ export default function LandingPage() {
 
             <div className="flex justify-center">
               <a 
-                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Smart Business Plan (\u20B9399/mo) for my store. \uD83D\uDE80\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. \uD83D\uDCC8")}`}
+                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Smart Business Plan (â‚¹399/mo) for my store. ðŸš€\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. ðŸ“ˆ")}`}
                 className="w-auto bg-orange-500 hover:bg-orange-600 text-white px-8 md:px-12 py-5 md:py-6 rounded-3xl font-black text-lg md:text-2xl transition-all flex items-center justify-center gap-4 shadow-2xl shadow-orange-500/30"
               >
                 ACTIVATE NOW <ChevronRight size={24} />
@@ -212,7 +216,7 @@ export default function LandingPage() {
 
       {/* LIGHT COOL FOOTER */}
       <footer id="about" className="py-20 bg-zinc-950 border-t border-white/5">
-        <div className="max-w-6xl mx-auto px-6">
+        <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-start gap-16 mb-20">
             <div className="max-w-sm">
               <div className="flex items-center gap-4 mb-6">
@@ -249,7 +253,7 @@ export default function LandingPage() {
           </div>
 
           <div className="flex flex-col md:flex-row justify-between items-center gap-8 border-t border-white/10 pt-10">
-            <p className="text-white font-black text-[11px] tracking-widest uppercase italic">{"\u00A9"} 2026 INSTAMUNIM SMART POS {"\u2022"} BEYOND BILLING {"\u2022"} ALL RIGHTS RESERVED</p>
+            <p className="text-white font-black text-[11px] tracking-widest uppercase italic">Â© 2026 INSTAMUNIM SMART POS â€¢ BEYOND BILLING â€¢ ALL RIGHTS RESERVED</p>
             <div className="flex gap-10 text-[10px] font-black text-zinc-500 tracking-widest uppercase italic">
               <a href="#" className="hover:text-orange-500 transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-orange-500 transition-colors">Terms of Use</a>
