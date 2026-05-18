@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InstaMunim - #1 Smart Billing App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000;
+            color: #fff;
+        }
+        .glass-panel {
+            background: rgba(24, 24, 27, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .text-gradient {
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-image: linear-gradient(to right, #f97316, #ea580c);
+        }
+        .hero-glow {
+            position: absolute;
+            top: 20%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(249,115,22,0.15) 0%, rgba(0,0,0,0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+        .testimonial-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -10px rgba(249,115,22,0.2);
+            border-color: rgba(249,115,22,0.5);
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-orange-500 selection:text-white">
+
+    <!-- Navbar -->
+    <nav class="fixed w-full z-50 glass-panel py-4">
+        <div class="max-w-6xl mx-auto px-6 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center font-black text-xl text-black">IM</div>
+                <span class="text-xl font-black italic tracking-tighter">INSTAMUNIM <span class="text-orange-500 text-sm">APP</span></span>
+            </div>
+            <div class="hidden md:flex gap-8 text-sm font-bold text-zinc-400 uppercase tracking-widest">
+                <a href="#features" class="hover:text-orange-500 transition">Features</a>
+                <a href="#reviews" class="hover:text-orange-500 transition">Reviews</a>
+                <a href="#pricing" class="hover:text-orange-500 transition">Pricing</a>
+            </div>
+            <a href="https://play.google.com" target="_blank" class="bg-orange-500 text-black px-6 py-2 rounded-full font-black text-sm uppercase tracking-widest hover:bg-orange-400 transition flex items-center gap-2">
+                Download App
+            </a>
+        </div>
+    </nav>
+
+    <!-- Hero Section (Software Focused) -->
+    <section class="relative pt-40 pb-20 overflow-hidden min-h-screen flex items-center">
+        <div class="hero-glow"></div>
+        <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-12 items-center">
+            <div class="z-10">
+                <div class="inline-flex items-center gap-2 bg-zinc-900 border border-zinc-800 px-4 py-1.5 rounded-full font-bold text-xs uppercase tracking-widest mb-6">
+                    <div class="flex text-orange-500">
+                        <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                        <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                        <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                        <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                        <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                    </div>
+                    <span class="text-zinc-400">4.9/5 Rating by 50K+ Users</span>
+                </div>
+                <h1 class="text-5xl md:text-7xl font-black tracking-tighter leading-[1.1] mb-6">
+                    YOUR ENTIRE <br>
+                    <span class="text-gradient italic">BUSINESS ON</span> <br>
+                    YOUR PHONE.
+                </h1>
+                <p class="text-zinc-400 text-lg md:text-xl mb-10 leading-relaxed font-medium max-w-lg">
+                    The smartest cloud-based billing and inventory app. Replace your clunky old PC with a modern app that works anywhere, anytime.
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <a href="https://play.google.com" class="bg-orange-500 text-black px-8 py-4 rounded-full font-black text-lg uppercase tracking-widest hover:bg-orange-400 transition flex items-center gap-3">
+                        <i data-lucide="smartphone" class="w-5 h-5"></i> Get App Now
+                    </a>
+                    <a href="https://wa.me/917838229178" target="_blank" class="glass-panel text-white border border-zinc-800 px-8 py-4 rounded-full font-black text-lg uppercase tracking-widest hover:border-orange-500 transition flex items-center gap-2">
+                        Book Demo <i data-lucide="video" class="w-5 h-5 text-orange-500"></i>
+                    </a>
+                </div>
+                <div class="mt-10 flex items-center gap-6">
+                    <div class="flex flex-col">
+                        <span class="text-2xl font-black text-white">50K+</span>
+                        <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Downloads</span>
+                    </div>
+                    <div class="w-px h-8 bg-zinc-800"></div>
+                    <div class="flex flex-col">
+                        <span class="text-2xl font-black text-white">10M+</span>
+                        <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Bills Made</span>
+                    </div>
+                    <div class="w-px h-8 bg-zinc-800"></div>
+                    <div class="flex flex-col">
+                        <span class="text-2xl font-black text-white">100%</span>
+                        <span class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Cloud Safe</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="relative z-10 flex justify-center md:justify-end">
+                <!-- AI Generated App UI Mockup -->
+                <div class="relative w-full max-w-lg">
+                    <div class="absolute inset-0 bg-orange-500/20 rounded-full blur-[100px] -z-10"></div>
+                    <img src="../../brain/5b8329fb-3d2d-4681-bc7f-a926b1bce822/app_ui_mockup_1779026139635.png" alt="InstaMunim App UI" class="w-full h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-[float_6s_ease-in-out_infinite]">
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <style>
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+
+    <!-- Social Proof / Trust Strip -->
+    <section class="py-8 bg-orange-500">
+        <div class="max-w-6xl mx-auto px-6 overflow-hidden">
+            <div class="flex justify-between items-center whitespace-nowrap gap-10 text-black font-black italic uppercase tracking-widest text-xl">
+                <span>MAKE IN INDIA 🇮🇳</span>
+                <span>•</span>
+                <span>#1 RETAIL POS APP</span>
+                <span>•</span>
+                <span>FREE LIFETIME UPDATES</span>
+                <span>•</span>
+                <span class="hidden md:inline">24/7 WHATSAPP SUPPORT</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features & Analytics -->
+    <section id="features" class="py-24 bg-zinc-950 relative">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="grid md:grid-cols-2 gap-16 items-center">
+                <!-- AI Generated Analytics Dashboard -->
+                <div class="relative rounded-[40px] overflow-hidden border border-white/10 shadow-[0_0_50px_rgba(249,115,22,0.1)] group">
+                    <img src="../../brain/5b8329fb-3d2d-4681-bc7f-a926b1bce822/dashboard_analytics_1779026168604.png" alt="Analytics Dashboard" class="w-full h-auto object-cover group-hover:scale-105 transition duration-700">
+                    <div class="absolute bottom-6 left-6 right-6 glass-panel p-4 rounded-2xl flex items-center justify-between">
+                        <div>
+                            <p class="text-zinc-400 text-xs font-bold uppercase tracking-widest">Today's Sales</p>
+                            <p class="text-2xl font-black text-white">₹45,890</p>
+                        </div>
+                        <div class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                            <i data-lucide="trending-up" class="w-3 h-3"></i> +12.5%
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h2 class="text-4xl md:text-6xl font-black italic tracking-tighter mb-8 leading-none">EVERYTHING YOU <br><span class="text-orange-500">NEED TO GROW.</span></h2>
+                    <ul class="space-y-8">
+                        <li class="flex gap-5 group">
+                            <div class="w-14 h-14 rounded-2xl bg-zinc-900 flex items-center justify-center shrink-0 border border-white/5 group-hover:border-orange-500/50 group-hover:bg-orange-500/10 transition"><i data-lucide="zap" class="text-orange-500 w-6 h-6"></i></div>
+                            <div>
+                                <h4 class="text-2xl font-black mb-2 italic">Lightning Fast Billing</h4>
+                                <p class="text-zinc-400 leading-relaxed font-medium">Create GST or non-GST bills in 3 seconds. Scan barcodes using phone camera or connect Bluetooth scanner.</p>
+                            </div>
+                        </li>
+                        <li class="flex gap-5 group">
+                            <div class="w-14 h-14 rounded-2xl bg-zinc-900 flex items-center justify-center shrink-0 border border-white/5 group-hover:border-orange-500/50 group-hover:bg-orange-500/10 transition"><i data-lucide="package-search" class="text-orange-500 w-6 h-6"></i></div>
+                            <div>
+                                <h4 class="text-2xl font-black mb-2 italic">Smart Inventory</h4>
+                                <p class="text-zinc-400 leading-relaxed font-medium">Get low stock alerts directly on WhatsApp. Bulk edit prices instantly. Never run out of your best sellers.</p>
+                            </div>
+                        </li>
+                        <li class="flex gap-5 group">
+                            <div class="w-14 h-14 rounded-2xl bg-zinc-900 flex items-center justify-center shrink-0 border border-white/5 group-hover:border-orange-500/50 group-hover:bg-orange-500/10 transition"><i data-lucide="bar-chart-3" class="text-orange-500 w-6 h-6"></i></div>
+                            <div>
+                                <h4 class="text-2xl font-black mb-2 italic">Real-time Analytics</h4>
+                                <p class="text-zinc-400 leading-relaxed font-medium">Access your store's live data from home. Track profits, top customers, and daily expenses effortlessly.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Wall of Love (Fake Testimonials & High Ratings) -->
+    <section id="reviews" class="py-32 bg-black relative">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <div class="inline-flex items-center justify-center gap-1 text-orange-500 mb-4">
+                    <i data-lucide="star" class="w-6 h-6 fill-current"></i>
+                    <i data-lucide="star" class="w-6 h-6 fill-current"></i>
+                    <i data-lucide="star" class="w-6 h-6 fill-current"></i>
+                    <i data-lucide="star" class="w-6 h-6 fill-current"></i>
+                    <i data-lucide="star" class="w-6 h-6 fill-current"></i>
+                </div>
+                <h2 class="text-4xl md:text-6xl font-black italic tracking-tighter mb-4 uppercase">Loved by India's Dukandars.</h2>
+                <p class="text-zinc-500 text-lg font-medium">Don't just take our word for it. See what 50,000+ businesses are saying.</p>
+            </div>
+
+            <!-- Masonry Grid for Reviews -->
+            <div class="grid md:grid-cols-3 gap-6">
+                <!-- Review 1 -->
+                <div class="glass-panel p-8 rounded-3xl border border-white/5 testimonial-card transition-all duration-300">
+                    <div class="flex items-center gap-4 mb-6">
+                        <img src="https://i.pravatar.cc/150?img=11" alt="User" class="w-12 h-12 rounded-full object-cover">
+                        <div>
+                            <h4 class="font-black">Ramesh Gupta</h4>
+                            <p class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Gupta Supermart</p>
+                        </div>
+                    </div>
+                    <div class="flex text-orange-500 mb-4">
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                    </div>
+                    <p class="text-zinc-300 font-medium leading-relaxed italic">
+                        "Pehle main PC par bill banata tha, bahut time lagta tha. Ab InstaMunim app se phone par hi 2 second mein bill ban jata hai. Customer bhi khush, main bhi khush! Best app for retail."
+                    </p>
+                </div>
+
+                <!-- Review 2 -->
+                <div class="glass-panel p-8 rounded-3xl border border-white/5 testimonial-card transition-all duration-300 md:translate-y-8">
+                    <div class="flex items-center gap-4 mb-6">
+                        <img src="https://i.pravatar.cc/150?img=5" alt="User" class="w-12 h-12 rounded-full object-cover">
+                        <div>
+                            <h4 class="font-black">Priya Sharma</h4>
+                            <p class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Fashion Hub Boutique</p>
+                        </div>
+                    </div>
+                    <div class="flex text-orange-500 mb-4">
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                    </div>
+                    <p class="text-zinc-300 font-medium leading-relaxed italic">
+                        "The WhatsApp bill feature is a game changer. I don't need to waste money on thermal paper anymore. The UI is incredibly premium and easy to use. Highly recommended!"
+                    </p>
+                </div>
+
+                <!-- Review 3 -->
+                <div class="glass-panel p-8 rounded-3xl border border-orange-500/30 testimonial-card transition-all duration-300 bg-gradient-to-b from-orange-500/10 to-transparent">
+                    <div class="absolute top-0 right-0 bg-orange-500 text-black px-3 py-1 rounded-bl-xl rounded-tr-3xl font-black text-[10px] tracking-widest uppercase">Verified Buyer</div>
+                    <div class="flex items-center gap-4 mb-6 pt-2">
+                        <img src="https://i.pravatar.cc/150?img=8" alt="User" class="w-12 h-12 rounded-full object-cover">
+                        <div>
+                            <h4 class="font-black">Amit Patel</h4>
+                            <p class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Patel Electronics</p>
+                        </div>
+                    </div>
+                    <div class="flex text-orange-500 mb-4">
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                    </div>
+                    <p class="text-zinc-300 font-medium leading-relaxed italic">
+                        "Inventory management used to be a nightmare. Now, InstaMunim alerts me on WhatsApp when stock is low. The live analytics dashboard looks so professional. This app replaced my ₹30,000 PC setup."
+                    </p>
+                </div>
+                 <!-- Review 4 -->
+                 <div class="glass-panel p-8 rounded-3xl border border-white/5 testimonial-card transition-all duration-300">
+                    <div class="flex items-center gap-4 mb-6">
+                        <img src="https://i.pravatar.cc/150?img=33" alt="User" class="w-12 h-12 rounded-full object-cover">
+                        <div>
+                            <h4 class="font-black">Vikram Singh</h4>
+                            <p class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Singh Hardware</p>
+                        </div>
+                    </div>
+                    <div class="flex text-orange-500 mb-4">
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                    </div>
+                    <p class="text-zinc-300 font-medium leading-relaxed italic">
+                        "Cloud backup saves me. Changed my phone last week, logged in, and all my 5000+ items and customer data was instantly there. 10/10 app."
+                    </p>
+                </div>
+                 <!-- Review 5 -->
+                 <div class="glass-panel p-8 rounded-3xl border border-white/5 testimonial-card transition-all duration-300 md:translate-y-8">
+                    <div class="flex items-center gap-4 mb-6">
+                        <img src="https://i.pravatar.cc/150?img=47" alt="User" class="w-12 h-12 rounded-full object-cover">
+                        <div>
+                            <h4 class="font-black">Neha Verma</h4>
+                            <p class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Verma Cafe</p>
+                        </div>
+                    </div>
+                    <div class="flex text-orange-500 mb-4">
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                    </div>
+                    <p class="text-zinc-300 font-medium leading-relaxed italic">
+                        "Staff management is brilliant. I can control what my cashier sees. They can only bill, they can't see my profit margins. Very secure."
+                    </p>
+                </div>
+                 <!-- Review 6 -->
+                 <div class="glass-panel p-8 rounded-3xl border border-white/5 testimonial-card transition-all duration-300">
+                    <div class="flex items-center gap-4 mb-6">
+                        <img src="https://i.pravatar.cc/150?img=12" alt="User" class="w-12 h-12 rounded-full object-cover">
+                        <div>
+                            <h4 class="font-black">Suresh Kumar</h4>
+                            <p class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Kumar Garments</p>
+                        </div>
+                    </div>
+                    <div class="flex text-orange-500 mb-4">
+                        <i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i><i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                    </div>
+                    <p class="text-zinc-300 font-medium leading-relaxed italic">
+                        "Easiest GST billing app ever. It automatically calculates SGST/CGST. Filing returns is now just a one-click export."
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Simple SaaS Pricing -->
+    <section id="pricing" class="py-24 relative overflow-hidden bg-zinc-950">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-6xl font-black tracking-tighter mb-4 italic uppercase">Simple Pricing.</h2>
+                <p class="text-zinc-500 text-lg font-medium">Download for free. Upgrade when you grow.</p>
+            </div>
+
+            <div class="max-w-md mx-auto glass-panel p-10 md:p-12 rounded-[50px] border-2 border-orange-500/50 relative shadow-[0_0_80px_rgba(249,115,22,0.15)] text-center">
+                <div class="absolute -top-5 left-1/2 -translate-x-1/2 bg-orange-500 text-black px-8 py-2 rounded-full font-black text-xs uppercase tracking-widest shadow-xl animate-pulse">PRO PLAN</div>
+                
+                <div class="flex justify-center items-end gap-2 mb-8 mt-4">
+                    <span class="text-6xl md:text-8xl font-black italic tracking-tighter leading-none">₹399</span>
+                    <span class="text-zinc-500 font-bold text-xl mb-2">/mo</span>
+                </div>
+
+                <div class="space-y-4 mb-10 text-left pl-4">
+                    <div class="flex items-center gap-4"><i data-lucide="check-circle-2" class="text-orange-500 w-5 h-5 shrink-0"></i><span class="font-bold text-zinc-300">Unlimited Digital Bills</span></div>
+                    <div class="flex items-center gap-4"><i data-lucide="check-circle-2" class="text-orange-500 w-5 h-5 shrink-0"></i><span class="font-bold text-zinc-300">Unlimited Inventory</span></div>
+                    <div class="flex items-center gap-4"><i data-lucide="check-circle-2" class="text-orange-500 w-5 h-5 shrink-0"></i><span class="font-bold text-zinc-300">WhatsApp Marketing</span></div>
+                    <div class="flex items-center gap-4"><i data-lucide="check-circle-2" class="text-orange-500 w-5 h-5 shrink-0"></i><span class="font-bold text-zinc-300">Multi-Staff Login</span></div>
+                    <div class="flex items-center gap-4"><i data-lucide="check-circle-2" class="text-orange-500 w-5 h-5 shrink-0"></i><span class="font-bold text-zinc-300">Auto Cloud Backup</span></div>
+                </div>
+
+                <a href="https://play.google.com" class="block w-full bg-orange-500 hover:bg-orange-400 text-black py-5 rounded-full font-black text-lg uppercase tracking-widest transition-all shadow-xl">
+                    Download Free App
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer CTA -->
+    <section class="py-16 bg-black text-center border-t border-white/5">
+        <div class="max-w-4xl mx-auto px-6">
+            <h2 class="text-3xl font-black italic tracking-tighter mb-6">JOIN 50,000+ SMART DUKANDARS TODAY.</h2>
+            <div class="flex justify-center gap-8 text-zinc-500 font-bold text-sm">
+                <a href="#" class="hover:text-orange-500 transition">Privacy</a>
+                <a href="#" class="hover:text-orange-500 transition">Terms</a>
+                <a href="#" class="hover:text-orange-500 transition">Contact</a>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

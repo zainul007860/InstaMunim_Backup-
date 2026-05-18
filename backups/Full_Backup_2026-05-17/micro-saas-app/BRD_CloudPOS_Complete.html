@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Business Requirements Document - InstaMunim POS System</title>
+    <style>
+        body {
+            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.7;
+            color: #1a1a1a;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px;
+            background-color: #fafafa;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 50px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        h1 { color: #111; border-bottom: 3px solid #f97316; padding-bottom: 15px; font-size: 2.5em; text-align: center; margin-bottom: 10px; }
+        .subtitle { text-align: center; color: #666; font-size: 1.2em; margin-bottom: 40px; font-weight: 500; }
+        h2 { color: #ea580c; margin-top: 40px; border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; font-size: 1.8em; }
+        h3 { color: #0f172a; font-size: 1.4em; margin-top: 30px; }
+        p, li { font-size: 16px; color: #475569; }
+        li { margin-bottom: 8px; }
+        .feature-block {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin: 40px 0;
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+        .feature-block.reverse {
+            flex-direction: row-reverse;
+        }
+        .text-content {
+            flex: 1;
+        }
+        .image-container { 
+            flex: 1;
+            text-align: center; 
+        }
+        .image-container img {
+            border-radius: 16px;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+            max-width: 280px;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.3s ease;
+        }
+        .image-container img:hover {
+            transform: scale(1.03);
+        }
+        hr { border: 0; border-top: 1px solid #e2e8f0; margin: 40px 0; }
+        .metadata { background: #f8fafc; padding: 25px; border-radius: 12px; margin-bottom: 40px; border-left: 5px solid #f97316; }
+        .metadata strong { color: #0f172a; display: inline-block; width: 150px; }
+        .highlight { background-color: #fff7ed; padding: 2px 6px; border-radius: 4px; color: #c2410c; font-weight: 600; }
+        
+        @media (max-width: 768px) {
+            .feature-block, .feature-block.reverse { flex-direction: column; }
+            .container { padding: 20px; }
+            .image-container img { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Complete BRD - InstaMunim</h1>
+    <div class="subtitle">- Beyond Billing - Comprehensive Specification Guide</div>
+    
+    <div class="metadata">
+        <p><strong>Project Name:</strong> InstaMunim POS System (Micro SaaS Application)</p>
+        <p><strong>Version:</strong> 2.0 (Mobile Optimized Edition)</p>
+        <p><strong>Role:</strong> Senior Business Analyst</p>
+        <p><strong>Platform:</strong> Progressive Web App (Next.js) & Native Android (Capacitor)</p>
+    </div>
+
+    <h2>1. Executive Summary</h2>
+    <p>The <strong>Smart Cloud POS System</strong> is an end-to-end Micro SaaS platform designed specifically for small to medium-sized retail and food service businesses. The application aims to replace traditional paper-based ledgers and clunky desktop software with a hyper-fast, mobile-first, AI-driven digital solution. By unifying voice-recognition billing, WhatsApp marketing, financial analytics, and customer credit (Udhaar) management into a single intuitive interface, the system drastically reduces checkout times and improves customer retention.</p>
+
+    <h2>2. Complete Core Features & Modules</h2>
+
+    <!-- Module 1 -->
+    <div class="feature-block">
+        <div class="text-content">
+            <h3>2.1. Authentication & Identity Management</h3>
+            <p><strong>Description:</strong> A secure and frictionless entry point for business owners to protect their financial data.</p>
+            <ul>
+                <li><strong>Role-Based Access:</strong> Secure owner login using registered mobile numbers and passwords.</li>
+                <li><strong>Usability Enhancements:</strong> Integrated <span class="highlight">Eye Toggle</span> for password visibility, specifically optimizing the mobile typing experience.</li>
+                <li><strong>Session State Management:</strong> Silent background authorization mechanisms that suppress "Please login" errors, providing a clean onboarding flow.</li>
+                <li><strong>Business Profiling:</strong> Options within settings to configure the shop name, owner identity, and upload a dynamic business logo.</li>
+            </ul>
+        </div>
+        <div class="image-container">
+            <img src="C:/Users/Admin/.gemini/antigravity/brain/5b8329fb-3d2d-4681-bc7f-a926b1bce822/brd_login_screen_1778140957091.png" alt="Login & Security" />
+        </div>
+    </div>
+
+    <!-- Module 2 -->
+    <div class="feature-block reverse">
+        <div class="text-content">
+            <h3>2.2. Financial Analytics & Dashboard (Sales & Profit)</h3>
+            <p><strong>Description:</strong> The central nervous system of the business, calculating real-time profitability.</p>
+            <ul>
+                <li><strong>Gross & Net Sales:</strong> Tracks daily total sales instantly upon checkout completion.</li>
+                <li><strong>Expense Tracker:</strong> A dedicated widget to record shop expenses (raw materials, wages, etc.) against the daily ledger.</li>
+                <li><strong>Aggregator Commission Engine:</strong> Automatically calculates deductions based on predefined Swiggy/Zomato commission rates.</li>
+                <li><strong>Net Profit Calculator:</strong> Real-time deduction of total expenses and commissions from Gross Sales to present exact <span class="highlight">Net Profit margins</span>.</li>
+                <li><strong>Hardware Sync Trigger:</strong> Integrated "Pull-to-Refresh" native gesture isolated exclusively to the Dashboard to fetch live data from the cloud.</li>
+            </ul>
+        </div>
+        <div class="image-container">
+            <img src="C:/Users/Admin/.gemini/antigravity/brain/5b8329fb-3d2d-4681-bc7f-a926b1bce822/brd_analytics_dash_1778141570713.png" alt="Financial Analytics" />
+        </div>
+    </div>
+
+    <!-- Module 3 -->
+    <div class="feature-block">
+        <div class="text-content">
+            <h3>2.3. Smart AI Voice Cashier</h3>
+            <p><strong>Description:</strong> A groundbreaking feature replacing traditional manual entry with an AI-powered conversational billing assistant.</p>
+            <ul>
+                <li><strong>Continuous Speech Loop:</strong> A bespoke Native Android bridge allows the microphone to remain active continuously, auto-restarting after natural pauses.</li>
+                <li><strong>Entity Extraction:</strong> The system intelligently parses Hindi/English speech to extract product names, prices, customer names, and 10-digit mobile numbers simultaneously.</li>
+                <li><strong>Hands-Free Cart Assembly:</strong> Automatically pushes recognized items into the checkout cart without requiring screen taps.</li>
+                <li><strong>Instant Feedback:</strong> Visual pulse animations and real-time text transcriptions display exactly what the AI is interpreting.</li>
+            </ul>
+        </div>
+        <div class="image-container">
+            <img src="C:/Users/Admin/.gemini/antigravity/brain/5b8329fb-3d2d-4681-bc7f-a926b1bce822/brd_voice_pos_1778140971556.png" alt="AI Voice Cashier" />
+        </div>
+    </div>
+
+    <!-- Module 4 -->
+    <div class="feature-block reverse">
+        <div class="text-content">
+            <h3>2.4. Customer Management & Pending Credit (Udhaar)</h3>
+            <p><strong>Description:</strong> A digital ledger feature addressing the common need for informal credit management in local retail.</p>
+            <ul>
+                <li><strong>Digital Ledger Book:</strong> Tracks customer profiles based on their mobile numbers and names.</li>
+                <li><strong>Pending Balance Tracking:</strong> Accumulates unpaid transaction amounts into a unified "Pending Udhaar" dashboard.</li>
+                <li><strong>One-Click Settlement:</strong> A <span class="highlight">"Mark as Paid"</span> action button that clears the outstanding balance and synchronizes the ledger with the master sales record.</li>
+                <li><strong>Dynamic Navigation:</strong> Clicking a specific pending profile auto-navigates the operator directly to the settlement view.</li>
+            </ul>
+        </div>
+        <div class="image-container">
+            <img src="C:/Users/Admin/.gemini/antigravity/brain/5b8329fb-3d2d-4681-bc7f-a926b1bce822/brd_udhaar_manager_1778141586615.png" alt="Udhaar Manager" />
+        </div>
+    </div>
+
+    <!-- Module 5 -->
+    <div class="feature-block">
+        <div class="text-content">
+            <h3>2.5. WhatsApp Invoicing & Promotional Marketing</h3>
+            <p><strong>Description:</strong> Eliminating paper receipt costs while establishing a direct line of communication with customers.</p>
+            <ul>
+                <li><strong>Dynamic Digital Invoices:</strong> Upon successful checkout, the system automatically generates a formatted WhatsApp message containing itemized bills, totals, and business branding.</li>
+                <li><strong>Automated Dispatch:</strong> Leverages the WhatsApp URL Scheme (`wa.me`) to open the app with a pre-filled, personalized receipt.</li>
+                <li><strong>WhatsApp Marketing Engine:</strong> Allows the shop owner to broadcast promotional messages, festival greetings, or discount offers to their stored customer database, acting as a lightweight CRM.</li>
+            </ul>
+        </div>
+        <div class="image-container">
+            <img src="C:/Users/Admin/.gemini/antigravity/brain/5b8329fb-3d2d-4681-bc7f-a926b1bce822/brd_whatsapp_invoice_1778141608545.png" alt="WhatsApp Invoicing" />
+        </div>
+    </div>
+
+    <!-- Module 6 -->
+    <div class="feature-block reverse">
+        <div class="text-content">
+            <h3>2.6. Hardware Security & Settings Configuration</h3>
+            <p><strong>Description:</strong> Deep integration with the device hardware to ensure application stability and customizability.</p>
+            <ul>
+                <li><strong>Native Back-Button Override:</strong> Prevents catastrophic data loss during billing by intercepting hardware back presses and injecting a custom React-based exit confirmation dialog.</li>
+                <li><strong>Cloud Synchronization Panel:</strong> A dedicated settings area to manually push local cache to the Supabase backend.</li>
+                <li><strong>Hardware Permission Automation:</strong> Uses `ActivityCompat` to seamlessly request `RECORD_AUDIO` permissions on app initialization, bypassing Android WebView restrictions.</li>
+            </ul>
+        </div>
+        <div class="image-container">
+            <img src="C:/Users/Admin/.gemini/antigravity/brain/5b8329fb-3d2d-4681-bc7f-a926b1bce822/brd_settings_profile_1778141625145.png" alt="Settings & Security" />
+        </div>
+    </div>
+
+    <h2>3. Cloud Infrastructure & Offline Strategy</h2>
+    <p>The application is designed to be highly resilient against network instability, a common challenge in mobile retail environments.</p>
+    <ul>
+        <li><strong>Database Layer:</strong> Supabase (PostgreSQL) acts as the central source of truth.</li>
+        <li><strong>Local Cache First:</strong> Transactions and customer updates are stored locally and reflected in the UI instantly, ensuring zero-latency checkout flows.</li>
+        <li><strong>Background Sync Engine:</strong> A silent chron-job routinely syncs local data to the cloud when a stable connection is detected, ensuring data integrity without interrupting the user.</li>
+    </ul>
+
+    <h2>4. Conclusion</h2>
+    <p>The Smart Cloud POS System represents a paradigm shift in Micro SaaS solutions for local commerce. By combining advanced natural language processing (Voice Cashier) with cultural business practices (Udhaar Management) and modern communication protocols (WhatsApp CRM), the application empowers small business owners to operate with the efficiency of a large enterprise, all from a standard Android smartphone.</p>
+
+</div>
+
+</body>
+</html>

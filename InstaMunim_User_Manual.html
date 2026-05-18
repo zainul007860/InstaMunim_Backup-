@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InstaMunim Smart POS - User Manual</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background-color: #f9f9f9;
+        }
+        .header {
+            text-align: center;
+            padding: 40px;
+            background: linear-gradient(135deg, #000, #333);
+            color: white;
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 42px;
+            letter-spacing: -1px;
+            font-weight: 900;
+            font-style: italic;
+        }
+        .header p {
+            color: #f97316;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .section h2 {
+            color: #f97316;
+            border-bottom: 2px solid #fff7ed;
+            padding-bottom: 10px;
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .feature-item {
+            padding: 15px;
+            border-left: 4px solid #f97316;
+            background: #fffaf5;
+        }
+        .feature-item h3 {
+            margin: 0 0 5px 0;
+            font-size: 18px;
+        }
+        .badge {
+            display: inline-block;
+            background: #f97316;
+            color: white;
+            padding: 2px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            color: #777;
+            font-size: 14px;
+        }
+        @media (max-width: 600px) {
+            .feature-grid { grid-template-columns: 1fr; }
+        }
+        @media print {
+            body { background-color: white; padding: 20px; }
+            .section { box-shadow: none; border: 1px solid #eee; break-inside: avoid; }
+            .header { background: #000 !important; color: white !important; -webkit-print-color-adjust: exact; }
+            .badge { background: #f97316 !important; color: white !important; -webkit-print-color-adjust: exact; }
+            h2 { color: #f97316 !important; -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <img src="micro-saas-app/public/assets/instamunim-logo-main.png" alt="InstaMunim Logo" style="width: 100px; height: 100px; margin-bottom: 20px; object-contain: contain;">
+        <h1>INSTAMUNIM</h1>
+        <p>Beyond Billing - User Guide v1.1</p>
+    </div>
+
+    <div class="section">
+        <h2>1. Getting Started</h2>
+        <p>Welcome to InstaMunim! This app is designed to make your shop billing and accounting fast and simple. You can manage everything from your smartphone.</p>
+        <div class="feature-item">
+            <h3>Download & Install</h3>
+            <p>Download the InstaMunim APK file from the official link and install it on your Android phone.</p>
+        </div>
+        <div class="feature-item" style="margin-top: 15px;">
+            <h3>7-Day Free Trial</h3>
+            <p>Every new store gets a 7-day full access trial. You can start billing immediately after registration.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>2. Smart Billing Features</h2>
+        <p>Create professional bills for your customers in seconds.</p>
+        <div class="feature-grid">
+            <div class="feature-item">
+                <h3>Quick Invoicing</h3>
+                <p>Search products by name or SKU and add them to the cart instantly.</p>
+            </div>
+            <div class="feature-item">
+                <h3>GST & Non-GST Billing</h3>
+                <p>Option to create bills with GST or simple bills without GST.</p>
+            </div>
+            <div class="feature-item">
+                <h3>Digital Receipts</h3>
+                <p>Generate digital receipts that you can share via WhatsApp or print using a Bluetooth printer.</p>
+            </div>
+            <div class="feature-item">
+                <h3>Return Management</h3>
+                <p>Easily manage returned items and adjust stock automatically.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>3. Advanced Inventory</h2>
+        <p>Keep track of your products and never run out of stock.</p>
+        <div class="feature-grid">
+            <div class="feature-item">
+                <h3>Stock Tracker</h3>
+                <p>View real-time stock levels. The app notifies you when stock is low.</p>
+            </div>
+            <div class="feature-item">
+                <h3>Bulk Import</h3>
+                <p>Add multiple products at once to save time.</p>
+            </div>
+            <div class="feature-item">
+                <h3>Multiple Categories</h3>
+                <p>Organize products into categories for faster searching.</p>
+            </div>
+            <div class="feature-item">
+                <h3>Profit Margin Set</h3>
+                <p>Set cost price and selling price to track your actual profit on every item.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>4. Complete Accounting</h2>
+        <p>Manage your expenses and shop costs without a calculator.</p>
+        <div class="feature-grid">
+            <div class="feature-item">
+                <h3>Expense Manager</h3>
+                <p>Record daily shop expenses like tea, cleaning, electricity, etc.</p>
+            </div>
+            <div class="feature-item">
+                <h3>Rent Target Tracker</h3>
+                <p>Set your monthly rent target. The app shows you how much daily sales you need to cover your rent.</p>
+            </div>
+            <div class="feature-item">
+                <h3>Profit/Loss Analytics</h3>
+                <p>Clear charts showing your total sales vs total expenses every month.</p>
+            </div>
+            <div class="feature-item">
+                <h3>Tax Reports</h3>
+                <p>Download simple tax summaries for your CA or accountant.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>5. Staff & Security</h2>
+        <p>Add staff members and keep your data safe.</p>
+        <div class="feature-item">
+            <h3>Staff Roles</h3>
+            <p>Add staff members with limited permissions. They can create bills but cannot see your total profits or edit sensitive settings.</p>
+        </div>
+        <div class="feature-item" style="margin-top: 15px;">
+            <h3>Automated Cloud Backup</h3>
+            <p>Your data is automatically synced to the cloud. Even if you lose your phone, your data is safe.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>6. Store Settings</h2>
+        <p>Customize the app for your brand.</p>
+        <ul style="padding-left: 20px;">
+            <li><strong>Logo Upload:</strong> Add your shop logo to the bills.</li>
+            <li><strong>Header/Footer:</strong> Add your address, phone number, and a "Thank You" message to every bill.</li>
+            <li><strong>GSTIN:</strong> Save your GST number to generate valid tax invoices.</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>7. WhatsApp Marketing</h2>
+        <p><span class="badge">PREMIUM</span> Send automated messages to customers after billing to increase repeat visits. Share special offers and festive greetings directly from the app.</p>
+    </div>
+
+    <div class="section">
+        <h2 style="color: #ef4444;">8. Subscription Management</h2>
+        <p>InstaMunim works on a simple subscription model.</p>
+        <ul style="padding-left: 20px;">
+            <li><strong>Monthly Plan:</strong> ₹399/month for all elite features.</li>
+            <li><strong>Activation:</strong> Contact our support team via the WhatsApp button in the app to activate your premium subscription.</li>
+            <li><strong>No Hidden Costs:</strong> One simple price for everything.</li>
+        </ul>
+    </div>
+
+    <div class="footer">
+        <p>© 2026 InstaMunim Smart POS - Beyond Billing</p>
+        <p>For Support: WhatsApp +91 7838229178</p>
+    </div>
+
+</body>
+</html>

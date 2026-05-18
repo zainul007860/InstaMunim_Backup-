@@ -1,0 +1,17 @@
+{
+  "name": "Cloud POS - Smart Restaurant Manager",
+  "short_name": "Cloud POS",
+  "description": "Manage your restaurant sales, expenses and CRM from anywhere.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f97316",
+  "icons": [
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
