@@ -1,7 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
 
 // Replace with your actual Supabase URL and Anon Key from supabase.com
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xkdzshwsbhtebwrtxlua.supabase.co'
+let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+if (!supabaseUrl.startsWith('http://') && !supabaseUrl.startsWith('https://')) {
+  supabaseUrl = 'https://xkdzshwsbhtebwrtxlua.supabase.co'
+}
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key'
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
