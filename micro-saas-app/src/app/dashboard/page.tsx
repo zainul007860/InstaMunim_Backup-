@@ -469,7 +469,7 @@ Stay safe & eat healthy! 🍕
           .single();
 
         if (error || !data) {
-          setLoginError("Store not found. Please register.");
+          setLoginError(`Store not found. Details: ${error ? JSON.stringify(error) : 'No data returned'}`);
         } else if (data.password !== loginPassword) {
           setLoginError("Invalid password.");
         } else {
