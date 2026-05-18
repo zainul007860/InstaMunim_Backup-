@@ -1,0 +1,5 @@
+node_modules/
+*.apk
+dist/
+build/
+.env
