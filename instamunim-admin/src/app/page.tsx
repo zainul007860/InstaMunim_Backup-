@@ -116,8 +116,7 @@ export default function AdminDashboard() {
     try {
       const yesterday = subDays(new Date(), 1);
       const { error } = await supabase.from('stores').update({ 
-        subscription_expiry: yesterday.toISOString(),
-        monthly_rent: 0
+        subscription_expiry: yesterday.toISOString()
       }).eq('id', store.id);
       
       if (error) throw error;
@@ -338,8 +337,6 @@ export default function AdminDashboard() {
                       <td>
                         {s.monthly_rent === 3600 ? (
                           <span style={{ color: '#10b981', fontWeight: 800 }}>Yearly (₹3600)</span>
-                        ) : s.monthly_rent === 0 ? (
-                          <span style={{ color: '#ef4444', fontWeight: 800 }}>Inactive</span>
                         ) : (
                           <span style={{ color: '#a1a1aa', fontWeight: 800 }}>Monthly (₹399)</span>
                         )}
