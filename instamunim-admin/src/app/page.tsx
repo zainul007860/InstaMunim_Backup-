@@ -353,6 +353,14 @@ export default function AdminDashboard() {
                           </button>
                           <button 
                             disabled={updatingStoreId === s.id}
+                            onClick={() => addSubscriptionDays(s, 365)} 
+                            style={{ padding: '8px 12px', background: '#10b981', color: 'white', borderRadius: '10px', border: 'none', fontWeight: 900, cursor: 'pointer', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '6px', opacity: updatingStoreId === s.id ? 0.5 : 1 }}
+                          >
+                            {updatingStoreId === s.id ? <Loader2 className="animate-spin" size={12} /> : null}
+                            {updatingStoreId === s.id ? 'WAIT...' : '+ 365 DAYS'}
+                          </button>
+                          <button 
+                            disabled={updatingStoreId === s.id}
                             onClick={() => deactivateSubscription(s)} 
                             style={{ padding: '8px 12px', background: '#ef4444', color: 'white', borderRadius: '10px', border: 'none', fontWeight: 900, cursor: 'pointer', fontSize: '10px', opacity: updatingStoreId === s.id ? 0.5 : 1 }}
                           >
