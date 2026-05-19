@@ -170,42 +170,96 @@ export default function LandingPage() {
             <h2 className="text-5xl md:text-8xl font-black tracking-tighter mb-8 italic underline decoration-orange-500 decoration-8 underline-offset-8 uppercase">PLANS.</h2>
           </div>
 
-          <div className="max-w-xl mx-auto bg-gradient-to-b from-zinc-900/80 to-black border-2 border-orange-500/50 p-10 md:p-16 rounded-[60px] relative shadow-[0_0_100px_rgba(249,115,22,0.1)]">
-            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-orange-500 text-black px-10 py-3 rounded-full font-black text-[12px] uppercase tracking-[0.3em] shadow-2xl animate-pulse">LIMITED OFFER</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto items-stretch">
             
-            <div className="text-center mb-12">
-              <div className="flex justify-center items-end gap-3 mb-4">
-                <span className="text-7xl md:text-[120px] font-black italic tracking-tighter leading-none">{"\u20B9"}399</span>
-                <span className="text-zinc-500 font-black text-xl md:text-2xl mb-4 md:mb-6">/mo</span>
+            {/* MONTHLY PLAN */}
+            <div className="bg-gradient-to-b from-zinc-900/50 to-black border border-zinc-800 p-8 md:p-12 rounded-[50px] relative flex flex-col justify-between shadow-[0_0_50px_rgba(0,0,0,0.5)]">
+              <div>
+                <div className="text-orange-500 font-black text-xs uppercase tracking-[0.2em] mb-4">MONTHLY PLAN</div>
+                <div className="mb-8">
+                  <div className="flex items-end gap-2 mb-2">
+                    <span className="text-5xl md:text-6xl font-black italic tracking-tighter leading-none">{"\u20B9"}399</span>
+                    <span className="text-zinc-500 font-black text-lg mb-1">/mo</span>
+                  </div>
+                  <p className="text-zinc-400 text-xs font-bold">Billed monthly. Cancel anytime.</p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 mb-8">
+                  {[
+                    "Unlimited Digital Accounting",
+                    "Advanced Rent Tracker",
+                    "Automated Expense Manager",
+                    "WhatsApp Marketing Features",
+                    "Unlimited Billing & Invoices",
+                    "Staff Permissions & Roles",
+                    "Automatic Cloud Backup"
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <CheckCircle2 size={16} className="text-orange-500 shrink-0" />
+                      <span className="font-bold text-zinc-300 text-sm">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-center">
+                  <a 
+                    href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Monthly Smart Business Plan (\u20B9399/mo) for my store. \uD83D\uDE80\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. \uD83D\uDCC8")}`}
+                    className="w-full bg-zinc-900 hover:bg-zinc-850 text-white border border-zinc-800 px-6 py-4 rounded-2xl font-black text-md transition-all flex items-center justify-center gap-3"
+                  >
+                    ACTIVATE MONTHLY <ChevronRight size={18} />
+                  </a>
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-5 mb-12">
-              {[
-                "Unlimited Digital Accounting",
-                "Advanced Rent Tracker",
-                "Automated Expense Manager",
-                "WhatsApp Marketing Features",
-                "Unlimited Billing & Invoices",
-                "Staff Permissions & Roles",
-                "Automatic Cloud Backup"
-              ].map((item, i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <CheckCircle2 size={18} className="text-orange-500" />
-                  <span className="font-black text-zinc-300 text-sm md:text-lg">{item}</span>
+            {/* YEARLY PLAN */}
+            <div className="bg-gradient-to-b from-zinc-900/90 to-black border-2 border-orange-500 p-8 md:p-12 rounded-[50px] relative flex flex-col justify-between shadow-[0_0_80px_rgba(249,115,22,0.15)]">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-orange-500 text-black px-6 py-1.5 rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] shadow-2xl animate-pulse">
+                BEST VALUE • SAVE 25%
+              </div>
+              
+              <div>
+                <div className="text-orange-500 font-black text-xs uppercase tracking-[0.2em] mb-4">YEARLY PLAN</div>
+                <div className="mb-8">
+                  <div className="flex items-end gap-2 mb-2">
+                    <span className="text-5xl md:text-6xl font-black italic tracking-tighter leading-none">{"\u20B9"}3,600</span>
+                    <span className="text-zinc-500 font-black text-lg mb-1">/yr</span>
+                  </div>
+                  <p className="text-orange-500/80 text-xs font-black tracking-wider uppercase">Equivalent to {"\u20B9"}300/mo (Save {"\u20B9"}1,188/yr)</p>
                 </div>
-              ))}
+
+                <div className="grid grid-cols-1 gap-4 mb-8">
+                  {[
+                    "Everything in Monthly Plan",
+                    "Priority WhatsApp Support (24/7)",
+                    "Dedicated Onboarding Manager",
+                    "Customized Invoice Templates",
+                    "Unlimited Billing & Invoices",
+                    "Staff Permissions & Roles",
+                    "Automatic Cloud Backup"
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <CheckCircle2 size={16} className="text-orange-500 shrink-0" />
+                      <span className="font-black text-zinc-200 text-sm">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-center">
+                  <a 
+                    href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Yearly Smart Business Plan (\u20B93600/yr) for my store. \uD83D\uDE80\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. \uD83D\uDCC8")}`}
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white px-6 py-4 rounded-2xl font-black text-md transition-all flex items-center justify-center gap-3 shadow-2xl shadow-orange-500/30"
+                  >
+                    ACTIVATE YEARLY <ChevronRight size={18} />
+                  </a>
+                </div>
+              </div>
             </div>
 
-            <div className="flex justify-center">
-              <a 
-                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Smart Business Plan (\u20B9399/mo) for my store. \uD83D\uDE80\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. \uD83D\uDCC8")}`}
-                className="w-auto bg-orange-500 hover:bg-orange-600 text-white px-8 md:px-12 py-5 md:py-6 rounded-3xl font-black text-lg md:text-2xl transition-all flex items-center justify-center gap-4 shadow-2xl shadow-orange-500/30"
-              >
-                ACTIVATE NOW <ChevronRight size={24} />
-              </a>
-            </div>
-            <p className="text-center text-orange-500 mt-8 font-black text-sm tracking-widest italic animate-pulse">7 DAYS FREE TRIAL AVAILABLE</p>
           </div>
         </div>
       </section>
