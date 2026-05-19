@@ -109,19 +109,27 @@ export default function AdminDashboard() {
     }
   };
 
-  const deactivateSubscription = async (store: any) => {
-    if (!confirm(`ARE YOU SURE? This will LOCK the app for ${store.store_name} immediately.`)) return;
+  const toggleSubscriptionActive = async (store: any, isCurrentlyActive: boolean) => {
+    const action = isCurrentlyActive ? 'DEACTIVATE' : 'ACTIVATE';
+    if (!confirm(`Are you sure you want to ${action} ${store.store_name}?`)) return;
     
     setUpdatingStoreId(store.id);
     try {
-      const yesterday = subDays(new Date(), 1);
+      let newExpiry;
+      if (isCurrentlyActive) {
+        newExpiry = subDays(new Date(), 1);
+      } else {
+        const days = Number(store.monthly_rent) === 3600 ? 365 : 30;
+        newExpiry = addDays(new Date(), days);
+      }
+      
       const { error } = await supabase.from('stores').update({ 
-        subscription_expiry: yesterday.toISOString()
+        subscription_expiry: newExpiry.toISOString()
       }).eq('id', store.id);
       
       if (error) throw error;
       
-      alert(`SUCCESS: ${store.store_name} has been deactivated.`);
+      alert(`SUCCESS: ${store.store_name} has been ${isCurrentlyActive ? 'deactivated' : 'activated'}.`);
       await fetchAdminData();
     } catch (err: any) {
       console.error(err);
@@ -371,10 +379,20 @@ export default function AdminDashboard() {
                           </button>
                           <button 
                             disabled={updatingStoreId === s.id}
-                            onClick={() => deactivateSubscription(s)} 
-                            style={{ padding: '8px 12px', background: '#ef4444', color: 'white', borderRadius: '10px', border: 'none', fontWeight: 900, cursor: 'pointer', fontSize: '10px', opacity: updatingStoreId === s.id ? 0.5 : 1 }}
+                            onClick={() => toggleSubscriptionActive(s, !!isActive)} 
+                            style={{ 
+                              padding: '8px 12px', 
+                              background: isActive ? '#ef4444' : '#10b981', 
+                              color: 'white', 
+                              borderRadius: '10px', 
+                              border: 'none', 
+                              fontWeight: 900, 
+                              cursor: 'pointer', 
+                              fontSize: '10px', 
+                              opacity: updatingStoreId === s.id ? 0.5 : 1 
+                            }}
                           >
-                            {updatingStoreId === s.id ? '...' : 'DEACTIVATE'}
+                            {updatingStoreId === s.id ? '...' : (isActive ? 'DEACTIVATE' : 'ACTIVATE')}
                           </button>
                         </div>
                       </td>
