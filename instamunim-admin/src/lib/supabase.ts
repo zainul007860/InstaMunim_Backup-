@@ -4,7 +4,9 @@ let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 if (!supabaseUrl.startsWith('http://') && !supabaseUrl.startsWith('https://')) {
   supabaseUrl = 'https://xkdzshwsbhtebwrtxlua.supabase.co'
 }
-// Using Service Role Key for Admin privileges (Must be in .env or .env.local)
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-key'
+let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+if (!supabaseAnonKey.startsWith('sb_publishable_')) {
+  supabaseAnonKey = 'sb_publishable_3EY3aMcvka2MVU3fRFmoCA_jd6J6UcD'
+}
 
-export const supabase = createClient(supabaseUrl, supabaseServiceKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
