@@ -88,15 +88,18 @@ export default function AdminDashboard() {
     // Immediate Feedback
     if (!confirm(`Confirm: Extend ${store.store_name} by ${days} days?`)) return;
     
+    const planPrice = days === 365 ? 3600 : 399;
+    
     setUpdatingStoreId(store.id);
     try {
       const { error } = await supabase.from('stores').update({ 
-        subscription_expiry: newExpiry.toISOString()
+        subscription_expiry: newExpiry.toISOString(),
+        monthly_rent: planPrice
       }).eq('id', store.id);
       
       if (error) throw error;
       
-      alert(`SUCCESS: ${store.store_name} updated. Expiry: ${format(newExpiry, "MMM dd, yyyy")}`);
+      alert(`SUCCESS: ${store.store_name} updated. Expiry: ${format(newExpiry, "MMM dd, yyyy")} (Plan: ₹${planPrice})`);
       await fetchAdminData();
     } catch (err: any) {
       console.error(err);
@@ -106,19 +109,27 @@ export default function AdminDashboard() {
     }
   };
 
-  const deactivateSubscription = async (store: any) => {
-    if (!confirm(`ARE YOU SURE? This will LOCK the app for ${store.store_name} immediately.`)) return;
+  const toggleSubscriptionActive = async (store: any, isCurrentlyActive: boolean) => {
+    const action = isCurrentlyActive ? 'DEACTIVATE' : 'ACTIVATE';
+    if (!confirm(`Are you sure you want to ${action} ${store.store_name}?`)) return;
     
     setUpdatingStoreId(store.id);
     try {
-      const yesterday = subDays(new Date(), 1);
+      let newExpiry;
+      if (isCurrentlyActive) {
+        newExpiry = subDays(new Date(), 1);
+      } else {
+        const days = Number(store.monthly_rent) === 3600 ? 365 : 30;
+        newExpiry = addDays(new Date(), days);
+      }
+      
       const { error } = await supabase.from('stores').update({ 
-        subscription_expiry: yesterday.toISOString()
+        subscription_expiry: newExpiry.toISOString()
       }).eq('id', store.id);
       
       if (error) throw error;
       
-      alert(`SUCCESS: ${store.store_name} has been deactivated.`);
+      alert(`SUCCESS: ${store.store_name} has been ${isCurrentlyActive ? 'deactivated' : 'activated'}.`);
       await fetchAdminData();
     } catch (err: any) {
       console.error(err);
@@ -259,7 +270,7 @@ export default function AdminDashboard() {
             <div className="stats-grid">
               <div className="stat-card"><p>Total Merchants</p><h3>{stores.length}</h3></div>
               <div className="stat-card"><p>Global GMV</p><h3>₹{totalSalesVal.toLocaleString()}</h3></div>
-              <div className="stat-card"><p>Est. Revenue</p><h3 style={{ color: '#f97316' }}>₹{(stores.length * 399).toLocaleString()}</h3></div>
+              <div className="stat-card"><p>Est. Revenue</p><h3 style={{ color: '#f97316' }}>₹{stores.reduce((sum, s) => sum + ((s.monthly_rent === null || s.monthly_rent === undefined) ? 399 : Number(s.monthly_rent)), 0).toLocaleString()}</h3></div>
             </div>
             <div className="data-table-container">
                <div className="table-header"><h4 style={{ fontSize: '16px', fontWeight: 900, color: 'white' }}>RECENT ONBOARDING</h4></div>
@@ -321,7 +332,7 @@ export default function AdminDashboard() {
           <div className="data-table-container animate-fade-in">
              <div className="table-header"><h4 style={{ color: 'white' }}>SUBSCRIPTIONS</h4></div>
              <table className="table-content">
-                <thead><tr><th>Merchant</th><th>Expiry</th><th>Status</th><th>Action</th></tr></thead>
+                <thead><tr><th>Merchant</th><th>Plan</th><th>Expiry</th><th>Status</th><th>Action</th></tr></thead>
                 <tbody>{filteredStores.map(s => {
                   const now = new Date();
                   const expiry = s.subscription_expiry ? new Date(s.subscription_expiry) : null;
@@ -331,6 +342,13 @@ export default function AdminDashboard() {
                   return (
                     <tr key={s.id}>
                       <td>{s.store_name}</td>
+                      <td>
+                        {s.monthly_rent === 3600 ? (
+                          <span style={{ color: '#10b981', fontWeight: 800 }}>Yearly (₹3600)</span>
+                        ) : (
+                          <span style={{ color: '#a1a1aa', fontWeight: 800 }}>Monthly (₹399)</span>
+                        )}
+                      </td>
                       <td style={{ color: getStatusColor(s), fontWeight: 700 }}>{s.subscription_expiry ? format(new Date(s.subscription_expiry), "MMM dd, yyyy") : 'TRIAL'}</td>
                       <td>
                         {isTrial ? (
@@ -353,10 +371,28 @@ export default function AdminDashboard() {
                           </button>
                           <button 
                             disabled={updatingStoreId === s.id}
-                            onClick={() => deactivateSubscription(s)} 
-                            style={{ padding: '8px 12px', background: '#ef4444', color: 'white', borderRadius: '10px', border: 'none', fontWeight: 900, cursor: 'pointer', fontSize: '10px', opacity: updatingStoreId === s.id ? 0.5 : 1 }}
+                            onClick={() => addSubscriptionDays(s, 365)} 
+                            style={{ padding: '8px 12px', background: '#10b981', color: 'white', borderRadius: '10px', border: 'none', fontWeight: 900, cursor: 'pointer', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '6px', opacity: updatingStoreId === s.id ? 0.5 : 1 }}
                           >
-                            {updatingStoreId === s.id ? '...' : 'DEACTIVATE'}
+                            {updatingStoreId === s.id ? <Loader2 className="animate-spin" size={12} /> : null}
+                            {updatingStoreId === s.id ? 'WAIT...' : '+ 365 DAYS'}
+                          </button>
+                          <button 
+                            disabled={updatingStoreId === s.id}
+                            onClick={() => toggleSubscriptionActive(s, !!isActive)} 
+                            style={{ 
+                              padding: '8px 12px', 
+                              background: isActive ? '#ef4444' : '#10b981', 
+                              color: 'white', 
+                              borderRadius: '10px', 
+                              border: 'none', 
+                              fontWeight: 900, 
+                              cursor: 'pointer', 
+                              fontSize: '10px', 
+                              opacity: updatingStoreId === s.id ? 0.5 : 1 
+                            }}
+                          >
+                            {updatingStoreId === s.id ? '...' : (isActive ? 'DEACTIVATE' : 'ACTIVATE')}
                           </button>
                         </div>
                       </td>

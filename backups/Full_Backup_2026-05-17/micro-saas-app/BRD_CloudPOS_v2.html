@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Requirements Document - Cloud POS System v2.0</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+            background-color: #fff;
+        }
+        h1 { color: #2c3e50; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        h2 { color: #e67e22; margin-top: 30px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        h3 { color: #34495e; }
+        p, li { font-size: 15px; color: #555; }
+        .image-container { text-align: center; margin: 20px 0; }
+        .image-container img {
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            max-width: 350px;
+            border: 1px solid #eee;
+        }
+        hr { border: 0; border-top: 1px solid #ddd; margin: 40px 0; }
+        .metadata { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 30px; }
+        .metadata strong { color: #333; }
+    </style>
+</head>
+<body>
+
+    <h1>Business Requirements Document (BRD)</h1>
+    
+    <div class="metadata">
+        <p><strong>Project Name:</strong> Cloud POS System v2.0 (Mobile Optimization & Voice Integration)</p>
+        <p><strong>Date:</strong> May 2026</p>
+        <p><strong>Role:</strong> Senior Business Analyst</p>
+    </div>
+
+    <h2>1. Executive Summary</h2>
+    <p>This document outlines the business requirements, features, and technical enhancements for the <strong>Cloud POS System v2.0</strong>. The primary goal of this update is to optimize the mobile user experience, integrating an advanced continuous native voice recognition system, robust security controls, and intuitive gestures that mimic native application behavior while maintaining seamless cloud synchronization.</p>
+
+    <h2>2. Feature Specifications</h2>
+
+    <h3>2.1. Authentication & Security Control</h3>
+    <p><strong>Description:</strong> The entry point of the application has been secured and optimized for mobile input.</p>
+    <ul>
+        <li><strong>Mobile Registration & Login:</strong> Users can authenticate using an owner's mobile number and a secure secret password.</li>
+        <li><strong>Password Visibility Toggle:</strong> A highly requested usability feature allowing users to toggle password visibility (Eye/Eye-Off icon) to reduce login friction and typos on small mobile keyboards.</li>
+        <li><strong>Silent Background Sync:</strong> The system handles authorization tokens intelligently, preventing redundant "Sync Error" popups during the login phase to ensure a smooth onboarding experience.</li>
+    </ul>
+    <div class="image-container">
+        <img src="C:/Users/Admin/.gemini/antigravity/brain/5b8329fb-3d2d-4681-bc7f-a926b1bce822/brd_login_screen_1778140957091.png" alt="Login Screen Mockup" />
+    </div>
+
+    <hr>
+
+    <h3>2.2. Interactive Dashboard & Pull-to-Refresh</h3>
+    <p><strong>Description:</strong> The centralized hub for all business analytics, sales data, and expense tracking.</p>
+    <ul>
+        <li><strong>Context-Aware Pull-to-Refresh:</strong> Users can synchronize their local state with the Supabase Cloud by performing a native "swipe down" gesture.</li>
+        <li><strong>Scope Restriction:</strong> This gesture is strictly bounded to the "Dashboard" tab to prevent accidental data reloads while compiling a cart or modifying settings in other tabs.</li>
+        <li><strong>Visual Feedback:</strong> A vibrant, spinning loader provides immediate feedback that synchronization is in progress.</li>
+    </ul>
+    <div class="image-container">
+        <img src="C:/Users/Admin/.gemini/antigravity/brain/5b8329fb-3d2d-4681-bc7f-a926b1bce822/brd_pull_refresh_1778140999378.png" alt="Pull to Refresh Mockup" />
+    </div>
+
+    <hr>
+
+    <h3>2.3. Continuous Native Voice Recognition (Smart Cashier)</h3>
+    <p><strong>Description:</strong> The flagship feature of v2.0, completely overriding standard web limitations to provide an uninterrupted, hands-free billing experience.</p>
+    <ul>
+        <li><strong>Continuous Listening Mode:</strong> Unlike standard mobile voice inputs that cut off after one phrase, this custom-built bridge auto-restarts instantly on natural pauses, allowing the cashier to dictate entire multi-item orders, names, and phone numbers sequentially.</li>
+        <li><strong>Native Hardware Integration:</strong> Built directly into the core configuration to request hardware-level permissions securely, ensuring Android's WebView grants Web Speech API access natively without 'not-allowed' restrictions.</li>
+        <li><strong>Zero-Click Setup:</strong> Requests hardware-level microphone access instantly upon app installation/launch to ensure a seamless setup for the cashier.</li>
+    </ul>
+    <div class="image-container">
+        <img src="C:/Users/Admin/.gemini/antigravity/brain/5b8329fb-3d2d-4681-bc7f-a926b1bce822/brd_voice_pos_1778140971556.png" alt="Voice POS Module Mockup" />
+    </div>
+
+    <hr>
+
+    <h3>2.4. Native Hardware Navigation & Exit Security</h3>
+    <p><strong>Description:</strong> Integrating the Android OS hardware buttons with the POS interface to prevent accidental data loss.</p>
+    <ul>
+        <li><strong>Hardware Back Button Interception:</strong> Overrides the Android native back button to communicate directly with the React frontend state.</li>
+        <li><strong>Smart Routing:</strong> If the user is inside a sub-menu (e.g., Settings, Cart), pressing the hardware back button returns them safely to the Dashboard.</li>
+        <li><strong>Custom Exit Dialog:</strong> If the user is on the Dashboard and presses back, a beautiful, non-intrusive native dialog asks for final exit confirmation, avoiding accidental app closures during peak billing hours.</li>
+    </ul>
+    <div class="image-container">
+        <img src="C:/Users/Admin/.gemini/antigravity/brain/5b8329fb-3d2d-4681-bc7f-a926b1bce822/brd_exit_dialog_1778141017891.png" alt="Exit Dialog Mockup" />
+    </div>
+
+    <hr>
+
+    <h2>3. Technology Stack Summary</h2>
+    <ul>
+        <li><strong>Frontend Environment:</strong> React, Next.js, Tailwind CSS</li>
+        <li><strong>Mobile Wrapper:</strong> Capacitor v8 (Android Native Java Bridge)</li>
+        <li><strong>Cloud Architecture:</strong> Supabase (PostgreSQL)</li>
+        <li><strong>Key Native Implementations:</strong> 
+            <ul>
+                <li><code>ActivityCompat</code> for robust runtime hardware permissions on launch.</li>
+                <li>Responsive layout designs optimized for small capacitive touch screens.</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h2>4. Conclusion</h2>
+    <p>The Cloud POS v2.0 implementation transitions the platform from a responsive web application to a truly native-feeling mobile experience. The bespoke continuous voice integration, intelligent pull-to-refresh mechanics, and hardware button intercepts ensure that operators experience zero friction, allowing for hyper-efficient order processing.</p>
+
+</body>
+</html>

@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'InstaMunim DEV',
   webDir: 'out',
   server: {
-    url: 'https://instamunimapp-git-dev-zainul007860s-projects.vercel.app',
+    url: 'https://instamunimapp.vercel.app',
     cleartext: true
   }
 };

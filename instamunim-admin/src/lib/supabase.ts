@@ -1,7 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = 'https://xkdzshwsbhtebwrtxlua.supabase.co'
-// Using Service Role Key for Admin privileges
-const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhrZHpzaHdzYmh0ZWJ3cnR4bHVhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODA2MjUyMCwiZXhwIjoyMDkzNjM4NTIwfQ.p55ronA1jHbUvaNAUK7xvgkQ4yg80MZwaijrbcNB7PM'
+let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+if (!supabaseUrl.startsWith('http://') && !supabaseUrl.startsWith('https://')) {
+  supabaseUrl = 'https://xkdzshwsbhtebwrtxlua.supabase.co'
+}
+let supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+if (!supabaseAnonKey.startsWith('sb_publishable_')) {
+  supabaseAnonKey = 'sb_publishable_3EY3aMcvka2MVU3fRFmoCA_jd6J6UcD'
+}
 
-export const supabase = createClient(supabaseUrl, supabaseServiceKey)
+export const supabase = createClient(supabaseUrl, supabaseAnonKey)
