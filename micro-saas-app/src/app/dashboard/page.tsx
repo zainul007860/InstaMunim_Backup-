@@ -647,21 +647,20 @@ Stay safe & eat healthy! 🍕
     try {
       if (authMode === "login") {
         const { data, error } = await supabase
-          .from('stores')
-          .select('*')
-          .eq('owner_mobile', loginMobile)
-          .single();
+          .rpc('verify_store_login', { 
+            mobile: loginMobile, 
+            input_pass: loginPassword 
+          });
 
-        if (error || !data) {
-          setLoginError("Store not found. Please register.");
-        } else if (data.password !== loginPassword) {
-          setLoginError("Invalid password.");
+        if (error || !data || data.length === 0) {
+          setLoginError("Invalid mobile number or password.");
         } else {
+          const storeData = data[0];
           // Success Login
           setIsLoggedIn(true);
           setOwnerMobile(loginMobile);
-          setRestaurantName(data.store_name);
-          setMonthlyRent(data.monthly_rent || 0);
+          setRestaurantName(storeData.store_name);
+          setMonthlyRent(storeData.monthly_rent || 0);
           localStorage.setItem("saas_is_logged_in", "true");
           localStorage.setItem("saas_owner_mobile", loginMobile);
 
@@ -673,12 +672,12 @@ Stay safe & eat healthy! 🍕
             localStorage.removeItem("saas_rem_pass");
           }
 
-          setStoreCreatedAt(data.created_at);
-          setSubscriptionExpiry(data.subscription_expiry);
-          localStorage.setItem("saas_store_created_at", data.created_at || "");
-          localStorage.setItem("saas_store_expiry", data.subscription_expiry || "");
+          setStoreCreatedAt(storeData.created_at);
+          setSubscriptionExpiry(storeData.subscription_expiry);
+          localStorage.setItem("saas_store_created_at", storeData.created_at || "");
+          localStorage.setItem("saas_store_expiry", storeData.subscription_expiry || "");
 
-          await fetchStoreData(data.id);
+          await fetchStoreData(storeData.id);
         }
       } else {
         // Signup
