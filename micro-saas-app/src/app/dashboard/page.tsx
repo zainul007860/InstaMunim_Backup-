@@ -119,6 +119,7 @@ export default function Dashboard() {
   const [showScanner, setShowScanner] = useState(false);
   const [scannedBarcode, setScannedBarcode] = useState("");
   const [scannerError, setScannerError] = useState("");
+  const [scannerDebugInfo, setScannerDebugInfo] = useState("Initializing...");
   const [isApiLoading, setIsApiLoading] = useState(false);
   const [showNewProductModal, setShowNewProductModal] = useState(false);
   const [newScannedName, setNewScannedName] = useState("");
@@ -248,6 +249,19 @@ Stay safe & eat healthy! 🍕
         },
         () => {}
       ).then(() => {
+        try {
+          const inputState = (html5QrCode as any).html5QrcodeInput;
+          const track = inputState?.localMediaStream?.getVideoTracks()?.[0];
+          if (track) {
+            const settings = track.getSettings ? track.getSettings() : {};
+            setScannerDebugInfo(`Active: ${settings.width || 0}x${settings.height || 0} px`);
+          } else {
+            setScannerDebugInfo("Camera active. Align barcode.");
+          }
+        } catch (e) {
+          setScannerDebugInfo("Camera active. Align barcode.");
+        }
+
         try {
           html5QrCode.applyVideoConstraints({
             focusMode: "continuous"
@@ -2878,6 +2892,11 @@ Stay safe & eat healthy! 🍕
             <p className="text-zinc-500 text-[10px] font-bold text-center uppercase tracking-widest">
               Align barcode inside the rectangle to auto-scan
             </p>
+            <div className="text-center">
+              <span className="inline-block text-[9px] font-mono text-zinc-500 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded">
+                {scannerDebugInfo}
+              </span>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
