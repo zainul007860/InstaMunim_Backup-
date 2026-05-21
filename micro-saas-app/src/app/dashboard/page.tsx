@@ -187,6 +187,8 @@ Stay safe & eat healthy! 🍕
   };
   
   const qrCodeRef = useRef<any>(null);
+  const lastScannedRef = useRef<{ barcode: string; time: number } | null>(null);
+  const [lastScannedMsg, setLastScannedMsg] = useState("");
 
   const playBeep = () => {
     try {
@@ -238,14 +240,16 @@ Stay safe & eat healthy! 🍕
           }
         },
         (decodedText: string) => {
-          html5QrCode.stop().then(() => {
-            setShowScanner(false);
-            handleScanSuccess(decodedText);
-          }).catch((err: any) => {
-            console.error("Failed to stop scanner:", err);
-            setShowScanner(false);
-            handleScanSuccess(decodedText);
-          });
+          const now = Date.now();
+          if (
+            lastScannedRef.current &&
+            lastScannedRef.current.barcode === decodedText &&
+            now - lastScannedRef.current.time < 2000
+          ) {
+            return;
+          }
+          lastScannedRef.current = { barcode: decodedText, time: now };
+          handleScanSuccess(decodedText, html5QrCode);
         },
         () => {}
       ).then(() => {
@@ -280,6 +284,8 @@ Stay safe & eat healthy! 🍕
   };
 
   const closeScanner = () => {
+    lastScannedRef.current = null;
+    setLastScannedMsg("");
     if (qrCodeRef.current) {
       try {
         qrCodeRef.current.stop().then(() => {
@@ -319,7 +325,7 @@ Stay safe & eat healthy! 🍕
     }
   }, [showScanner]);
 
-  const handleScanSuccess = async (barcode: string) => {
+  const handleScanSuccess = async (barcode: string, html5QrCodeInstance?: any) => {
     playBeep();
     setScannedBarcode(barcode);
     
@@ -330,8 +336,21 @@ Stay safe & eat healthy! 🍕
 
     if (matchedItem) {
       addToCart(matchedItem);
-      alert(`Scanned: ${matchedItem.name} added to cart!`);
+      setLastScannedMsg(`Added: ${matchedItem.name} (₹${matchedItem.price})`);
+      setTimeout(() => {
+        setLastScannedMsg("");
+      }, 3000);
     } else {
+      const scanner = html5QrCodeInstance || qrCodeRef.current;
+      if (scanner) {
+        try {
+          await scanner.stop();
+        } catch (e) {
+          console.error("Error stopping scanner for new product:", e);
+        }
+      }
+      setShowScanner(false);
+      
       setIsApiLoading(true);
       setNewScannedName("");
       setNewScannedPrice("");
@@ -2885,6 +2904,12 @@ Stay safe & eat healthy! 🍕
                   <div className="absolute left-0 right-0 h-[2px] bg-red-500 shadow-md shadow-red-500 top-1/2 -translate-y-1/2 animate-bounce" />
                 </div>
               </div>
+              {lastScannedMsg && (
+                <div className="absolute bottom-4 left-4 right-4 bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg text-center shadow-lg animate-fade-in flex items-center justify-center gap-1.5">
+                  <span className="h-2 w-2 bg-white rounded-full animate-ping" />
+                  {lastScannedMsg}
+                </div>
+              )}
             </div>
             {scannerError && (
               <p className="text-red-500 text-xs font-bold text-center leading-relaxed">{scannerError}</p>
