@@ -378,7 +378,7 @@ Stay safe & eat healthy! 🍕
     }
   };
 
-  const handleAddNewScannedProduct = () => {
+  const handleAddNewScannedProduct = async () => {
     if (!newScannedName.trim()) return alert("Product name is required.");
     const priceVal = Number(newScannedPrice) || 0;
     const qtyVal = Number(newScannedQty) || 1;
@@ -392,12 +392,37 @@ Stay safe & eat healthy! 🍕
         name: newScannedName.trim(),
         price: priceVal,
         qty: qtyVal,
-        isNewProduct: true,
+        isNewProduct: false,
         barcode: scannedBarcode
       }];
     });
 
+    try {
+      const { data: newDbItem, error: dbErr } = await supabase
+        .from("menu_items")
+        .insert([{
+          store_id: store.id,
+          name: newScannedName.trim(),
+          price: priceVal,
+          category: `General|Barcode:${scannedBarcode}`
+        }])
+        .select()
+        .single();
+
+      if (!dbErr && newDbItem) {
+        setMenuItems(prev => [...prev, {
+          id: newDbItem.id,
+          name: newDbItem.name,
+          price: newDbItem.price,
+          category: newDbItem.category
+        }]);
+      }
+    } catch (err) {
+      console.error("Error saving new barcode product immediately:", err);
+    }
+
     setShowNewProductModal(false);
+    setShowScanner(true);
   };
   
   // Latest State Ref to avoid stale closures in voice listener
