@@ -227,9 +227,9 @@ Stay safe & eat healthy! 🍕
         handleScanSuccess(decodedText, html5QrCode);
       };
 
-      const startWithConstraints = (constraints: any) => {
+      const startWithConfig = (cameraIdOrConfig: any) => {
         return html5QrCode.start(
-          constraints,
+          cameraIdOrConfig,
           {
             fps: 20,
             qrbox: (width: number, height: number) => {
@@ -245,19 +245,15 @@ Stay safe & eat healthy! 🍕
         );
       };
 
-      // Try HD constraints first
-      startWithConstraints({
-        facingMode: "environment",
-        width: { min: 640, ideal: 1280, max: 1920 },
-        height: { min: 480, ideal: 720, max: 1080 }
-      })
+      // Try Back Camera first (environment)
+      startWithConfig({ facingMode: "environment" })
       .then(() => {
         try {
           const inputState = (html5QrCode as any).html5QrcodeInput;
           const track = inputState?.localMediaStream?.getVideoTracks()?.[0];
           if (track) {
             const settings = track.getSettings ? track.getSettings() : {};
-            setScannerDebugInfo(`Active (HD): ${settings.width || 0}x${settings.height || 0} px`);
+            setScannerDebugInfo(`Active (Back): ${settings.width || 0}x${settings.height || 0} px`);
           } else {
             setScannerDebugInfo("Camera active. Align barcode.");
           }
@@ -274,40 +270,32 @@ Stay safe & eat healthy! 🍕
         }
       })
       .catch((err: any) => {
-        console.warn("HD constraints failed, trying SD environment:", err);
-        startWithConstraints({ facingMode: "environment" })
+        console.warn("Back camera failed, trying Front Camera (Webcam):", err);
+        startWithConfig({ facingMode: "user" })
         .then(() => {
-          try {
-            const inputState = (html5QrCode as any).html5QrcodeInput;
-            const track = inputState?.localMediaStream?.getVideoTracks()?.[0];
-            if (track) {
-              const settings = track.getSettings ? track.getSettings() : {};
-              setScannerDebugInfo(`Active (SD): ${settings.width || 0}x${settings.height || 0} px`);
-            } else {
-              setScannerDebugInfo("Camera active. Align barcode.");
-            }
-          } catch (e) {
-            setScannerDebugInfo("Camera active. Align barcode.");
-          }
-
-          try {
-            html5QrCode.applyVideoConstraints({
-              focusMode: "continuous"
-            } as any).catch((e: any) => console.log("autofocus not supported:", e));
-          } catch (e) {
-            console.log("Error applying focus constraints:", e);
-          }
+          setScannerDebugInfo("Camera active (Front/Webcam). Align barcode.");
         })
-        .catch((sdErr: any) => {
-          console.warn("SD environment constraints failed, trying default camera (Webcam):", sdErr);
-          startWithConstraints({})
-          .then(() => {
-            setScannerDebugInfo("Camera active (Default Webcam). Align barcode.");
-          })
-          .catch((fallbackErr: any) => {
-            console.error("Scanner start completely failed:", fallbackErr);
-            setScannerError(`Camera error: ${fallbackErr.message || fallbackErr}`);
-          });
+        .catch((frontErr: any) => {
+          console.warn("Front camera failed, trying first available device ID:", frontErr);
+          (window as any).Html5Qrcode.getCameras()
+            .then((cameras: any[]) => {
+              if (cameras && cameras.length > 0) {
+                startWithConfig(cameras[0].id)
+                  .then(() => {
+                    setScannerDebugInfo(`Active (Device: ${cameras[0].label || "Default"}).`);
+                  })
+                  .catch((finalErr: any) => {
+                    console.error("Camera ID start failed:", finalErr);
+                    setScannerError(`Camera error: ${finalErr.message || finalErr}`);
+                  });
+              } else {
+                setScannerError("No camera device detected on this system.");
+              }
+            })
+            .catch((camListErr: any) => {
+              console.error("Failed to list cameras:", camListErr);
+              setScannerError(`Camera list error: ${camListErr.message || camListErr}`);
+            });
         });
       });
     } catch (err: any) {
