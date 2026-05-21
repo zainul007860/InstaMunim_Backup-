@@ -227,7 +227,7 @@ Stay safe & eat healthy! 🍕
         handleScanSuccess(decodedText, html5QrCode);
       };
 
-      const startWithConfig = (cameraIdOrConfig: any) => {
+      const startWithConfig = (cameraIdOrConfig: any, videoConstraints?: any) => {
         return html5QrCode.start(
           cameraIdOrConfig,
           {
@@ -235,6 +235,7 @@ Stay safe & eat healthy! 🍕
             qrbox: (width: number, height: number) => {
               return { width: Math.min(width * 0.85, 290), height: 140 };
             },
+            videoConstraints: videoConstraints,
             formatsToSupport: formats,
             experimentalFeatures: {
               useBarCodeDetectorIfSupported: true
@@ -245,15 +246,21 @@ Stay safe & eat healthy! 🍕
         );
       };
 
-      // Try Back Camera first (environment)
-      startWithConfig({ facingMode: "environment" })
+      // Try HD Back Camera first
+      startWithConfig(
+        { facingMode: "environment" },
+        {
+          width: { min: 640, ideal: 1280, max: 1920 },
+          height: { min: 480, ideal: 720, max: 1080 }
+        }
+      )
       .then(() => {
         try {
           const inputState = (html5QrCode as any).html5QrcodeInput;
           const track = inputState?.localMediaStream?.getVideoTracks()?.[0];
           if (track) {
             const settings = track.getSettings ? track.getSettings() : {};
-            setScannerDebugInfo(`Active (Back): ${settings.width || 0}x${settings.height || 0} px`);
+            setScannerDebugInfo(`Active (HD Back): ${settings.width || 0}x${settings.height || 0} px`);
           } else {
             setScannerDebugInfo("Camera active. Align barcode.");
           }
@@ -270,32 +277,58 @@ Stay safe & eat healthy! 🍕
         }
       })
       .catch((err: any) => {
-        console.warn("Back camera failed, trying Front Camera (Webcam):", err);
-        startWithConfig({ facingMode: "user" })
+        console.warn("HD back camera failed, trying SD back camera:", err);
+        startWithConfig({ facingMode: "environment" })
         .then(() => {
-          setScannerDebugInfo("Camera active (Front/Webcam). Align barcode.");
+          try {
+            const inputState = (html5QrCode as any).html5QrcodeInput;
+            const track = inputState?.localMediaStream?.getVideoTracks()?.[0];
+            if (track) {
+              const settings = track.getSettings ? track.getSettings() : {};
+              setScannerDebugInfo(`Active (SD Back): ${settings.width || 0}x${settings.height || 0} px`);
+            } else {
+              setScannerDebugInfo("Camera active. Align barcode.");
+            }
+          } catch (e) {
+            setScannerDebugInfo("Camera active. Align barcode.");
+          }
+
+          try {
+            html5QrCode.applyVideoConstraints({
+              focusMode: "continuous"
+            } as any).catch((e: any) => console.log("autofocus not supported:", e));
+          } catch (e) {
+            console.log("Error applying focus constraints:", e);
+          }
         })
-        .catch((frontErr: any) => {
-          console.warn("Front camera failed, trying first available device ID:", frontErr);
-          (window as any).Html5Qrcode.getCameras()
-            .then((cameras: any[]) => {
-              if (cameras && cameras.length > 0) {
-                startWithConfig(cameras[0].id)
-                  .then(() => {
-                    setScannerDebugInfo(`Active (Device: ${cameras[0].label || "Default"}).`);
-                  })
-                  .catch((finalErr: any) => {
-                    console.error("Camera ID start failed:", finalErr);
-                    setScannerError(`Camera error: ${finalErr.message || finalErr}`);
-                  });
-              } else {
-                setScannerError("No camera device detected on this system.");
-              }
-            })
-            .catch((camListErr: any) => {
-              console.error("Failed to list cameras:", camListErr);
-              setScannerError(`Camera list error: ${camListErr.message || camListErr}`);
-            });
+        .catch((sdErr: any) => {
+          console.warn("SD back camera failed, trying Front Camera (Webcam):", sdErr);
+          startWithConfig({ facingMode: "user" })
+          .then(() => {
+            setScannerDebugInfo("Camera active (Front/Webcam). Align barcode.");
+          })
+          .catch((frontErr: any) => {
+            console.warn("Front camera failed, trying first available device ID:", frontErr);
+            (window as any).Html5Qrcode.getCameras()
+              .then((cameras: any[]) => {
+                if (cameras && cameras.length > 0) {
+                  startWithConfig(cameras[0].id)
+                    .then(() => {
+                      setScannerDebugInfo(`Active (Device: ${cameras[0].label || "Default"}).`);
+                    })
+                    .catch((finalErr: any) => {
+                      console.error("Camera ID start failed:", finalErr);
+                      setScannerError(`Camera error: ${finalErr.message || finalErr}`);
+                    });
+                } else {
+                  setScannerError("No camera device detected on this system.");
+                }
+              })
+              .catch((camListErr: any) => {
+                console.error("Failed to list cameras:", camListErr);
+                setScannerError(`Camera list error: ${camListErr.message || camListErr}`);
+              });
+          });
         });
       });
     } catch (err: any) {
@@ -410,34 +443,10 @@ Stay safe & eat healthy! 🍕
         name: newScannedName.trim(),
         price: priceVal,
         qty: qtyVal,
-        isNewProduct: false,
+        isNewProduct: true,
         barcode: scannedBarcode
       }];
     });
-
-    try {
-      const { data: newDbItem, error: dbErr } = await supabase
-        .from("menu_items")
-        .insert([{
-          store_id: store.id,
-          name: newScannedName.trim(),
-          price: priceVal,
-          category: `General|Barcode:${scannedBarcode}`
-        }])
-        .select()
-        .single();
-
-      if (!dbErr && newDbItem) {
-        setMenuItems(prev => [...prev, {
-          id: newDbItem.id,
-          name: newDbItem.name,
-          price: newDbItem.price,
-          category: newDbItem.category
-        }]);
-      }
-    } catch (err) {
-      console.error("Error saving new barcode product immediately:", err);
-    }
 
     setShowNewProductModal(false);
   };
