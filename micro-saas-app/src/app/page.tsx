@@ -305,7 +305,7 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row justify-between items-center gap-8 border-t border-white/10 pt-10">
             <p className="text-white font-black text-[11px] tracking-widest uppercase italic">{"\u00A9"} 2026 INSTAMUNIM SMART POS {"\u2022"} BEYOND BILLING {"\u2022"} ALL RIGHTS RESERVED</p>
             <div className="flex gap-10 text-[10px] font-black text-zinc-500 tracking-widest uppercase italic">
-              <a href="#" className="hover:text-orange-500 transition-colors">Privacy Policy</a>
+              <a href="/privacy" className="hover:text-orange-500 transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-orange-500 transition-colors">Terms of Use</a>
             </div>
           </div>
