@@ -229,11 +229,6 @@ Stay safe & eat healthy! 🍕
           qrbox: (width: number, height: number) => {
             return { width: Math.min(width * 0.85, 290), height: 140 };
           },
-          videoConstraints: {
-            width: { min: 640, ideal: 1280, max: 1920 },
-            height: { min: 480, ideal: 720, max: 1080 },
-            facingMode: "environment"
-          },
           formatsToSupport: formats,
           experimentalFeatures: {
             useBarCodeDetectorIfSupported: true
@@ -304,14 +299,14 @@ Stay safe & eat healthy! 🍕
   useEffect(() => {
     if (showScanner) {
       if ((window as any).Html5Qrcode) {
-        setTimeout(startScanner, 200);
+        setTimeout(startScanner, 400);
         return;
       }
       const script = document.createElement("script");
       script.src = "https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js";
       script.async = true;
       script.onload = () => {
-        setTimeout(startScanner, 200);
+        setTimeout(startScanner, 400);
       };
       script.onerror = () => {
         setScannerError("Failed to load scanner library. Check internet connection.");
