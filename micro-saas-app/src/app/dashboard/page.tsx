@@ -274,7 +274,7 @@ Stay safe & eat healthy! 🍕
         }
       })
       .catch((err: any) => {
-        console.warn("HD constraints failed, falling back to SD:", err);
+        console.warn("HD constraints failed, trying SD environment:", err);
         startWithConstraints({ facingMode: "environment" })
         .then(() => {
           try {
@@ -298,9 +298,16 @@ Stay safe & eat healthy! 🍕
             console.log("Error applying focus constraints:", e);
           }
         })
-        .catch((fallbackErr: any) => {
-          console.error("Scanner start completely failed:", fallbackErr);
-          setScannerError(`Camera error: ${fallbackErr.message || fallbackErr}`);
+        .catch((sdErr: any) => {
+          console.warn("SD environment constraints failed, trying default camera (Webcam):", sdErr);
+          startWithConstraints({})
+          .then(() => {
+            setScannerDebugInfo("Camera active (Default Webcam). Align barcode.");
+          })
+          .catch((fallbackErr: any) => {
+            console.error("Scanner start completely failed:", fallbackErr);
+            setScannerError(`Camera error: ${fallbackErr.message || fallbackErr}`);
+          });
         });
       });
     } catch (err: any) {
