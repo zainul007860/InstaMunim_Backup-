@@ -329,23 +329,20 @@ Stay safe & eat healthy! 🍕
       return itemBarcode === barcode;
     });
 
+    const scanner = html5QrCodeInstance || qrCodeRef.current;
+    if (scanner) {
+      try {
+        await scanner.stop();
+      } catch (e) {
+        console.error("Error stopping scanner:", e);
+      }
+    }
+    qrCodeRef.current = null;
+    setShowScanner(false);
+
     if (matchedItem) {
       addToCart(matchedItem);
-      setLastScannedMsg(`Added: ${matchedItem.name} (₹${matchedItem.price})`);
-      setTimeout(() => {
-        setLastScannedMsg("");
-      }, 3000);
     } else {
-      const scanner = html5QrCodeInstance || qrCodeRef.current;
-      if (scanner) {
-        try {
-          await scanner.stop();
-        } catch (e) {
-          console.error("Error stopping scanner for new product:", e);
-        }
-      }
-      setShowScanner(false);
-      
       setIsApiLoading(true);
       setNewScannedName("");
       setNewScannedPrice("");
@@ -417,7 +414,6 @@ Stay safe & eat healthy! 🍕
     }
 
     setShowNewProductModal(false);
-    setShowScanner(true);
   };
   
   // Latest State Ref to avoid stale closures in voice listener
