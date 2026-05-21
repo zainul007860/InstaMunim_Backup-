@@ -300,12 +300,12 @@ Stay safe & eat healthy! 🍕
         })
         .catch((fallbackErr: any) => {
           console.error("Scanner start completely failed:", fallbackErr);
-          setScannerError("Camera access denied or camera not found.");
+          setScannerError(`Camera error: ${fallbackErr.message || fallbackErr}`);
         });
       });
     } catch (err: any) {
       console.error(err);
-      setScannerError("Failed to initialize camera. Try again.");
+      setScannerError(`Init error: ${err.message || err}`);
     }
   };
 
