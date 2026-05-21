@@ -210,54 +210,54 @@ Stay safe & eat healthy! 🍕
   const startScanner = () => {
     setScannerError("");
     try {
-      const formats = (window as any).Html5QrcodeSupportedFormats ? [
-        (window as any).Html5QrcodeSupportedFormats.EAN_13,
-        (window as any).Html5QrcodeSupportedFormats.EAN_8,
-        (window as any).Html5QrcodeSupportedFormats.CODE_128,
-        (window as any).Html5QrcodeSupportedFormats.CODE_39,
-        (window as any).Html5QrcodeSupportedFormats.UPC_A,
-        (window as any).Html5QrcodeSupportedFormats.UPC_E,
-        (window as any).Html5QrcodeSupportedFormats.QR_CODE
-      ] : [];
-
+      const formats = [9, 10, 5, 3, 14, 15, 0]; // EAN_13, EAN_8, CODE_128, CODE_39, UPC_A, UPC_E, QR_CODE
       const html5QrCode = new (window as any).Html5Qrcode("reader");
       qrCodeRef.current = html5QrCode;
-      html5QrCode.start(
-        { 
-          facingMode: "environment",
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
-        {
-          fps: 20,
-          qrbox: (width: number, height: number) => {
-            return { width: Math.min(width * 0.85, 290), height: 140 };
+
+      const successCallback = (decodedText: string) => {
+        const now = Date.now();
+        if (
+          lastScannedRef.current &&
+          lastScannedRef.current.barcode === decodedText &&
+          now - lastScannedRef.current.time < 2000
+        ) {
+          return;
+        }
+        lastScannedRef.current = { barcode: decodedText, time: now };
+        handleScanSuccess(decodedText, html5QrCode);
+      };
+
+      const startWithConstraints = (constraints: any) => {
+        return html5QrCode.start(
+          constraints,
+          {
+            fps: 20,
+            qrbox: (width: number, height: number) => {
+              return { width: Math.min(width * 0.85, 290), height: 140 };
+            },
+            formatsToSupport: formats,
+            experimentalFeatures: {
+              useBarCodeDetectorIfSupported: true
+            }
           },
-          formatsToSupport: formats,
-          experimentalFeatures: {
-            useBarCodeDetectorIfSupported: true
-          }
-        },
-        (decodedText: string) => {
-          const now = Date.now();
-          if (
-            lastScannedRef.current &&
-            lastScannedRef.current.barcode === decodedText &&
-            now - lastScannedRef.current.time < 2000
-          ) {
-            return;
-          }
-          lastScannedRef.current = { barcode: decodedText, time: now };
-          handleScanSuccess(decodedText, html5QrCode);
-        },
-        () => {}
-      ).then(() => {
+          successCallback,
+          () => {}
+        );
+      };
+
+      // Try HD constraints first
+      startWithConstraints({
+        facingMode: "environment",
+        width: { min: 640, ideal: 1280, max: 1920 },
+        height: { min: 480, ideal: 720, max: 1080 }
+      })
+      .then(() => {
         try {
           const inputState = (html5QrCode as any).html5QrcodeInput;
           const track = inputState?.localMediaStream?.getVideoTracks()?.[0];
           if (track) {
             const settings = track.getSettings ? track.getSettings() : {};
-            setScannerDebugInfo(`Active: ${settings.width || 0}x${settings.height || 0} px`);
+            setScannerDebugInfo(`Active (HD): ${settings.width || 0}x${settings.height || 0} px`);
           } else {
             setScannerDebugInfo("Camera active. Align barcode.");
           }
@@ -268,13 +268,40 @@ Stay safe & eat healthy! 🍕
         try {
           html5QrCode.applyVideoConstraints({
             focusMode: "continuous"
-          } as any).catch((e: any) => console.log("autofocus constraint not supported:", e));
+          } as any).catch((e: any) => console.log("autofocus not supported:", e));
         } catch (e) {
           console.log("Error applying focus constraints:", e);
         }
-      }).catch((err: any) => {
-        console.error("Scanner start error:", err);
-        setScannerError("Camera access denied or camera not found.");
+      })
+      .catch((err: any) => {
+        console.warn("HD constraints failed, falling back to SD:", err);
+        startWithConstraints({ facingMode: "environment" })
+        .then(() => {
+          try {
+            const inputState = (html5QrCode as any).html5QrcodeInput;
+            const track = inputState?.localMediaStream?.getVideoTracks()?.[0];
+            if (track) {
+              const settings = track.getSettings ? track.getSettings() : {};
+              setScannerDebugInfo(`Active (SD): ${settings.width || 0}x${settings.height || 0} px`);
+            } else {
+              setScannerDebugInfo("Camera active. Align barcode.");
+            }
+          } catch (e) {
+            setScannerDebugInfo("Camera active. Align barcode.");
+          }
+
+          try {
+            html5QrCode.applyVideoConstraints({
+              focusMode: "continuous"
+            } as any).catch((e: any) => console.log("autofocus not supported:", e));
+          } catch (e) {
+            console.log("Error applying focus constraints:", e);
+          }
+        })
+        .catch((fallbackErr: any) => {
+          console.error("Scanner start completely failed:", fallbackErr);
+          setScannerError("Camera access denied or camera not found.");
+        });
       });
     } catch (err: any) {
       console.error(err);
