@@ -226,6 +226,11 @@ Stay safe & eat healthy! 🍕
           qrbox: (width: number, height: number) => {
             return { width: Math.min(width * 0.85, 290), height: 140 };
           },
+          videoConstraints: {
+            width: { min: 640, ideal: 1280, max: 1920 },
+            height: { min: 480, ideal: 720, max: 1080 },
+            facingMode: "environment"
+          },
           formatsToSupport: formats,
           experimentalFeatures: {
             useBarCodeDetectorIfSupported: true
@@ -283,7 +288,7 @@ Stay safe & eat healthy! 🍕
         return;
       }
       const script = document.createElement("script");
-      script.src = "https://unpkg.com/html5-qrcode";
+      script.src = "https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js";
       script.async = true;
       script.onload = () => {
         setTimeout(startScanner, 200);
@@ -2860,7 +2865,7 @@ Stay safe & eat healthy! 🍕
               </Button>
             </div>
             <div className="relative overflow-hidden rounded-xl bg-zinc-900 border border-zinc-800 aspect-[4/3] flex items-center justify-center">
-              <div id="reader" className="w-full h-full [&_video]:object-cover [&_video]:rounded-xl" />
+              <div id="reader" className="w-full h-full [&_video]:object-contain [&_video]:rounded-xl" />
               <div className="absolute inset-0 border-[30px] border-zinc-950/60 pointer-events-none flex items-center justify-center">
                 <div className="w-[220px] h-[100px] border-2 border-dashed border-orange-500 rounded-lg relative">
                   <div className="absolute left-0 right-0 h-[2px] bg-red-500 shadow-md shadow-red-500 top-1/2 -translate-y-1/2 animate-bounce" />
