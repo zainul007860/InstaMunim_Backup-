@@ -210,7 +210,7 @@ Stay safe & eat healthy! 🍕
   const startScanner = () => {
     setScannerError("");
     try {
-      const formats = [
+      const formats = (window as any).Html5QrcodeSupportedFormats ? [
         (window as any).Html5QrcodeSupportedFormats.EAN_13,
         (window as any).Html5QrcodeSupportedFormats.EAN_8,
         (window as any).Html5QrcodeSupportedFormats.CODE_128,
@@ -218,12 +218,16 @@ Stay safe & eat healthy! 🍕
         (window as any).Html5QrcodeSupportedFormats.UPC_A,
         (window as any).Html5QrcodeSupportedFormats.UPC_E,
         (window as any).Html5QrcodeSupportedFormats.QR_CODE
-      ];
+      ] : [];
 
       const html5QrCode = new (window as any).Html5Qrcode("reader");
       qrCodeRef.current = html5QrCode;
       html5QrCode.start(
-        { facingMode: "environment" },
+        { 
+          facingMode: "environment",
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
         {
           fps: 20,
           qrbox: (width: number, height: number) => {
