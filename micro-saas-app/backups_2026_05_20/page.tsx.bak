@@ -5,29 +5,9 @@ import { format, isBefore, isAfter } from "date-fns";
 import { 
   LayoutDashboard, FileText, Settings, LogOut, Search,
   PlusCircle, Loader2, Book, Trash2, Send, ShoppingCart, Package,
-  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera
+  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const getDisplayCategory = (cat: string) => {
-  if (!cat) return "General";
-  if (cat.includes("|Barcode:")) {
-    return cat.split("|Barcode:")[0] || "General";
-  }
-  if (cat.startsWith("Barcode:")) return "General";
-  return cat;
-};
-
-const getBarcode = (cat: string) => {
-  if (!cat) return null;
-  if (cat.includes("|Barcode:")) {
-    return cat.split("|Barcode:")[1];
-  }
-  if (cat.startsWith("Barcode:")) {
-    return cat.replace("Barcode:", "");
-  }
-  return null;
-};
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -114,16 +94,7 @@ export default function Dashboard() {
   const [isWhatsAppEnabled, setIsWhatsAppEnabled] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [crmMessage, setCrmMessage] = useState("Hi [NAME], we miss you at [SHOP]! 🍕 Come back today for a special offer just for you!");
-  const [cart, setCart] = useState<any[]>([]);
-  // Barcode Scanner states
-  const [showScanner, setShowScanner] = useState(false);
-  const [scannedBarcode, setScannedBarcode] = useState("");
-  const [scannerError, setScannerError] = useState("");
-  const [isApiLoading, setIsApiLoading] = useState(false);
-  const [showNewProductModal, setShowNewProductModal] = useState(false);
-  const [newScannedName, setNewScannedName] = useState("");
-  const [newScannedPrice, setNewScannedPrice] = useState("");
-  const [newScannedQty, setNewScannedQty] = useState("1");
+  const [cart, setCart] = useState<{name: string, price: number, qty: number}[]>([]);
   const [restaurantName, setRestaurantName] = useState("InstaMunim");
   const [storeLogo, setStoreLogo] = useState<string | null>(null);
   const [storeAddress, setStoreAddress] = useState("Premium Plaza, Main Road, New Delhi");
@@ -183,183 +154,6 @@ Stay safe & eat healthy! 🍕
       'ा':'a','ि':'i','ी':'ee','ु':'u','ू':'oo','े':'e','ै':'ai','ो':'o','ौ':'au','ं':'n','ः':'h','्':'','़':''
     };
     return text.split('').map(char => map[char] || char).join('').toUpperCase();
-  };
-  
-  const qrCodeRef = useRef<any>(null);
-
-  const playBeep = () => {
-    try {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
-      gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-      oscillator.start();
-      oscillator.stop(audioCtx.currentTime + 0.1);
-    } catch (e) {
-      console.warn("Audio context not supported", e);
-    }
-  };
-
-  const startScanner = () => {
-    setScannerError("");
-    try {
-      const formats = [
-        (window as any).Html5QrcodeSupportedFormats.EAN_13,
-        (window as any).Html5QrcodeSupportedFormats.EAN_8,
-        (window as any).Html5QrcodeSupportedFormats.CODE_128,
-        (window as any).Html5QrcodeSupportedFormats.CODE_39,
-        (window as any).Html5QrcodeSupportedFormats.UPC_A,
-        (window as any).Html5QrcodeSupportedFormats.UPC_E,
-        (window as any).Html5QrcodeSupportedFormats.QR_CODE
-      ];
-
-      const html5QrCode = new (window as any).Html5Qrcode("reader");
-      qrCodeRef.current = html5QrCode;
-      html5QrCode.start(
-        { facingMode: "environment" },
-        {
-          fps: 20,
-          qrbox: (width: number, height: number) => {
-            return { width: Math.min(width * 0.85, 290), height: 140 };
-          },
-          formatsToSupport: formats,
-          experimentalFeatures: {
-            useBarCodeDetectorIfSupported: true
-          }
-        },
-        (decodedText: string) => {
-          html5QrCode.stop().then(() => {
-            setShowScanner(false);
-            handleScanSuccess(decodedText);
-          }).catch((err: any) => {
-            console.error("Failed to stop scanner:", err);
-            setShowScanner(false);
-            handleScanSuccess(decodedText);
-          });
-        },
-        () => {}
-      ).then(() => {
-        try {
-          html5QrCode.applyVideoConstraints({
-            focusMode: "continuous"
-          } as any).catch((e: any) => console.log("autofocus constraint not supported:", e));
-        } catch (e) {
-          console.log("Error applying focus constraints:", e);
-        }
-      }).catch((err: any) => {
-        console.error("Scanner start error:", err);
-        setScannerError("Camera access denied or camera not found.");
-      });
-    } catch (err: any) {
-      console.error(err);
-      setScannerError("Failed to initialize camera. Try again.");
-    }
-  };
-
-  const closeScanner = () => {
-    if (qrCodeRef.current) {
-      try {
-        qrCodeRef.current.stop().then(() => {
-          setShowScanner(false);
-        }).catch(() => {
-          setShowScanner(false);
-        });
-      } catch (e) {
-        setShowScanner(false);
-      }
-    } else {
-      setShowScanner(false);
-    }
-  };
-
-  useEffect(() => {
-    if (showScanner) {
-      if ((window as any).Html5Qrcode) {
-        setTimeout(startScanner, 200);
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = "https://unpkg.com/html5-qrcode";
-      script.async = true;
-      script.onload = () => {
-        setTimeout(startScanner, 200);
-      };
-      script.onerror = () => {
-        setScannerError("Failed to load scanner library. Check internet connection.");
-      };
-      document.body.appendChild(script);
-      return () => {
-        if (document.body.contains(script)) {
-          document.body.removeChild(script);
-        }
-      };
-    }
-  }, [showScanner]);
-
-  const handleScanSuccess = async (barcode: string) => {
-    playBeep();
-    setScannedBarcode(barcode);
-    
-    const matchedItem = menuItems.find(item => {
-      const itemBarcode = getBarcode(item.category);
-      return itemBarcode === barcode;
-    });
-
-    if (matchedItem) {
-      addToCart(matchedItem);
-      alert(`Scanned: ${matchedItem.name} added to cart!`);
-    } else {
-      setIsApiLoading(true);
-      setNewScannedName("");
-      setNewScannedPrice("");
-      setNewScannedQty("1");
-      setShowNewProductModal(true);
-      
-      try {
-        const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
-        const data = await res.json();
-        if (data.status === 1) {
-          const prodName = data.product.product_name || data.product.product_name_en || "";
-          const brand = data.product.brands || "";
-          const fullName = brand ? `${brand} ${prodName}` : prodName;
-          setNewScannedName(fullName.trim());
-        }
-      } catch (err) {
-        console.error("Open Food Facts fetch error:", err);
-      } finally {
-        setIsApiLoading(false);
-        setTimeout(() => {
-          const priceInput = document.getElementById("new-scanned-price-input");
-          if (priceInput) priceInput.focus();
-        }, 300);
-      }
-    }
-  };
-
-  const handleAddNewScannedProduct = () => {
-    if (!newScannedName.trim()) return alert("Product name is required.");
-    const priceVal = Number(newScannedPrice) || 0;
-    const qtyVal = Number(newScannedQty) || 1;
-
-    setCart(prev => {
-      const existing = prev.find(c => c.name === newScannedName.trim());
-      if (existing) {
-        return prev.map(c => c.name === newScannedName.trim() ? { ...c, qty: c.qty + qtyVal } : c);
-      }
-      return [...prev, {
-        name: newScannedName.trim(),
-        price: priceVal,
-        qty: qtyVal,
-        isNewProduct: true,
-        barcode: scannedBarcode
-      }];
-    });
-
-    setShowNewProductModal(false);
   };
   
   // Latest State Ref to avoid stale closures in voice listener
@@ -669,20 +463,21 @@ Stay safe & eat healthy! 🍕
     try {
       if (authMode === "login") {
         const { data, error } = await supabase
-          .rpc('verify_store_login', { 
-            mobile: loginMobile, 
-            input_pass: loginPassword 
-          });
+          .from('stores')
+          .select('*')
+          .eq('owner_mobile', loginMobile)
+          .single();
 
-        if (error || !data || data.length === 0) {
-          setLoginError("Invalid mobile number or password.");
+        if (error || !data) {
+          setLoginError("Store not found. Please register.");
+        } else if (data.password !== loginPassword) {
+          setLoginError("Invalid password.");
         } else {
-          const storeData = data[0];
           // Success Login
           setIsLoggedIn(true);
           setOwnerMobile(loginMobile);
-          setRestaurantName(storeData.store_name);
-          setMonthlyRent(storeData.monthly_rent || 0);
+          setRestaurantName(data.store_name);
+          setMonthlyRent(data.monthly_rent || 0);
           localStorage.setItem("saas_is_logged_in", "true");
           localStorage.setItem("saas_owner_mobile", loginMobile);
 
@@ -694,12 +489,12 @@ Stay safe & eat healthy! 🍕
             localStorage.removeItem("saas_rem_pass");
           }
 
-          setStoreCreatedAt(storeData.created_at);
-          setSubscriptionExpiry(storeData.subscription_expiry);
-          localStorage.setItem("saas_store_created_at", storeData.created_at || "");
-          localStorage.setItem("saas_store_expiry", storeData.subscription_expiry || "");
+          setStoreCreatedAt(data.created_at);
+          setSubscriptionExpiry(data.subscription_expiry);
+          localStorage.setItem("saas_store_created_at", data.created_at || "");
+          localStorage.setItem("saas_store_expiry", data.subscription_expiry || "");
 
-          await fetchStoreData(storeData.id);
+          await fetchStoreData(data.id);
         }
       } else {
         // Signup
@@ -915,33 +710,6 @@ Stay safe & eat healthy! 🍕
         .single();
 
       if (error) throw error;
-
-      // Save new products to menu_items in background
-      try {
-        const newProducts = cart.filter(c => c.isNewProduct);
-        if (newProducts.length > 0) {
-          const inserts = newProducts.map(item => ({
-            store_id: store.id,
-            name: item.name,
-            price: Number(item.price),
-            category: `General|Barcode:${item.barcode}`
-          }));
-          const { data: insertedItems, error: insertErr } = await supabase
-            .from('menu_items')
-            .insert(inserts)
-            .select();
-          if (!insertErr && insertedItems) {
-            setMenuItems(prev => [...prev, ...insertedItems.map(m => ({
-              id: m.id,
-              name: m.name,
-              price: m.price,
-              category: m.category
-            }))]);
-          }
-        }
-      } catch (dbErr) {
-        console.error("Failed to auto-onboard products:", dbErr);
-      }
 
       const sale = { 
         id: newSale.id, 
@@ -1366,18 +1134,9 @@ Stay safe & eat healthy! 🍕
                 {/* SELECT ITEMS SECTION */}
                 <div className="space-y-3">
                   <h4 className="text-[9px] font-black uppercase text-zinc-400 tracking-[0.2em]">Select Items</h4>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-300" />
-                      <Input placeholder="Search dishes..." value={itemSearch} onChange={e => setItemSearch(e.target.value)} className="h-10 pl-10 rounded-xl bg-zinc-50 dark:bg-zinc-900 border-0 font-bold placeholder:text-zinc-300 text-xs w-full" />
-                    </div>
-                    <button 
-                      onClick={() => setShowScanner(true)} 
-                      className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center hover:bg-orange-600 hover:text-white transition-colors active:scale-95 shadow-sm"
-                      title="Scan Barcode"
-                    >
-                      <Camera className="h-5 w-5" />
-                    </button>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-300" />
+                    <Input placeholder="Search dishes..." value={itemSearch} onChange={e => setItemSearch(e.target.value)} className="h-10 pl-10 rounded-xl bg-zinc-50 dark:bg-zinc-900 border-0 font-bold placeholder:text-zinc-300 text-xs" />
                   </div>
                   <div className="grid grid-cols-3 gap-1.5">
                     {menuItems.filter(i => i.name.toLowerCase().includes(itemSearch.toLowerCase())).map(item => (
@@ -2210,7 +1969,7 @@ Stay safe & eat healthy! 🍕
                         <div key={item.id} className="p-6 grid grid-cols-12 items-center hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors px-8">
                           <div className="col-span-7">
                             <p className="font-bold text-md text-zinc-900 dark:text-white leading-none">{item.name}</p>
-                            <p className="text-[9px] font-bold text-zinc-400 uppercase mt-1 tracking-wider">{getDisplayCategory(item.category)}</p>
+                            <p className="text-[9px] font-bold text-zinc-400 uppercase mt-1 tracking-wider">{item.category}</p>
                           </div>
                           <div className="col-span-3 text-center">
                             <p className="font-bold text-lg tracking-tight">₹{item.price}</p>
@@ -2843,106 +2602,6 @@ Stay safe & eat healthy! 🍕
                 className="w-full h-12 text-zinc-400 font-black uppercase tracking-[0.2em] text-[10px] hover:text-zinc-600"
               >
                 Done
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* BARCODE SCANNER DIALOG */}
-      <Dialog open={showScanner} onOpenChange={(open) => { if(!open) closeScanner(); }}>
-        <DialogContent className="p-6 border-0 max-w-[360px] bg-zinc-950 text-white rounded-xl shadow-2xl">
-          <div className="space-y-4">
-            <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
-              <DialogTitle className="text-sm font-black uppercase tracking-wider text-zinc-400">Barcode Scanner</DialogTitle>
-              <Button size="icon" variant="ghost" onClick={closeScanner} className="h-8 w-8 text-zinc-400 hover:text-white rounded-lg">
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="relative overflow-hidden rounded-xl bg-zinc-900 border border-zinc-800 aspect-[4/3] flex items-center justify-center">
-              <div id="reader" className="w-full h-full [&_video]:object-cover [&_video]:rounded-xl" />
-              <div className="absolute inset-0 border-[30px] border-zinc-950/60 pointer-events-none flex items-center justify-center">
-                <div className="w-[220px] h-[100px] border-2 border-dashed border-orange-500 rounded-lg relative">
-                  <div className="absolute left-0 right-0 h-[2px] bg-red-500 shadow-md shadow-red-500 top-1/2 -translate-y-1/2 animate-bounce" />
-                </div>
-              </div>
-            </div>
-            {scannerError && (
-              <p className="text-red-500 text-xs font-bold text-center leading-relaxed">{scannerError}</p>
-            )}
-            <p className="text-zinc-500 text-[10px] font-bold text-center uppercase tracking-widest">
-              Align barcode inside the rectangle to auto-scan
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* NEW PRODUCT SCAN MODAL */}
-      <Dialog open={showNewProductModal} onOpenChange={setShowNewProductModal}>
-        <DialogContent className="p-6 border-0 max-w-[340px] bg-white dark:bg-zinc-900 rounded-xl shadow-2xl">
-          <div className="space-y-5">
-            <div className="text-center space-y-1">
-              <DialogTitle className="text-lg font-black tracking-tight">New Barcode Scanned!</DialogTitle>
-              <DialogDescription className="text-zinc-500 font-bold text-xs">
-                Enter details to add this product to your sale.
-              </DialogDescription>
-            </div>
-
-            <div className="space-y-4">
-              <div className="space-y-1">
-                <Label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Product Name</Label>
-                {isApiLoading ? (
-                  <div className="h-10 w-full flex items-center gap-2 px-3 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950">
-                    <Loader2 className="animate-spin text-orange-600" size={14} />
-                    <span className="text-zinc-400 text-xs font-bold italic">Fetching name...</span>
-                  </div>
-                ) : (
-                  <Input 
-                    placeholder="e.g. Good Day Biscuits" 
-                    value={newScannedName} 
-                    onChange={e => setNewScannedName(e.target.value)} 
-                    className="h-10 rounded-xl font-bold text-xs"
-                  />
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <Label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Price (₹)</Label>
-                  <Input 
-                    id="new-scanned-price-input"
-                    type="number"
-                    placeholder="e.g. 10" 
-                    value={newScannedPrice} 
-                    onChange={e => setNewScannedPrice(e.target.value)} 
-                    className="h-10 rounded-xl font-black text-xs"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Quantity</Label>
-                  <Input 
-                    type="number"
-                    value={newScannedQty} 
-                    onChange={e => setNewScannedQty(e.target.value)} 
-                    className="h-10 rounded-xl font-black text-xs"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-2.5 pt-2">
-              <Button 
-                onClick={handleAddNewScannedProduct} 
-                className="flex-1 h-12 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-black text-xs active:scale-95 transition-all"
-              >
-                ADD TO SALE
-              </Button>
-              <Button 
-                onClick={() => setShowNewProductModal(false)} 
-                variant="outline" 
-                className="h-12 rounded-xl font-black text-xs active:scale-95 transition-all"
-              >
-                CANCEL
               </Button>
             </div>
           </div>
