@@ -8,6 +8,7 @@ import {
   TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Capacitor } from "@capacitor/core";
 
 const getDisplayCategory = (cat: string) => {
   if (!cat) return "General";
@@ -41,6 +42,11 @@ import InventoryDiary from "./InventoryDiary";
 export default function Dashboard() {
   const [extraChargeName, setExtraChargeName] = useState("");
   const [extraChargeAmount, setExtraChargeAmount] = useState("");
+
+  const [isAdMobActive, setIsAdMobActive] = useState(false);
+  const [admobDebugInfo, setAdmobDebugInfo] = useState("Not initialized");
+  const [admobHeight, setAdmobHeight] = useState(60);
+  const admobRef = useRef<any>(null);
 
   const [mounted, setMounted] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
@@ -480,6 +486,122 @@ Stay safe & eat healthy! 🍕
       if (backListener) backListener.remove();
     };
   }, [activeTab, isSaleOpen]);
+
+  const prepareInterstitialAd = async () => {
+    try {
+      const adModule = admobRef.current;
+      const { Capacitor } = await import('@capacitor/core');
+      if (adModule && Capacitor.isNativePlatform()) {
+        console.log("Preparing Interstitial Ad...");
+        await adModule.prepareInterstitial({
+          adId: "ca-app-pub-6433517681109667/4211760677",
+          isTesting: false,
+        });
+        console.log("Interstitial Ad prepared successfully.");
+      }
+    } catch (err) {
+      console.error("Error preparing Interstitial Ad:", err);
+    }
+  };
+
+  useEffect(() => {
+    let loadedListener: any = null;
+    let failedListener: any = null;
+    let sizeChangedListener: any = null;
+    let interstitialDismissedListener: any = null;
+    let interstitialFailedToLoadListener: any = null;
+
+    const initAdMob = async () => {
+      try {
+        const { Capacitor } = await import('@capacitor/core');
+        if (!Capacitor.isNativePlatform()) {
+          setAdmobDebugInfo("Non-native platform");
+          return;
+        }
+
+        setAdmobDebugInfo("Loading AdMob module...");
+        const adModule = await import('@capacitor-community/admob');
+        admobRef.current = adModule.AdMob;
+        const AdMob = adModule.AdMob;
+        const BannerAdSize = adModule.BannerAdSize;
+        const BannerAdPosition = adModule.BannerAdPosition;
+        const BannerAdPluginEvents = adModule.BannerAdPluginEvents;
+        const InterstitialAdPluginEvents = adModule.InterstitialAdPluginEvents;
+
+        setAdmobDebugInfo("Registering listeners...");
+
+        loadedListener = await AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
+          console.log("AdMob banner loaded successfully");
+          setAdmobDebugInfo("Loaded successfully");
+          setIsAdMobActive(true);
+        });
+
+        failedListener = await AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (info: any) => {
+          console.error("AdMob banner failed to load:", info);
+          setAdmobDebugInfo(`Failed to load: Code ${info?.code || "unknown"}, Msg: ${info?.message || "unknown"}`);
+          setIsAdMobActive(false);
+        });
+
+        sizeChangedListener = await AdMob.addListener(BannerAdPluginEvents.SizeChanged, (size: any) => {
+          console.log("AdMob banner size changed:", size);
+          if (size && typeof size.height === "number" && size.height > 0) {
+            setAdmobHeight(size.height);
+          }
+        });
+
+        interstitialDismissedListener = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
+          console.log("Interstitial ad dismissed, pre-loading next one...");
+          prepareInterstitialAd();
+        });
+
+        interstitialFailedToLoadListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, (info: any) => {
+          console.error("Interstitial ad failed to load:", info);
+        });
+
+        setAdmobDebugInfo("Initializing SDK...");
+        await AdMob.initialize({
+          initializeForTesting: false,
+        });
+
+        await prepareInterstitialAd();
+
+        setAdmobDebugInfo("Requesting banner...");
+        console.log("Showing AdMob Banner ad...");
+        await AdMob.showBanner({
+          adId: "ca-app-pub-6433517681109667/2890562844",
+          adSize: BannerAdSize.ADAPTIVE_BANNER,
+          position: BannerAdPosition.TOP_CENTER,
+          margin: 0,
+          isTesting: false,
+        });
+        setAdmobDebugInfo("Show requested. Waiting for load...");
+      } catch (err: any) {
+        console.error("AdMob initialization/show error: ", err);
+        setAdmobDebugInfo(`Init Error: ${err?.message || err}`);
+      }
+    };
+
+    initAdMob();
+
+    return () => {
+      const cleanUp = async () => {
+        try {
+          const { Capacitor } = await import('@capacitor/core');
+          if (Capacitor.isNativePlatform() && admobRef.current) {
+            if (loadedListener) loadedListener.remove();
+            if (failedListener) failedListener.remove();
+            if (sizeChangedListener) sizeChangedListener.remove();
+            if (interstitialDismissedListener) interstitialDismissedListener.remove();
+            if (interstitialFailedToLoadListener) interstitialFailedToLoadListener.remove();
+            await admobRef.current.removeBanner();
+          }
+        } catch (e) {
+          console.error("Error removing AdMob banner/listeners: ", e);
+        }
+      };
+      cleanUp();
+    };
+  }, []);
 
   // AI-SMART HINGLISH VOICE CASHIER (With Transliteration)
   useEffect(() => {
@@ -1051,6 +1173,17 @@ Stay safe & eat healthy! 🍕
       setNewMobile("");
       setExtraChargeName("");
       setExtraChargeAmount("");
+
+      // Trigger Interstitial Ad after sale
+      if (admobRef.current) {
+        try {
+          console.log("Triggering Interstitial Ad after sale...");
+          await admobRef.current.showInterstitial();
+        } catch (e) {
+          console.error("Error showing interstitial ad:", e);
+          prepareInterstitialAd();
+        }
+      }
     } catch (err: any) {
       alert("Cloud Sync Error: " + (err.message || "Unknown error"));
     } finally {
@@ -1352,7 +1485,10 @@ Stay safe & eat healthy! 🍕
   const isSubscribed = checkSubscription();
 
   return (
-    <div className={`min-h-screen flex flex-col font-sans selection:bg-orange-500/30 ${isDarkMode ? 'dark bg-zinc-950 text-white' : 'bg-[#fafafa] text-zinc-900'}`}>
+    <div 
+      className={`min-h-screen flex flex-col font-sans selection:bg-orange-500/30 ${isDarkMode ? 'dark bg-zinc-950 text-white' : 'bg-[#fafafa] text-zinc-900'}`}
+      style={{ paddingTop: isAdMobActive ? `${admobHeight}px` : "0px" }}
+    >
       
       {!isSubscribed && (
         <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6 overflow-y-auto">
@@ -2770,6 +2906,12 @@ Stay safe & eat healthy! 🍕
                             >
                               {isSyncing ? "SYNCING..." : "MANUAL SYNC NOW"}
                             </Button>
+                            
+                            {Capacitor.isNativePlatform() && (
+                              <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 p-4 rounded-2xl text-center text-[10px] text-zinc-500 dark:text-zinc-400 font-mono mt-4">
+                                <span className="font-bold text-orange-500">AdMob Status:</span> {admobDebugInfo}
+                              </div>
+                            )}
                           </div>
                         )}
 

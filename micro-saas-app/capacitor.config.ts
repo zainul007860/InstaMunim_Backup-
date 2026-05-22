@@ -7,6 +7,11 @@ const config: CapacitorConfig = {
   server: {
     url: 'https://instamunimapp.vercel.app',
     cleartext: true
+  },
+  plugins: {
+    AdMob: {
+      initializeOnAdvertisingIdentifier: true,
+    }
   }
 };
 

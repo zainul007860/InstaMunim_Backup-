@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
+    "@capacitor-community/admob": "^8.0.0",
     "@capacitor/app": "^8.1.0",
     "@supabase/supabase-js": "^2.105.3",
     "class-variance-authority": "^0.7.1",
