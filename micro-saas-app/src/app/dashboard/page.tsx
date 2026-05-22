@@ -8,7 +8,6 @@ import {
   TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Capacitor } from "@capacitor/core";
 
 const getDisplayCategory = (cat: string) => {
   if (!cat) return "General";
@@ -44,6 +43,7 @@ export default function Dashboard() {
   const [extraChargeAmount, setExtraChargeAmount] = useState("");
 
   const [isAdMobActive, setIsAdMobActive] = useState(false);
+  const [isNative, setIsNative] = useState(false);
   const [admobDebugInfo, setAdmobDebugInfo] = useState("Not initialized");
   const [admobHeight, setAdmobHeight] = useState(60);
   const admobRef = useRef<any>(null);
@@ -518,6 +518,7 @@ Stay safe & eat healthy! 🍕
           setAdmobDebugInfo("Non-native platform");
           return;
         }
+        setIsNative(true);
 
         setAdmobDebugInfo("Loading AdMob module...");
         const adModule = await import('@capacitor-community/admob');
@@ -2907,7 +2908,7 @@ Stay safe & eat healthy! 🍕
                               {isSyncing ? "SYNCING..." : "MANUAL SYNC NOW"}
                             </Button>
                             
-                            {Capacitor.isNativePlatform() && (
+                            {isNative && (
                               <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 p-4 rounded-2xl text-center text-[10px] text-zinc-500 dark:text-zinc-400 font-mono mt-4">
                                 <span className="font-bold text-orange-500">AdMob Status:</span> {admobDebugInfo}
                               </div>
