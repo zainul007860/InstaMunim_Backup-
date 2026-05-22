@@ -1,8 +1,8 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.zainul.smartpos.dev',
-  appName: 'InstaMunim DEV',
+  appId: 'com.zainul.instamunim',
+  appName: 'InstaMunim',
   webDir: 'out',
   server: {
     url: 'https://instamunimapp.vercel.app',
