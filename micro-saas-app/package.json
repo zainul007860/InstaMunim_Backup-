@@ -6,11 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "capacitor:copy:before": "node -e \"const fs = require('fs'); const file = 'out/InstaMunimSmartPOS_v1.1.apk'; if (fs.existsSync(file)) { fs.unlinkSync(file); console.log('Successfully excluded APK from native assets copy'); }\""
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
+    "@capacitor-community/admob": "^8.0.0",
     "@capacitor/app": "^8.1.0",
+    "@capacitor/core": "^8.3.4",
     "@supabase/supabase-js": "^2.105.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -26,7 +29,6 @@
   "devDependencies": {
     "@capacitor/android": "^8.3.4",
     "@capacitor/cli": "^8.3.4",
-    "@capacitor/core": "^8.3.4",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

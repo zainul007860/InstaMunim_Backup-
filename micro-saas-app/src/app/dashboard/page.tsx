@@ -5,9 +5,29 @@ import { format, isBefore, isAfter } from "date-fns";
 import { 
   LayoutDashboard, FileText, Settings, LogOut, Search,
   PlusCircle, Loader2, Book, Trash2, Send, ShoppingCart, Package,
-  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check
+  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+const getDisplayCategory = (cat: string) => {
+  if (!cat) return "General";
+  if (cat.includes("|Barcode:")) {
+    return cat.split("|Barcode:")[0] || "General";
+  }
+  if (cat.startsWith("Barcode:")) return "General";
+  return cat;
+};
+
+const getBarcode = (cat: string) => {
+  if (!cat) return null;
+  if (cat.includes("|Barcode:")) {
+    return cat.split("|Barcode:")[1];
+  }
+  if (cat.startsWith("Barcode:")) {
+    return cat.replace("Barcode:", "");
+  }
+  return null;
+};
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +41,12 @@ import InventoryDiary from "./InventoryDiary";
 export default function Dashboard() {
   const [extraChargeName, setExtraChargeName] = useState("");
   const [extraChargeAmount, setExtraChargeAmount] = useState("");
+
+  const [isAdMobActive, setIsAdMobActive] = useState(false);
+  const [isNative, setIsNative] = useState(false);
+  const [admobDebugInfo, setAdmobDebugInfo] = useState("Not initialized");
+  const [admobHeight, setAdmobHeight] = useState(60);
+  const admobRef = useRef<any>(null);
 
   const [mounted, setMounted] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
@@ -94,7 +120,17 @@ export default function Dashboard() {
   const [isWhatsAppEnabled, setIsWhatsAppEnabled] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [crmMessage, setCrmMessage] = useState("Hi [NAME], we miss you at [SHOP]! 🍕 Come back today for a special offer just for you!");
-  const [cart, setCart] = useState<{name: string, price: number, qty: number}[]>([]);
+  const [cart, setCart] = useState<any[]>([]);
+  // Barcode Scanner states
+  const [showScanner, setShowScanner] = useState(false);
+  const [scannedBarcode, setScannedBarcode] = useState("");
+  const [scannerError, setScannerError] = useState("");
+  const [scannerDebugInfo, setScannerDebugInfo] = useState("Initializing...");
+  const [isApiLoading, setIsApiLoading] = useState(false);
+  const [showNewProductModal, setShowNewProductModal] = useState(false);
+  const [newScannedName, setNewScannedName] = useState("");
+  const [newScannedPrice, setNewScannedPrice] = useState("");
+  const [newScannedQty, setNewScannedQty] = useState("1");
   const [restaurantName, setRestaurantName] = useState("InstaMunim");
   const [storeLogo, setStoreLogo] = useState<string | null>(null);
   const [storeAddress, setStoreAddress] = useState("Premium Plaza, Main Road, New Delhi");
@@ -156,6 +192,271 @@ Stay safe & eat healthy! 🍕
     return text.split('').map(char => map[char] || char).join('').toUpperCase();
   };
   
+  const qrCodeRef = useRef<any>(null);
+  const lastScannedRef = useRef<{ barcode: string; time: number } | null>(null);
+  const [lastScannedMsg, setLastScannedMsg] = useState("");
+
+  const playBeep = () => {
+    try {
+      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(800, audioCtx.currentTime);
+      gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 0.1);
+    } catch (e) {
+      console.warn("Audio context not supported", e);
+    }
+  };
+
+  const startScanner = () => {
+    setScannerError("");
+    try {
+      const formats = [9, 10, 5, 3, 14, 15, 0]; // EAN_13, EAN_8, CODE_128, CODE_39, UPC_A, UPC_E, QR_CODE
+      const html5QrCode = new (window as any).Html5Qrcode("reader");
+      qrCodeRef.current = html5QrCode;
+
+      const successCallback = (decodedText: string) => {
+        const now = Date.now();
+        if (
+          lastScannedRef.current &&
+          lastScannedRef.current.barcode === decodedText &&
+          now - lastScannedRef.current.time < 2000
+        ) {
+          return;
+        }
+        lastScannedRef.current = { barcode: decodedText, time: now };
+        handleScanSuccess(decodedText, html5QrCode);
+      };
+
+      const startWithConfig = (cameraIdOrConfig: any, videoConstraints?: any) => {
+        return html5QrCode.start(
+          cameraIdOrConfig,
+          {
+            fps: 20,
+            qrbox: (width: number, height: number) => {
+              return { width: Math.min(width * 0.85, 290), height: 140 };
+            },
+            videoConstraints: videoConstraints,
+            formatsToSupport: formats,
+            experimentalFeatures: {
+              useBarCodeDetectorIfSupported: true
+            }
+          },
+          successCallback,
+          () => {}
+        );
+      };
+
+      // Try HD Back Camera first
+      startWithConfig(
+        { facingMode: "environment" },
+        {
+          width: { min: 640, ideal: 1280, max: 1920 },
+          height: { min: 480, ideal: 720, max: 1080 }
+        }
+      )
+      .then(() => {
+        try {
+          const inputState = (html5QrCode as any).html5QrcodeInput;
+          const track = inputState?.localMediaStream?.getVideoTracks()?.[0];
+          if (track) {
+            const settings = track.getSettings ? track.getSettings() : {};
+            setScannerDebugInfo(`Active (HD Back): ${settings.width || 0}x${settings.height || 0} px`);
+          } else {
+            setScannerDebugInfo("Camera active. Align barcode.");
+          }
+        } catch (e) {
+          setScannerDebugInfo("Camera active. Align barcode.");
+        }
+
+        try {
+          html5QrCode.applyVideoConstraints({
+            focusMode: "continuous"
+          } as any).catch((e: any) => console.log("autofocus not supported:", e));
+        } catch (e) {
+          console.log("Error applying focus constraints:", e);
+        }
+      })
+      .catch((err: any) => {
+        console.warn("HD back camera failed, trying SD back camera:", err);
+        startWithConfig({ facingMode: "environment" })
+        .then(() => {
+          try {
+            const inputState = (html5QrCode as any).html5QrcodeInput;
+            const track = inputState?.localMediaStream?.getVideoTracks()?.[0];
+            if (track) {
+              const settings = track.getSettings ? track.getSettings() : {};
+              setScannerDebugInfo(`Active (SD Back): ${settings.width || 0}x${settings.height || 0} px`);
+            } else {
+              setScannerDebugInfo("Camera active. Align barcode.");
+            }
+          } catch (e) {
+            setScannerDebugInfo("Camera active. Align barcode.");
+          }
+
+          try {
+            html5QrCode.applyVideoConstraints({
+              focusMode: "continuous"
+            } as any).catch((e: any) => console.log("autofocus not supported:", e));
+          } catch (e) {
+            console.log("Error applying focus constraints:", e);
+          }
+        })
+        .catch((sdErr: any) => {
+          console.warn("SD back camera failed, trying Front Camera (Webcam):", sdErr);
+          startWithConfig({ facingMode: "user" })
+          .then(() => {
+            setScannerDebugInfo("Camera active (Front/Webcam). Align barcode.");
+          })
+          .catch((frontErr: any) => {
+            console.warn("Front camera failed, trying first available device ID:", frontErr);
+            (window as any).Html5Qrcode.getCameras()
+              .then((cameras: any[]) => {
+                if (cameras && cameras.length > 0) {
+                  startWithConfig(cameras[0].id)
+                    .then(() => {
+                      setScannerDebugInfo(`Active (Device: ${cameras[0].label || "Default"}).`);
+                    })
+                    .catch((finalErr: any) => {
+                      console.error("Camera ID start failed:", finalErr);
+                      setScannerError(`Camera error: ${finalErr.message || finalErr}`);
+                    });
+                } else {
+                  setScannerError("No camera device detected on this system.");
+                }
+              })
+              .catch((camListErr: any) => {
+                console.error("Failed to list cameras:", camListErr);
+                setScannerError(`Camera list error: ${camListErr.message || camListErr}`);
+              });
+          });
+        });
+      });
+    } catch (err: any) {
+      console.error(err);
+      setScannerError(`Init error: ${err.message || err}`);
+    }
+  };
+
+  const closeScanner = () => {
+    lastScannedRef.current = null;
+    setLastScannedMsg("");
+    if (qrCodeRef.current) {
+      try {
+        qrCodeRef.current.stop().then(() => {
+          setShowScanner(false);
+        }).catch(() => {
+          setShowScanner(false);
+        });
+      } catch (e) {
+        setShowScanner(false);
+      }
+    } else {
+      setShowScanner(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showScanner) {
+      if ((window as any).Html5Qrcode) {
+        setTimeout(startScanner, 400);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js";
+      script.async = true;
+      script.onload = () => {
+        setTimeout(startScanner, 400);
+      };
+      script.onerror = () => {
+        setScannerError("Failed to load scanner library. Check internet connection.");
+      };
+      document.body.appendChild(script);
+      return () => {
+        if (document.body.contains(script)) {
+          document.body.removeChild(script);
+        }
+      };
+    }
+  }, [showScanner]);
+
+  const handleScanSuccess = async (barcode: string, html5QrCodeInstance?: any) => {
+    playBeep();
+    setScannedBarcode(barcode);
+    
+    const matchedItem = menuItems.find(item => {
+      const itemBarcode = getBarcode(item.category);
+      return itemBarcode === barcode;
+    });
+
+    const scanner = html5QrCodeInstance || qrCodeRef.current;
+    if (scanner) {
+      try {
+        await scanner.stop();
+      } catch (e) {
+        console.error("Error stopping scanner:", e);
+      }
+    }
+    qrCodeRef.current = null;
+    setShowScanner(false);
+
+    if (matchedItem) {
+      addToCart(matchedItem);
+    } else {
+      setIsApiLoading(true);
+      setNewScannedName("");
+      setNewScannedPrice("");
+      setNewScannedQty("1");
+      setShowNewProductModal(true);
+      
+      try {
+        const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
+        const data = await res.json();
+        if (data.status === 1) {
+          const prodName = data.product.product_name || data.product.product_name_en || "";
+          const brand = data.product.brands || "";
+          const fullName = brand ? `${brand} ${prodName}` : prodName;
+          setNewScannedName(fullName.trim());
+        }
+      } catch (err) {
+        console.error("Open Food Facts fetch error:", err);
+      } finally {
+        setIsApiLoading(false);
+        setTimeout(() => {
+          const priceInput = document.getElementById("new-scanned-price-input");
+          if (priceInput) priceInput.focus();
+        }, 300);
+      }
+    }
+  };
+
+  const handleAddNewScannedProduct = async () => {
+    if (!newScannedName.trim()) return alert("Product name is required.");
+    const priceVal = Number(newScannedPrice) || 0;
+    const qtyVal = Number(newScannedQty) || 1;
+
+    setCart(prev => {
+      const existing = prev.find(c => c.name === newScannedName.trim());
+      if (existing) {
+        return prev.map(c => c.name === newScannedName.trim() ? { ...c, qty: c.qty + qtyVal } : c);
+      }
+      return [...prev, {
+        name: newScannedName.trim(),
+        price: priceVal,
+        qty: qtyVal,
+        isNewProduct: true,
+        barcode: scannedBarcode
+      }];
+    });
+
+    setShowNewProductModal(false);
+  };
+  
   // Latest State Ref to avoid stale closures in voice listener
   const latestStateRef = useRef({ menuItems, voicePhase, cart, newName, newMobile });
   useEffect(() => {
@@ -185,6 +486,123 @@ Stay safe & eat healthy! 🍕
       if (backListener) backListener.remove();
     };
   }, [activeTab, isSaleOpen]);
+
+  const prepareInterstitialAd = async () => {
+    try {
+      const adModule = admobRef.current;
+      const { Capacitor } = await import('@capacitor/core');
+      if (adModule && Capacitor.isNativePlatform()) {
+        console.log("Preparing Interstitial Ad...");
+        await adModule.prepareInterstitial({
+          adId: "ca-app-pub-6433517681109667/4211760677",
+          isTesting: false,
+        });
+        console.log("Interstitial Ad prepared successfully.");
+      }
+    } catch (err) {
+      console.error("Error preparing Interstitial Ad:", err);
+    }
+  };
+
+  useEffect(() => {
+    let loadedListener: any = null;
+    let failedListener: any = null;
+    let sizeChangedListener: any = null;
+    let interstitialDismissedListener: any = null;
+    let interstitialFailedToLoadListener: any = null;
+
+    const initAdMob = async () => {
+      try {
+        const { Capacitor } = await import('@capacitor/core');
+        if (!Capacitor.isNativePlatform()) {
+          setAdmobDebugInfo("Non-native platform");
+          return;
+        }
+        setIsNative(true);
+
+        setAdmobDebugInfo("Loading AdMob module...");
+        const adModule = await import('@capacitor-community/admob');
+        admobRef.current = adModule.AdMob;
+        const AdMob = adModule.AdMob;
+        const BannerAdSize = adModule.BannerAdSize;
+        const BannerAdPosition = adModule.BannerAdPosition;
+        const BannerAdPluginEvents = adModule.BannerAdPluginEvents;
+        const InterstitialAdPluginEvents = adModule.InterstitialAdPluginEvents;
+
+        setAdmobDebugInfo("Registering listeners...");
+
+        loadedListener = await AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
+          console.log("AdMob banner loaded successfully");
+          setAdmobDebugInfo("Loaded successfully");
+          setIsAdMobActive(true);
+        });
+
+        failedListener = await AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (info: any) => {
+          console.error("AdMob banner failed to load:", info);
+          setAdmobDebugInfo(`Failed to load: Code ${info?.code || "unknown"}, Msg: ${info?.message || "unknown"}`);
+          setIsAdMobActive(false);
+        });
+
+        sizeChangedListener = await AdMob.addListener(BannerAdPluginEvents.SizeChanged, (size: any) => {
+          console.log("AdMob banner size changed:", size);
+          if (size && typeof size.height === "number" && size.height > 0) {
+            setAdmobHeight(size.height);
+          }
+        });
+
+        interstitialDismissedListener = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
+          console.log("Interstitial ad dismissed, pre-loading next one...");
+          prepareInterstitialAd();
+        });
+
+        interstitialFailedToLoadListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, (info: any) => {
+          console.error("Interstitial ad failed to load:", info);
+        });
+
+        setAdmobDebugInfo("Initializing SDK...");
+        await AdMob.initialize({
+          initializeForTesting: false,
+        });
+
+        await prepareInterstitialAd();
+
+        setAdmobDebugInfo("Requesting banner...");
+        console.log("Showing AdMob Banner ad...");
+        await AdMob.showBanner({
+          adId: "ca-app-pub-6433517681109667/2890562844",
+          adSize: BannerAdSize.ADAPTIVE_BANNER,
+          position: BannerAdPosition.TOP_CENTER,
+          margin: 0,
+          isTesting: false,
+        });
+        setAdmobDebugInfo("Show requested. Waiting for load...");
+      } catch (err: any) {
+        console.error("AdMob initialization/show error: ", err);
+        setAdmobDebugInfo(`Init Error: ${err?.message || err}`);
+      }
+    };
+
+    initAdMob();
+
+    return () => {
+      const cleanUp = async () => {
+        try {
+          const { Capacitor } = await import('@capacitor/core');
+          if (Capacitor.isNativePlatform() && admobRef.current) {
+            if (loadedListener) loadedListener.remove();
+            if (failedListener) failedListener.remove();
+            if (sizeChangedListener) sizeChangedListener.remove();
+            if (interstitialDismissedListener) interstitialDismissedListener.remove();
+            if (interstitialFailedToLoadListener) interstitialFailedToLoadListener.remove();
+            await admobRef.current.removeBanner();
+          }
+        } catch (e) {
+          console.error("Error removing AdMob banner/listeners: ", e);
+        }
+      };
+      cleanUp();
+    };
+  }, []);
 
   // AI-SMART HINGLISH VOICE CASHIER (With Transliteration)
   useEffect(() => {
@@ -710,6 +1128,33 @@ Stay safe & eat healthy! 🍕
 
       if (error) throw error;
 
+      // Save new products to menu_items in background
+      try {
+        const newProducts = cart.filter(c => c.isNewProduct);
+        if (newProducts.length > 0) {
+          const inserts = newProducts.map(item => ({
+            store_id: store.id,
+            name: item.name,
+            price: Number(item.price),
+            category: `General|Barcode:${item.barcode}`
+          }));
+          const { data: insertedItems, error: insertErr } = await supabase
+            .from('menu_items')
+            .insert(inserts)
+            .select();
+          if (!insertErr && insertedItems) {
+            setMenuItems(prev => [...prev, ...insertedItems.map(m => ({
+              id: m.id,
+              name: m.name,
+              price: m.price,
+              category: m.category
+            }))]);
+          }
+        }
+      } catch (dbErr) {
+        console.error("Failed to auto-onboard products:", dbErr);
+      }
+
       const sale = { 
         id: newSale.id, 
         name: newSale.customer_name, 
@@ -729,6 +1174,17 @@ Stay safe & eat healthy! 🍕
       setNewMobile("");
       setExtraChargeName("");
       setExtraChargeAmount("");
+
+      // Trigger Interstitial Ad after sale
+      if (admobRef.current) {
+        try {
+          console.log("Triggering Interstitial Ad after sale...");
+          await admobRef.current.showInterstitial();
+        } catch (e) {
+          console.error("Error showing interstitial ad:", e);
+          prepareInterstitialAd();
+        }
+      }
     } catch (err: any) {
       alert("Cloud Sync Error: " + (err.message || "Unknown error"));
     } finally {
@@ -1030,7 +1486,10 @@ Stay safe & eat healthy! 🍕
   const isSubscribed = checkSubscription();
 
   return (
-    <div className={`min-h-screen flex flex-col font-sans selection:bg-orange-500/30 ${isDarkMode ? 'dark bg-zinc-950 text-white' : 'bg-[#fafafa] text-zinc-900'}`}>
+    <div 
+      className={`min-h-screen flex flex-col font-sans selection:bg-orange-500/30 ${isDarkMode ? 'dark bg-zinc-950 text-white' : 'bg-[#fafafa] text-zinc-900'}`}
+      style={{ paddingTop: isAdMobActive ? `${admobHeight}px` : "0px" }}
+    >
       
       {!isSubscribed && (
         <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6 overflow-y-auto">
@@ -1133,9 +1592,18 @@ Stay safe & eat healthy! 🍕
                 {/* SELECT ITEMS SECTION */}
                 <div className="space-y-3">
                   <h4 className="text-[9px] font-black uppercase text-zinc-400 tracking-[0.2em]">Select Items</h4>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-300" />
-                    <Input placeholder="Search dishes..." value={itemSearch} onChange={e => setItemSearch(e.target.value)} className="h-10 pl-10 rounded-xl bg-zinc-50 dark:bg-zinc-900 border-0 font-bold placeholder:text-zinc-300 text-xs" />
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-300" />
+                      <Input placeholder="Search dishes..." value={itemSearch} onChange={e => setItemSearch(e.target.value)} className="h-10 pl-10 rounded-xl bg-zinc-50 dark:bg-zinc-900 border-0 font-bold placeholder:text-zinc-300 text-xs w-full" />
+                    </div>
+                    <button 
+                      onClick={() => setShowScanner(true)} 
+                      className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center hover:bg-orange-600 hover:text-white transition-colors active:scale-95 shadow-sm"
+                      title="Scan Barcode"
+                    >
+                      <Camera className="h-5 w-5" />
+                    </button>
                   </div>
                   <div className="grid grid-cols-3 gap-1.5">
                     {menuItems.filter(i => i.name.toLowerCase().includes(itemSearch.toLowerCase())).map(item => (
@@ -1968,7 +2436,7 @@ Stay safe & eat healthy! 🍕
                         <div key={item.id} className="p-6 grid grid-cols-12 items-center hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors px-8">
                           <div className="col-span-7">
                             <p className="font-bold text-md text-zinc-900 dark:text-white leading-none">{item.name}</p>
-                            <p className="text-[9px] font-bold text-zinc-400 uppercase mt-1 tracking-wider">{item.category}</p>
+                            <p className="text-[9px] font-bold text-zinc-400 uppercase mt-1 tracking-wider">{getDisplayCategory(item.category)}</p>
                           </div>
                           <div className="col-span-3 text-center">
                             <p className="font-bold text-lg tracking-tight">₹{item.price}</p>
@@ -2439,6 +2907,12 @@ Stay safe & eat healthy! 🍕
                             >
                               {isSyncing ? "SYNCING..." : "MANUAL SYNC NOW"}
                             </Button>
+                            
+                            {isNative && (
+                              <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 p-4 rounded-2xl text-center text-[10px] text-zinc-500 dark:text-zinc-400 font-mono mt-4">
+                                <span className="font-bold text-orange-500">AdMob Status:</span> {admobDebugInfo}
+                              </div>
+                            )}
                           </div>
                         )}
 
@@ -2601,6 +3075,117 @@ Stay safe & eat healthy! 🍕
                 className="w-full h-12 text-zinc-400 font-black uppercase tracking-[0.2em] text-[10px] hover:text-zinc-600"
               >
                 Done
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* BARCODE SCANNER DIALOG */}
+      <Dialog open={showScanner} onOpenChange={(open) => { if(!open) closeScanner(); }}>
+        <DialogContent className="p-6 border-0 max-w-[360px] bg-zinc-950 text-white rounded-xl shadow-2xl">
+          <div className="space-y-4">
+            <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
+              <DialogTitle className="text-sm font-black uppercase tracking-wider text-zinc-400">Barcode Scanner</DialogTitle>
+              <Button size="icon" variant="ghost" onClick={closeScanner} className="h-8 w-8 text-zinc-400 hover:text-white rounded-lg">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            <div className="relative overflow-hidden rounded-xl bg-zinc-900 border border-zinc-800 aspect-[4/3] flex items-center justify-center">
+              <div id="reader" className="w-full h-full [&_video]:object-contain [&_video]:rounded-xl" />
+              <div className="absolute inset-0 border-[30px] border-zinc-950/60 pointer-events-none flex items-center justify-center">
+                <div className="w-[220px] h-[100px] border-2 border-dashed border-orange-500 rounded-lg relative">
+                  <div className="absolute left-0 right-0 h-[2px] bg-red-500 shadow-md shadow-red-500 top-1/2 -translate-y-1/2 animate-bounce" />
+                </div>
+              </div>
+              {lastScannedMsg && (
+                <div className="absolute bottom-4 left-4 right-4 bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg text-center shadow-lg animate-fade-in flex items-center justify-center gap-1.5">
+                  <span className="h-2 w-2 bg-white rounded-full animate-ping" />
+                  {lastScannedMsg}
+                </div>
+              )}
+            </div>
+            {scannerError && (
+              <p className="text-red-500 text-xs font-bold text-center leading-relaxed">{scannerError}</p>
+            )}
+            <p className="text-zinc-500 text-[10px] font-bold text-center uppercase tracking-widest">
+              Align barcode inside the rectangle to auto-scan
+            </p>
+            <div className="text-center">
+              <span className="inline-block text-[9px] font-mono text-zinc-500 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded">
+                {scannerDebugInfo}
+              </span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* NEW PRODUCT SCAN MODAL */}
+      <Dialog open={showNewProductModal} onOpenChange={setShowNewProductModal}>
+        <DialogContent className="p-6 border-0 max-w-[340px] bg-white dark:bg-zinc-900 rounded-xl shadow-2xl">
+          <div className="space-y-5">
+            <div className="text-center space-y-1">
+              <DialogTitle className="text-lg font-black tracking-tight">New Barcode Scanned!</DialogTitle>
+              <DialogDescription className="text-zinc-500 font-bold text-xs">
+                Enter details to add this product to your sale.
+              </DialogDescription>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Product Name</Label>
+                {isApiLoading ? (
+                  <div className="h-10 w-full flex items-center gap-2 px-3 border border-zinc-200 dark:border-zinc-800 rounded-xl bg-zinc-50 dark:bg-zinc-950">
+                    <Loader2 className="animate-spin text-orange-600" size={14} />
+                    <span className="text-zinc-400 text-xs font-bold italic">Fetching name...</span>
+                  </div>
+                ) : (
+                  <Input 
+                    placeholder="e.g. Good Day Biscuits" 
+                    value={newScannedName} 
+                    onChange={e => setNewScannedName(e.target.value)} 
+                    className="h-10 rounded-xl font-bold text-xs"
+                  />
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Price (₹)</Label>
+                  <Input 
+                    id="new-scanned-price-input"
+                    type="number"
+                    placeholder="e.g. 10" 
+                    value={newScannedPrice} 
+                    onChange={e => setNewScannedPrice(e.target.value)} 
+                    className="h-10 rounded-xl font-black text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Quantity</Label>
+                  <Input 
+                    type="number"
+                    value={newScannedQty} 
+                    onChange={e => setNewScannedQty(e.target.value)} 
+                    className="h-10 rounded-xl font-black text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2.5 pt-2">
+              <Button 
+                onClick={handleAddNewScannedProduct} 
+                className="flex-1 h-12 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-black text-xs active:scale-95 transition-all"
+              >
+                ADD TO SALE
+              </Button>
+              <Button 
+                onClick={() => setShowNewProductModal(false)} 
+                variant="outline" 
+                className="h-12 rounded-xl font-black text-xs active:scale-95 transition-all"
+              >
+                CANCEL
               </Button>
             </div>
           </div>
