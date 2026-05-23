@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.zainul.instamunim"
+    namespace = "com.zainul.smartpos"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.zainul.instamunim"
+        applicationId "com.zainul.smartpos"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 4

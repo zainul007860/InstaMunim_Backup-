@@ -1,4 +1,4 @@
-package com.zainul.instamunim;
+package com.zainul.smartpos;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
