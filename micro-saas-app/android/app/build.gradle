@@ -7,7 +7,7 @@ android {
         applicationId "com.zainul.instamunim"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 3
+        versionCode 4
         versionName "1.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
@@ -15,6 +15,14 @@ android {
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
             cruncherEnabled = false
+        }
+    }
+    signingConfigs {
+        release {
+            storeFile file('instamunim-release.jks')
+            storePassword 'Instamunim@2024'
+            keyAlias 'instamunim'
+            keyPassword 'Instamunim@2024'
         }
     }
     buildTypes {
@@ -25,6 +33,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         release {
+            signingConfig signingConfigs.release
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -32,7 +41,7 @@ android {
     }
     applicationVariants.all { variant ->
         variant.outputs.all {
-            outputFileName = "InstaMunimSmartPOS_v1.1.apk"
+            outputFileName = "InstaMunimSmartPOS_v1.2-release.apk"
         }
     }
 }

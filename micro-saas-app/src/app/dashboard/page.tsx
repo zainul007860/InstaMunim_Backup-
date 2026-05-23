@@ -63,6 +63,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("Dashboard");
   const [lang, setLang] = useState<'hi'|'en'>('en');
   const [lastSyncedTime, setLastSyncedTime] = useState(format(new Date(), "hh:mm:ss aa"));
+  const [showExitDialog, setShowExitDialog] = useState(false);
   const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
   const [aiInsightText, setAiInsightText] = useState("");
 
@@ -252,91 +253,65 @@ Stay safe & eat healthy! 🍕
         );
       };
 
-      // Try HD Back Camera first
-      startWithConfig(
-        { facingMode: "environment" },
-        {
-          width: { min: 640, ideal: 1280, max: 1920 },
-          height: { min: 480, ideal: 720, max: 1080 }
-        }
-      )
-      .then(() => {
-        try {
-          const inputState = (html5QrCode as any).html5QrcodeInput;
-          const track = inputState?.localMediaStream?.getVideoTracks()?.[0];
-          if (track) {
-            const settings = track.getSettings ? track.getSettings() : {};
-            setScannerDebugInfo(`Active (HD Back): ${settings.width || 0}x${settings.height || 0} px`);
-          } else {
-            setScannerDebugInfo("Camera active. Align barcode.");
-          }
-        } catch (e) {
-          setScannerDebugInfo("Camera active. Align barcode.");
-        }
+      // Get all available cameras and look specifically for the back/rear camera
+      (window as any).Html5Qrcode.getCameras()
+        .then((cameras: any[]) => {
+          if (cameras && cameras.length > 0) {
+            // Find back camera by label keywords (most reliable)
+            let backCam = cameras.find((cam: any) => {
+              const label = (cam.label || "").toLowerCase();
+              return label.includes("back") || label.includes("rear") || label.includes("environment");
+            });
 
-        try {
-          html5QrCode.applyVideoConstraints({
-            focusMode: "continuous"
-          } as any).catch((e: any) => console.log("autofocus not supported:", e));
-        } catch (e) {
-          console.log("Error applying focus constraints:", e);
-        }
-      })
-      .catch((err: any) => {
-        console.warn("HD back camera failed, trying SD back camera:", err);
-        startWithConfig({ facingMode: "environment" })
-        .then(() => {
-          try {
-            const inputState = (html5QrCode as any).html5QrcodeInput;
-            const track = inputState?.localMediaStream?.getVideoTracks()?.[0];
-            if (track) {
-              const settings = track.getSettings ? track.getSettings() : {};
-              setScannerDebugInfo(`Active (SD Back): ${settings.width || 0}x${settings.height || 0} px`);
-            } else {
-              setScannerDebugInfo("Camera active. Align barcode.");
+            // If not found by label, look for any camera that does not contain "front" or "user"
+            if (!backCam) {
+              backCam = cameras.find((cam: any) => {
+                const label = (cam.label || "").toLowerCase();
+                return !label.includes("front") && !label.includes("user") && !label.includes("selfie");
+              });
             }
-          } catch (e) {
-            setScannerDebugInfo("Camera active. Align barcode.");
-          }
 
-          try {
-            html5QrCode.applyVideoConstraints({
-              focusMode: "continuous"
-            } as any).catch((e: any) => console.log("autofocus not supported:", e));
-          } catch (e) {
-            console.log("Error applying focus constraints:", e);
-          }
-        })
-        .catch((sdErr: any) => {
-          console.warn("SD back camera failed, trying Front Camera (Webcam):", sdErr);
-          startWithConfig({ facingMode: "user" })
-          .then(() => {
-            setScannerDebugInfo("Camera active (Front/Webcam). Align barcode.");
-          })
-          .catch((frontErr: any) => {
-            console.warn("Front camera failed, trying first available device ID:", frontErr);
-            (window as any).Html5Qrcode.getCameras()
-              .then((cameras: any[]) => {
-                if (cameras && cameras.length > 0) {
-                  startWithConfig(cameras[0].id)
-                    .then(() => {
-                      setScannerDebugInfo(`Active (Device: ${cameras[0].label || "Default"}).`);
-                    })
-                    .catch((finalErr: any) => {
-                      console.error("Camera ID start failed:", finalErr);
-                      setScannerError(`Camera error: ${finalErr.message || finalErr}`);
-                    });
-                } else {
-                  setScannerError("No camera device detected on this system.");
+            // On Android WebView, cameras[0] is often the FRONT camera.
+            // Use the LAST camera as default since back camera is usually last in the list.
+            if (!backCam) {
+              backCam = cameras[cameras.length - 1];
+            }
+
+            setScannerDebugInfo(`Using: ${backCam.label || "Back Camera"}`);
+
+            // Start scanning with the selected camera ID
+            startWithConfig(backCam.id)
+              .then(() => {
+                try {
+                  html5QrCode.applyVideoConstraints({
+                    focusMode: "continuous"
+                  } as any).catch((e: any) => console.log("autofocus not supported:", e));
+                } catch (e) {
+                  console.log("Error applying focus constraints:", e);
                 }
               })
-              .catch((camListErr: any) => {
-                console.error("Failed to list cameras:", camListErr);
-                setScannerError(`Camera list error: ${camListErr.message || camListErr}`);
+              .catch((err: any) => {
+                console.warn("Failed to start with selected camera ID, falling back to facingMode environment", err);
+                startWithConfig({ facingMode: "environment" })
+                  .catch((fallbackErr: any) => {
+                    setScannerError(`Camera start error: ${fallbackErr.message || fallbackErr}`);
+                  });
               });
-          });
+          } else {
+            // Fallback to facingMode environment
+            startWithConfig({ facingMode: "environment" })
+              .catch((e: any) => {
+                setScannerError(`No camera devices detected: ${e.message || e}`);
+              });
+          }
+        })
+        .catch((camListErr: any) => {
+          console.warn("Failed to get cameras, using environment facingMode", camListErr);
+          startWithConfig({ facingMode: "environment" })
+            .catch((e: any) => {
+              setScannerError(`Camera initialization error: ${e.message || e}`);
+            });
         });
-      });
     } catch (err: any) {
       console.error(err);
       setScannerError(`Init error: ${err.message || err}`);
@@ -474,6 +449,8 @@ Stay safe & eat healthy! 🍕
             setActiveTab("Dashboard");
           } else if (isSaleOpen) {
             setIsSaleOpen(false);
+          } else {
+            setShowExitDialog(true);
           }
         });
       } catch (e) {
@@ -485,7 +462,7 @@ Stay safe & eat healthy! 🍕
     return () => {
       if (backListener) backListener.remove();
     };
-  }, [activeTab, isSaleOpen]);
+  }, [activeTab, isSaleOpen, setShowExitDialog]);
 
   const prepareInterstitialAd = async () => {
     try {
@@ -603,6 +580,38 @@ Stay safe & eat healthy! 🍕
       cleanUp();
     };
   }, []);
+
+  // Hide AdMob banner when Sale popup is open, show when closed
+  useEffect(() => {
+    const toggleBanner = async () => {
+      try {
+        const { Capacitor } = await import('@capacitor/core');
+        if (!Capacitor.isNativePlatform() || !admobRef.current) return;
+        const adModule = await import('@capacitor-community/admob');
+        const BannerAdSize = adModule.BannerAdSize;
+        const BannerAdPosition = adModule.BannerAdPosition;
+        if (isSaleOpen) {
+          await admobRef.current.hideBanner();
+        } else {
+          // showBanner again instead of resumeBanner (more reliable)
+          try {
+            await admobRef.current.showBanner({
+              adId: "ca-app-pub-6433517681109667/2890562844",
+              adSize: BannerAdSize.ADAPTIVE_BANNER,
+              position: BannerAdPosition.TOP_CENTER,
+              margin: 0,
+              isTesting: false,
+            });
+          } catch (e) {
+            // already showing, ignore
+          }
+        }
+      } catch (e) {
+        console.log("Banner toggle error:", e);
+      }
+    };
+    toggleBanner();
+  }, [isSaleOpen]);
 
   // AI-SMART HINGLISH VOICE CASHIER (With Transliteration)
   useEffect(() => {
@@ -741,8 +750,6 @@ Stay safe & eat healthy! 🍕
     }
   };
 
-  const [showExitDialog, setShowExitDialog] = useState(false);
-
   useEffect(() => {
     setMounted(true);
     
@@ -789,6 +796,53 @@ Stay safe & eat healthy! 🍕
 
     const savedIsLoggedIn = localStorage.getItem("saas_is_logged_in");
     const savedOwnerMobile = localStorage.getItem("saas_owner_mobile");
+
+    // Also check native Preferences (survives app restart on Android)
+    const checkNativeSession = async () => {
+      try {
+        const { Capacitor } = await import('@capacitor/core');
+        if (Capacitor.isNativePlatform()) {
+          const { Preferences } = await import('@capacitor/preferences');
+          const { value: nativeLoggedIn } = await Preferences.get({ key: 'saas_is_logged_in' });
+          const { value: nativeMobile } = await Preferences.get({ key: 'saas_owner_mobile' });
+          if (nativeLoggedIn === 'true' && nativeMobile) {
+            // Restore to localStorage too
+            localStorage.setItem('saas_is_logged_in', 'true');
+            localStorage.setItem('saas_owner_mobile', nativeMobile);
+            setIsLoggedIn(true);
+            setOwnerMobile(nativeMobile);
+            const savedLogo = localStorage.getItem('saas_store_logo');
+            if (savedLogo) setStoreLogo(savedLogo);
+            const savedName = localStorage.getItem('saas_store_name');
+            if (savedName) setRestaurantName(savedName);
+            const savedRent = localStorage.getItem('saas_monthly_rent');
+            if (savedRent) setMonthlyRent(Number(savedRent));
+            const savedSwiggy = localStorage.getItem('saas_swiggy_comm');
+            if (savedSwiggy) setSwiggyCommission(Number(savedSwiggy));
+            const savedSwiggyType = localStorage.getItem('saas_swiggy_comm_type');
+            if (savedSwiggyType) setSwiggyCommType(savedSwiggyType);
+            const savedZomato = localStorage.getItem('saas_zomato_comm');
+            if (savedZomato) setZomatoCommission(Number(savedZomato));
+            const savedZomatoType = localStorage.getItem('saas_zomato_comm_type');
+            if (savedZomatoType) setZomatoCommType(savedZomatoType);
+            // Auto-fetch from cloud
+            const { data } = await supabase.from('stores').select('*').eq('owner_mobile', nativeMobile).single();
+            if (data) {
+              setRestaurantName(data.store_name);
+              setMonthlyRent(data.monthly_rent || 0);
+              setStoreCreatedAt(data.created_at);
+              setSubscriptionExpiry(data.subscription_expiry);
+              localStorage.setItem('saas_store_created_at', data.created_at || '');
+              localStorage.setItem('saas_store_expiry', data.subscription_expiry || '');
+              await fetchStoreData(data.id);
+            }
+          }
+        }
+      } catch (e) {
+        console.log('Native preferences check failed:', e);
+      }
+    };
+
     if (savedIsLoggedIn === "true") {
       setIsLoggedIn(true);
       if (savedOwnerMobile) {
@@ -825,8 +879,11 @@ Stay safe & eat healthy! 🍕
         };
         autoSync();
       }
+    } else {
+      // localStorage not found, check native storage (app restart case)
+      checkNativeSession();
     }
-    
+
     const savedSales = localStorage.getItem("saas_sales");
     if (savedSales) { 
       try { 
@@ -897,6 +954,15 @@ Stay safe & eat healthy! 🍕
           setMonthlyRent(storeData.monthly_rent || 0);
           localStorage.setItem("saas_is_logged_in", "true");
           localStorage.setItem("saas_owner_mobile", loginMobile);
+          // Save to native Preferences for app restart persistence
+          try {
+            const { Capacitor } = await import('@capacitor/core');
+            if (Capacitor.isNativePlatform()) {
+              const { Preferences } = await import('@capacitor/preferences');
+              await Preferences.set({ key: 'saas_is_logged_in', value: 'true' });
+              await Preferences.set({ key: 'saas_owner_mobile', value: loginMobile });
+            }
+          } catch (e) { console.log('Preferences save error:', e); }
 
           if (rememberMe) {
             localStorage.setItem("saas_rem_mobile", loginMobile);
@@ -1066,10 +1132,19 @@ Stay safe & eat healthy! 🍕
     }, 600);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsLoggedIn(false);
     localStorage.removeItem("saas_is_logged_in");
     setActiveTab("Dashboard");
+    // Clear native Preferences on logout
+    try {
+      const { Capacitor } = await import('@capacitor/core');
+      if (Capacitor.isNativePlatform()) {
+        const { Preferences } = await import('@capacitor/preferences');
+        await Preferences.remove({ key: 'saas_is_logged_in' });
+        await Preferences.remove({ key: 'saas_owner_mobile' });
+      }
+    } catch (e) { console.log('Preferences clear error:', e); }
     
     if (!rememberMe) {
       setLoginMobile("");
@@ -1175,7 +1250,7 @@ Stay safe & eat healthy! 🍕
       setExtraChargeName("");
       setExtraChargeAmount("");
 
-      // Trigger Interstitial Ad after sale
+      // Trigger Interstitial Ad after every sale
       if (admobRef.current) {
         try {
           console.log("Triggering Interstitial Ad after sale...");
@@ -3039,7 +3114,15 @@ Stay safe & eat healthy! 🍕
               </DialogDescription>
             </div>
             <div className="flex gap-3 pt-4">
-              <Button onClick={() => window.close()} className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-xs active:scale-95 transition-all">Yes</Button>
+              <Button onClick={async () => {
+                await handleLogout();
+                try {
+                  const { App } = await import('@capacitor/app');
+                  await App.exitApp();
+                } catch (e) {
+                  window.close();
+                }
+              }} className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-xs active:scale-95 transition-all">Yes</Button>
               <Button onClick={() => setShowExitDialog(false)} variant="outline" className="flex-1 h-12 bg-transparent border-zinc-700 text-white hover:bg-white/5 font-black rounded-xl text-xs active:scale-95 transition-all">No</Button>
             </div>
           </div>
