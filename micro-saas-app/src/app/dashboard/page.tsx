@@ -2743,7 +2743,10 @@ Stay safe & eat healthy! 🍕
                           .from('stores')
                           .update({ 
                             store_name: restaurantName,
-                            store_logo: storeLogo
+                            store_logo: storeLogo,
+                            monthly_rent: monthlyRent,
+                            swiggy_commission: swiggyCommission,
+                            zomato_commission: zomatoCommission
                           })
                           .eq('owner_mobile', ownerMobile);
 
