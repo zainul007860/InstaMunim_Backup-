@@ -197,6 +197,14 @@ Stay safe & eat healthy! 🍕
   const lastScannedRef = useRef<{ barcode: string; time: number } | null>(null);
   const [lastScannedMsg, setLastScannedMsg] = useState("");
 
+  // Smart Menu Scanner states
+  const [showScanMenuModal, setShowScanMenuModal] = useState(false);
+  const [scanMenuImage, setScanMenuImage] = useState<string | null>(null);
+  const [scanMenuLoading, setScanMenuLoading] = useState(false);
+  const [scanMenuResults, setScanMenuResults] = useState<{name: string, price: number, selected: boolean}[]>([]);
+  const [scanMenuStep, setScanMenuStep] = useState<'capture' | 'review'>('capture');
+  const [geminiApiKey, setGeminiApiKey] = useState('');
+
   const playBeep = () => {
     try {
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
@@ -1082,6 +1090,14 @@ Stay safe & eat healthy! 🍕
       setMenuItems(menuData ? menuData.map(m => ({ 
         id: m.id, name: m.name, price: m.price, category: m.category 
       })) : []);
+
+      // Fetch Gemini API Key from app_config
+      const { data: configData } = await supabase
+        .from('app_config')
+        .select('value')
+        .eq('key', 'gemini_api_key')
+        .single();
+      if (configData?.value) setGeminiApiKey(configData.value);
       
       setSyncStatus("synced");
     } catch (err) {
@@ -1416,6 +1432,97 @@ Stay safe & eat healthy! 🍕
       setMenuItems(menuItems.filter(item => item.id !== id));
     } catch (err) {
       alert("Failed to delete item from cloud.");
+    }
+  };
+
+  const handleScanMenu = async () => {
+    if (!scanMenuImage) return;
+    setScanMenuLoading(true);
+    setScanMenuResults([]);
+    try {
+      const apiKey = geminiApiKey;
+      if (!apiKey) throw new Error("Gemini API key not configured. Please set it in Supabase app_config table with key='gemini_api_key'.");
+      
+      const base64Data = scanMenuImage.split(',')[1];
+      const mimeType = scanMenuImage.split(';')[0].split(':')[1];
+      
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                {
+                  text: `You are a menu parser AI. Analyze this menu card image and extract ALL food/drink items with their prices. Return ONLY a valid JSON array like this: [{"name": "Paneer Tikka", "price": 180}, {"name": "Masala Chai", "price": 20}]. If price is not visible, use 0. Extract every single item you can see. Return ONLY the JSON array, no explanation.`
+                },
+                {
+                  inline_data: {
+                    mime_type: mimeType || 'image/jpeg',
+                    data: base64Data
+                  }
+                }
+              ]
+            }],
+            generationConfig: { temperature: 0.1, maxOutputTokens: 2048 }
+          })
+        }
+      );
+      
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData?.error?.message || `API Error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      
+      // Extract JSON from response
+      const jsonMatch = rawText.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) throw new Error("Could not parse menu items from image. Please try a clearer photo.");
+      
+      const items = JSON.parse(jsonMatch[0]);
+      if (!Array.isArray(items) || items.length === 0) throw new Error("No items found in the image.");
+      
+      setScanMenuResults(items.map((item: any) => ({
+        name: String(item.name || '').trim(),
+        price: Number(item.price) || 0,
+        selected: true
+      })));
+      setScanMenuStep('review');
+    } catch (err: any) {
+      alert('Scan Error: ' + (err.message || 'Unknown error'));
+    } finally {
+      setScanMenuLoading(false);
+    }
+  };
+
+  const handleAddScannedItems = async () => {
+    const selectedItems = scanMenuResults.filter(i => i.selected && i.name.trim());
+    if (selectedItems.length === 0) return alert("Koi item select nahi hai!");
+    
+    setIsLoading(true);
+    try {
+      const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
+      if (!store) throw new Error("Store ID not found");
+      
+      const { data: insertedData, error } = await supabase
+        .from('menu_items')
+        .insert(selectedItems.map(item => ({ store_id: store.id, name: item.name, price: item.price, category: 'Main Course' })))
+        .select();
+      
+      if (error) throw error;
+      setMenuItems(prev => [...prev, ...insertedData]);
+      setShowScanMenuModal(false);
+      setScanMenuImage(null);
+      setScanMenuResults([]);
+      setScanMenuStep('capture');
+      alert(`✅ ${insertedData.length} items menu mein add ho gaye!`);
+    } catch (err: any) {
+      alert("Add Error: " + err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -2356,6 +2463,23 @@ Stay safe & eat healthy! 🍕
                 <p className="text-sm font-medium text-zinc-400 mt-3 leading-relaxed">Update your digital menu items and pricing.</p>
               </header>
 
+              {/* SMART MENU AI SCANNER BUTTON */}
+              <button
+                onClick={() => { setScanMenuStep('capture'); setScanMenuImage(null); setScanMenuResults([]); setShowScanMenuModal(true); }}
+                className="w-full flex items-center justify-between p-5 bg-gradient-to-r from-violet-600 to-purple-600 rounded-2xl shadow-xl shadow-violet-500/25 active:scale-95 transition-all"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <Camera className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-white font-black text-base leading-none">📷 Smart Menu Scanner</p>
+                    <p className="text-white/70 text-[10px] font-bold mt-1 uppercase tracking-widest">AI se menu card scan karein</p>
+                  </div>
+                </div>
+                <div className="text-white/60 text-xs font-black uppercase tracking-widest">AI ✨</div>
+              </button>
+
               {/* NEW ITEM CARD - PREMIUM STYLE */}
               <Card className="rounded-2xl border-0 shadow-2xl shadow-zinc-200 dark:shadow-none bg-white dark:bg-zinc-900 overflow-hidden">
                 <div className="bg-zinc-900 dark:bg-zinc-800 p-6">
@@ -3274,6 +3398,133 @@ Stay safe & eat healthy! 🍕
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* SMART MENU SCANNER MODAL */}
+      {showScanMenuModal && (
+        <div className="fixed inset-0 z-[200] bg-black/80 backdrop-blur-md flex items-end justify-center p-0" onClick={(e) => { if (e.target === e.currentTarget) { setShowScanMenuModal(false); } }}>
+          <div className="bg-white dark:bg-zinc-900 rounded-t-[3rem] w-full max-w-lg p-8 pb-12 space-y-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-2xl font-black tracking-tighter">Smart Menu Scanner</h3>
+                <p className="text-xs font-bold text-zinc-400 mt-1">Menu card ki photo se AI items detect karega</p>
+              </div>
+              <button onClick={() => setShowScanMenuModal(false)} className="w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                <X className="h-5 w-5 text-zinc-500" />
+              </button>
+            </div>
+
+            {scanMenuStep === 'capture' && (
+              <div className="space-y-5">
+                {!scanMenuImage ? (
+                  <label className="block cursor-pointer">
+                    <div className="border-2 border-dashed border-violet-300 dark:border-violet-800 rounded-3xl p-10 text-center space-y-4 hover:border-violet-500 transition-colors bg-violet-50 dark:bg-violet-950/20">
+                      <div className="w-20 h-20 bg-violet-100 dark:bg-violet-900/30 rounded-2xl flex items-center justify-center mx-auto">
+                        <Camera className="h-10 w-10 text-violet-500" />
+                      </div>
+                      <div>
+                        <p className="text-base font-black text-zinc-800 dark:text-zinc-200">Menu Card Upload Karein</p>
+                        <p className="text-[11px] font-bold text-zinc-400 mt-1">Camera se photo lein ya gallery se choose karein</p>
+                      </div>
+                      <div className="inline-flex items-center gap-2 bg-violet-600 text-white px-6 py-3 rounded-2xl font-black text-sm">
+                        <Camera className="h-4 w-4" /> Photo Lein / Upload
+                      </div>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (ev) => setScanMenuImage(ev.target?.result as string);
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <img src={scanMenuImage} alt="Menu card" className="w-full rounded-2xl object-cover max-h-64" />
+                      <button
+                        onClick={() => setScanMenuImage(null)}
+                        className="absolute top-3 right-3 w-9 h-9 bg-black/60 rounded-full flex items-center justify-center"
+                      >
+                        <X className="h-4 w-4 text-white" />
+                      </button>
+                    </div>
+                    <button
+                      onClick={handleScanMenu}
+                      disabled={scanMenuLoading}
+                      className="w-full h-16 bg-gradient-to-r from-violet-600 to-purple-600 text-white font-black rounded-2xl text-base shadow-xl shadow-violet-500/30 active:scale-95 transition-all flex items-center justify-center gap-3 disabled:opacity-60"
+                    >
+                      {scanMenuLoading ? (
+                        <><Loader2 className="h-5 w-5 animate-spin" /> AI Scan Ho Raha Hai...</>
+                      ) : (
+                        <><Camera className="h-5 w-5" /> AI Se Scan Karein ✨</>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {scanMenuStep === 'review' && (
+              <div className="space-y-5">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-black text-zinc-700 dark:text-zinc-300">{scanMenuResults.filter(i => i.selected).length} items select hain</p>
+                  <button
+                    onClick={() => setScanMenuResults(prev => prev.map(i => ({ ...i, selected: !prev.every(x => x.selected) })))}
+                    className="text-[10px] font-black text-violet-600 uppercase tracking-widest"
+                  >
+                    Toggle All
+                  </button>
+                </div>
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                  {scanMenuResults.map((item, idx) => (
+                    <div key={idx} className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all cursor-pointer ${item.selected ? 'border-violet-500 bg-violet-50 dark:bg-violet-950/20' : 'border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900'}`}
+                      onClick={() => setScanMenuResults(prev => prev.map((x, i) => i === idx ? { ...x, selected: !x.selected } : x))}
+                    >
+                      <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 ${item.selected ? 'bg-violet-600 border-violet-600' : 'border-zinc-300'}`}>
+                        {item.selected && <Check className="h-4 w-4 text-white" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-sm text-zinc-900 dark:text-white truncate">{item.name}</p>
+                      </div>
+                      <input
+                        type="number"
+                        value={item.price}
+                        onClick={e => e.stopPropagation()}
+                        onChange={e => setScanMenuResults(prev => prev.map((x, i) => i === idx ? { ...x, price: Number(e.target.value) } : x))}
+                        className="w-20 text-right font-black text-sm bg-transparent border-b border-zinc-200 dark:border-zinc-700 focus:outline-none focus:border-violet-500 text-zinc-900 dark:text-white"
+                        placeholder="₹0"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => { setScanMenuStep('capture'); setScanMenuImage(null); }}
+                    className="flex-1 h-14 border-2 border-zinc-200 dark:border-zinc-700 rounded-2xl font-black text-sm text-zinc-600 dark:text-zinc-400 active:scale-95 transition-all"
+                  >
+                    Wapas Jao
+                  </button>
+                  <button
+                    onClick={handleAddScannedItems}
+                    disabled={isLoading || scanMenuResults.filter(i => i.selected).length === 0}
+                    className="flex-1 h-14 bg-violet-600 hover:bg-violet-700 text-white rounded-2xl font-black text-sm shadow-xl shadow-violet-500/30 active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-60"
+                  >
+                    {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                    Add to Menu
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
