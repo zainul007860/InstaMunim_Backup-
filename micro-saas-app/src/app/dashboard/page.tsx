@@ -1788,16 +1788,16 @@ Stay safe & eat healthy! 🍕
                     </button>
                   </div>
                   <div className="grid grid-cols-3 gap-1.5">
-                    {menuItems.filter(i => i.name.toLowerCase().includes(itemSearch.toLowerCase())).slice(0, 6).map(item => (
+                    {menuItems.filter(i => i.name.toLowerCase().includes(itemSearch.toLowerCase())).slice(0, 15).map(item => (
                       <button key={item.id} onClick={() => addToCart(item)} className="p-1.5 bg-white dark:bg-zinc-900 rounded-xl text-left border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all active:scale-95 group">
                         <p className="font-bold text-[10px] text-zinc-900 dark:text-white lowercase leading-tight truncate">{item.name}</p>
                         <p className="text-[8px] font-bold text-zinc-400 mt-0.5">₹{item.price}</p>
                       </button>
                     ))}
                   </div>
-                  {menuItems.filter(i => i.name.toLowerCase().includes(itemSearch.toLowerCase())).length > 6 && (
+                  {menuItems.filter(i => i.name.toLowerCase().includes(itemSearch.toLowerCase())).length > 15 && (
                     <p className="text-[9px] text-center text-zinc-400 font-bold mt-1 uppercase tracking-wider">
-                      + {menuItems.filter(i => i.name.toLowerCase().includes(itemSearch.toLowerCase())).length - 6} more items (search to find)
+                      + {menuItems.filter(i => i.name.toLowerCase().includes(itemSearch.toLowerCase())).length - 15} more items (search to find)
                     </p>
                   )}
                 </div>
