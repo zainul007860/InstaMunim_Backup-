@@ -1,0 +1,565 @@
+﻿diff --git a/src/app/page.tsx b/src/app/page.tsx
+index 3f36f7c..a006841 100644
+--- a/src/app/page.tsx
++++ b/src/app/page.tsx
+@@ -1,65 +1,502 @@
+-import Image from "next/image";
++"use client";
++
++import { useState, useEffect, useRef } from "react";
++import { format } from "date-fns";
++import { 
++  LayoutDashboard, FileText, Settings, LogOut, Search,
++  PlusCircle, Loader2, Book, Trash2, Send, ShoppingCart, 
++  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff
++} from "lucide-react";
++import { Button } from "@/components/ui/button";
++import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
++import { Input } from "@/components/ui/input";
++import { Label } from "@/components/ui/label";
++import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
++import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
++import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
++import { Badge } from "@/components/ui/badge";
++import { supabase } from "@/lib/supabase";
++
++export default function Dashboard() {
++  const [mounted, setMounted] = useState(false);
++  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
++  const [isLoggedIn, setIsLoggedIn] = useState(false);
++  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
++  const [loginMobile, setLoginMobile] = useState("");
++  const [loginPassword, setLoginPassword] = useState("");
++  const [showPassword, setShowPassword] = useState(false);
++  const [signupStoreName, setSignupStoreName] = useState("");
++  const [ownerPassword, setOwnerPassword] = useState("admin");
++  const [loginError, setLoginError] = useState("");
++  const [ownerMobile, setOwnerMobile] = useState("");
++  const [activeTab, setActiveTab] = useState("Dashboard");
++  const [lang, setLang] = useState<'hi'|'en'>('en');
++
++  const t = (key: string) => {
++    const map: Record<string, string> = {
++      "Dashboard": "αñíαÑêαñ╢αñ¼αÑïαñ░αÑìαñí",
++      "Cart": "αñòαñ╛αñ░αÑìαñƒ",
++      "Customers": "αñùαÑìαñ░αñ╛αñ╣αñò",
++      "Settings": "αñ╕αÑçαñƒαñ┐αñéαñùαÑìαñ╕",
++      "Marketing": "αñ«αñ╛αñ░αÑìαñòαÑçαñƒαñ┐αñéαñù",
++      "Gross Sales": "αñòαÑüαñ▓ αñ¼αñ┐αñòαÑìαñ░αÑÇ",
++      "Aggregator Com.": "αñòαñ«αÑÇαñ╢αñ¿",
++      "Daily Expenses": "αñûαñ░αÑìαñÜαÑç",
++      "Net Profit": "αñ╢αÑüαñªαÑìαñº αñ«αÑüαñ¿αñ╛αñ½αñ╛",
++      "Add Expense": "αñûαñ░αÑìαñÜαñ╛ αñ£αÑïαñíαñ╝αÑçαñé",
++      "Select Items": "αñåαñçαñƒαñ« αñÜαÑüαñ¿αÑçαñé",
++      "Order Summary": "αñæαñ░αÑìαñíαñ░ αñ╕αñ«αñ░αÑÇ",
++      "Grand Total": "αñòαÑüαñ▓ αñ¼αñ┐αñ▓",
++      "Cash Received": "αñ¿αñòαñª αñ«αñ┐αñ▓αñ╛",
++      "Change Due": "αñ╡αñ╛αñ¬αñ╕ αñªαÑçαñ¿αñ╛ αñ╣αÑê",
++      "Complete Order": "αñæαñ░αÑìαñíαñ░ αñ¬αÑéαñ░αñ╛ αñòαñ░αÑçαñé",
++      "Cash": "αñ¿αñòαñª",
++      "Online": "αñæαñ¿αñ▓αñ╛αñçαñ¿",
++      "Udhaar": "αñëαñºαñ╛αñ░",
++      "Mark as Paid": "αñ¬αÑêαñ╕αÑç αñ«αñ┐αñ▓ αñùαñÅ",
++      "Send WhatsApp Receipt": "WhatsApp αñ¼αñ┐αñ▓",
++      "Total Pending": "αñòαÑüαñ▓ αñëαñºαñ╛αñ░",
++      "Smart CRM": "αñ╕αÑìαñ«αñ╛αñ░αÑìαñƒ CRM"
++    };
++    return lang === 'hi' && map[key] ? map[key] : key;
++  };
++
++  const [settingsActiveSection, setSettingsActiveSection] = useState("Identity");
++  const [dataLoaded, setDataLoaded] = useState(false);
++  const [sales, setSales] = useState<any[]>([]);
++  const [expenses, setExpenses] = useState<any[]>([]);
++  const [menuItems, setMenuItems] = useState([
++    { id: 1, name: "Chicken Egg Roll", price: 120 },
++    { id: 2, name: "Special Veg Pizza", price: 299 },
++    { id: 3, name: "White Sauce Pasta", price: 180 },
++    { id: 4, name: "Steamed Momos", price: 90 },
++  ]);
++
++  const [newItemName, setNewItemName] = useState("");
++  const [newItemPrice, setNewItemPrice] = useState("");
++  const [newName, setNewName] = useState("");
++  const [newMobile, setNewMobile] = useState("");
++  const [newType, setNewType] = useState("Cash");
++  const [cashReceived, setCashReceived] = useState("");
++  const recognitionRef = useRef<any>(null);
++  const manualStopRef = useRef(false);
++  const [isSaleOpen, setIsSaleOpen] = useState(false);
++  const [newExpTitle, setNewExpTitle] = useState("");
++  const [newExpAmount, setNewExpAmount] = useState("");
++  const [isExpOpen, setIsExpOpen] = useState(false);
++  const [swiggyCommission, setSwiggyCommission] = useState(25);
++  const [zomatoCommission, setZomatoCommission] = useState(25);
++  const [swiggyCommType, setSwiggyCommType] = useState("percent");
++  const [zomatoCommType, setZomatoCommType] = useState("percent");
++  const [monthlyRent, setMonthlyRent] = useState(15000);
++  const [isWhatsAppEnabled, setIsWhatsAppEnabled] = useState(true);
++  const [isPrintEnabled, setIsPrintEnabled] = useState(false);
++  const [isDarkMode, setIsDarkMode] = useState(false);
++  const [crmMessage, setCrmMessage] = useState("Hi [NAME], we miss you at [SHOP]! ≡ƒìò Come back today for a special offer just for you!");
++  const [cart, setCart] = useState<{name: string, price: number, qty: number}[]>([]);
++  const [restaurantName, setRestaurantName] = useState("InstaMunim");
++  const [storeLogo, setStoreLogo] = useState<string | null>(null);
++  const [isLoading, setIsLoading] = useState(false);
++  const [isRefreshing, setIsRefreshing] = useState(false);
++  const [cloudStatus, setCloudStatus] = useState<"disconnected" | "connecting" | "connected">("disconnected");
++  const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
++  const [itemSearch, setItemSearch] = useState("");
++  const [isListening, setIsListening] = useState(false);
++  const [lastSpoken, setLastSpoken] = useState("");
++  const [isSyncing, setIsSyncing] = useState(false);
++  const [syncStatus, setSyncStatus] = useState<"synced" | "pending" | "error">("synced");
++  const [whatsappInvoiceTemplate, setWhatsappInvoiceTemplate] = useState(`Γ£¿ *ORDER CONFIRMED* Γ£¿
++
++Hi [NAME],
++Thank you for ordering from *[SHOP]*!
++
++*Order Details:*
++150: ≡ƒôª [ITEMS]
++≡ƒÆ░ *Total: Γé╣[TOTAL]*
++
++≡ƒöù *View/Download Invoice:*
++[URL]
++
++Hope you enjoyed your meal! ≡ƒìò
++Have a great day!`);
++
++  useEffect(() => {
++    setMounted(true);
++    const savedIsLoggedIn = localStorage.getItem("saas_is_logged_in");
++    const savedOwnerMobile = localStorage.getItem("saas_owner_mobile");
++    const savedOwnerPassword = localStorage.getItem("saas_owner_password");
++    if (savedIsLoggedIn === "true") {
++      setIsLoggedIn(true);
++      if (savedOwnerMobile) setOwnerMobile(savedOwnerMobile);
++      if (savedOwnerPassword) setOwnerPassword(savedOwnerPassword);
++    }
++    
++    const savedSales = localStorage.getItem("saas_sales");
++    if (savedSales && savedSales !== "[]") {
++      try {
++        const parsed = JSON.parse(savedSales);
++        if (Array.isArray(parsed)) {
++          setSales(parsed.map((s: any) => ({ ...s, date: new Date(s.date || Date.now()) })));
++        }
++      } catch (e) { console.error("Sales Load Error:", e); }
++    }
++    
++    const savedExpenses = localStorage.getItem("saas_expenses");
++    if (savedExpenses && savedExpenses !== "[]") {
++      try {
++        const parsed = JSON.parse(savedExpenses);
++        if (Array.isArray(parsed)) {
++          setExpenses(parsed.map((e: any) => ({ ...e, date: new Date(e.date || Date.now()) })));
++        }
++      } catch (e) { console.error("Expenses Load Error:", e); }
++    }
++
++    const savedMenu = localStorage.getItem("saas_menu");
++    if (savedMenu) { try { setMenuItems(JSON.parse(savedMenu)); } catch (e) { console.error(e); } }
++
++    const savedRestName = localStorage.getItem("saas_rest_name");
++    if (savedRestName) setRestaurantName(savedRestName);
++
++    const savedLogo = localStorage.getItem("saas_store_logo");
++    if (savedLogo) setStoreLogo(savedLogo);
++
++    const savedDarkMode = localStorage.getItem("saas_dark_mode");
++    if (savedDarkMode) setIsDarkMode(savedDarkMode === "true");
++
++    const savedWaTemplate = localStorage.getItem("saas_wa_template");
++    if (savedWaTemplate) setWhatsappInvoiceTemplate(savedWaTemplate);
++    
++    const savedRent = localStorage.getItem("saas_rent");
++    if (savedRent) setMonthlyRent(Number(savedRent));
++
++    setDataLoaded(true);
++  }, []);
++
++  const handleAuth = (e: React.FormEvent) => {
++    e.preventDefault();
++    if (authMode === "login") {
++      if (loginMobile.length === 10 && loginPassword === ownerPassword) {
++        setIsLoggedIn(true);
++        setOwnerMobile(loginMobile);
++        localStorage.setItem("saas_is_logged_in", "true");
++        localStorage.setItem("saas_owner_mobile", loginMobile);
++        localStorage.setItem("saas_owner_password", ownerPassword);
++      } else {
++        setLoginError("Invalid mobile number or password.");
++      }
++    } else {
++      if (loginMobile.length === 10 && loginPassword.length >= 4 && signupStoreName) {
++        setIsLoading(true);
++        const createStore = async () => {
++          try {
++            await supabase.from('stores').upsert({ owner_mobile: loginMobile, store_name: signupStoreName, updated_at: new Date().toISOString() });
++            setRestaurantName(signupStoreName);
++            setOwnerMobile(loginMobile);
++            setOwnerPassword(loginPassword);
++            localStorage.setItem("saas_owner_mobile", loginMobile);
++            localStorage.setItem("saas_owner_password", loginPassword);
++            localStorage.setItem("saas_rest_name", signupStoreName);
++            setAuthMode("login");
++            alert("Account Created! Please login now.");
++          } catch (e: any) { setLoginError("Registration Failed: " + e.message); }
++          finally { setIsLoading(false); }
++        };
++        createStore();
++      }
++    }
++  };
++
++  const handleLogout = () => {
++    setIsLoggedIn(false);
++    localStorage.removeItem("saas_is_logged_in");
++    setActiveTab("Dashboard");
++  };
++
++  useEffect(() => {
++    if (dataLoaded && mounted) {
++      localStorage.setItem("saas_sales", JSON.stringify(sales));
++      localStorage.setItem("saas_expenses", JSON.stringify(expenses));
++      localStorage.setItem("saas_menu", JSON.stringify(menuItems));
++      localStorage.setItem("saas_rest_name", restaurantName);
++      if (storeLogo) localStorage.setItem("saas_store_logo", storeLogo);
++      localStorage.setItem("saas_rent", monthlyRent.toString());
++      localStorage.setItem("saas_dark_mode", isDarkMode.toString());
++      localStorage.setItem("saas_wa_template", whatsappInvoiceTemplate);
++    }
++  }, [sales, expenses, menuItems, restaurantName, storeLogo, monthlyRent, isDarkMode, whatsappInvoiceTemplate, dataLoaded, mounted]);
++
++  const syncDataToCloud = async () => {
++    if (!isLoggedIn || cloudStatus === "connecting") return;
++    setCloudStatus("connecting");
++    try {
++      await supabase.from('stores').upsert({ owner_mobile: ownerMobile, store_name: restaurantName, monthly_rent: Number(monthlyRent), updated_at: new Date().toISOString() });
++      if (sales.length > 0) await supabase.from('sales').upsert(sales.map(s => ({ id: s.id, store_id: ownerMobile, customer_name: s.name, total_price: s.price, payment_type: s.type, sale_date: new Date(s.date).toISOString() })));
++      setLastSyncedAt(new Date().toLocaleTimeString());
++      setCloudStatus("connected");
++      setSyncStatus("synced");
++      setSales(prev => prev.map(s => ({ ...s, isSynced: true })));
++    } catch (e) { setCloudStatus("disconnected"); }
++  };
++
++  const handleSale = async () => {
++    if (cart.length === 0) return alert("Please add items to cart.");
++    setIsLoading(true);
++    const saleId = Date.now();
++    const cartDescription = cart.map(c => `${c.qty} ${c.name}`).join(", ");
++    const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
++    const sale = { id: saleId, name: newName || "Guest", item: cartDescription, mobile: newMobile || "N/A", price: cartTotal, type: newType, date: new Date(), isSynced: false };
++    setSales([sale, ...sales]);
++    setIsSaleOpen(false);
++    
++    if (isWhatsAppEnabled && newMobile.length === 10) {
++      const msg = whatsappInvoiceTemplate.replace("[NAME]", newName || "Guest").replace("[SHOP]", restaurantName).replace("[ITEMS]", cartDescription).replace("[TOTAL]", cartTotal.toString()).replace("[URL]", "#");
++      window.open(`https://wa.me/91${newMobile}?text=${encodeURIComponent(msg)}`, "_blank");
++    }
++    
++    setCart([]); setNewName(""); setNewMobile(""); setIsLoading(false);
++  };
++
++  const addToCart = (item: any) => {
++    setCart(prev => {
++      const existing = prev.find(c => c.name === item.name);
++      if (existing) return prev.map(c => c.name === item.name ? {...c, qty: c.qty + 1} : c);
++      return [...prev, { ...item, qty: 1 }];
++    });
++  };
++
++  const handleAddExpense = () => {
++    if (!newExpTitle || !newExpAmount) return;
++    const exp = { id: Date.now(), title: newExpTitle, amount: Number(newExpAmount), date: new Date(), isSynced: false };
++    setExpenses([exp, ...expenses]);
++    setNewExpTitle(""); setNewExpAmount("");
++  };
++
++  const handleAddMenuItem = () => {
++    if (!newItemName || !newItemPrice) return;
++    setMenuItems([...menuItems, { id: Date.now(), name: newItemName, price: Number(newItemPrice) }]);
++    setNewItemName(""); setNewItemPrice("");
++  };
++
++  const removeMenuItem = (id: number) => setMenuItems(menuItems.filter(i => i.id !== id));
++  const markAsPaid = (id: number) => setSales(sales.map(s => s.id === id ? { ...s, type: "Cash", isSynced: false } : s));
++
++  const filteredSales = sales.filter(s => format(new Date(s.date), "yyyy-MM") === selectedMonth);
++  const filteredExpenses = expenses.filter(e => format(new Date(e.date), "yyyy-MM") === selectedMonth);
++  const totalSales = filteredSales.filter(s => s.type !== "Udhaar").reduce((sum, s) => sum + s.price, 0);
++  const totalExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
++  const udhaarSales = filteredSales.filter(s => s.type === "Udhaar").reduce((sum, s) => sum + s.price, 0);
++  const netProfit = totalSales - totalExpenses;
++
++  if (!mounted) return null;
++
++  if (!isLoggedIn) {
++    return (
++      <div className={`min-h-screen w-full flex items-center justify-center p-6 ${isDarkMode ? 'bg-zinc-950' : 'bg-zinc-50'}`}>
++        <Card className={`w-full max-w-md border-0 shadow-2xl rounded-[2.5rem] p-10 ${isDarkMode ? 'bg-zinc-900 text-white' : 'bg-white'}`}>
++          <div className="text-center mb-8">
++            <div className="mx-auto bg-orange-500 w-16 h-16 flex items-center justify-center rounded-2xl mb-4"><Lock className="h-8 w-8 text-white" /></div>
++            <h1 className="text-3xl font-black">InstaMunim</h1>
++            <p className="text-zinc-500 font-bold uppercase tracking-widest text-[10px] mt-1">Beyond Billing</p>
++          </div>
++          <form onSubmit={handleAuth} className="space-y-4">
++            {authMode === "signup" && <Input placeholder="Restaurant Name" value={signupStoreName} onChange={e => setSignupStoreName(e.target.value)} required className="h-14 rounded-2xl bg-zinc-100 border-0 font-bold" />}
++            <Input placeholder="Mobile Number" value={loginMobile} onChange={e => setLoginMobile(e.target.value)} required className="h-14 rounded-2xl bg-zinc-100 border-0 font-bold" />
++            <Input type="password" placeholder="Password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required className="h-14 rounded-2xl bg-zinc-100 border-0 font-bold" />
++            {loginError && <p className="text-red-500 text-xs font-bold text-center">{loginError}</p>}
++            <Button type="submit" className="w-full h-14 bg-zinc-900 text-white rounded-2xl font-black">{authMode === "login" ? "LOGIN" : "SIGNUP"}</Button>
++            <button type="button" onClick={() => setAuthMode(authMode === "login" ? "signup" : "login")} className="w-full text-center text-xs font-bold text-zinc-400">{authMode === "login" ? "Create Account" : "Back to Login"}</button>
++          </form>
++        </Card>
++      </div>
++    );
++  }
+ 
+-export default function Home() {
+   return (
+-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
+-        <Image
+-          className="dark:invert"
+-          src="/next.svg"
+-          alt="Next.js logo"
+-          width={100}
+-          height={20}
+-          priority
+-        />
+-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
+-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
+-            To get started, edit the page.tsx file.
+-          </h1>
+-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
+-            Looking for a starting point or more instructions? Head over to{" "}
+-            <a
+-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+-              className="font-medium text-zinc-950 dark:text-zinc-50"
+-            >
+-              Templates
+-            </a>{" "}
+-            or the{" "}
+-            <a
+-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+-              className="font-medium text-zinc-950 dark:text-zinc-50"
+-            >
+-              Learning
+-            </a>{" "}
+-            center.
+-          </p>
+-        </div>
+-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
+-          <a
+-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
+-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+-            target="_blank"
+-            rel="noopener noreferrer"
+-          >
+-            <Image
+-              className="dark:invert"
+-              src="/vercel.svg"
+-              alt="Vercel logomark"
+-              width={16}
+-              height={16}
+-            />
+-            Deploy Now
+-          </a>
+-          <a
+-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
+-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
+-            target="_blank"
+-            rel="noopener noreferrer"
+-          >
+-            Documentation
+-          </a>
++    <div className={`min-h-screen flex flex-col ${isDarkMode ? 'dark bg-zinc-950 text-white' : 'bg-zinc-50 text-zinc-900'}`}>
++      <style jsx global>{`html, body { overflow-x: hidden; height: 100%; font-family: sans-serif; }`}</style>
++
++      <main className="flex-1 pb-24 overflow-y-auto">
++        <div className="max-w-md mx-auto px-6 py-8">
++          
++          <Dialog open={isSaleOpen} onOpenChange={setIsSaleOpen}>
++            <DialogContent className="p-6 rounded-3xl">
++              <DialogHeader><DialogTitle>New Sale Entry</DialogTitle></DialogHeader>
++              <div className="space-y-4">
++                <div className="grid grid-cols-2 gap-2 h-40 overflow-y-auto">
++                  {menuItems.map(item => (
++                    <button key={item.id} onClick={() => addToCart(item)} className="p-3 bg-zinc-100 dark:bg-zinc-800 rounded-xl text-left">
++                      <p className="font-bold text-xs">{item.name}</p>
++                      <p className="text-[10px] text-zinc-400">Γé╣{item.price}</p>
++                    </button>
++                  ))}
++                </div>
++                <div className="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-2xl">
++                   <p className="text-[10px] font-black uppercase text-zinc-400 mb-2">Cart Total: Γé╣{cart.reduce((s,i) => s + (i.price*i.qty), 0)}</p>
++                   {cart.map(c => <div key={c.name} className="text-xs font-bold flex justify-between"><span>{c.qty}x {c.name}</span><span>Γé╣{c.price*c.qty}</span></div>)}
++                </div>
++                <Input placeholder="Customer Name" value={newName} onChange={e => setNewName(e.target.value)} className="rounded-xl" />
++                <Input placeholder="Mobile" value={newMobile} onChange={e => setNewMobile(e.target.value)} className="rounded-xl" />
++                <Select value={newType} onValueChange={setNewType}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Cash">Cash</SelectItem><SelectItem value="Online">Online</SelectItem><SelectItem value="Udhaar">Udhaar</SelectItem></SelectContent></Select>
++                <Button onClick={handleSale} className="w-full h-12 bg-orange-500 text-white font-black rounded-xl">COMPLETE SALE</Button>
++              </div>
++            </DialogContent>
++          </Dialog>
++
++          {activeTab === "Dashboard" && (
++            <div className="space-y-6 animate-in fade-in">
++              <header className="flex justify-between items-center">
++                <h2 className="text-2xl font-black tracking-tight">{restaurantName}</h2>
++                <div className="flex gap-2">
++                  <button onClick={() => setLang(lang === 'en' ? 'hi' : 'en')} className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl text-[10px] font-black">{lang.toUpperCase()}</button>
++                  <button onClick={() => setIsDarkMode(!isDarkMode)} className="p-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl">{isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}</button>
++                </div>
++              </header>
++
++              <div className="grid grid-cols-2 gap-3">
++                <Card className="bg-orange-500 text-white p-4 rounded-[2rem] border-0"><p className="text-[10px] font-bold uppercase opacity-80">Net Profit</p><h3 className="text-2xl font-black">Γé╣{netProfit}</h3></Card>
++                <Card className="bg-zinc-900 text-white p-4 rounded-[2rem] border-0"><p className="text-[10px] font-bold uppercase opacity-80">Gross Sales</p><h3 className="text-2xl font-black">Γé╣{totalSales}</h3></Card>
++                <Card className="bg-white dark:bg-zinc-900 p-4 rounded-[2rem] border-0 shadow-sm"><p className="text-[10px] font-bold uppercase text-red-500">Udhaar</p><h3 className="text-2xl font-black text-red-500">Γé╣{udhaarSales}</h3></Card>
++                <Card className="bg-white dark:bg-zinc-900 p-4 rounded-[2rem] border-0 shadow-sm"><p className="text-[10px] font-bold uppercase text-zinc-400">Expenses</p><h3 className="text-2xl font-black">Γé╣{totalExpenses}</h3></Card>
++              </div>
++
++              <Card className="rounded-3xl border-0 shadow-sm overflow-hidden bg-white dark:bg-zinc-900">
++                <CardHeader className="bg-zinc-50 dark:bg-zinc-800 py-3 px-5 flex flex-row justify-between items-center"><CardTitle className="text-sm font-bold">Recent Sales</CardTitle><button onClick={() => setActiveTab("Total Sale Report")} className="text-[10px] font-black text-orange-500">VIEW ALL</button></CardHeader>
++                <CardContent className="p-0">
++                  {filteredSales.slice(0, 5).map(s => (
++                    <div key={s.id} className="p-4 border-b dark:border-zinc-800 flex justify-between items-center">
++                      <div><p className="font-bold text-sm">{s.name}</p><p className="text-[10px] text-zinc-400">{format(new Date(s.date), "hh:mm a")} ΓÇó {s.type}</p></div>
++                      <p className="font-black">Γé╣{s.price}</p>
++                    </div>
++                  ))}
++                </CardContent>
++              </Card>
++            </div>
++          )}
++
++          {activeTab === "Menu" && (
++            <div className="space-y-6">
++              <h2 className="text-xl font-black">Inventory Control</h2>
++              <Card className="p-4 rounded-3xl space-y-3">
++                <Input placeholder="Item Name" value={newItemName} onChange={e => setNewItemName(e.target.value)} />
++                <Input type="number" placeholder="Price" value={newItemPrice} onChange={e => setNewItemPrice(e.target.value)} />
++                <Button onClick={handleAddMenuItem} className="w-full bg-zinc-900 text-white font-black h-12 rounded-xl">ADD ITEM</Button>
++              </Card>
++              <div className="space-y-2">
++                {menuItems.map(i => (
++                  <div key={i.id} className="p-4 bg-white dark:bg-zinc-900 rounded-2xl flex justify-between items-center shadow-sm">
++                    <div><p className="font-bold">{i.name}</p><p className="text-xs text-zinc-400">Γé╣{i.price}</p></div>
++                    <button onClick={() => removeMenuItem(i.id)} className="text-red-500"><Trash2 className="h-4 w-4" /></button>
++                  </div>
++                ))}
++              </div>
++            </div>
++          )}
++
++          {activeTab === "Khata" && (
++            <div className="space-y-6">
++              <h2 className="text-xl font-black text-red-500">Udhaar Khata</h2>
++              <div className="space-y-3">
++                {sales.filter(s => s.type === "Udhaar").map(s => (
++                  <div key={s.id} className="p-4 bg-white dark:bg-zinc-900 rounded-3xl flex justify-between items-center shadow-sm">
++                    <div><p className="font-bold">{s.name}</p><p className="text-xs text-zinc-400">{format(new Date(s.date), "dd MMM")}</p></div>
++                    <div className="flex items-center gap-4"><p className="font-black text-red-600">Γé╣{s.price}</p><Button onClick={() => markAsPaid(s.id)} className="h-8 bg-emerald-500 text-white font-black text-[10px] rounded-lg">PAID</Button></div>
++                  </div>
++                ))}
++                {sales.filter(s => s.type === "Udhaar").length === 0 && <p className="text-center py-20 text-zinc-300 italic">No pending Udhaar</p>}
++              </div>
++            </div>
++          )}
++
++          {activeTab === "Total Sale Report" && (
++            <div className="space-y-6">
++              <header className="flex justify-between items-center"><h2 className="text-xl font-black">Sales Report</h2><Button onClick={() => window.print()} className="h-8 bg-zinc-100 dark:bg-zinc-800 text-[10px] font-black rounded-lg">PRINT</Button></header>
++              <Card className="rounded-3xl overflow-hidden border-0 bg-white dark:bg-zinc-900 shadow-sm">
++                <Table>
++                  <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Customer</TableHead><TableHead className="text-right">Amount</TableHead></TableRow></TableHeader>
++                  <TableBody>
++                    {filteredSales.map(s => (
++                      <TableRow key={s.id}>
++                        <TableCell className="text-[10px] font-bold text-zinc-500">{format(new Date(s.date), "dd MMM, hh:mm")}</TableCell>
++                        <TableCell className="font-bold text-xs">{s.name}</TableCell>
++                        <TableCell className="text-right font-black">Γé╣{s.price}</TableCell>
++                      </TableRow>
++                    ))}
++                  </TableBody>
++                </Table>
++              </Card>
++            </div>
++          )}
++
++          {activeTab === "MoreMenu" && (
++            <div className="grid grid-cols-2 gap-3 pb-20">
++              <button onClick={() => setActiveTab("Settings")} className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] flex flex-col items-center gap-3 shadow-sm border border-zinc-100 dark:border-zinc-800"><Settings className="h-8 w-8 text-zinc-500" /><span className="text-[10px] font-black uppercase">Settings</span></button>
++              <button onClick={() => setActiveTab("Marketing")} className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] flex flex-col items-center gap-3 shadow-sm border border-zinc-100 dark:border-zinc-800"><Send className="h-8 w-8 text-blue-500" /><span className="text-[10px] font-black uppercase">CRM</span></button>
++              <button onClick={() => setActiveTab("Khata")} className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] flex flex-col items-center gap-3 shadow-sm border border-zinc-100 dark:border-zinc-800"><Book className="h-8 w-8 text-amber-500" /><span className="text-[10px] font-black uppercase">Udhaar</span></button>
++              <button onClick={() => setActiveTab("Support")} className="p-8 bg-white dark:bg-zinc-900 rounded-[2.5rem] flex flex-col items-center gap-3 shadow-sm border border-zinc-100 dark:border-zinc-800"><Smartphone className="h-8 w-8 text-emerald-500" /><span className="text-[10px] font-black uppercase">Support</span></button>
++              <button onClick={handleLogout} className="col-span-2 p-6 bg-red-50 dark:bg-red-900/10 rounded-[2.5rem] flex items-center justify-center gap-3 text-red-500 font-black uppercase tracking-widest text-xs mt-4">LOGOUT ACCOUNT</button>
++            </div>
++          )}
++
++          {activeTab === "Settings" && (
++            <div className="space-y-6">
++              <h2 className="text-xl font-black">Settings</h2>
++              <div className="space-y-4">
++                 <div className="space-y-1"><Label className="text-[10px] font-black text-zinc-400 uppercase">Shop Name</Label><Input value={restaurantName} onChange={e => setRestaurantName(e.target.value)} /></div>
++                 <div className="space-y-1"><Label className="text-[10px] font-black text-zinc-400 uppercase">Monthly Rent</Label><Input type="number" value={monthlyRent} onChange={e => setMonthlyRent(Number(e.target.value))} /></div>
++                 <div className="space-y-1"><Label className="text-[10px] font-black text-zinc-400 uppercase">Password</Label><Input type="password" value={ownerPassword} onChange={e => setOwnerPassword(e.target.value)} /></div>
++                 <div className="pt-4 flex items-center justify-between"><span className="text-sm font-bold">Dark Mode</span><button onClick={() => setIsDarkMode(!isDarkMode)} className={`w-12 h-6 rounded-full transition-colors ${isDarkMode ? 'bg-orange-500' : 'bg-zinc-200'}`}><div className={`w-4 h-4 rounded-full bg-white transition-transform ${isDarkMode ? 'translate-x-7' : 'translate-x-1'}`} /></button></div>
++                 <Button onClick={() => alert("Saved!")} className="w-full bg-zinc-900 text-white h-12 rounded-xl font-black">SAVE SETTINGS</Button>
++              </div>
++            </div>
++          )}
++
++          {activeTab === "Support" && (
++            <div className="space-y-6 animate-in fade-in">
++              <header className="text-center py-6">
++                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4"><Smartphone className="h-8 w-8" /></div>
++                <h2 className="text-2xl font-black">Help & Support</h2>
++                <p className="text-zinc-500 text-sm">We are here to help you grow 24/7.</p>
++              </header>
++              <Card className="p-8 text-center rounded-[2.5rem] space-y-6">
++                 <div className="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mx-auto"><Users className="h-8 w-8" /></div>
++                 <h3 className="font-black text-xl">Zainul Khan</h3>
++                 <p className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Platform Founder</p>
++                 <Button onClick={() => window.open(`https://wa.me/917838229178?text=Hi Zainul, I need help.`, "_blank")} className="w-full bg-emerald-500 text-white h-14 rounded-2xl font-black">WHATSAPP SUPPORT</Button>
++              </Card>
++            </div>
++          )}
++
+         </div>
+       </main>
++
++      <nav className={`lg:hidden fixed bottom-0 left-0 right-0 h-16 border-t backdrop-blur-xl z-50 flex items-center justify-around px-2 ${isDarkMode ? 'bg-zinc-900/95 border-zinc-800' : 'bg-white/95 border-zinc-100 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]'}`}>
++        <button onClick={() => setActiveTab("Dashboard")} className={`flex flex-col items-center gap-0.5 px-3 py-1 transition-all ${activeTab === 'Dashboard' ? (isDarkMode ? 'text-white' : 'text-zinc-900') : 'text-zinc-400'}`}>
++          <LayoutDashboard className={`h-5 w-5 ${activeTab === 'Dashboard' ? 'text-orange-500' : ''}`} />
++          <span className="text-[9px] font-bold uppercase">{t("Dashboard")}</span>
++        </button>
++
++        <button onClick={() => setActiveTab("Menu")} className={`flex flex-col items-center gap-0.5 px-3 py-1 transition-all ${activeTab === 'Menu' ? (isDarkMode ? 'text-white' : 'text-zinc-900') : 'text-zinc-400'}`}>
++          <Book className={`h-5 w-5 ${activeTab === 'Menu' ? 'text-orange-500' : ''}`} />
++          <span className="text-[9px] font-bold uppercase">Menu</span>
++        </button>
++
++        <button onClick={() => setIsSaleOpen(true)} className="flex flex-col items-center gap-0.5 -mt-4">
++          <div className="w-14 h-14 bg-orange-600 rounded-full flex items-center justify-center shadow-xl shadow-orange-600/40 active:scale-95 border-4 border-white dark:border-zinc-900">
++            <PlusCircle className="h-7 w-7 text-white" />
++          </div>
++          <span className="text-[9px] font-bold uppercase text-orange-500">Sale</span>
++        </button>
++
++        <button onClick={() => setActiveTab("Total Sale Report")} className={`flex flex-col items-center gap-0.5 px-3 py-1 transition-all ${activeTab === 'Total Sale Report' ? (isDarkMode ? 'text-white' : 'text-zinc-900') : 'text-zinc-400'}`}>
++          <PieChart className={`h-5 w-5 ${activeTab === 'Total Sale Report' ? 'text-orange-500' : ''}`} />
++          <span className="text-[9px] font-bold uppercase">Stats</span>
++        </button>
++
++        <button onClick={() => setActiveTab("MoreMenu")} className={`flex flex-col items-center gap-0.5 px-3 py-1 transition-all ${['MoreMenu', 'Settings', 'Rent', 'Khata', 'Marketing', 'Legal', 'Support'].includes(activeTab) ? (isDarkMode ? 'text-white' : 'text-zinc-900') : 'text-zinc-400'}`}>
++          <Settings className={`h-5 w-5 ${['MoreMenu', 'Settings', 'Rent', 'Khata', 'Marketing', 'Legal', 'Support'].includes(activeTab) ? 'text-orange-500' : ''}`} />
++          <span className="text-[9px] font-bold uppercase">{t("Settings")}</span>
++        </button>
++      </nav>
+     </div>
+   );
+ }

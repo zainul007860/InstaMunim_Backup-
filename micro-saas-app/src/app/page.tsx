@@ -16,9 +16,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
+import { Capacitor } from "@capacitor/core";
+import { AdMob, BannerAdSize, BannerAdPosition, BannerAdPluginEvents, InterstitialAdPluginEvents } from "@capacitor-community/admob";
+import { Camera, CameraResultType } from "@capacitor/camera";
 
 export default function Dashboard() {
   const [mounted, setMounted] = useState(false);
+  const [isAdMobActive, setIsAdMobActive] = useState(false);
+  const [admobDebugInfo, setAdmobDebugInfo] = useState("Not initialized");
+  const [admobHeight, setAdmobHeight] = useState(60);
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
@@ -92,6 +98,12 @@ export default function Dashboard() {
   const [restaurantName, setRestaurantName] = useState("InstaMunim");
   const [storeLogo, setStoreLogo] = useState<string | null>(null);
   const [storeAddress, setStoreAddress] = useState("Premium Plaza, Main Road, New Delhi");
+  
+  // Gemini AI Menu Scanner State
+  const [geminiApiKey, setGeminiApiKey] = useState("");
+  const [isScanning, setIsScanning] = useState(false);
+  const [scannedItems, setScannedItems] = useState<{ name: string; price: number; selected: boolean }[]>([]);
+  const [showScanModal, setShowScanModal] = useState(false);
   const [storePhone, setStorePhone] = useState("+91 9999 888 777");
   const [storeWebsite, setStoreWebsite] = useState("www.khankitchen.com");
   const [storeGstin, setStoreGstin] = useState("07AABCU1234F1Z5");
@@ -291,6 +303,105 @@ Stay safe & eat healthy! 🍕
 
   const [showExitDialog, setShowExitDialog] = useState(false);
 
+  const prepareInterstitialAd = async () => {
+    try {
+      if (typeof window !== "undefined" && Capacitor.isNativePlatform()) {
+        console.log("Preparing Interstitial Ad...");
+        await AdMob.prepareInterstitial({
+          adId: "ca-app-pub-6433517681109667/4211760677", // User's Real Android Interstitial ID
+          isTesting: false,
+        });
+        console.log("Interstitial Ad prepared successfully.");
+      }
+    } catch (err) {
+      console.error("Error preparing Interstitial Ad:", err);
+    }
+  };
+
+  useEffect(() => {
+    let loadedListener: any = null;
+    let failedListener: any = null;
+    let sizeChangedListener: any = null;
+    let interstitialDismissedListener: any = null;
+    let interstitialFailedToLoadListener: any = null;
+
+    const initAdMob = async () => {
+      try {
+        if (typeof window !== "undefined" && Capacitor.isNativePlatform()) {
+          setAdmobDebugInfo("Registering listeners...");
+          
+          loadedListener = await AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
+            console.log("AdMob banner loaded successfully");
+            setAdmobDebugInfo("Loaded successfully");
+            setIsAdMobActive(true);
+          });
+
+          failedListener = await AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (info: any) => {
+            console.error("AdMob banner failed to load:", info);
+            setAdmobDebugInfo(`Failed to load: Code ${info?.code || "unknown"}, Msg: ${info?.message || "unknown"}`);
+            setIsAdMobActive(false);
+          });
+
+          sizeChangedListener = await AdMob.addListener(BannerAdPluginEvents.SizeChanged, (size: any) => {
+            console.log("AdMob banner size changed:", size);
+            if (size && typeof size.height === "number" && size.height > 0) {
+              setAdmobHeight(size.height);
+            }
+          });
+
+          interstitialDismissedListener = await AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
+            console.log("Interstitial ad dismissed, pre-loading next one...");
+            prepareInterstitialAd();
+          });
+
+          interstitialFailedToLoadListener = await AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, (info: any) => {
+            console.error("Interstitial ad failed to load:", info);
+          });
+
+          setAdmobDebugInfo("Initializing SDK...");
+          await AdMob.initialize({
+            initializeForTesting: false,
+          });
+
+          // Preload first interstitial ad
+          await prepareInterstitialAd();
+
+          setAdmobDebugInfo("Requesting banner...");
+          console.log("Showing AdMob Banner ad...");
+          await AdMob.showBanner({
+            adId: "ca-app-pub-6433517681109667/2890562844", // User's Real Android Banner ID
+            adSize: BannerAdSize.ADAPTIVE_BANNER,
+            position: BannerAdPosition.TOP_CENTER,
+            margin: 0,
+            isTesting: false,
+          });
+          setAdmobDebugInfo("Show requested. Waiting for load...");
+        } else {
+          setAdmobDebugInfo("Non-native platform");
+        }
+      } catch (err: any) {
+        console.error("AdMob initialization/show error: ", err);
+        setAdmobDebugInfo(`Init Error: ${err?.message || err}`);
+      }
+    };
+    initAdMob();
+
+    return () => {
+      if (typeof window !== "undefined" && Capacitor.isNativePlatform()) {
+        try {
+          if (loadedListener) loadedListener.remove();
+          if (failedListener) failedListener.remove();
+          if (sizeChangedListener) sizeChangedListener.remove();
+          if (interstitialDismissedListener) interstitialDismissedListener.remove();
+          if (interstitialFailedToLoadListener) interstitialFailedToLoadListener.remove();
+          AdMob.removeBanner();
+        } catch (e) {
+          console.error("Error removing AdMob banner/listeners: ", e);
+        }
+      }
+    };
+  }, []);
+
   useEffect(() => {
     setMounted(true);
     
@@ -375,6 +486,9 @@ Stay safe & eat healthy! 🍕
     const savedDarkMode = localStorage.getItem("saas_dark_mode");
     if (savedDarkMode) setIsDarkMode(savedDarkMode === "true");
 
+    const savedGeminiKey = localStorage.getItem("saas_gemini_api_key");
+    if (savedGeminiKey) setGeminiApiKey(savedGeminiKey);
+
     setDataLoaded(true);
 
     return () => window.removeEventListener("popstate", handleBackButton);
@@ -388,8 +502,9 @@ Stay safe & eat healthy! 🍕
       localStorage.setItem("saas_rest_name", restaurantName);
       localStorage.setItem("saas_rent", monthlyRent.toString());
       localStorage.setItem("saas_dark_mode", isDarkMode.toString());
+      localStorage.setItem("saas_gemini_api_key", geminiApiKey);
     }
-  }, [sales, expenses, menuItems, restaurantName, monthlyRent, isDarkMode, dataLoaded, mounted]);
+  }, [sales, expenses, menuItems, restaurantName, monthlyRent, isDarkMode, geminiApiKey, dataLoaded, mounted]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -565,6 +680,18 @@ Stay safe & eat healthy! 🍕
       setCart([]); 
       setNewName(""); 
       setNewMobile("");
+
+      // Show Fullscreen Interstitial Ad
+      if (typeof window !== "undefined" && Capacitor.isNativePlatform()) {
+        try {
+          console.log("Triggering Interstitial Ad after sale...");
+          await AdMob.showInterstitial();
+        } catch (e) {
+          console.error("Error showing interstitial ad:", e);
+          // If show fails (e.g. not loaded), try preloading again
+          prepareInterstitialAd();
+        }
+      }
     } catch (err: any) {
       alert("Cloud Sync Error: " + (err.message || "Unknown error"));
     } finally {
@@ -672,6 +799,174 @@ Stay safe & eat healthy! 🍕
       alert("Menu Sync Error: " + (err.message || "Unknown error"));
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleBatchAddItems = async (itemsToAdd: { name: string; price: number }[]) => {
+    if (itemsToAdd.length === 0) return;
+    setIsLoading(true);
+    try {
+      const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
+      if (!store) throw new Error("Store ID not found");
+
+      const rows = itemsToAdd.map(item => ({
+        store_id: store.id,
+        name: item.name,
+        price: Number(item.price),
+        category: "Uncategorized"
+      }));
+
+      const { data: newItems, error } = await supabase
+        .from('menu_items')
+        .insert(rows)
+        .select();
+
+      if (error) throw error;
+      
+      const mapped = newItems.map(item => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        category: item.category
+      }));
+      
+      setMenuItems([...menuItems, ...mapped]);
+      alert("Batch Menu Sync Success: Added " + newItems.length + " items!");
+    } catch (err: any) {
+      alert("Batch Menu Sync Error: " + (err.message || "Unknown error"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const parseMenuWithGemini = async (base64Image: string, apiKey: string) => {
+    if (!apiKey) {
+      throw new Error("Gemini API Key missing! Please add it in Store Settings -> System & Cloud.");
+    }
+    
+    const base64Data = base64Image.replace(/^data:image\/\w+;base64,/, "");
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    
+    const requestBody = {
+      contents: [
+        {
+          parts: [
+            {
+              text: "You are a menu card scanning assistant. Analyze this restaurant menu card image. Extract all dishes/items and their prices. Return strictly as a JSON array of objects, with each object having keys 'name' (string) and 'price' (number). Make sure prices are parsed as numbers. Do not include markdown blocks like ```json ... ```, HTML, or conversational text. Return only the raw JSON array string. Example: [{\"name\": \"Margherita Pizza\", \"price\": 199}]"
+            },
+            {
+              inlineData: {
+                mimeType: "image/jpeg",
+                data: base64Data
+              }
+            }
+          ]
+        }
+      ]
+    };
+    
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData?.error?.message || `Gemini API returned HTTP status ${response.status}`);
+    }
+    
+    const data = await response.json();
+    let text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    
+    text = text.trim();
+    if (text.startsWith("```json")) {
+      text = text.substring(7);
+    } else if (text.startsWith("```")) {
+      text = text.substring(3);
+    }
+    if (text.endsWith("```")) {
+      text = text.substring(0, text.length - 3);
+    }
+    text = text.trim();
+    
+    try {
+      const items = JSON.parse(text);
+      if (!Array.isArray(items)) throw new Error("Output is not a valid list");
+      return items.map(item => ({
+        name: String(item.name || "Unnamed Item"),
+        price: Number(item.price || 0),
+        selected: true
+      }));
+    } catch (parseErr) {
+      console.error("Gemini output parsing failed. Raw response:", text);
+      throw new Error("AI output was not in the expected JSON format. Please try again with a clearer image.");
+    }
+  };
+
+  const handleScanMenu = async () => {
+    try {
+      if (!geminiApiKey) {
+        alert("Pehle Settings me jaakar Gemini API Key daalein! (System & Cloud settings ke andar)");
+        setActiveTab("Settings");
+        setExpandedSetting("SystemCloud");
+        return;
+      }
+      
+      let base64Image = "";
+      
+      if (Capacitor.isNativePlatform()) {
+        const image = await Camera.getPhoto({
+          quality: 90,
+          allowEditing: false,
+          resultType: CameraResultType.Base64
+        });
+        if (image && image.base64String) {
+          base64Image = image.base64String;
+        } else {
+          return;
+        }
+      } else {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = "image/*";
+        input.onchange = async (e: any) => {
+          const file = e.target.files?.[0];
+          if (!file) return;
+          
+          setIsScanning(true);
+          const reader = new FileReader();
+          reader.onloadend = async () => {
+            try {
+              const base64 = reader.result as string;
+              const items = await parseMenuWithGemini(base64, geminiApiKey);
+              setScannedItems(items);
+              setShowScanModal(true);
+            } catch (err: any) {
+              alert("Scan Fail: " + err.message);
+            } finally {
+              setIsScanning(false);
+            }
+          };
+          reader.readAsDataURL(file);
+        };
+        input.click();
+        return;
+      }
+      
+      if (base64Image) {
+        setIsScanning(true);
+        const items = await parseMenuWithGemini(base64Image, geminiApiKey);
+        setScannedItems(items);
+        setShowScanModal(true);
+      }
+    } catch (err: any) {
+      if (err.message && err.message.includes("User cancelled")) return;
+      alert("Scan Failed: " + (err.message || "Unknown error"));
+    } finally {
+      setIsScanning(false);
     }
   };
 
@@ -809,6 +1104,12 @@ Stay safe & eat healthy! 🍕
               </button>
             </form>
           </Card>
+
+          {Capacitor.isNativePlatform() && (
+            <div className="bg-white border border-orange-100 dark:bg-zinc-900 dark:border-zinc-800 rounded-xl p-3 text-center text-[10px] text-zinc-500 dark:text-zinc-400 font-mono shadow-sm">
+              <span className="font-bold text-orange-500">AdMob Status:</span> {admobDebugInfo}
+            </div>
+          )}
           
           <p className="text-center text-[8px] font-bold text-zinc-300 uppercase tracking-widest">
             Secured by InstaMunim Cloud Gateway
@@ -819,7 +1120,10 @@ Stay safe & eat healthy! 🍕
   }
 
   return (
-    <div className={`min-h-screen flex flex-col font-sans selection:bg-orange-500/30 ${isDarkMode ? 'dark bg-zinc-950 text-white' : 'bg-[#fafafa] text-zinc-900'}`}>
+    <div 
+      className={`min-h-screen flex flex-col font-sans selection:bg-orange-500/30 ${isDarkMode ? 'dark bg-zinc-950 text-white' : 'bg-[#fafafa] text-zinc-900'}`}
+      style={{ paddingTop: isAdMobActive ? `${admobHeight}px` : "0px" }}
+    >
       <main className="flex-1 pb-24 overflow-y-auto">
         <div className="max-w-full px-2 sm:px-4 py-8">
           
@@ -1503,10 +1807,104 @@ Stay safe & eat healthy! 🍕
 
           {activeTab === "Menu" && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24 px-3">
-              <header className="px-2 pt-4">
-                <h2 className="text-5xl font-bold tracking-tighter leading-tight text-zinc-900 dark:text-white">Inventory<br/>Control</h2>
-                <p className="text-sm font-medium text-zinc-400 mt-3 leading-relaxed">Update your digital menu items and pricing.</p>
+              <header className="px-2 pt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <h2 className="text-5xl font-bold tracking-tighter leading-tight text-zinc-900 dark:text-white">Inventory<br/>Control</h2>
+                  <p className="text-sm font-medium text-zinc-400 mt-3 leading-relaxed">Update your digital menu items and pricing.</p>
+                </div>
+                <div>
+                  <Button 
+                    onClick={handleScanMenu}
+                    disabled={isScanning}
+                    className="h-14 w-full sm:w-auto bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold rounded-2xl text-xs px-6 shadow-xl shadow-orange-500/20 active:scale-95 transition-all uppercase tracking-widest flex items-center justify-center gap-2"
+                  >
+                    {isScanning ? (
+                      <>SCANNING MENU... <Loader2 className="h-4 w-4 animate-spin" /></>
+                    ) : (
+                      <>📷 SMART AI SCANNER</>
+                    )}
+                  </Button>
+                </div>
               </header>
+
+              {/* GEMINI MENU SCANNER REVIEW MODAL */}
+              <Dialog open={showScanModal} onOpenChange={setShowScanModal}>
+                <DialogContent className="max-w-md rounded-3xl bg-white dark:bg-zinc-900 border-0 p-6 shadow-2xl">
+                  <DialogHeader>
+                    <DialogTitle className="text-2xl font-black tracking-tight">AI Scanned Menu Items</DialogTitle>
+                    <DialogDescription className="text-xs text-zinc-400 font-bold uppercase mt-1">
+                      Check and edit the scanned items before saving.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="max-h-[350px] overflow-y-auto divide-y dark:divide-zinc-800 my-4 pr-1 scrollbar-thin">
+                    {scannedItems.map((item, index) => (
+                      <div key={index} className="py-4 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3 flex-1">
+                          <input 
+                            type="checkbox" 
+                            checked={item.selected} 
+                            onChange={(e) => {
+                              const updated = [...scannedItems];
+                              updated[index].selected = e.target.checked;
+                              setScannedItems(updated);
+                            }}
+                            className="w-5 h-5 rounded-md border-zinc-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
+                          />
+                          <Input 
+                            value={item.name} 
+                            onChange={(e) => {
+                              const updated = [...scannedItems];
+                              updated[index].name = e.target.value;
+                              setScannedItems(updated);
+                            }}
+                            className="h-10 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold text-sm px-3 flex-1"
+                          />
+                        </div>
+                        <div className="w-24">
+                          <Input 
+                            type="number"
+                            value={item.price} 
+                            onChange={(e) => {
+                              const updated = [...scannedItems];
+                              updated[index].price = Number(e.target.value);
+                              setScannedItems(updated);
+                            }}
+                            className="h-10 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold text-sm px-3 text-right"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    {scannedItems.length === 0 && (
+                      <p className="text-center py-6 text-xs text-zinc-400 font-bold uppercase tracking-wider">No items found. Please try again.</p>
+                    )}
+                  </div>
+
+                  <DialogFooter className="flex flex-row gap-3 pt-4 border-t dark:border-zinc-800">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowScanModal(false)}
+                      className="flex-1 h-14 rounded-2xl font-bold uppercase tracking-wider text-xs border-zinc-200"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={async () => {
+                        const selected = scannedItems.filter(i => i.selected && i.name.trim() !== "");
+                        if (selected.length === 0) {
+                          alert("Pehle kam se kam 1 item select karein!");
+                          return;
+                        }
+                        setShowScanModal(false);
+                        await handleBatchAddItems(selected);
+                      }}
+                      className="flex-1 h-14 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-orange-500/20"
+                    >
+                      Save {scannedItems.filter(i => i.selected).length} Items
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
 
               {/* NEW ITEM CARD - PREMIUM STYLE */}
               <Card className="rounded-2xl border-0 shadow-2xl shadow-zinc-200 dark:shadow-none bg-white dark:bg-zinc-900 overflow-hidden">
@@ -1916,6 +2314,7 @@ Stay safe & eat healthy! 🍕
                         localStorage.setItem("saas_monthly_rent", monthlyRent.toString());
                         localStorage.setItem("saas_swiggy_comm", swiggyCommission.toString());
                         localStorage.setItem("saas_zomato_comm", zomatoCommission.toString());
+                        localStorage.setItem("saas_gemini_api_key", geminiApiKey);
                         
                         // Cloud Sync (Safe Mode)
                         const { error: syncError } = await supabase
@@ -2152,6 +2551,43 @@ Stay safe & eat healthy! 🍕
                               </Button>
                             </div>
                             <p className="text-center text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-4">Database is synchronized and secure</p>
+                            
+                            <div className="bg-white dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 p-6 rounded-3xl shadow-sm mt-6 space-y-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-2xl bg-orange-50 dark:bg-orange-950/20 text-orange-600 flex items-center justify-center font-bold">AI</div>
+                                <div>
+                                  <h4 className="font-black text-md tracking-tight">Gemini AI Menu Scanner</h4>
+                                  <p className="text-[10px] font-bold text-zinc-400 uppercase">Extract menu items from images instantly</p>
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Gemini API Key</Label>
+                                <Input 
+                                  type="password"
+                                  placeholder="Paste your Gemini API Key here..."
+                                  value={geminiApiKey}
+                                  onChange={e => setGeminiApiKey(e.target.value)}
+                                  className="h-12 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border-0 font-bold px-4 focus:ring-2 ring-orange-500/20"
+                                />
+                                <p className="text-[9px] text-zinc-400 font-bold">
+                                  API Key nahi hai?{" "}
+                                  <a 
+                                    href="https://aistudio.google.com/" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="text-orange-500 underline hover:text-orange-600 transition-colors"
+                                  >
+                                    Google AI Studio se FREE Key banayein ↗
+                                  </a>
+                                </p>
+                               </div>
+                            </div>
+                            
+                            {Capacitor.isNativePlatform() && (
+                              <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 p-4 rounded-2xl text-center text-[10px] text-zinc-500 dark:text-zinc-400 font-mono mt-4">
+                                <span className="font-bold text-orange-500">AdMob Status:</span> {admobDebugInfo}
+                              </div>
+                            )}
                           </div>
                         )}
 

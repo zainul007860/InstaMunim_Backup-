@@ -1,4 +1,4 @@
-package com.zainul.smartpos;
+package com.zainul.instamunim;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -21,8 +21,15 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
+        java.util.ArrayList<String> permissions = new java.util.ArrayList<>();
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.RECORD_AUDIO}, 1001);
+            permissions.add(Manifest.permission.RECORD_AUDIO);
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            permissions.add(Manifest.permission.CAMERA);
+        }
+        if (!permissions.isEmpty()) {
+            ActivityCompat.requestPermissions(this, permissions.toArray(new String[0]), 1001);
         }
 
         this.bridge.getWebView().addJavascriptInterface(new Object() {
