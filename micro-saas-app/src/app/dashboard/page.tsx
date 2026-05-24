@@ -2738,17 +2738,14 @@ Stay safe & eat healthy! 🍕
                         localStorage.setItem("saas_zomato_comm", zomatoCommission.toString());
                         localStorage.setItem("saas_zomato_comm_type", zomatoCommType);
                         
-                        // Cloud Sync (Safe Mode)
+                        // Cloud Sync (Safe Mode via Secure RPC)
                         const { error: syncError } = await supabase
-                          .from('stores')
-                          .update({ 
-                            store_name: restaurantName,
-                            store_logo: storeLogo,
-                            monthly_rent: monthlyRent,
-                            swiggy_commission: swiggyCommission,
-                            zomato_commission: zomatoCommission
-                          })
-                          .eq('owner_mobile', ownerMobile);
+                          .rpc('update_store_settings', { 
+                            input_mobile: ownerMobile,
+                            input_name: restaurantName,
+                            input_logo: storeLogo,
+                            input_rent: monthlyRent
+                          });
 
                         if (syncError) {
                           console.warn("Cloud sync warning:", syncError.message);
