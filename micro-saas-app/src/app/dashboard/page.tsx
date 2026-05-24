@@ -767,7 +767,7 @@ Stay safe & eat healthy! 🍕
           const savedPhone = localStorage.getItem("saas_store_phone");
           const savedWebsite = localStorage.getItem("saas_store_website");
           const savedGstin = localStorage.getItem("saas_store_gstin");
-          const savedRent = localStorage.getItem("saas_store_rent");
+          const savedRent = localStorage.getItem("saas_monthly_rent");
 
           if (savedName) setRestaurantName(savedName);
           if (savedLogo) setStoreLogo(savedLogo);
