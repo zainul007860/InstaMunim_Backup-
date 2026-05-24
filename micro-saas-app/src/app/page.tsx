@@ -104,6 +104,22 @@ export default function Dashboard() {
   const [isScanning, setIsScanning] = useState(false);
   const [scannedItems, setScannedItems] = useState<{ name: string; price: number; selected: boolean }[]>([]);
   const [showScanModal, setShowScanModal] = useState(false);
+
+  const fetchGeminiKey = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('app_config')
+        .select('value')
+        .eq('key', 'gemini_api_key')
+        .single();
+      if (data && data.value) {
+        setGeminiApiKey(data.value);
+        localStorage.setItem("saas_gemini_api_key", data.value);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch Gemini API Key from Supabase config:", err);
+    }
+  };
   const [storePhone, setStorePhone] = useState("+91 9999 888 777");
   const [storeWebsite, setStoreWebsite] = useState("www.khankitchen.com");
   const [storeGstin, setStoreGstin] = useState("07AABCU1234F1Z5");
@@ -404,6 +420,7 @@ Stay safe & eat healthy! 🍕
 
   useEffect(() => {
     setMounted(true);
+    fetchGeminiKey();
     
     // Exit Protection Logic
     const handleBackButton = (e: PopStateEvent) => {
@@ -2551,37 +2568,7 @@ Stay safe & eat healthy! 🍕
                               </Button>
                             </div>
                             <p className="text-center text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-4">Database is synchronized and secure</p>
-                            
-                            <div className="bg-white dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 p-6 rounded-3xl shadow-sm mt-6 space-y-4">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-2xl bg-orange-50 dark:bg-orange-950/20 text-orange-600 flex items-center justify-center font-bold">AI</div>
-                                <div>
-                                  <h4 className="font-black text-md tracking-tight">Gemini AI Menu Scanner</h4>
-                                  <p className="text-[10px] font-bold text-zinc-400 uppercase">Extract menu items from images instantly</p>
-                                </div>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Gemini API Key</Label>
-                                <Input 
-                                  type="password"
-                                  placeholder="Paste your Gemini API Key here..."
-                                  value={geminiApiKey}
-                                  onChange={e => setGeminiApiKey(e.target.value)}
-                                  className="h-12 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border-0 font-bold px-4 focus:ring-2 ring-orange-500/20"
-                                />
-                                <p className="text-[9px] text-zinc-400 font-bold">
-                                  API Key nahi hai?{" "}
-                                  <a 
-                                    href="https://aistudio.google.com/" 
-                                    target="_blank" 
-                                    rel="noopener noreferrer" 
-                                    className="text-orange-500 underline hover:text-orange-600 transition-colors"
-                                  >
-                                    Google AI Studio se FREE Key banayein ↗
-                                  </a>
-                                </p>
-                               </div>
-                            </div>
+                             
                             
                             {Capacitor.isNativePlatform() && (
                               <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 p-4 rounded-2xl text-center text-[10px] text-zinc-500 dark:text-zinc-400 font-mono mt-4">
