@@ -1,5 +1,5 @@
 "use client";
-// v1.2.0 - Daylight Theme with High-Trust Visuals (Orange & White)
+// v1.1.2 - Character encoding fix
 
 import { useState, useEffect } from "react";
 import { 
@@ -7,11 +7,12 @@ import {
   Download, CheckCircle2, MessageSquare, Star, ArrowRight,
   LayoutDashboard, ShoppingCart, Users, Globe,
   Camera, Play, Info, Video, MessageCircle, Send, MapPin,
-  Clock, CreditCard, PieChart, Share2, HelpCircle, Lock, Award
+  Clock, CreditCard, PieChart, Share2
 } from "lucide-react";
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
+
   const [isApp, setIsApp] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -27,289 +28,235 @@ export default function LandingPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  if (isApp === null) return <div className="bg-white min-h-screen" />; // White screen during check
+  if (isApp === null) return <div className="bg-black min-h-screen" />; // Black screen during check
 
   return (
-    <div className="bg-zinc-50/50 text-zinc-900 font-sans selection:bg-orange-500 selection:text-white scroll-smooth overflow-x-hidden min-h-screen">
+    <div className="bg-black text-white font-sans selection:bg-orange-500 selection:text-white scroll-smooth overflow-x-hidden min-h-screen">
       {/* Navigation */}
-      <nav className={`fixed top-0 w-full z-[100] transition-all duration-300 ${scrolled ? "bg-white/90 backdrop-blur-md border-b border-zinc-200/60 py-3 shadow-md" : "bg-transparent py-5"}`}>
+      <nav className={`fixed top-0 w-full z-[100] transition-all duration-300 ${scrolled ? "bg-zinc-950 border-b border-white/10 py-2 shadow-2xl" : "bg-transparent py-4"}`}>
         <div className="max-w-6xl mx-auto px-6 flex justify-between items-center">
           <div className="flex items-center gap-3">
-             <img src="/assets/instamunim-logo-main.png" alt="InstaMunim" className="w-12 h-12 md:w-16 md:h-16 object-contain" />
-             <div className="flex flex-col">
-                <span className="text-xl md:text-2xl font-black tracking-tight text-zinc-900 leading-none">INSTAMUNIM</span>
-                <span className="text-[9px] md:text-[10px] font-black tracking-[0.3em] text-orange-500 uppercase mt-1">Beyond Billing</span>
+             <img src="/assets/instamunim-logo-main.png" alt="InstaMunim" className="w-16 h-16 md:w-24 md:h-24 object-contain" />
+             <div className="flex flex-col -ml-2">
+                <span className="text-xl md:text-3xl font-black tracking-tighter italic leading-none">INSTAMUNIM</span>
+                <span className="text-[9px] md:text-[11px] font-black tracking-[0.4em] text-orange-500 italic uppercase ml-1">Beyond Billing</span>
              </div>
           </div>
           
-          <div className="hidden lg:flex items-center gap-10 text-[11px] font-black tracking-widest text-zinc-500">
+          <div className="hidden lg:flex items-center gap-10 text-[11px] font-black tracking-widest text-zinc-400">
             <a href="#features" className="hover:text-orange-500 transition-colors uppercase">Features</a>
-            <a href="#ai-scanner" className="hover:text-orange-500 transition-colors uppercase">AI Scanner</a>
             <a href="#plans" className="hover:text-orange-500 transition-colors uppercase">Pricing</a>
-            <a href="#trust" className="hover:text-orange-500 transition-colors uppercase">Why Trust Us</a>
+            <a href="#about" className="hover:text-orange-500 transition-colors uppercase">About</a>
           </div>
 
-          <div className="flex items-center gap-4">
-            <a 
-              href="/dashboard"
-              className="bg-zinc-900 hover:bg-orange-500 text-white hover:text-white px-5 py-2.5 rounded-2xl font-bold text-xs transition-all flex items-center gap-2 shadow-md active:scale-95"
-            >
-              <LayoutDashboard size={14} /> LOGIN TO WEB
-            </a>
-          </div>
+          {/* Header Button Removed */}
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-40 md:pt-48 pb-24 overflow-hidden bg-gradient-to-b from-orange-50/60 via-white to-zinc-50/50">
-        {/* Soft background grid pattern */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-orange-500/5 via-transparent to-transparent -z-10" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px] -z-20 opacity-70" />
+      <section className="relative pt-48 md:pt-60 pb-20 overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[1000px] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-orange-500/10 via-transparent to-transparent -z-10" />
         
         <div className="max-w-6xl mx-auto px-6 text-center">
-          <div className="inline-flex items-center gap-2 bg-orange-50 text-orange-600 border border-orange-200 px-5 py-2 rounded-full font-black text-[10px] md:text-[11px] uppercase tracking-wider mb-8 shadow-sm">
-             🇮🇳 MADE IN INDIA FOR SMART DUKANDAARS
+          <div className="inline-flex items-center gap-2 bg-orange-500 text-black px-6 py-2 rounded-full font-black text-[10px] md:text-[12px] uppercase tracking-widest mb-10 shadow-[0_0_30px_rgba(249,115,22,0.3)]">
+             7 DAYS FREE TRIAL {"\u2022"} NO CREDIT CARD
           </div>
 
-          <h1 className="text-4xl md:text-7xl font-extrabold tracking-tight text-zinc-900 leading-[1.1] mb-8">
-            Ab Bill Banayein <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-orange-600 italic font-black">Superfast</span> <br />
-            Aur Business Ko Karein <span className="underline decoration-orange-500 decoration-wavy decoration-3 underline-offset-8">Pro</span>.
+          <h1 className="text-5xl md:text-[120px] font-black tracking-tighter leading-[0.8] mb-12">
+            BILLING <span className="italic text-transparent bg-clip-text bg-gradient-to-b from-orange-400 to-orange-600">FAST</span> <br />
+            BUSINESS <span className="italic">PRO.</span>
           </h1>
           
-          <p className="max-w-2xl mx-auto text-zinc-500 text-base md:text-xl mb-12 font-medium leading-relaxed">
-            Apne smartphone ko banayein high-speed billing machine. Digital accounting, stock manager, automatic cloud backup aur customer history—sab kuch ek hi app mein.
+          <p className="max-w-2xl mx-auto text-zinc-400 text-lg md:text-3xl mb-16 font-medium leading-relaxed">
+            Turn your smartphone into a high-speed billing machine.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-20 max-w-md mx-auto">
+          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-32">
              <a 
               href="/InstaMunimSmartPOS_v1.2-release.apk?v=5" 
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white px-8 py-4.5 rounded-2xl font-black text-base shadow-xl shadow-orange-500/25 active:scale-95 transition-all flex items-center justify-center gap-3 group"
+              className="w-full sm:w-auto bg-white text-black hover:bg-orange-500 hover:text-white px-12 py-6 rounded-3xl font-black text-xl md:text-2xl transition-all flex items-center justify-center gap-4 group"
             >
-              <Download size={18} /> DOWNLOAD APK v1.2
+              DOWNLOAD APP <ArrowRight className="group-hover:translate-x-2 transition-transform" />
             </a>
             <a 
               href="/dashboard"
-              className="w-full bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-800 px-8 py-4.5 rounded-2xl font-black text-base transition-all flex items-center justify-center gap-3 shadow-md active:scale-95"
+              className="w-full sm:w-auto bg-zinc-900 border-2 border-zinc-800 hover:border-orange-500 px-12 py-6 rounded-3xl font-black text-xl md:text-2xl transition-all flex items-center justify-center gap-4 text-white"
             >
-              FREE WEB TRIAL <ArrowRight size={18} className="text-orange-500 group-hover:translate-x-1 transition-transform" />
+              LOGIN (WEB) <LayoutDashboard size={24} className="text-orange-500" />
             </a>
           </div>
 
           {/* STRETCHED COLORFUL TRUST SECTION */}
-          <div className="max-w-4xl mx-auto py-8 px-6 bg-white border border-zinc-100 rounded-3xl shadow-[0_15px_40px_-15px_rgba(249,115,22,0.1)] relative">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 divide-y md:divide-y-0 md:divide-x divide-zinc-100">
-              <div className="flex flex-col items-center gap-1 pt-4 md:pt-0">
-                <span className="text-3xl md:text-4xl font-extrabold text-orange-500">1,200+</span>
-                <span className="text-[10px] font-black tracking-widest text-zinc-400 uppercase">ACTIVE STORES</span>
+          <div className="max-w-7xl mx-auto py-12 px-6 bg-gradient-to-r from-orange-600/20 to-orange-400/20 rounded-[40px] border border-orange-500/30 backdrop-blur-md overflow-hidden relative shadow-[0_0_50px_rgba(249,115,22,0.1)]">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 relative z-10">
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-4xl md:text-6xl font-black italic text-orange-500">100+</span>
+                <span className="text-[9px] md:text-[11px] font-black tracking-[0.3em] text-white/80 uppercase">Merchants</span>
               </div>
-              <div className="flex flex-col items-center gap-1 pt-4 md:pt-0">
-                <span className="text-3xl md:text-4xl font-extrabold text-zinc-800">50K+</span>
-                <span className="text-[10px] font-black tracking-widest text-zinc-400 uppercase">BILLS GENERATED</span>
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-4xl md:text-6xl font-black italic text-white">50K+</span>
+                <span className="text-[9px] md:text-[11px] font-black tracking-[0.3em] text-white/80 uppercase">Invoices</span>
               </div>
-              <div className="flex flex-col items-center gap-1 pt-4 md:pt-0">
-                <span className="text-3xl md:text-4xl font-extrabold text-orange-500">4.9★</span>
-                <span className="text-[10px] font-black tracking-widest text-zinc-400 uppercase">MERCHANT RATING</span>
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-4xl md:text-6xl font-black italic text-orange-500">4.9/5</span>
+                <span className="text-[9px] md:text-[11px] font-black tracking-[0.3em] text-white/80 uppercase">Rating</span>
               </div>
-              <div className="flex flex-col items-center gap-1 pt-4 md:pt-0">
-                <span className="text-3xl md:text-4xl font-extrabold text-zinc-800">100%</span>
-                <span className="text-[10px] font-black tracking-widest text-zinc-400 uppercase">SAFE & SECURE</span>
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-4xl md:text-6xl font-black italic text-white">100%</span>
+                <span className="text-[9px] md:text-[11px] font-black tracking-[0.3em] text-white/80 uppercase">Secure</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* TRUST AND ASSURANCE BANNER */}
-      <section id="trust" className="py-8 bg-zinc-900 text-white relative overflow-hidden">
-        <div className="max-w-6xl mx-auto px-6 relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-orange-500 flex items-center justify-center text-black font-black">🇮🇳</div>
-            <div>
-              <p className="text-sm font-black uppercase tracking-wider text-orange-400">100% Swadeshi & Secure</p>
-              <p className="text-xs text-zinc-400">Aapka data encrypted aur safe hai. No data sharing.</p>
+            <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
+              MAKE IN INDIA {"\uD83C\uDDEE\uD83C\uDDF3"}
             </div>
-          </div>
-          <div className="flex gap-6 items-center text-xs font-black tracking-widest text-zinc-400">
-            <span className="flex items-center gap-1.5"><Shield className="h-4 w-4 text-orange-500" /> SECURE SSL</span>
-            <span className="flex items-center gap-1.5"><Lock className="h-4 w-4 text-orange-500" /> CLOUD DEPLOYED</span>
-            <span className="flex items-center gap-1.5"><Award className="h-4 w-4 text-orange-500" /> GST COMPLIANT</span>
+      <section className="py-10 bg-gradient-to-r from-orange-600 to-red-700 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6 text-center">
+            <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
+            <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
+              MAKE IN INDIA {"\uD83C\uDDEE\uD83C\uDDF3"}
+            </div>
+            </div>
+            <h2 className="text-2xl md:text-5xl font-black italic tracking-tighter text-white uppercase leading-none">
+              AB INDIA KA HAR DUKANDAR <span className="text-black">BANEGA DIGITAL</span>
+            </h2>
           </div>
         </div>
       </section>
 
-      {/* CORE FEATURES SECTION */}
-      <section id="features" className="py-24 bg-white relative">
+      {/* FEATURES SECTION */}
+      <section id="features" className="py-32 bg-zinc-950 relative">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">Complete Shop Control</h2>
-            <p className="text-zinc-500 font-medium">Billing, stock monitor, rent trackers, aur staff management—sab kuch chalta hai bina kisi pareshani ke.</p>
+          <div className="flex flex-col md:flex-row justify-between items-center mb-24 gap-10">
+            <div className="max-w-2xl text-center md:text-left">
+              <h2 className="text-5xl md:text-8xl font-black tracking-tighter mb-8 italic leading-none">SHOP CONTROL.</h2>
+              <p className="text-zinc-500 text-xl font-medium">Manage billing, stock, and staff from anywhere.</p>
+            </div>
+            <div className="bg-white text-orange-600 px-6 py-2 rounded-full font-black text-xs md:text-sm uppercase tracking-[0.3em] shadow-xl">
+              MAKE IN INDIA {"\uD83C\uDDEE\uD83C\uDDF3"}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { icon: Zap, title: "Superfast Billing", desc: "GST aur Non-GST bills banayein sirf 3 clicks mein. WhatsApp par instant invoices bhejein." },
-              { icon: BarChart3, title: "Daily Profit/Loss Reports", desc: "Din ke aakhir mein check karein sales, profit margins, aur expenses bina kisi manual calculations ke." },
-              { icon: Smartphone, title: "Full Mobile POS Support", desc: "Kisi mahenge computer ki zaroorat nahi. Aapka Android mobile hi aapka smart billing terminal hai." },
-              { icon: Shield, title: "Automated Cloud Backup", desc: "Phone khone ya damage hone par bhi data safe! Ek click mein database recover karein." },
-              { icon: Users, title: "Multi-Staff Accounts", desc: "Apne staff ko alag access dekar securely control karein. Sale transactions ka full records unki id se manage karein." },
-              { icon: Globe, title: "Offline Billing Capability", desc: "No internet? No worries. Billing continue rakhein, internet aate hi saara data automatic sync ho jayega." }
+              { icon: Zap, title: "Speedy Billing", desc: "Create bills in seconds. Keep customers moving." },
+              { icon: BarChart3, title: "Daily Reports", desc: "Know profit and expense at day end." },
+              { icon: Smartphone, title: "Mobile POS", desc: "No PC needed. Your phone is your POS." },
+              { icon: Shield, title: "Cloud Backup", desc: "Data always safe and accessible." },
+              { icon: Users, title: "Staff Mgmt", desc: "Limited access for extra security." },
+              { icon: Globe, title: "Multi-Outlet", desc: "Control all branches from one place." }
             ].map((f, i) => (
-              <div key={i} className="bg-zinc-50/50 border border-zinc-200/50 p-8 rounded-3xl hover:bg-white hover:shadow-xl transition-all group duration-300">
-                <div className="w-12 h-12 bg-orange-500/10 rounded-xl flex items-center justify-center mb-6 group-hover:bg-orange-500 transition-all duration-300">
-                  <f.icon className="text-orange-500 group-hover:text-white transition-colors" size={24} />
+              <div key={i} className="bg-zinc-900/40 border border-white/5 p-10 rounded-[40px] hover:bg-zinc-900 transition-all group">
+                <div className="w-14 h-14 bg-orange-500/10 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-orange-500 transition-all duration-500">
+                  <f.icon className="text-orange-500 group-hover:text-white transition-colors" size={28} />
                 </div>
-                <h4 className="text-xl font-bold mb-3 text-zinc-900">{f.title}</h4>
-                <p className="text-zinc-500 leading-relaxed text-sm font-medium">{f.desc}</p>
+                <h4 className="text-2xl font-black mb-4 italic">{f.title}</h4>
+                <p className="text-zinc-500 font-bold leading-relaxed text-sm">{f.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* NEW AI SCANNER HIGHLIGHT SECTION */}
-      <section id="ai-scanner" className="py-24 bg-gradient-to-r from-orange-500 to-orange-600 text-white relative overflow-hidden">
-        <div className="absolute right-0 top-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -z-10" />
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-          <div className="lg:col-span-7 space-y-6 text-left">
-            <span className="bg-white/20 text-white px-4 py-1.5 rounded-full font-black text-xs uppercase tracking-widest">
-              NEW FEATURE ⚡
-            </span>
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-tight">
-              Smart Menu AI Scanner
-            </h2>
-            <p className="text-white/90 text-base md:text-lg leading-relaxed">
-              Apne purane printed rate-list ya menu card ki photo kheenchiye! InstaMunim AI automatic items aur prices ko extract karke aapke software menu mein **5 seconds** ke andar feed kar dega. Naye items manually add karne ki bilkul zaroorat nahi.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4">
-              <div className="bg-white/10 p-4 rounded-2xl">
-                <span className="font-black text-orange-200 block text-lg mb-1">Step 1</span>
-                <span className="text-xs font-bold text-white/80">Menu Card Photo upload karein</span>
-              </div>
-              <div className="bg-white/10 p-4 rounded-2xl">
-                <span className="font-black text-orange-200 block text-lg mb-1">Step 2</span>
-                <span className="text-xs font-bold text-white/80">AI items detect karega use check karein</span>
-              </div>
-              <div className="bg-white/10 p-4 rounded-2xl">
-                <span className="font-black text-orange-200 block text-lg mb-1">Step 3</span>
-                <span className="text-xs font-bold text-white/80">Instant item base automatic save karein</span>
-              </div>
-            </div>
-          </div>
-          <div className="lg:col-span-5 flex justify-center">
-            <div className="bg-white/10 backdrop-blur-md border border-white/20 p-6 rounded-[3rem] shadow-2xl w-full max-w-sm relative">
-              <div className="bg-white rounded-3xl p-5 text-zinc-950 space-y-4 shadow-lg text-center">
-                <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto text-orange-600">
-                  <Camera className="h-8 w-8" />
-                </div>
-                <div>
-                  <p className="font-black text-base text-zinc-800">Scan Printed Rate List</p>
-                  <p className="text-[10px] font-bold text-zinc-400 mt-1">Camera and Upload options both live inside the app</p>
-                </div>
-                <div className="border border-dashed border-zinc-200 rounded-2xl p-4 text-[11px] font-bold text-zinc-500 bg-zinc-50 space-y-2">
-                  <div className="flex justify-between border-b pb-1.5 border-zinc-200/50"><span>1. Kadhai Paneer</span> <span className="text-orange-600">₹240</span></div>
-                  <div className="flex justify-between border-b pb-1.5 border-zinc-200/50"><span>2. Masala Naan</span> <span className="text-orange-600">₹45</span></div>
-                  <div className="flex justify-between"><span>3. Veg Noodles</span> <span className="text-orange-600">₹140</span></div>
-                </div>
-                <button className="w-full bg-orange-500 text-white font-black py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2">
-                  <CheckCircle2 className="h-4 w-4" /> Save Items to Menu
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* PLANS & PRICING SECTION */}
-      <section id="plans" className="py-24 relative overflow-hidden bg-zinc-50">
+      {/* PLANS SECTION */}
+      <section id="plans" className="py-32 relative overflow-hidden bg-black">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4">Transparent Pricing</h2>
-            <p className="text-zinc-500 font-medium">Bina kisi hidden charges ke. Select the plan that fits your shop.</p>
+          <div className="text-center mb-24">
+            <h2 className="text-5xl md:text-8xl font-black tracking-tighter mb-8 italic underline decoration-orange-500 decoration-8 underline-offset-8 uppercase">PLANS.</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto items-stretch">
             
             {/* MONTHLY PLAN */}
-            <div className="bg-white border border-zinc-200/80 p-8 md:p-10 rounded-[2.5rem] flex flex-col justify-between shadow-md hover:shadow-lg transition-all duration-300">
+            <div className="bg-gradient-to-b from-zinc-900/50 to-black border border-zinc-800 p-8 md:p-12 rounded-[50px] relative flex flex-col justify-between shadow-[0_0_50px_rgba(0,0,0,0.5)]">
               <div>
-                <div className="text-orange-500 font-black text-xs uppercase tracking-wider mb-4">MONTHLY PLAN</div>
-                <div className="mb-6">
-                  <div className="flex items-end gap-1.5 mb-1">
-                    <span className="text-4xl md:text-5xl font-black text-zinc-950">₹399</span>
-                    <span className="text-zinc-400 font-bold text-base mb-1">/month</span>
+                <div className="text-orange-500 font-black text-xs uppercase tracking-[0.2em] mb-4">MONTHLY PLAN</div>
+                <div className="mb-8">
+                  <div className="flex items-end gap-2 mb-2">
+                    <span className="text-5xl md:text-6xl font-black italic tracking-tighter leading-none">{"\u20B9"}399</span>
+                    <span className="text-zinc-500 font-black text-lg mb-1">/mo</span>
                   </div>
-                  <p className="text-zinc-500 text-xs font-bold">Billed monthly. Cancel anytime.</p>
+                  <p className="text-zinc-400 text-xs font-bold">Billed monthly. Cancel anytime.</p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-3.5 mb-8">
+                <div className="grid grid-cols-1 gap-4 mb-8">
                   {[
                     "Unlimited Digital Accounting",
-                    "Advanced Rent Tracker Sync",
+                    "Advanced Rent Tracker",
                     "Automated Expense Manager",
-                    "Voice-Control Billing Support",
-                    "Smart Menu AI Scanner Access",
-                    "Unlimited Billing & Invoices",
-                    "Secure Cloud Storage Backup"
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-3">
-                      <CheckCircle2 size={16} className="text-orange-500 shrink-0" />
-                      <span className="font-bold text-zinc-600 text-sm">{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <a 
-                  href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Monthly Smart Business Plan (\u20B9399/mo) for my store. \uD83D\uDE80\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. \uD83D\uDCC8")}`}
-                  className="w-full bg-zinc-900 hover:bg-orange-500 text-white hover:text-white px-6 py-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-3 shadow-md"
-                >
-                  ACTIVATE MONTHLY <ChevronRight size={16} />
-                </a>
-              </div>
-            </div>
-
-            {/* YEARLY PLAN */}
-            <div className="bg-white border-2 border-orange-500 p-8 md:p-10 rounded-[2.5rem] relative flex flex-col justify-between shadow-xl shadow-orange-500/5 hover:scale-[1.01] transition-all duration-300">
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-orange-500 text-white px-5 py-1 rounded-full font-black text-[9px] uppercase tracking-wider shadow-md">
-                BEST VALUE • SAVE 25%
-              </div>
-              
-              <div>
-                <div className="text-orange-600 font-black text-xs uppercase tracking-wider mb-4">YEARLY PLAN</div>
-                <div className="mb-6">
-                  <div className="flex items-end gap-1.5 mb-1">
-                    <span className="text-4xl md:text-5xl font-black text-zinc-950">₹3,600</span>
-                    <span className="text-zinc-400 font-bold text-base mb-1">/year</span>
-                  </div>
-                  <p className="text-orange-600 text-xs font-black tracking-wider uppercase">Equivalent to ₹300/month (Save ₹1,188/yr)</p>
-                </div>
-
-                <div className="grid grid-cols-1 gap-3.5 mb-8">
-                  {[
-                    "Everything in Monthly Plan",
-                    "Priority WhatsApp Support (24/7)",
-                    "Dedicated Onboarding Manager",
-                    "Customized Invoice Layouts",
+                    "WhatsApp Marketing Features",
                     "Unlimited Billing & Invoices",
                     "Staff Permissions & Roles",
                     "Automatic Cloud Backup"
                   ].map((item, i) => (
                     <div key={i} className="flex items-center gap-3">
                       <CheckCircle2 size={16} className="text-orange-500 shrink-0" />
-                      <span className="font-black text-zinc-700 text-sm">{item}</span>
+                      <span className="font-bold text-zinc-300 text-sm">{item}</span>
                     </div>
                   ))}
                 </div>
               </div>
 
               <div>
-                <a 
-                  href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Yearly Smart Business Plan (\u20B93600/yr) for my store. \uD83D\uDE80\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. \uD83D\uDCC8")}`}
-                  className="w-full bg-orange-500 hover:bg-orange-600 text-white px-6 py-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-3 shadow-lg shadow-orange-500/20"
-                >
-                  ACTIVATE YEARLY <ChevronRight size={16} />
-                </a>
+                <div className="flex justify-center">
+                  <a 
+                    href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Monthly Smart Business Plan (\u20B9399/mo) for my store. \uD83D\uDE80\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. \uD83D\uDCC8")}`}
+                    className="w-full bg-zinc-900 hover:bg-zinc-850 text-white border border-zinc-800 px-6 py-4 rounded-2xl font-black text-md transition-all flex items-center justify-center gap-3"
+                  >
+                    ACTIVATE MONTHLY <ChevronRight size={18} />
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* YEARLY PLAN */}
+            <div className="bg-gradient-to-b from-zinc-900/90 to-black border-2 border-orange-500 p-8 md:p-12 rounded-[50px] relative flex flex-col justify-between shadow-[0_0_80px_rgba(249,115,22,0.15)]">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-orange-500 text-black px-6 py-1.5 rounded-full font-black text-[9px] md:text-[10px] uppercase tracking-[0.2em] shadow-2xl animate-pulse">
+                BEST VALUE • SAVE 25%
+              </div>
+              
+              <div>
+                <div className="text-orange-500 font-black text-xs uppercase tracking-[0.2em] mb-4">YEARLY PLAN</div>
+                <div className="mb-8">
+                  <div className="flex items-end gap-2 mb-2">
+                    <span className="text-5xl md:text-6xl font-black italic tracking-tighter leading-none">{"\u20B9"}3,600</span>
+                    <span className="text-zinc-500 font-black text-lg mb-1">/yr</span>
+                  </div>
+                  <p className="text-orange-500/80 text-xs font-black tracking-wider uppercase">Equivalent to {"\u20B9"}300/mo (Save {"\u20B9"}1,188/yr)</p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 mb-8">
+                  {[
+                    "Everything in Monthly Plan",
+                    "Priority WhatsApp Support (24/7)",
+                    "Dedicated Onboarding Manager",
+                    "Customized Invoice Templates",
+                    "Unlimited Billing & Invoices",
+                    "Staff Permissions & Roles",
+                    "Automatic Cloud Backup"
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-center gap-3">
+                      <CheckCircle2 size={16} className="text-orange-500 shrink-0" />
+                      <span className="font-black text-zinc-200 text-sm">{item}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-center">
+                  <a 
+                    href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Yearly Smart Business Plan (\u20B93600/yr) for my store. \uD83D\uDE80\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. \uD83D\uDCC8")}`}
+                    className="w-full bg-orange-500 hover:bg-orange-600 text-white px-6 py-4 rounded-2xl font-black text-md transition-all flex items-center justify-center gap-3 shadow-2xl shadow-orange-500/30"
+                  >
+                    ACTIVATE YEARLY <ChevronRight size={18} />
+                  </a>
+                </div>
               </div>
             </div>
 
@@ -317,87 +264,49 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* MERCHANT TRUST FAQS */}
-      <section className="py-24 bg-white border-t border-zinc-100">
-        <div className="max-w-4xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-4 flex items-center justify-center gap-2">
-              <HelpCircle className="text-orange-500" /> Frequently Asked Questions
-            </h2>
-            <p className="text-zinc-500 font-medium">InstaMunim se jude dukandaron ke aam sawaal</p>
-          </div>
-
-          <div className="space-y-6">
-            {[
-              {
-                q: "Kya mera billing data completely secure hai?",
-                a: "Ji haan, bilkul. InstaMunim high-level encryption aur advanced Supabase database cloud server ka upyog karta hai. Aapka data aur transactions completely private hain aur hum kisi ke sath data share nahi karte."
-              },
-              {
-                q: "Agar mera phone toot jaye toh kya mera data chala jayega?",
-                a: "Bilkul nahi! InstaMunim automatic cloud backup support ke sath aata hai. Aap kisi bhi naye phone par same details se login karke 1-click mein apna menu, stock aur sales backup recover kar sakte hain."
-              },
-              {
-                q: "Smart Menu AI Scanner kaise kaam karta hai?",
-                a: "Aapko bas apne photo-capture ya gallery upload button se printed menu ki photo select karni hai. Hamara Google Gemini integration us photo se items aur prices ko parse karke system menu mein ready-to-save items load kar deta hai."
-              },
-              {
-                q: "Kya main computer ke bina billing kar sakta hoon?",
-                a: "Haan. InstaMunim ko design hi mobile-first POS ki tarah kiya gaya hai. Isse chalane ke liye kisi computer ya laptop ki zaroorat nahi hai. Aap asani se billing mobile se hi manage kar sakte hain."
-              }
-            ].map((faq, i) => (
-              <div key={i} className="bg-zinc-50/50 p-6 rounded-2xl border border-zinc-150">
-                <h4 className="font-extrabold text-zinc-900 mb-2">{faq.q}</h4>
-                <p className="text-sm font-medium text-zinc-500 leading-relaxed">{faq.a}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer id="about" className="py-16 bg-zinc-950 text-white">
+      {/* LIGHT COOL FOOTER */}
+      <footer id="about" className="py-20 bg-zinc-950 border-t border-white/5">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-start gap-12 mb-16">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-16 mb-20">
             <div className="max-w-sm">
-              <div className="flex items-center gap-3 mb-6">
-                <img src="/assets/instamunim-logo-main.png" alt="InstaMunim" className="w-16 h-16 object-contain" />
+              <div className="flex items-center gap-4 mb-6">
+                <img src="/assets/instamunim-logo-main.png" alt="InstaMunim" className="w-20 h-20 object-contain" />
                 <div className="flex flex-col">
-                   <span className="text-lg font-black tracking-tight text-white leading-none">INSTAMUNIM</span>
-                   <span className="text-[9px] font-black tracking-[0.2em] text-orange-400 uppercase mt-1">Beyond Billing</span>
+                   <span className="text-xl font-black italic tracking-tighter">INSTAMUNIM</span>
+                   <span className="text-[10px] font-black tracking-widest text-orange-500 uppercase">Beyond Billing</span>
                 </div>
               </div>
               <p className="text-zinc-500 font-bold text-sm leading-relaxed">
-                Empowering small merchants and retailers across India with the fastest smart POS solution.
+                Empowering small merchants across India with the fastest smart POS solution.
               </p>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-12">
-              <div className="flex flex-col gap-4 text-sm font-bold text-zinc-400">
-                <h5 className="font-black text-orange-400 text-[10px] tracking-widest uppercase mb-2">Company</h5>
-                <a href="#" className="hover:text-white transition-colors">About Us</a>
-                <a href="#features" className="hover:text-white transition-colors">Features</a>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-12 md:gap-24">
+              <div className="flex flex-col gap-6">
+                <h5 className="font-black text-orange-500 text-[10px] tracking-widest uppercase">Company</h5>
+                <a href="#" className="text-zinc-400 font-bold text-sm hover:text-white transition-colors">About Us</a>
+                <a href="#features" className="text-zinc-400 font-bold text-sm hover:text-white transition-colors">Features</a>
               </div>
-              <div className="flex flex-col gap-4 text-sm font-bold text-zinc-400">
-                <h5 className="font-black text-orange-400 text-[10px] tracking-widest uppercase mb-2">Connect</h5>
-                <div className="flex gap-4">
-                  <a href="https://wa.me/917838229178" className="text-zinc-500 hover:text-orange-400"><MessageSquare className="h-5 w-5" /></a>
+              <div className="flex flex-col gap-6">
+                <h5 className="font-black text-orange-500 text-[10px] tracking-widest uppercase">Connect</h5>
+                <div className="flex gap-5">
+                   <a href="#" className="text-zinc-500 hover:text-orange-500"><svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg></a>
+                   <a href="#" className="text-zinc-500 hover:text-orange-500"><svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></a>
+                   <a href="#" className="text-zinc-500 hover:text-orange-500"><svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg></a>
                 </div>
               </div>
-              <div className="flex flex-col gap-4 text-sm font-bold text-zinc-400">
-                <h5 className="font-black text-orange-400 text-[10px] tracking-widest uppercase mb-2">Support</h5>
-                <a href="https://wa.me/917838229178" className="hover:text-white transition-colors">WhatsApp 24/7</a>
+              <div className="flex flex-col gap-6">
+                <h5 className="font-black text-orange-500 text-[10px] tracking-widest uppercase">Support</h5>
+                <a href="https://wa.me/917838229178" className="text-zinc-400 font-bold text-sm hover:text-white transition-colors">WhatsApp</a>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6 border-t border-zinc-800 pt-8 text-center md:text-left">
-            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
-              &copy; 2026 INSTAMUNIM SMART POS • BEYOND BILLING • ALL RIGHTS RESERVED
-            </p>
-            <div className="flex gap-6 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
-              <a href="/privacy" className="hover:text-orange-400 transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-orange-400 transition-colors">Terms of Use</a>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8 border-t border-white/10 pt-10">
+            <p className="text-white font-black text-[11px] tracking-widest uppercase italic">{"\u00A9"} 2026 INSTAMUNIM SMART POS {"\u2022"} BEYOND BILLING {"\u2022"} ALL RIGHTS RESERVED</p>
+            <div className="flex gap-10 text-[10px] font-black text-zinc-500 tracking-widest uppercase italic">
+              <a href="/privacy" className="hover:text-orange-500 transition-colors">Privacy Policy</a>
+              <a href="#" className="hover:text-orange-500 transition-colors">Terms of Use</a>
             </div>
           </div>
         </div>
