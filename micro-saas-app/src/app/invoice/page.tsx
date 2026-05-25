@@ -257,9 +257,25 @@ function InvoiceContent() {
               <p className="text-[8px] font-black text-zinc-300 uppercase tracking-[0.3em]">Verified Digital Receipt</p>
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
-                <p className="text-[10px] font-black text-zinc-900 uppercase tracking-widest italic">
-                  {isFree ? "Download InstaMunim, install now for Free" : "Powered by InstaMunim"}
-                </p>
+                {isFree ? (
+                  <a 
+                    href="https://instamunim.vercel.app" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-[10px] font-black text-orange-600 hover:text-orange-500 uppercase tracking-widest italic underline print-hide"
+                  >
+                    Download App: instamunim.vercel.app
+                  </a>
+                ) : (
+                  <p className="text-[10px] font-black text-zinc-900 uppercase tracking-widest italic">
+                    Powered by InstaMunim
+                  </p>
+                )}
+                {isFree && (
+                  <span className="hidden print:inline text-[10px] font-black text-zinc-900 uppercase tracking-widest italic">
+                    Download App: instamunim.vercel.app
+                  </span>
+                )}
               </div>
             </div>
           </div>
