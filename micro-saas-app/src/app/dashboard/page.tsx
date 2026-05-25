@@ -2938,7 +2938,40 @@ Stay safe & eat healthy! 🍕
             </div>
           )}
 
-          {activeTab === "Inventory" && <InventoryDiary />}
+          {activeTab === "Inventory" && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8 pb-10 px-4 pt-4">
+              <header className="relative">
+                <div className="absolute -left-10 -top-10 w-40 h-40 bg-orange-500/10 rounded-full blur-3xl" />
+                <h2 className="text-4xl font-black tracking-tighter">Daily Stock</h2>
+                <p className="text-zinc-500 font-bold flex items-center gap-2 mt-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" /> Track your store raw items and recipe stock.
+                </p>
+              </header>
+
+              {!isSubscribed ? (
+                <Card className="bg-gradient-to-br from-zinc-900 to-black text-white p-10 rounded-[3rem] border border-zinc-800 relative overflow-hidden shadow-2xl flex flex-col items-center justify-center text-center space-y-6">
+                  <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:20px_20px]" />
+                  <div className="w-20 h-20 bg-orange-500/20 rounded-3xl flex items-center justify-center relative animate-pulse shadow-inner">
+                    <Lock className="h-10 w-10 text-orange-500" />
+                  </div>
+                  <div className="space-y-2 relative z-10">
+                    <h3 className="text-2xl font-black uppercase tracking-tight">Daily Stock Locked</h3>
+                    <p className="text-zinc-400 font-bold text-xs max-w-sm mx-auto leading-relaxed">
+                      Daily stock diaries, consumption logs, and inventory alerts are premium features of the Smart Business Plan.
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => window.open(`https://wa.me/917838229178?text=${encodeURIComponent(`Hi Zainul, I want to upgrade to the Paid Plan to unlock Daily Stock for: ${restaurantName} (${ownerMobile}).`)}`, "_blank")}
+                    className="h-14 px-8 bg-orange-600 hover:bg-orange-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all z-10"
+                  >
+                    Activate Smart Business Plan
+                  </Button>
+                </Card>
+              ) : (
+                <InventoryDiary />
+              )}
+            </div>
+          )}
 
           {activeTab === "Settings" && (
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 pb-28 px-4 pt-4">
