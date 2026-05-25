@@ -146,8 +146,10 @@ export default function Dashboard() {
   const [syncStatus, setSyncStatus] = useState<"synced" | "pending" | "error">("synced");
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
-  // Subscription Logic
   const checkSubscription = () => {
+    // FORCE FREE PLAN FOR TESTING
+    if (ownerMobile === "8130707236") return false;
+
     if (!storeCreatedAt) return true; // Loading state safety
     
     const now = new Date();
