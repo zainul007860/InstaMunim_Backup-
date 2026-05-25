@@ -3,13 +3,14 @@
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { Suspense, useEffect, useState } from "react";
-import { Printer, ShoppingBag, CheckCircle2, QrCode, Camera, Globe, Phone, MapPin, ReceiptText } from "lucide-react";
+import { Printer, ShoppingBag, CheckCircle2, QrCode, Camera, Globe, Phone, MapPin, ReceiptText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 
 function InvoiceContent() {
   const searchParams = useSearchParams();
   const [cloudLogo, setCloudLogo] = useState<string | null>(null);
+  const isFree = searchParams.get("free") === "true";
   
   const restName = searchParams.get("n") || "InstaMunim POS";
   const items = searchParams.get("i") || "";
@@ -222,6 +223,27 @@ function InvoiceContent() {
             </div>
           </div>
 
+          {/* Free Plan APK Download Promotion Banner */}
+          {isFree && (
+            <div className="bg-gradient-to-br from-orange-500 to-amber-600 text-white rounded-3xl p-6 shadow-xl text-center space-y-4 print-hide">
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Download className="w-5 h-5 text-white animate-bounce" />
+                </div>
+                <div className="text-left">
+                  <p className="font-black text-sm uppercase tracking-tight">Create Bills Fast & Smart</p>
+                  <p className="text-[10px] opacity-90 font-bold uppercase tracking-tight">Download InstaMunim POS App Free</p>
+                </div>
+              </div>
+              <Button 
+                onClick={() => window.open("https://github.com/zainul007860/InstaMunim_Backup-/raw/main/app-v1.2-final.apk", "_blank")}
+                className="w-full h-12 bg-zinc-900 hover:bg-black text-white rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-md border-0"
+              >
+                Download Free APK
+              </Button>
+            </div>
+          )}
+
           {/* Footer Barcode Style */}
           <div className="text-center pt-10 border-t-2 border-dashed border-zinc-100">
             <div className="w-full h-12 bg-zinc-50 border-2 border-zinc-100 rounded-xl flex items-center justify-center mb-6 opacity-30 overflow-hidden">
@@ -235,7 +257,9 @@ function InvoiceContent() {
               <p className="text-[8px] font-black text-zinc-300 uppercase tracking-[0.3em]">Verified Digital Receipt</p>
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
-                <p className="text-[10px] font-black text-zinc-900 uppercase tracking-widest italic">Powered by InstaMunim</p>
+                <p className="text-[10px] font-black text-zinc-900 uppercase tracking-widest italic">
+                  {isFree ? "Download InstaMunim, install now for Free" : "Powered by InstaMunim"}
+                </p>
               </div>
             </div>
           </div>

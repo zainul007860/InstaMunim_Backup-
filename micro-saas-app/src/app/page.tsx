@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { 
-  Download, Shield, ShieldCheck, ArrowRight, CheckCircle2, Check,
+  Download, Shield, ShieldCheck, ArrowRight, CheckCircle2, Check, X,
   RefreshCw, Heart, Zap, BarChart3, Camera, CreditCard, Lock,
   Users, HelpCircle, ChevronDown, MessageSquare, Star, Eye,
   Receipt, Wallet, Scan, Home, Wand2, Cpu
@@ -779,7 +779,35 @@ export default function LandingPage() {
             <p className="text-zinc-500 text-sm font-medium">Flat subscription model. No hidden charges or transaction commissions.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* FREE PLAN */}
+            <div className="bg-white border border-zinc-200 p-8 rounded-3xl flex flex-col justify-between shadow-sm text-left hover:border-zinc-300 transition-colors">
+              <div className="space-y-4">
+                <span className="text-xs font-black text-zinc-500 uppercase tracking-widest">Free Plan</span>
+                <div className="flex items-end gap-1">
+                  <span className="text-4xl font-extrabold text-zinc-900">₹0</span>
+                  <span className="text-zinc-400 text-xs font-bold">/ forever</span>
+                </div>
+                <p className="text-zinc-500 text-xs font-bold">Launch your business at zero cost.</p>
+                <div className="border-t border-zinc-100 pt-4 space-y-3.5 text-xs font-semibold text-zinc-650">
+                  <div className="flex items-center gap-2"><Check className="text-orange-500 w-4 h-4" /> 40 sales bills / day limit</div>
+                  <div className="flex items-center gap-2"><Check className="text-orange-500 w-4 h-4" /> Smart CRM (Up to 10 contacts)</div>
+                  <div className="flex items-center gap-2"><Check className="text-orange-500 w-4 h-4" /> Digital Receipts via WhatsApp</div>
+                  <div className="flex items-center gap-2 opacity-50"><X className="text-zinc-400 w-4 h-4" /> Rent & Commission Tracker</div>
+                  <div className="flex items-center gap-2 opacity-50"><X className="text-zinc-400 w-4 h-4" /> AI Menu Card Scanner</div>
+                  <div className="flex items-center gap-2 opacity-50"><X className="text-zinc-400 w-4 h-4" /> Barcode Scanner Checkout</div>
+                </div>
+              </div>
+              <a 
+                href="https://github.com/zainul007860/InstaMunim_Backup-/raw/main/app-v1.2-final.apk"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-extrabold py-3.5 rounded-xl text-xs mt-8 transition-colors text-center uppercase tracking-widest border border-zinc-200 shadow-sm"
+              >
+                Download Free APK
+              </a>
+            </div>
+
             {/* MONTHLY */}
             <div className="bg-white border border-zinc-200 p-8 rounded-3xl flex flex-col justify-between shadow-sm text-left hover:border-zinc-300 transition-colors">
               <div className="space-y-4">
