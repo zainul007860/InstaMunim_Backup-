@@ -83,14 +83,26 @@ export default function PrivacyPolicy() {
             </ul>
 
             <h2 className="text-xl font-bold text-white mt-8 border-l-2 border-emerald-500 pl-3">
-              5. Contact Us
+              5. Data Retention & Account Deletion
+            </h2>
+            <p>
+              We retain your business data for as long as your account is active. We believe in complete data transparency and user control:
+            </p>
+            <ul className="list-disc list-inside pl-4 space-y-2">
+              <li><strong>Account Deletion:</strong> You can delete your account and all associated data at any time directly within the application by navigating to <strong>Settings &gt; Account Security &gt; Danger Zone</strong>.</li>
+              <li><strong>Immediate Purge:</strong> When you execute the deletion command, your store profile, sales invoices, expenses, menu/inventory lists, and account credentials are permanently and immediately purged from our Supabase database. This action is irreversible.</li>
+              <li><strong>Web Deletion Requests:</strong> If you are unable to access the app and want your account deleted, you may also email us at the address below with your registered mobile number.</li>
+            </ul>
+
+            <h2 className="text-xl font-bold text-white mt-8 border-l-2 border-emerald-500 pl-3">
+              6. Contact Us
             </h2>
             <p>
               If you have any questions or feedback about this Privacy Policy, please feel free to reach out to us:
             </p>
             <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1">
               <p><strong>Support Email:</strong> support@instamunim.in</p>
-              <p><strong>Website:</strong> https://instamunimapp.vercel.app</p>
+              <p><strong>Website:</strong> https://instamunim.vercel.app</p>
             </div>
           </div>
         </div>
