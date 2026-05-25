@@ -139,6 +139,29 @@ export default function AdminDashboard() {
     }
   };
 
+  const makeStoreFreemium = async (store: any) => {
+    if (!confirm(`Are you sure you want to convert ${store.store_name} to FREEMIUM?`)) return;
+    
+    setUpdatingStoreId(store.id);
+    try {
+      const pastExpiry = subDays(new Date(), 1);
+      const { error } = await supabase.from('stores').update({ 
+        subscription_expiry: pastExpiry.toISOString(),
+        monthly_rent: 0
+      }).eq('id', store.id);
+      
+      if (error) throw error;
+      
+      alert(`SUCCESS: ${store.store_name} has been set to FREEMIUM.`);
+      await fetchAdminData();
+    } catch (err: any) {
+      console.error(err);
+      alert("Sync Error: " + (err.message || JSON.stringify(err) || "Unknown error"));
+    } finally {
+      setUpdatingStoreId(null);
+    }
+  };
+
   const openWhatsApp = (mobile: string) => {
     const msg = encodeURIComponent(broadcastMessage || "Hello from InstaMunim!");
     const cleanMobile = mobile.replace(/[^0-9]/g, "");
@@ -416,6 +439,23 @@ export default function AdminDashboard() {
                             }}
                           >
                             {updatingStoreId === s.id ? '...' : (isPaidActive ? 'DEACTIVATE' : 'ACTIVATE')}
+                          </button>
+                          <button 
+                            disabled={updatingStoreId === s.id}
+                            onClick={() => makeStoreFreemium(s)} 
+                            style={{ 
+                              padding: '8px 12px', 
+                              background: '#71717a', 
+                              color: 'white', 
+                              borderRadius: '10px', 
+                              border: 'none', 
+                              fontWeight: 900, 
+                              cursor: 'pointer', 
+                              fontSize: '10px', 
+                              opacity: updatingStoreId === s.id ? 0.5 : 1 
+                            }}
+                          >
+                            {updatingStoreId === s.id ? '...' : 'MAKE FREEMIUM'}
                           </button>
                         </div>
                       </td>
