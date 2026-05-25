@@ -236,10 +236,10 @@ function InvoiceContent() {
                 </div>
               </div>
               <Button 
-                onClick={() => window.open("https://github.com/zainul007860/InstaMunim_Backup-/raw/main/app-v1.2-final.apk", "_blank")}
+                onClick={() => window.open("/InstaMunimSmartPOS_v1.2-release.apk?v=5", "_self")}
                 className="w-full h-12 bg-zinc-900 hover:bg-black text-white rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-md border-0"
               >
-                Download Free APK
+                Download Free APP
               </Button>
             </div>
           )}

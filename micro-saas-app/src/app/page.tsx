@@ -199,7 +199,7 @@ export default function LandingPage() {
               LOG IN
             </a>
             <a href="/InstaMunimSmartPOS_v1.2-release.apk?v=5" className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-2xl font-bold text-xs transition-all shadow-md shadow-orange-500/10 flex items-center gap-2 active:scale-95">
-              <Download className="w-3.5 h-3.5" /> DOWNLOAD APK
+              <Download className="w-3.5 h-3.5" /> DOWNLOAD APP
             </a>
           </div>
         </div>
@@ -802,12 +802,10 @@ export default function LandingPage() {
                 </div>
               </div>
               <a 
-                href="https://github.com/zainul007860/InstaMunim_Backup-/raw/main/app-v1.2-final.apk"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="/InstaMunimSmartPOS_v1.2-release.apk?v=5"
                 className="w-full bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-extrabold py-3.5 rounded-xl text-xs mt-8 transition-colors text-center uppercase tracking-widest border border-zinc-200 shadow-sm"
               >
-                Download Free APK
+                Download Free APP
               </a>
             </div>
 
