@@ -2925,7 +2925,7 @@ Stay safe & eat healthy! 🍕
                 <Card className="p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900 border-0 shadow-sm space-y-4">
                   <h3 className="text-xl font-black text-zinc-900 dark:text-white">3. Subscription & Payments</h3>
                   <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                    The usage of this application is subject to a monthly subscription fee (e.g., ₹399/month). Failure to pay the subscription may result in limited access to features or account suspension from the Admin Panel.
+                    The usage of this application is subject to a monthly subscription fee (e.g., ₹299/month). Failure to pay the subscription may result in limited access to features or account suspension from the Admin Panel.
                   </p>
                 </Card>
 

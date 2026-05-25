@@ -816,7 +816,7 @@ export default function LandingPage() {
               <div className="space-y-4">
                 <span className="text-xs font-black text-orange-500 uppercase tracking-widest">Monthly Smart Plan</span>
                 <div className="flex items-end gap-1">
-                  <span className="text-4xl font-extrabold text-zinc-900">₹399</span>
+                  <span className="text-4xl font-extrabold text-zinc-900">₹299</span>
                   <span className="text-zinc-400 text-xs font-bold">/ month</span>
                 </div>
                 <p className="text-zinc-500 text-xs font-bold">Billed monthly. Cancel anytime.</p>
@@ -833,7 +833,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <a 
-                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Monthly Smart Business Plan (\u20B9399/mo) for my store. \uD83D\uDE80\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. \uD83D\uDCC8")}`}
+                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Monthly Smart Business Plan (\u20B9299/mo) for my store. \uD83D\uDE80\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. \uD83D\uDCC8")}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full bg-zinc-900 hover:bg-orange-500 text-white font-extrabold py-3.5 rounded-xl text-xs mt-8 transition-colors text-center uppercase tracking-widest"
