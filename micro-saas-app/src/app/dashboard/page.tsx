@@ -145,6 +145,12 @@ export default function Dashboard() {
   const [subscriptionExpiry, setSubscriptionExpiry] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<"synced" | "pending" | "error">("synced");
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [deleteConfirmStep, setDeleteConfirmStep] = useState<'form' | 'confirm'>('form');
+  const [deleteMobile, setDeleteMobile] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const checkSubscription = () => {
     // FORCE FREE PLAN FOR TESTING
@@ -167,6 +173,53 @@ export default function Dashboard() {
   };
 
   const isSubscribed = checkSubscription();
+
+  const handleDeleteAccount = async () => {
+    if (!deleteMobile || !deletePassword) {
+      setDeleteError("Mobile number aur password dono required hain.");
+      return;
+    }
+    if (deleteMobile !== ownerMobile) {
+      setDeleteError("Mobile number aapke account se match nahi karta.");
+      return;
+    }
+    setIsDeleting(true);
+    setDeleteError("");
+    try {
+      // Step 1: Verify credentials
+      const { data: verifyData, error: verifyError } = await supabase
+        .rpc('verify_store_login', { mobile: deleteMobile, input_pass: deletePassword });
+      if (verifyError || !verifyData || verifyData.length === 0) {
+        setDeleteError("Mobile number ya password galat hai. Dobara check karein.");
+        setIsDeleting(false);
+        return;
+      }
+      const storeId = verifyData[0].id;
+      // Step 2: Delete all related data cascade
+      await supabase.from('sales').delete().eq('store_id', storeId);
+      await supabase.from('expenses').delete().eq('store_id', storeId);
+      await supabase.from('menu_items').delete().eq('store_id', storeId);
+      await supabase.from('inventory_items').delete().eq('store_id', storeId);
+      // Step 3: Delete the store record itself
+      await supabase.from('stores').delete().eq('id', storeId);
+      // Step 4: Clear all local storage and log out
+      localStorage.clear();
+      try {
+        const { Capacitor } = await import('@capacitor/core');
+        if (Capacitor.isNativePlatform()) {
+          const { Preferences } = await import('@capacitor/preferences');
+          await Preferences.clear();
+        }
+      } catch (e) { /* ignore */ }
+      // Show success and reload
+      alert("✅ Account successfully delete ho gaya. Shukriya InstaMunim use karne ke liye!");
+      window.location.reload();
+    } catch (err: any) {
+      setDeleteError("Delete failed. Internet check karein aur dobara try karein.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // Force light mode if user is on the Free plan
   useEffect(() => {
@@ -3151,6 +3204,7 @@ Stay safe & eat healthy! 🍕
 
                         {item.id === "AccountSecurity" && (
                           <div className="space-y-6 pt-6">
+                            {/* --- Password Update --- */}
                             <div className="space-y-3">
                               <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Owner Password</Label>
                               <Input 
@@ -3163,6 +3217,156 @@ Stay safe & eat healthy! 🍕
                             <Button className="w-full h-16 bg-[#00c875] hover:bg-[#00b067] text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
                               UPDATE PASSWORD
                             </Button>
+
+                            {/* --- Divider --- */}
+                            <div className="flex items-center gap-3 py-2">
+                              <div className="flex-1 h-px bg-red-100 dark:bg-red-900/30" />
+                              <span className="text-[9px] font-black text-red-400 uppercase tracking-widest">Danger Zone</span>
+                              <div className="flex-1 h-px bg-red-100 dark:bg-red-900/30" />
+                            </div>
+
+                            {/* --- Delete Account Card --- */}
+                            {!showDeleteAccountModal ? (
+                              <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-3xl p-6 space-y-4">
+                                <div className="flex items-start gap-4">
+                                  <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center shrink-0">
+                                    <Trash2 className="h-6 w-6 text-red-500" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-black text-red-700 dark:text-red-400 text-sm uppercase tracking-tight">Delete Account</h4>
+                                    <p className="text-[11px] text-red-500/80 font-bold leading-relaxed mt-1">
+                                      Aapka poora data — sales, menu, expenses — permanently delete ho jayega. Ye action undo nahi ho sakta.
+                                    </p>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    setShowDeleteAccountModal(true);
+                                    setDeleteConfirmStep('form');
+                                    setDeleteMobile("");
+                                    setDeletePassword("");
+                                    setDeleteError("");
+                                  }}
+                                  className="w-full h-12 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-red-500/20"
+                                >
+                                  🗑️ Delete My Account
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="bg-zinc-950 border border-red-900/50 rounded-3xl p-6 space-y-5 shadow-2xl">
+                                {deleteConfirmStep === 'form' ? (
+                                  <>
+                                    <div className="text-center space-y-1">
+                                      <div className="w-14 h-14 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                                        <Trash2 className="h-7 w-7 text-red-500" />
+                                      </div>
+                                      <h4 className="font-black text-white text-base uppercase tracking-tight">Verify Karo, Phir Delete</h4>
+                                      <p className="text-[10px] text-zinc-400 font-bold">Apna registered number aur password enter karo</p>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                      <div className="space-y-2">
+                                        <Label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest px-1">Registered Mobile Number</Label>
+                                        <Input
+                                          type="tel"
+                                          maxLength={10}
+                                          placeholder="10-digit mobile number"
+                                          value={deleteMobile}
+                                          onChange={e => { setDeleteMobile(e.target.value); setDeleteError(""); }}
+                                          className="h-14 rounded-2xl bg-zinc-900 border border-zinc-800 text-white font-black text-lg px-5 placeholder:text-zinc-600 focus:ring-2 ring-red-500/30 transition-all"
+                                        />
+                                      </div>
+                                      <div className="space-y-2">
+                                        <Label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest px-1">Account Password</Label>
+                                        <Input
+                                          type="password"
+                                          placeholder="Enter your password"
+                                          value={deletePassword}
+                                          onChange={e => { setDeletePassword(e.target.value); setDeleteError(""); }}
+                                          className="h-14 rounded-2xl bg-zinc-900 border border-zinc-800 text-white font-black text-lg px-5 placeholder:text-zinc-600 focus:ring-2 ring-red-500/30 transition-all"
+                                        />
+                                      </div>
+                                    </div>
+
+                                    {deleteError && (
+                                      <div className="bg-red-950/60 border border-red-800/50 rounded-xl px-4 py-3">
+                                        <p className="text-[11px] text-red-400 font-bold">⚠️ {deleteError}</p>
+                                      </div>
+                                    )}
+
+                                    <div className="flex gap-3">
+                                      <button
+                                        onClick={() => setShowDeleteAccountModal(false)}
+                                        className="flex-1 h-12 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all"
+                                      >
+                                        Cancel
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          if (!deleteMobile || deleteMobile.length !== 10) {
+                                            setDeleteError("Valid 10-digit mobile number enter karo.");
+                                            return;
+                                          }
+                                          if (!deletePassword) {
+                                            setDeleteError("Password field empty hai.");
+                                            return;
+                                          }
+                                          if (deleteMobile !== ownerMobile) {
+                                            setDeleteError("Ye mobile number is account se registered nahi hai.");
+                                            return;
+                                          }
+                                          setDeleteConfirmStep('confirm');
+                                          setDeleteError("");
+                                        }}
+                                        className="flex-1 h-12 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-lg"
+                                      >
+                                        Next →
+                                      </button>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    {/* Final Confirm Step */}
+                                    <div className="text-center space-y-3">
+                                      <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto animate-pulse">
+                                        <Trash2 className="h-8 w-8 text-red-500" />
+                                      </div>
+                                      <h4 className="font-black text-white text-lg">Are you sure?</h4>
+                                      <p className="text-[11px] text-red-400 font-bold leading-relaxed px-2">
+                                        Number <span className="text-white">{deleteMobile}</span> ka poora account aur data permanently delete hoga. Ye kisi bhi tarah recover nahi ho sakta.
+                                      </p>
+                                    </div>
+
+                                    {deleteError && (
+                                      <div className="bg-red-950/60 border border-red-800/50 rounded-xl px-4 py-3">
+                                        <p className="text-[11px] text-red-400 font-bold">⚠️ {deleteError}</p>
+                                      </div>
+                                    )}
+
+                                    <div className="flex gap-3">
+                                      <button
+                                        onClick={() => setDeleteConfirmStep('form')}
+                                        disabled={isDeleting}
+                                        className="flex-1 h-12 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all disabled:opacity-50"
+                                      >
+                                        ← Back
+                                      </button>
+                                      <button
+                                        onClick={handleDeleteAccount}
+                                        disabled={isDeleting}
+                                        className="flex-1 h-12 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-xl shadow-red-900/40 disabled:opacity-60 flex items-center justify-center gap-2"
+                                      >
+                                        {isDeleting ? (
+                                          <><Loader2 className="h-4 w-4 animate-spin" /> Deleting...</>
+                                        ) : (
+                                          <>🗑️ YES, DELETE</>
+                                        )}
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            )}
                           </div>
                         )}
 
