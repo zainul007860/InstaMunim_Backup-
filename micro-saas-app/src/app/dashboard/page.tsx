@@ -186,23 +186,29 @@ export default function Dashboard() {
     setIsDeleting(true);
     setDeleteError("");
     try {
-      // Step 1: Verify credentials
-      const { data: verifyData, error: verifyError } = await supabase
-        .rpc('verify_store_login', { mobile: deleteMobile, input_pass: deletePassword });
-      if (verifyError || !verifyData || verifyData.length === 0) {
+      // Single secure RPC call — runs with SECURITY DEFINER on server,
+      // bypasses Supabase RLS, verifies creds + deletes all data atomically
+      const { data: deleted, error } = await supabase
+        .rpc('delete_store_account', {
+          input_mobile: deleteMobile,
+          input_pass: deletePassword
+        });
+
+      if (error) {
+        console.error("RPC error:", error);
+        setDeleteError("Server error aaya. Thodi der baad try karein.");
+        setIsDeleting(false);
+        return;
+      }
+
+      if (!deleted) {
+        // RPC returned false → wrong credentials
         setDeleteError("Mobile number ya password galat hai. Dobara check karein.");
         setIsDeleting(false);
         return;
       }
-      const storeId = verifyData[0].id;
-      // Step 2: Delete all related data cascade
-      await supabase.from('sales').delete().eq('store_id', storeId);
-      await supabase.from('expenses').delete().eq('store_id', storeId);
-      await supabase.from('menu_items').delete().eq('store_id', storeId);
-      await supabase.from('inventory_items').delete().eq('store_id', storeId);
-      // Step 3: Delete the store record itself
-      await supabase.from('stores').delete().eq('id', storeId);
-      // Step 4: Clear all local storage and log out
+
+      // Success — clear everything locally and reload
       localStorage.clear();
       try {
         const { Capacitor } = await import('@capacitor/core');
@@ -210,16 +216,18 @@ export default function Dashboard() {
           const { Preferences } = await import('@capacitor/preferences');
           await Preferences.clear();
         }
-      } catch (e) { /* ignore */ }
-      // Show success and reload
-      alert("✅ Account successfully delete ho gaya. Shukriya InstaMunim use karne ke liye!");
+      } catch (e) { /* ignore on web */ }
+
+      alert("✅ Account permanently delete ho gaya. InstaMunim use karne ke liye shukriya!");
       window.location.reload();
+
     } catch (err: any) {
-      setDeleteError("Delete failed. Internet check karein aur dobara try karein.");
+      setDeleteError("Connection failed. Internet check karein aur dobara try karein.");
     } finally {
       setIsDeleting(false);
     }
   };
+
 
   // Force light mode if user is on the Free plan
   useEffect(() => {
