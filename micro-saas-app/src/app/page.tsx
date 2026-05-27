@@ -198,8 +198,8 @@ export default function LandingPage() {
             <a href="/dashboard" className="border border-zinc-200 hover:border-orange-500 text-zinc-700 hover:text-orange-600 px-4 py-2.5 rounded-2xl font-bold text-xs transition-colors">
               LOG IN
             </a>
-            <a href="/InstaMunimSmartPOS_v1.2-release.apk?v=5" className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-2xl font-bold text-xs transition-all shadow-md shadow-orange-500/10 flex items-center gap-2 active:scale-95">
-              <Download className="w-3.5 h-3.5" /> DOWNLOAD APK
+            <a href="/InstaMunimSmartPOS_v1.3-release.apk?v=6" className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-2xl font-bold text-xs transition-all shadow-md shadow-orange-500/10 flex items-center gap-2 active:scale-95">
+              <Download className="w-3.5 h-3.5" /> DOWNLOAD APP
             </a>
           </div>
         </div>
@@ -227,8 +227,8 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
-              <a href="/InstaMunimSmartPOS_v1.2-release.apk?v=5" className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4.5 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2.5 shadow-lg shadow-orange-500/20 active:scale-95">
-                <Download className="w-5 h-5" /> DOWNLOAD APP v1.2
+              <a href="/InstaMunimSmartPOS_v1.3-release.apk?v=6" className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4.5 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2.5 shadow-lg shadow-orange-500/20 active:scale-95">
+                <Download className="w-5 h-5" /> DOWNLOAD APP v1.3
               </a>
               <a href="/dashboard" className="bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-800 px-8 py-4.5 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95">
                 FREE WEB TRIAL <ArrowRight className="w-4 h-4 text-orange-500" />

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "capacitor:copy:before": "node -e \"const fs = require('fs'); const file = 'out/InstaMunimSmartPOS_v1.1.apk'; if (fs.existsSync(file)) { fs.unlinkSync(file); console.log('Successfully excluded APK from native assets copy'); }\""
+    "capacitor:copy:before": "node -e \"const fs = require('fs'); if (fs.existsSync('out')) { fs.readdirSync('out').forEach(f => { if (f.endsWith('.apk')) { fs.unlinkSync('out/' + f); console.log('Deleted ' + f + ' from out/'); } }); }\""
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
