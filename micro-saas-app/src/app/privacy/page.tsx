@@ -101,7 +101,7 @@ export default function PrivacyPolicy() {
               If you have any questions or feedback about this Privacy Policy, please feel free to reach out to us:
             </p>
             <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1">
-              <p><strong>Support Email:</strong> support@instamunim.in</p>
+              <p><strong>Support Email:</strong> Instamunim@gmail.com</p>
               <p><strong>Website:</strong> https://instamunim.vercel.app</p>
             </div>
           </div>
