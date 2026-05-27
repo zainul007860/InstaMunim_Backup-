@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default function PrivacyPolicy() {
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 font-sans selection:bg-emerald-500 selection:text-slate-950">
+    <div className="h-screen overflow-y-auto custom-scrollbar bg-slate-900 text-slate-100 font-sans selection:bg-emerald-500 selection:text-slate-950">
       {/* Header */}
       <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">

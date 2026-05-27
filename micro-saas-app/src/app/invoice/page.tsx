@@ -69,7 +69,7 @@ function InvoiceContent() {
   const finalTotal = totalBase; // Since 'price' from dashboard already includes extraChargeAmount
 
   return (
-    <div className="min-h-screen bg-zinc-100 flex justify-center py-0 sm:py-10 px-0 sm:px-4 font-sans print:bg-white print:p-0 overflow-y-auto">
+    <div className="h-screen bg-zinc-100 flex justify-center py-0 sm:py-10 px-0 sm:px-4 font-sans print:bg-white print:p-0 overflow-y-auto">
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
           @page { margin: 0; }
@@ -236,7 +236,7 @@ function InvoiceContent() {
                 </div>
               </div>
               <Button 
-                onClick={() => window.open("/InstaMunimSmartPOS_v1.2-release.apk?v=5", "_self")}
+                onClick={() => window.open("/InstaMunimSmartPOS_v1.3-release.apk?v=6", "_self")}
                 className="w-full h-12 bg-zinc-900 hover:bg-black text-white rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-md border-0"
               >
                 Download Free APP
