@@ -7,6 +7,7 @@ import {
   Users, HelpCircle, ChevronDown, MessageSquare, Star, Eye,
   Receipt, Wallet, Scan, Home, Wand2, Cpu
 } from "lucide-react";
+import Dashboard from "./dashboard/page";
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
@@ -73,12 +74,8 @@ export default function LandingPage() {
 
   useEffect(() => {
     // Check if running inside mobile web wrapper
-    const checkApp = typeof window !== "undefined" && (window as any).Capacitor?.isNativePlatform;
-    if (checkApp) {
-      window.location.href = "/dashboard";
-    } else {
-      setIsApp(false);
-    }
+    const checkApp = typeof window !== "undefined" && !!(window as any).Capacitor?.isNativePlatform;
+    setIsApp(checkApp);
 
     // Scroll listener
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -137,6 +134,10 @@ export default function LandingPage() {
       setFadeScreen(false);
     }, 100);
   };
+
+  if (isApp) {
+    return <Dashboard />;
+  }
 
   if (isApp === null) return <div className="bg-white min-h-screen" />;
 
