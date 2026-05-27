@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { 
-  Download, Shield, ShieldCheck, ArrowRight, CheckCircle2, Check,
+  Download, Shield, ShieldCheck, ArrowRight, CheckCircle2, Check, X,
   RefreshCw, Heart, Zap, BarChart3, Camera, CreditCard, Lock,
   Users, HelpCircle, ChevronDown, MessageSquare, Star, Eye,
   Receipt, Wallet, Scan, Home, Wand2, Cpu
@@ -779,28 +779,62 @@ export default function LandingPage() {
             <p className="text-zinc-500 text-sm font-medium">Flat subscription model. No hidden charges or transaction commissions.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-3xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {/* FREE PLAN */}
+            <div className="bg-white border border-zinc-200 p-8 rounded-3xl flex flex-col justify-between shadow-sm text-left hover:border-zinc-300 transition-colors">
+              <div className="space-y-4">
+                <span className="text-xs font-black text-zinc-500 uppercase tracking-widest">Freemium Plan</span>
+                <div className="flex items-end gap-1">
+                  <span className="text-4xl font-extrabold text-zinc-900">₹0</span>
+                  <span className="text-zinc-400 text-xs font-bold">/ forever</span>
+                </div>
+                <p className="text-zinc-500 text-xs font-bold">Launch your business at zero cost.</p>
+                <div className="border-t border-zinc-100 pt-4 space-y-3.5 text-xs font-semibold text-zinc-650">
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> 40 sales bills / day limit</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> Smart CRM (10 contacts limit)</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> WhatsApp Receipts (with watermark)</div>
+                  <div className="flex items-center gap-2 opacity-50"><X className="text-red-500 w-4 h-4 shrink-0" /> Daily Stock Diary & Inventory</div>
+                  <div className="flex items-center gap-2 opacity-50"><X className="text-red-500 w-4 h-4 shrink-0" /> Rent & Commission Tracker</div>
+                  <div className="flex items-center gap-2 opacity-50"><X className="text-red-500 w-4 h-4 shrink-0" /> High-Speed Barcode Checkout</div>
+                  <div className="flex items-center gap-2 opacity-50"><X className="text-red-500 w-4 h-4 shrink-0" /> AI Menu Card Scanner</div>
+                  <div className="flex items-center gap-2 opacity-50"><X className="text-red-500 w-4 h-4 shrink-0" /> Premium Dark Mode Theme</div>
+                  <div className="flex items-center gap-2 opacity-50"><X className="text-red-500 w-4 h-4 shrink-0" /> Ad-Free App Experience</div>
+                </div>
+              </div>
+              <a 
+                href="/InstaMunimSmartPOS_v1.2-release.apk?v=5"
+                className="w-full bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-extrabold py-3.5 rounded-xl text-xs mt-8 transition-colors text-center uppercase tracking-widest border border-zinc-200 shadow-sm"
+              >
+                Download Free APP
+              </a>
+            </div>
+
             {/* MONTHLY */}
             <div className="bg-white border border-zinc-200 p-8 rounded-3xl flex flex-col justify-between shadow-sm text-left hover:border-zinc-300 transition-colors">
               <div className="space-y-4">
                 <span className="text-xs font-black text-orange-500 uppercase tracking-widest">Monthly Smart Plan</span>
                 <div className="flex items-end gap-1">
-                  <span className="text-4xl font-extrabold text-zinc-900">₹399</span>
+                  <span className="text-4xl font-extrabold text-zinc-900">₹299</span>
                   <span className="text-zinc-400 text-xs font-bold">/ month</span>
                 </div>
                 <p className="text-zinc-500 text-xs font-bold">Billed monthly. Cancel anytime.</p>
                 <div className="border-t border-zinc-100 pt-4 space-y-3.5 text-xs font-semibold text-zinc-650">
-                  <div className="flex items-center gap-2"><Check className="text-orange-500 w-4 h-4" /> Unlimited Invoicing & Sales bills</div>
-                  <div className="flex items-center gap-2"><Check className="text-orange-500 w-4 h-4" /> Rent & Commission Tracker logs</div>
-                  <div className="flex items-center gap-2"><Check className="text-orange-500 w-4 h-4" /> Automated cloud sync database sync</div>
-                  <div className="flex items-center gap-2"><Check className="text-orange-500 w-4 h-4" /> Gemini AI Menu Scanner Access</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> Unlimited Invoicing & Sales Bills</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> Smart CRM (Unlimited Outreach)</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> WhatsApp Receipts (No watermark)</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> Daily Stock Diary & Inventory</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> Rent & Commission Tracker</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> High-Speed Barcode Checkout</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> AI Menu Card Scanner</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> Premium Dark Mode Theme</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> Ad-Free App Experience</div>
                 </div>
               </div>
               <a 
-                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Monthly Smart Business Plan (\u20B9399/mo) for my store. \uD83D\uDE80\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. \uD83D\uDCC8")}`}
+                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Monthly Smart Business Plan (\u20B9299/mo) for my store. \uD83D\uDE80\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. \uD83D\uDCC8")}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full bg-zinc-900 hover:bg-orange-500 text-white font-extrabold py-3.5 rounded-xl text-xs mt-8 transition-colors text-center"
+                className="w-full bg-zinc-900 hover:bg-orange-500 text-white font-extrabold py-3.5 rounded-xl text-xs mt-8 transition-colors text-center uppercase tracking-widest"
               >
                 ACTIVATE MONTHLY
               </a>
@@ -808,7 +842,7 @@ export default function LandingPage() {
 
             {/* YEARLY */}
             <div className="bg-white border-2 border-orange-500 p-8 rounded-3xl flex flex-col justify-between shadow-md text-left relative hover:scale-[1.01] transition-transform duration-300">
-              <div className="absolute -top-3.5 right-6 bg-orange-500 text-white px-3.5 py-1 rounded-full font-black text-[9px] uppercase tracking-wider shadow-md">SAVE 25%</div>
+              <div className="absolute -top-3.5 right-6 bg-orange-500 text-white px-3.5 py-1 rounded-full font-black text-[9px] uppercase tracking-wider shadow-md animate-bounce">SAVE 25%</div>
               <div className="space-y-4">
                 <span className="text-xs font-black text-orange-600 uppercase tracking-widest">Yearly Smart Plan</span>
                 <div className="flex items-end gap-1">
@@ -817,17 +851,25 @@ export default function LandingPage() {
                 </div>
                 <p className="text-orange-600 text-xs font-black uppercase">Equivalent to ₹300/mo (Save ₹1,188/yr)</p>
                 <div className="border-t border-zinc-100 pt-4 space-y-3.5 text-xs font-semibold text-zinc-750">
-                  <div className="flex items-center gap-2"><Check className="text-orange-500 w-4 h-4" /> Everything in Monthly Plan</div>
-                  <div className="flex items-center gap-2"><Check className="text-orange-500 w-4 h-4" /> 24/7 Priority Support Link</div>
-                  <div className="flex items-center gap-2"><Check className="text-orange-500 w-4 h-4" /> Free Dedicated Setup Manager</div>
-                  <div className="flex items-center gap-2"><Check className="text-orange-500 w-4 h-4" /> Customized Invoice Templates</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> Unlimited Invoicing & Sales Bills</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> Smart CRM (Unlimited Outreach)</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> WhatsApp Receipts (No watermark)</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> Daily Stock Diary & Inventory</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> Rent & Commission Tracker</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> High-Speed Barcode Checkout</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> AI Menu Card Scanner</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> Premium Dark Mode Theme</div>
+                  <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> Ad-Free App Experience</div>
+                  <div className="flex items-center gap-2 text-orange-600 font-extrabold"><Check className="text-orange-500 w-4 h-4 shrink-0" /> Customized Invoice Templates</div>
+                  <div className="flex items-center gap-2 text-orange-600 font-extrabold"><Check className="text-orange-500 w-4 h-4 shrink-0" /> Free Dedicated Setup Manager</div>
+                  <div className="flex items-center gap-2 text-orange-600 font-extrabold"><Check className="text-orange-500 w-4 h-4 shrink-0" /> 24/7 Priority Support & New Modules</div>
                 </div>
               </div>
               <a 
                 href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Yearly Smart Business Plan (\u20B93600/yr) for my store. \uD83D\uDE80\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. \uD83D\uDCC8")}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-extrabold py-3.5 rounded-xl text-xs mt-8 transition-colors shadow-md shadow-orange-500/10 text-center"
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-extrabold py-3.5 rounded-xl text-xs mt-8 transition-colors shadow-md shadow-orange-500/10 text-center uppercase tracking-widest"
               >
                 ACTIVATE YEARLY
               </a>

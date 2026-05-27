@@ -88,7 +88,7 @@ export default function AdminDashboard() {
     // Immediate Feedback
     if (!confirm(`Confirm: Extend ${store.store_name} by ${days} days?`)) return;
     
-    const planPrice = days === 365 ? 3600 : 399;
+    const planPrice = days === 365 ? 3600 : 299;
     
     setUpdatingStoreId(store.id);
     try {
@@ -139,6 +139,29 @@ export default function AdminDashboard() {
     }
   };
 
+  const makeStoreFreemium = async (store: any) => {
+    if (!confirm(`Are you sure you want to convert ${store.store_name} to FREEMIUM?`)) return;
+    
+    setUpdatingStoreId(store.id);
+    try {
+      const pastExpiry = subDays(new Date(), 1);
+      const { error } = await supabase.from('stores').update({ 
+        subscription_expiry: pastExpiry.toISOString(),
+        monthly_rent: 0
+      }).eq('id', store.id);
+      
+      if (error) throw error;
+      
+      alert(`SUCCESS: ${store.store_name} has been set to FREEMIUM.`);
+      await fetchAdminData();
+    } catch (err: any) {
+      console.error(err);
+      alert("Sync Error: " + (err.message || JSON.stringify(err) || "Unknown error"));
+    } finally {
+      setUpdatingStoreId(null);
+    }
+  };
+
   const openWhatsApp = (mobile: string) => {
     const msg = encodeURIComponent(broadcastMessage || "Hello from InstaMunim!");
     const cleanMobile = mobile.replace(/[^0-9]/g, "");
@@ -147,12 +170,23 @@ export default function AdminDashboard() {
 
   const getStatusColor = (store: any) => {
     if (store.status === 'suspended') return '#ef4444';
-    if (!store.subscription_expiry) return '#f97316';
-    const expiry = new Date(store.subscription_expiry);
-    const today = new Date();
-    if (isBefore(expiry, today)) return '#ef4444';
-    if (differenceInDays(expiry, today) <= 3) return '#facc15';
-    return '#f97316';
+    
+    const now = new Date();
+    const expiry = store.subscription_expiry ? new Date(store.subscription_expiry) : null;
+    const isPaidActive = expiry && isAfter(expiry, now);
+    
+    const created = new Date(store.created_at);
+    const trialEnds = new Date(created.getTime() + (7 * 24 * 60 * 60 * 1000));
+    const isTrialActive = !expiry && isBefore(now, trialEnds);
+
+    if (isPaidActive) {
+      if (differenceInDays(expiry!, now) <= 3) return '#facc15';
+      return '#10b981';
+    }
+    if (isTrialActive) {
+      return '#f97316';
+    }
+    return '#a1a1aa';
   };
 
   const filteredStores = stores.filter(s => 
@@ -270,7 +304,7 @@ export default function AdminDashboard() {
             <div className="stats-grid">
               <div className="stat-card"><p>Total Merchants</p><h3>{stores.length}</h3></div>
               <div className="stat-card"><p>Global GMV</p><h3>₹{totalSalesVal.toLocaleString()}</h3></div>
-              <div className="stat-card"><p>Est. Revenue</p><h3 style={{ color: '#f97316' }}>₹{stores.reduce((sum, s) => sum + ((s.monthly_rent === null || s.monthly_rent === undefined) ? 399 : Number(s.monthly_rent)), 0).toLocaleString()}</h3></div>
+              <div className="stat-card"><p>Est. Revenue</p><h3 style={{ color: '#f97316' }}>₹{stores.reduce((sum, s) => sum + ((s.monthly_rent === null || s.monthly_rent === undefined) ? 299 : Number(s.monthly_rent)), 0).toLocaleString()}</h3></div>
             </div>
             <div className="data-table-container">
                <div className="table-header"><h4 style={{ fontSize: '16px', fontWeight: 900, color: 'white' }}>RECENT ONBOARDING</h4></div>
@@ -279,18 +313,23 @@ export default function AdminDashboard() {
                   <tbody>{stores.slice(0, 10).map(s => {
                     const now = new Date();
                     const expiry = s.subscription_expiry ? new Date(s.subscription_expiry) : null;
-                    const isActive = expiry && isAfter(expiry, now);
+                    const isPaidActive = expiry && isAfter(expiry, now);
+                    
+                    const created = new Date(s.created_at);
+                    const trialEnds = new Date(created.getTime() + (7 * 24 * 60 * 60 * 1000));
+                    const isTrialActive = !expiry && isBefore(now, trialEnds);
+
                     return (
                       <tr key={s.id}>
                         <td>{s.store_name}</td>
                         <td>{s.owner_mobile}</td>
                         <td>
-                          {!expiry ? (
-                            <span style={{ padding: '4px 8px', background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', borderRadius: '6px', fontSize: '10px', fontWeight: 900 }}>TRIAL</span>
-                          ) : isActive ? (
+                          {isPaidActive ? (
                             <span style={{ padding: '4px 8px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '6px', fontSize: '10px', fontWeight: 900 }}>ACTIVE</span>
+                          ) : isTrialActive ? (
+                            <span style={{ padding: '4px 8px', background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', borderRadius: '6px', fontSize: '10px', fontWeight: 900 }}>TRIAL</span>
                           ) : (
-                            <span style={{ padding: '4px 8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '6px', fontSize: '10px', fontWeight: 900 }}>EXPIRED</span>
+                            <span style={{ padding: '4px 8px', background: 'rgba(161, 161, 170, 0.1)', color: '#a1a1aa', borderRadius: '6px', fontSize: '10px', fontWeight: 900 }}>FREEMIUM</span>
                           )}
                         </td>
                         <td style={{ color: getStatusColor(s), fontWeight: 700 }}>{s.subscription_expiry ? format(new Date(s.subscription_expiry), "MMM dd") : 'Trial'}</td>
@@ -336,27 +375,34 @@ export default function AdminDashboard() {
                 <tbody>{filteredStores.map(s => {
                   const now = new Date();
                   const expiry = s.subscription_expiry ? new Date(s.subscription_expiry) : null;
-                  const isActive = expiry && isAfter(expiry, now);
-                  const isTrial = !expiry;
+                  const isPaidActive = expiry && isAfter(expiry, now);
+                  
+                  const created = new Date(s.created_at);
+                  const trialEnds = new Date(created.getTime() + (7 * 24 * 60 * 60 * 1000));
+                  const isTrialActive = !expiry && isBefore(now, trialEnds);
                   
                   return (
                     <tr key={s.id}>
                       <td>{s.store_name}</td>
                       <td>
-                        {s.monthly_rent === 3600 ? (
-                          <span style={{ color: '#10b981', fontWeight: 800 }}>Yearly (₹3600)</span>
+                        {isPaidActive ? (
+                          s.monthly_rent === 3600 ? (
+                            <span style={{ color: '#10b981', fontWeight: 800 }}>Yearly (₹3600)</span>
+                          ) : (
+                            <span style={{ color: '#f97316', fontWeight: 800 }}>Monthly (₹299)</span>
+                          )
                         ) : (
-                          <span style={{ color: '#a1a1aa', fontWeight: 800 }}>Monthly (₹399)</span>
+                          <span style={{ color: '#a1a1aa', fontWeight: 800 }}>Freemium</span>
                         )}
                       </td>
                       <td style={{ color: getStatusColor(s), fontWeight: 700 }}>{s.subscription_expiry ? format(new Date(s.subscription_expiry), "MMM dd, yyyy") : 'TRIAL'}</td>
                       <td>
-                        {isTrial ? (
-                          <span style={{ padding: '4px 8px', background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', borderRadius: '6px', fontSize: '10px', fontWeight: 900 }}>TRIAL</span>
-                        ) : isActive ? (
+                        {isPaidActive ? (
                           <span style={{ padding: '4px 8px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '6px', fontSize: '10px', fontWeight: 900 }}>ACTIVE</span>
+                        ) : isTrialActive ? (
+                          <span style={{ padding: '4px 8px', background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', borderRadius: '6px', fontSize: '10px', fontWeight: 900 }}>TRIAL</span>
                         ) : (
-                          <span style={{ padding: '4px 8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', borderRadius: '6px', fontSize: '10px', fontWeight: 900 }}>EXPIRED</span>
+                          <span style={{ padding: '4px 8px', background: 'rgba(161, 161, 170, 0.1)', color: '#a1a1aa', borderRadius: '6px', fontSize: '10px', fontWeight: 900 }}>FREEMIUM</span>
                         )}
                       </td>
                       <td>
@@ -379,10 +425,10 @@ export default function AdminDashboard() {
                           </button>
                           <button 
                             disabled={updatingStoreId === s.id}
-                            onClick={() => toggleSubscriptionActive(s, !!isActive)} 
+                            onClick={() => toggleSubscriptionActive(s, !!isPaidActive)} 
                             style={{ 
                               padding: '8px 12px', 
-                              background: isActive ? '#ef4444' : '#10b981', 
+                              background: isPaidActive ? '#ef4444' : '#10b981', 
                               color: 'white', 
                               borderRadius: '10px', 
                               border: 'none', 
@@ -392,7 +438,24 @@ export default function AdminDashboard() {
                               opacity: updatingStoreId === s.id ? 0.5 : 1 
                             }}
                           >
-                            {updatingStoreId === s.id ? '...' : (isActive ? 'DEACTIVATE' : 'ACTIVATE')}
+                            {updatingStoreId === s.id ? '...' : (isPaidActive ? 'DEACTIVATE' : 'ACTIVATE')}
+                          </button>
+                          <button 
+                            disabled={updatingStoreId === s.id}
+                            onClick={() => makeStoreFreemium(s)} 
+                            style={{ 
+                              padding: '8px 12px', 
+                              background: '#71717a', 
+                              color: 'white', 
+                              borderRadius: '10px', 
+                              border: 'none', 
+                              fontWeight: 900, 
+                              cursor: 'pointer', 
+                              fontSize: '10px', 
+                              opacity: updatingStoreId === s.id ? 0.5 : 1 
+                            }}
+                          >
+                            {updatingStoreId === s.id ? '...' : 'MAKE FREEMIUM'}
                           </button>
                         </div>
                       </td>

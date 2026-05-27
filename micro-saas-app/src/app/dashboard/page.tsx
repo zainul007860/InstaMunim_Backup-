@@ -144,6 +144,97 @@ export default function Dashboard() {
   const [storeCreatedAt, setStoreCreatedAt] = useState<string | null>(null);
   const [subscriptionExpiry, setSubscriptionExpiry] = useState<string | null>(null);
   const [syncStatus, setSyncStatus] = useState<"synced" | "pending" | "error">("synced");
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [showDeleteAccountModal, setShowDeleteAccountModal] = useState(false);
+  const [deleteConfirmStep, setDeleteConfirmStep] = useState<'form' | 'confirm'>('form');
+  const [deleteMobile, setDeleteMobile] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteError, setDeleteError] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const checkSubscription = () => {
+    // FORCE FREE PLAN FOR TESTING
+    if (ownerMobile === "8130707236") return false;
+
+    if (!storeCreatedAt) return true; // Loading state safety
+    
+    const now = new Date();
+    const created = new Date(storeCreatedAt);
+    const trialEnds = new Date(created.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 Days Trial
+    
+    // If active subscription exists
+    if (subscriptionExpiry) {
+      const expiry = new Date(subscriptionExpiry);
+      return isAfter(expiry, now);
+    }
+    
+    // Check if within trial period
+    return isBefore(now, trialEnds);
+  };
+
+  const isSubscribed = checkSubscription();
+
+  const handleDeleteAccount = async () => {
+    if (!deleteMobile || !deletePassword) {
+      setDeleteError("Mobile number aur password dono required hain.");
+      return;
+    }
+    if (deleteMobile !== ownerMobile) {
+      setDeleteError("Mobile number aapke account se match nahi karta.");
+      return;
+    }
+    setIsDeleting(true);
+    setDeleteError("");
+    try {
+      // Single secure RPC call — runs with SECURITY DEFINER on server,
+      // bypasses Supabase RLS, verifies creds + deletes all data atomically
+      const { data: deleted, error } = await supabase
+        .rpc('delete_store_account', {
+          input_mobile: deleteMobile,
+          input_pass: deletePassword
+        });
+
+      if (error) {
+        console.error("RPC error:", error);
+        setDeleteError("Server error aaya. Thodi der baad try karein.");
+        setIsDeleting(false);
+        return;
+      }
+
+      if (!deleted) {
+        // RPC returned false → wrong credentials
+        setDeleteError("Mobile number ya password galat hai. Dobara check karein.");
+        setIsDeleting(false);
+        return;
+      }
+
+      // Success — clear everything locally and reload
+      localStorage.clear();
+      try {
+        const { Capacitor } = await import('@capacitor/core');
+        if (Capacitor.isNativePlatform()) {
+          const { Preferences } = await import('@capacitor/preferences');
+          await Preferences.clear();
+        }
+      } catch (e) { /* ignore on web */ }
+
+      alert("✅ Account permanently delete ho gaya. InstaMunim use karne ke liye shukriya!");
+      window.location.reload();
+
+    } catch (err: any) {
+      setDeleteError("Connection failed. Internet check karein aur dobara try karein.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+
+  // Force light mode if user is on the Free plan
+  useEffect(() => {
+    if (isLoggedIn && !isSubscribed && isDarkMode) {
+      setIsDarkMode(false);
+    }
+  }, [isLoggedIn, isSubscribed, isDarkMode]);
   const [whatsappInvoiceTemplate, setWhatsappInvoiceTemplate] = useState(`━━━━━━━━━━━━━━━━━━━━━
 🌟 *ORDER RECEIPT* 🌟
 ━━━━━━━━━━━━━━━━━━━━━
@@ -473,6 +564,7 @@ Stay safe & eat healthy! 🍕
   }, [activeTab, isSaleOpen, setShowExitDialog]);
 
   const prepareInterstitialAd = async () => {
+    if (isSubscribed) return;
     try {
       const adModule = admobRef.current;
       const { Capacitor } = await import('@capacitor/core');
@@ -497,6 +589,12 @@ Stay safe & eat healthy! 🍕
     let interstitialFailedToLoadListener: any = null;
 
     const initAdMob = async () => {
+      if (isSubscribed) {
+        setAdmobDebugInfo("Subscribed user: AdMob inactive");
+        setIsAdMobActive(false);
+        setAdmobHeight(0);
+        return;
+      }
       try {
         const { Capacitor } = await import('@capacitor/core');
         if (!Capacitor.isNativePlatform()) {
@@ -587,7 +685,7 @@ Stay safe & eat healthy! 🍕
       };
       cleanUp();
     };
-  }, []);
+  }, [isSubscribed]);
 
   // Hide AdMob banner when Sale popup is open, show when closed
   useEffect(() => {
@@ -595,6 +693,7 @@ Stay safe & eat healthy! 🍕
       try {
         const { Capacitor } = await import('@capacitor/core');
         if (!Capacitor.isNativePlatform() || !admobRef.current) return;
+        if (isSubscribed) return;
         const adModule = await import('@capacitor-community/admob');
         const BannerAdSize = adModule.BannerAdSize;
         const BannerAdPosition = adModule.BannerAdPosition;
@@ -1179,6 +1278,22 @@ Stay safe & eat healthy! 🍕
       alert("Please enter a valid 10-digit mobile number.");
       return;
     }
+
+    if (!isSubscribed) {
+      const todaySales = sales.filter(s => {
+        const saleDate = s.date ? new Date(s.date) : new Date();
+        const today = new Date();
+        return saleDate.getDate() === today.getDate() &&
+               saleDate.getMonth() === today.getMonth() &&
+               saleDate.getFullYear() === today.getFullYear();
+      }).length;
+      
+      if (todaySales >= 40) {
+        setShowUpgradeModal(true);
+        return;
+      }
+    }
+
     setIsLoading(true);
     
     try {
@@ -1267,7 +1382,7 @@ Stay safe & eat healthy! 🍕
       setExtraChargeAmount("");
 
       // Trigger Interstitial Ad after every sale
-      if (admobRef.current) {
+      if (!isSubscribed && admobRef.current) {
         try {
           console.log("Triggering Interstitial Ad after sale...");
           await admobRef.current.showInterstitial();
@@ -1299,7 +1414,10 @@ Stay safe & eat healthy! 🍕
     const extraPart = extraMatch ? `&ecn=${encodeURIComponent(extraMatch[1])}&eca=${extraMatch[2]}` : "";
 
     const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-    const invoiceUrl = `${baseUrl}/invoice?n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${lastOrderDetails.price}&d=${encodeURIComponent(lastOrderDetails.date.toISOString())}&t=${lastOrderDetails.type}&id=${lastOrderDetails.id}&m=${lastOrderDetails.mobile}&cn=${encodeURIComponent(lastOrderDetails.name)}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}${extraPart}`;
+    let invoiceUrl = `${baseUrl}/invoice?n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${lastOrderDetails.price}&d=${encodeURIComponent(lastOrderDetails.date.toISOString())}&t=${lastOrderDetails.type}&id=${lastOrderDetails.id}&m=${lastOrderDetails.mobile}&cn=${encodeURIComponent(lastOrderDetails.name)}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}${extraPart}`;
+    if (!isSubscribed) {
+      invoiceUrl += "&free=true";
+    }
 
     let displayItems = (lastOrderDetails.item || "").split("[COMM:")[0].trim();
     if (extraMatch) {
@@ -1307,12 +1425,16 @@ Stay safe & eat healthy! 🍕
       displayItems += `\n${extraMatch[1]}: ₹${extraMatch[2]}`;
     }
 
-    const msg = whatsappInvoiceTemplate
+    let msg = whatsappInvoiceTemplate
       .replace("[NAME]", lastOrderDetails.name)
       .replace("[SHOP]", restaurantName)
       .replace("[ITEMS]", displayItems)
       .replace("[TOTAL]", lastOrderDetails.price.toString())
       .replace("[LINK]", invoiceUrl);
+      
+    if (!isSubscribed) {
+      msg += "\n\nGenerated by InstaMunim POS\nDownload App Free: https://instamunim.vercel.app";
+    }
       
     window.open(`https://wa.me/91${lastOrderDetails.mobile}?text=${encodeURIComponent(msg)}`, "_blank");
   };
@@ -1346,6 +1468,54 @@ Stay safe & eat healthy! 🍕
   const netProfit = useMemo(() => totalSales - totalExpenses - totalCommissions, [totalSales, totalExpenses, totalCommissions]);
 
   const uniqueCustomers = useMemo(() => Array.from(new Set(sales.filter(s => s.mobile !== "N/A").map(s => s.mobile))), [sales]);
+
+  const crmList = useMemo(() => {
+    // Extract unique customers from sales
+    const customersMap = new Map<string, { name: string; mobile: string; lastDate: Date }>();
+    
+    sales.forEach(s => {
+      if (s.mobile && s.mobile !== "N/A" && s.mobile.length === 10) {
+        const existing = customersMap.get(s.mobile);
+        const sDate = s.date ? new Date(s.date) : new Date();
+        if (!existing || sDate > existing.lastDate) {
+          customersMap.set(s.mobile, {
+            name: s.name || "Customer",
+            mobile: s.mobile,
+            lastDate: sDate
+          });
+        }
+      }
+    });
+
+    const derived = Array.from(customersMap.values()).map(c => {
+      // Calculate days ago
+      const diffTime = Math.abs(new Date().getTime() - c.lastDate.getTime());
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return {
+        name: c.name,
+        mobile: c.mobile,
+        last: `${diffDays} days ago`
+      };
+    });
+
+    // Fallback to mock items if empty
+    if (derived.length === 0) {
+      return [
+        { name: "salman khan", mobile: "7838229178", last: "1 days ago" },
+        { name: "Sumaira", mobile: "8130707236", last: "2 days ago" },
+        { name: "Anish Gupta", mobile: "9910293847", last: "5 days ago" }
+      ];
+    }
+
+    return derived;
+  }, [sales]);
+
+  const displayedCrmList = useMemo(() => {
+    if (!isSubscribed) {
+      return crmList.slice(0, 10);
+    }
+    return crmList;
+  }, [crmList, isSubscribed]);
 
   const rentTargetData = useMemo(() => {
     const dailyBase = Math.round(monthlyRent / 30);
@@ -1647,78 +1817,11 @@ Stay safe & eat healthy! 🍕
     );
   }
 
-  // Subscription Logic
-  const checkSubscription = () => {
-    if (!storeCreatedAt) return true; // Loading state safety
-    
-    const now = new Date();
-    const created = new Date(storeCreatedAt);
-    const trialEnds = new Date(created.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 Days Trial
-    
-    // If active subscription exists
-    if (subscriptionExpiry) {
-      const expiry = new Date(subscriptionExpiry);
-      return isAfter(expiry, now);
-    }
-    
-    // Check if within trial period
-    return isBefore(now, trialEnds);
-  };
-
-  const isSubscribed = checkSubscription();
-
   return (
     <div 
       className={`min-h-screen flex flex-col font-sans selection:bg-orange-500/30 ${isDarkMode ? 'dark bg-zinc-950 text-white' : 'bg-[#fafafa] text-zinc-900'}`}
       style={{ paddingTop: isAdMobActive ? `${admobHeight}px` : "0px" }}
     >
-      
-      {!isSubscribed && (
-        <div className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-xl flex items-center justify-center p-6 overflow-y-auto">
-          <Card className="w-full max-w-[400px] bg-zinc-900 border-zinc-800 p-8 rounded-[2.5rem] shadow-[0_0_50px_rgba(249,115,22,0.2)] text-center space-y-8 animate-in zoom-in-95 duration-500">
-            <div className="w-20 h-20 bg-orange-500 rounded-3xl flex items-center justify-center mx-auto shadow-2xl shadow-orange-500/20">
-              <Clock className="h-10 w-10 text-white animate-pulse" />
-            </div>
-            
-            <div className="space-y-2">
-              <h2 className="text-3xl font-black tracking-tighter text-white uppercase">Trial Expired</h2>
-              <p className="text-zinc-400 font-bold text-xs leading-relaxed uppercase tracking-tighter">
-                Your free trial is over.<br/>Please scan the QR code and pay to continue using the app.
-              </p>
-            </div>
-
-            <div className="bg-white p-4 rounded-3xl shadow-inner group">
-              <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-3">Scan to Pay via UPI</p>
-              <div className="aspect-square w-full max-w-[200px] mx-auto bg-zinc-100 rounded-2xl flex items-center justify-center border-2 border-zinc-100 overflow-hidden">
-                <img src="/pay-qr.png" alt="Payment QR" className="w-full h-full object-contain" />
-              </div>
-              <p className="mt-3 font-black text-zinc-900 text-sm">₹399 <span className="text-[10px] text-zinc-400 uppercase">/ Month</span></p>
-            </div>
-
-            <div className="space-y-3">
-              <Button 
-                onClick={() => window.open(`https://wa.me/917838229178?text=${encodeURIComponent(`Hi Zainul, I have paid ₹399 for InstaMunim. My Store: ${restaurantName} (${ownerMobile}). Please activate my account.`)}`, "_blank")}
-                className="w-full h-14 bg-[#00c875] hover:bg-[#00b067] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all"
-              >
-                <MessageCircle className="h-5 w-5" /> After Payment Click Here
-              </Button>
-              <button 
-                onClick={() => handleLogout()}
-                className="text-[9px] font-black text-zinc-500 hover:text-white uppercase tracking-widest transition-colors py-2"
-              >
-                Logout Account
-              </button>
-            </div>
-            
-            <div className="pt-2">
-              <div className="flex items-center justify-center gap-2 text-zinc-500">
-                <ShieldCheck className="h-3 w-3" />
-                <span className="text-[8px] font-black uppercase tracking-widest">Secured Payment Gateway</span>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
       <main className="flex-1 pb-24 overflow-y-auto">
         <div className="max-w-full px-2 sm:px-4 py-8">
           
@@ -1780,7 +1883,13 @@ Stay safe & eat healthy! 🍕
                       <Input placeholder="Search dishes..." value={itemSearch} onChange={e => setItemSearch(e.target.value)} className="h-10 pl-10 rounded-xl bg-zinc-50 dark:bg-zinc-900 border-0 font-bold placeholder:text-zinc-300 text-xs w-full" />
                     </div>
                     <button 
-                      onClick={() => setShowScanner(true)} 
+                      onClick={() => {
+                        if (!isSubscribed) {
+                          setShowUpgradeModal(true);
+                        } else {
+                          setShowScanner(true);
+                        }
+                      }} 
                       className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center hover:bg-orange-600 hover:text-white transition-colors active:scale-95 shadow-sm"
                       title="Scan Barcode"
                     >
@@ -2122,7 +2231,28 @@ Stay safe & eat healthy! 🍕
                 <p className="text-zinc-500 font-bold flex items-center gap-2 mt-1"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" /> Stay ahead of your shop costs.</p>
               </header>
 
-              <Card className="bg-blue-600 text-white p-10 rounded-[3rem] border-0 relative overflow-hidden shadow-2xl shadow-blue-600/30">
+              {!isSubscribed ? (
+                <Card className="bg-gradient-to-br from-zinc-900 to-black text-white p-10 rounded-[3rem] border border-zinc-800 relative overflow-hidden shadow-2xl flex flex-col items-center justify-center text-center space-y-6">
+                  <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:20px_20px]" />
+                  <div className="w-20 h-20 bg-blue-500/20 rounded-3xl flex items-center justify-center relative animate-pulse shadow-inner">
+                    <Lock className="h-10 w-10 text-blue-500" />
+                  </div>
+                  <div className="space-y-2 relative z-10">
+                    <h3 className="text-2xl font-black uppercase tracking-tight">Rent Tracker Locked</h3>
+                    <p className="text-zinc-400 font-bold text-xs max-w-sm mx-auto leading-relaxed">
+                      Automatic carry-over cost calculation, Rent ledger, and daily target tracker are premium features of the Smart Business Plan.
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => window.open(`https://wa.me/917838229178?text=${encodeURIComponent(`Hi Zainul, I want to upgrade to the Paid Plan to unlock Rent Tracker for: ${restaurantName} (${ownerMobile}).`)}`, "_blank")}
+                    className="h-14 px-8 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all z-10"
+                  >
+                    Activate Smart Business Plan
+                  </Button>
+                </Card>
+              ) : (
+                <>
+                  <Card className="bg-blue-600 text-white p-10 rounded-[3rem] border-0 relative overflow-hidden shadow-2xl shadow-blue-600/30">
                 <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl" />
                 <Badge className="bg-white text-blue-600 border-0 font-black px-4 py-1.5 mb-6 rounded-full shadow-lg">MISSION TARGET</Badge>
                 <h3 className="text-7xl font-black tracking-tighter mb-2">₹{rentTargetData.todaysTarget}</h3>
@@ -2163,6 +2293,8 @@ Stay safe & eat healthy! 🍕
                  </div>
                  <div className="text-right"><p className="text-[8px] font-black opacity-40 uppercase">Est. Monthly Profit</p><p className="text-xl font-black">₹{netProfit}</p></div>
               </div>
+                </>
+              )}
             </div>
           )}
 
@@ -2298,6 +2430,23 @@ Stay safe & eat healthy! 🍕
                 <Badge className="bg-emerald-500/10 text-emerald-500 border-0 font-black text-[10px] uppercase px-3 py-1">Active</Badge>
               </header>
 
+              {!isSubscribed && (
+                <Card className="bg-orange-500/10 border border-orange-500/20 text-orange-600 dark:text-orange-400 p-6 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-left space-y-1">
+                    <p className="font-black text-sm uppercase tracking-tight">Free CRM Outreach Limit</p>
+                    <p className="text-[10px] opacity-80 leading-normal">
+                      Only the first 10 customers are displayed. Upgrade to the Paid Plan to view and contact your entire customer base.
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => setShowUpgradeModal(true)} 
+                    className="h-10 px-6 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-black text-[10px] uppercase tracking-wider shadow-md shrink-0 whitespace-nowrap active:scale-95 transition-all"
+                  >
+                    Unlock Unlimited
+                  </Button>
+                </Card>
+              )}
+
               {/* CAMPAIGN MESSAGE EDITOR */}
               <Card className="p-8 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-[2.5rem] border border-indigo-100 dark:border-indigo-900/30 space-y-6 relative overflow-hidden shadow-sm">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-16 -mt-16 blur-2xl" />
@@ -2355,11 +2504,7 @@ Stay safe & eat healthy! 🍕
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800">
-                      {[
-                        { name: "salman khan", mobile: "7838229178", last: "1 days ago" },
-                        { name: "Sumaira", mobile: "8130707236", last: "2 days ago" },
-                        { name: "Anish Gupta", mobile: "9910293847", last: "5 days ago" }
-                      ].map((cust, i) => (
+                      {displayedCrmList.map((cust, i) => (
                         <tr key={i} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                           <td className="py-6 px-8">
                             <div className="font-black text-base text-zinc-900 dark:text-white tracking-tight">{cust.name}</div>
@@ -2368,14 +2513,19 @@ Stay safe & eat healthy! 🍕
                           <td className="py-6 px-8">
                             <div className="bg-zinc-50 dark:bg-zinc-800 p-4 rounded-3xl max-w-[280px] border border-zinc-100 dark:border-zinc-700">
                               <p className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 italic leading-relaxed">
-                                "Hi {cust.name}, we miss you at {restaurantName}! 🍕 Come back today for a special offer..."
+                                "{crmMessage.replace("[NAME]", cust.name).replace("[SHOP]", restaurantName).substring(0, 75)}..."
                               </p>
                             </div>
                           </td>
                           <td className="py-6 px-8 text-xs font-black text-zinc-500 uppercase tracking-widest">{cust.last}</td>
                           <td className="py-6 px-8">
                             <Button 
-                              onClick={() => window.open(`https://wa.me/91${cust.mobile}?text=${encodeURIComponent(`Hi ${cust.name}, we miss you at ${restaurantName}! 🍕 Come back today for a special offer just for you!`)}`, "_blank")}
+                              onClick={() => {
+                                const customMsg = crmMessage
+                                  .replace("[NAME]", cust.name)
+                                  .replace("[SHOP]", restaurantName);
+                                window.open(`https://wa.me/91${cust.mobile}?text=${encodeURIComponent(customMsg)}`, "_blank");
+                              }}
                               className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-2xl h-14 px-8 font-black text-xs shadow-lg shadow-indigo-500/30 flex items-center gap-3 active:scale-95 transition-all"
                             >
                               <Send className="h-4 w-4" /> SEND
@@ -2470,7 +2620,16 @@ Stay safe & eat healthy! 🍕
 
               {/* SMART MENU AI SCANNER BUTTON */}
               <button
-                onClick={() => { setScanMenuStep('capture'); setScanMenuImage(null); setScanMenuResults([]); setShowScanMenuModal(true); }}
+                onClick={() => {
+                  if (!isSubscribed) {
+                    setShowUpgradeModal(true);
+                  } else {
+                    setScanMenuStep('capture');
+                    setScanMenuImage(null);
+                    setScanMenuResults([]);
+                    setShowScanMenuModal(true);
+                  }
+                }}
                 className="w-full flex items-center justify-between p-5 bg-gradient-to-r from-violet-600 to-purple-600 rounded-2xl shadow-xl shadow-violet-500/25 active:scale-95 transition-all"
               >
                 <div className="flex items-center gap-4">
@@ -2766,7 +2925,7 @@ Stay safe & eat healthy! 🍕
                 <Card className="p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900 border-0 shadow-sm space-y-4">
                   <h3 className="text-xl font-black text-zinc-900 dark:text-white">3. Subscription & Payments</h3>
                   <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                    The usage of this application is subject to a monthly subscription fee (e.g., ₹399/month). Failure to pay the subscription may result in limited access to features or account suspension from the Admin Panel.
+                    The usage of this application is subject to a monthly subscription fee (e.g., ₹299/month). Failure to pay the subscription may result in limited access to features or account suspension from the Admin Panel.
                   </p>
                 </Card>
 
@@ -2840,14 +2999,56 @@ Stay safe & eat healthy! 🍕
             </div>
           )}
 
-          {activeTab === "Inventory" && <InventoryDiary />}
+          {activeTab === "Inventory" && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8 pb-10 px-4 pt-4">
+              <header className="relative">
+                <div className="absolute -left-10 -top-10 w-40 h-40 bg-orange-500/10 rounded-full blur-3xl" />
+                <h2 className="text-4xl font-black tracking-tighter">Daily Stock</h2>
+                <p className="text-zinc-500 font-bold flex items-center gap-2 mt-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" /> Track your store raw items and recipe stock.
+                </p>
+              </header>
+
+              {!isSubscribed ? (
+                <Card className="bg-gradient-to-br from-zinc-900 to-black text-white p-10 rounded-[3rem] border border-zinc-800 relative overflow-hidden shadow-2xl flex flex-col items-center justify-center text-center space-y-6">
+                  <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:20px_20px]" />
+                  <div className="w-20 h-20 bg-orange-500/20 rounded-3xl flex items-center justify-center relative animate-pulse shadow-inner">
+                    <Lock className="h-10 w-10 text-orange-500" />
+                  </div>
+                  <div className="space-y-2 relative z-10">
+                    <h3 className="text-2xl font-black uppercase tracking-tight">Daily Stock Locked</h3>
+                    <p className="text-zinc-400 font-bold text-xs max-w-sm mx-auto leading-relaxed">
+                      Daily stock diaries, consumption logs, and inventory alerts are premium features of the Smart Business Plan.
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => window.open(`https://wa.me/917838229178?text=${encodeURIComponent(`Hi Zainul, I want to upgrade to the Paid Plan to unlock Daily Stock for: ${restaurantName} (${ownerMobile}).`)}`, "_blank")}
+                    className="h-14 px-8 bg-orange-600 hover:bg-orange-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all z-10"
+                  >
+                    Activate Smart Business Plan
+                  </Button>
+                </Card>
+              ) : (
+                <InventoryDiary />
+              )}
+            </div>
+          )}
 
           {activeTab === "Settings" && (
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 pb-28 px-4 pt-4">
               <header className="flex items-center justify-between px-2 mb-6">
                 <h2 className="text-3xl font-black tracking-tighter">Store Settings</h2>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setIsDarkMode(!isDarkMode)} className="w-10 h-10 rounded-full flex items-center justify-center border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm">
+                  <button 
+                    onClick={() => {
+                      if (!isSubscribed) {
+                        setShowUpgradeModal(true);
+                      } else {
+                        setIsDarkMode(!isDarkMode);
+                      }
+                    }} 
+                    className="w-10 h-10 rounded-full flex items-center justify-center border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm"
+                  >
                     {isDarkMode ? <Sun className="h-5 w-5 text-zinc-400" /> : <Moon className="h-5 w-5 text-zinc-400" />}
                   </button>
                   <Button 
@@ -3011,6 +3212,7 @@ Stay safe & eat healthy! 🍕
 
                         {item.id === "AccountSecurity" && (
                           <div className="space-y-6 pt-6">
+                            {/* --- Password Update --- */}
                             <div className="space-y-3">
                               <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Owner Password</Label>
                               <Input 
@@ -3023,6 +3225,156 @@ Stay safe & eat healthy! 🍕
                             <Button className="w-full h-16 bg-[#00c875] hover:bg-[#00b067] text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
                               UPDATE PASSWORD
                             </Button>
+
+                            {/* --- Divider --- */}
+                            <div className="flex items-center gap-3 py-2">
+                              <div className="flex-1 h-px bg-red-100 dark:bg-red-900/30" />
+                              <span className="text-[9px] font-black text-red-400 uppercase tracking-widest">Danger Zone</span>
+                              <div className="flex-1 h-px bg-red-100 dark:bg-red-900/30" />
+                            </div>
+
+                            {/* --- Delete Account Card --- */}
+                            {!showDeleteAccountModal ? (
+                              <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-3xl p-6 space-y-4">
+                                <div className="flex items-start gap-4">
+                                  <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center shrink-0">
+                                    <Trash2 className="h-6 w-6 text-red-500" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-black text-red-700 dark:text-red-400 text-sm uppercase tracking-tight">Delete Account</h4>
+                                    <p className="text-[11px] text-red-500/80 font-bold leading-relaxed mt-1">
+                                      Aapka poora data — sales, menu, expenses — permanently delete ho jayega. Ye action undo nahi ho sakta.
+                                    </p>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    setShowDeleteAccountModal(true);
+                                    setDeleteConfirmStep('form');
+                                    setDeleteMobile("");
+                                    setDeletePassword("");
+                                    setDeleteError("");
+                                  }}
+                                  className="w-full h-12 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-lg shadow-red-500/20"
+                                >
+                                  🗑️ Delete My Account
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="bg-zinc-950 border border-red-900/50 rounded-3xl p-6 space-y-5 shadow-2xl">
+                                {deleteConfirmStep === 'form' ? (
+                                  <>
+                                    <div className="text-center space-y-1">
+                                      <div className="w-14 h-14 bg-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                                        <Trash2 className="h-7 w-7 text-red-500" />
+                                      </div>
+                                      <h4 className="font-black text-white text-base uppercase tracking-tight">Verify Karo, Phir Delete</h4>
+                                      <p className="text-[10px] text-zinc-400 font-bold">Apna registered number aur password enter karo</p>
+                                    </div>
+
+                                    <div className="space-y-3">
+                                      <div className="space-y-2">
+                                        <Label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest px-1">Registered Mobile Number</Label>
+                                        <Input
+                                          type="tel"
+                                          maxLength={10}
+                                          placeholder="10-digit mobile number"
+                                          value={deleteMobile}
+                                          onChange={e => { setDeleteMobile(e.target.value); setDeleteError(""); }}
+                                          className="h-14 rounded-2xl bg-zinc-900 border border-zinc-800 text-white font-black text-lg px-5 placeholder:text-zinc-600 focus:ring-2 ring-red-500/30 transition-all"
+                                        />
+                                      </div>
+                                      <div className="space-y-2">
+                                        <Label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest px-1">Account Password</Label>
+                                        <Input
+                                          type="password"
+                                          placeholder="Enter your password"
+                                          value={deletePassword}
+                                          onChange={e => { setDeletePassword(e.target.value); setDeleteError(""); }}
+                                          className="h-14 rounded-2xl bg-zinc-900 border border-zinc-800 text-white font-black text-lg px-5 placeholder:text-zinc-600 focus:ring-2 ring-red-500/30 transition-all"
+                                        />
+                                      </div>
+                                    </div>
+
+                                    {deleteError && (
+                                      <div className="bg-red-950/60 border border-red-800/50 rounded-xl px-4 py-3">
+                                        <p className="text-[11px] text-red-400 font-bold">⚠️ {deleteError}</p>
+                                      </div>
+                                    )}
+
+                                    <div className="flex gap-3">
+                                      <button
+                                        onClick={() => setShowDeleteAccountModal(false)}
+                                        className="flex-1 h-12 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all"
+                                      >
+                                        Cancel
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          if (!deleteMobile || deleteMobile.length !== 10) {
+                                            setDeleteError("Valid 10-digit mobile number enter karo.");
+                                            return;
+                                          }
+                                          if (!deletePassword) {
+                                            setDeleteError("Password field empty hai.");
+                                            return;
+                                          }
+                                          if (deleteMobile !== ownerMobile) {
+                                            setDeleteError("Ye mobile number is account se registered nahi hai.");
+                                            return;
+                                          }
+                                          setDeleteConfirmStep('confirm');
+                                          setDeleteError("");
+                                        }}
+                                        className="flex-1 h-12 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-lg"
+                                      >
+                                        Next →
+                                      </button>
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    {/* Final Confirm Step */}
+                                    <div className="text-center space-y-3">
+                                      <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto animate-pulse">
+                                        <Trash2 className="h-8 w-8 text-red-500" />
+                                      </div>
+                                      <h4 className="font-black text-white text-lg">Are you sure?</h4>
+                                      <p className="text-[11px] text-red-400 font-bold leading-relaxed px-2">
+                                        Number <span className="text-white">{deleteMobile}</span> ka poora account aur data permanently delete hoga. Ye kisi bhi tarah recover nahi ho sakta.
+                                      </p>
+                                    </div>
+
+                                    {deleteError && (
+                                      <div className="bg-red-950/60 border border-red-800/50 rounded-xl px-4 py-3">
+                                        <p className="text-[11px] text-red-400 font-bold">⚠️ {deleteError}</p>
+                                      </div>
+                                    )}
+
+                                    <div className="flex gap-3">
+                                      <button
+                                        onClick={() => setDeleteConfirmStep('form')}
+                                        disabled={isDeleting}
+                                        className="flex-1 h-12 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all disabled:opacity-50"
+                                      >
+                                        ← Back
+                                      </button>
+                                      <button
+                                        onClick={handleDeleteAccount}
+                                        disabled={isDeleting}
+                                        className="flex-1 h-12 bg-red-600 hover:bg-red-700 text-white rounded-2xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-xl shadow-red-900/40 disabled:opacity-60 flex items-center justify-center gap-2"
+                                      >
+                                        {isDeleting ? (
+                                          <><Loader2 className="h-4 w-4 animate-spin" /> Deleting...</>
+                                        ) : (
+                                          <>🗑️ YES, DELETE</>
+                                        )}
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            )}
                           </div>
                         )}
 
@@ -3197,6 +3549,28 @@ Stay safe & eat healthy! 🍕
           )}
 
           {/* Old Support Tab Removed */}
+
+          {/* Web simulated banner ad */}
+          {!isSubscribed && (
+            <div className="w-full bg-gradient-to-r from-orange-500/10 via-amber-500/10 to-orange-500/10 border border-orange-500/20 rounded-2xl p-4 flex items-center justify-between gap-4 mt-6 animate-in fade-in duration-1000 relative overflow-hidden">
+              <div className="absolute right-0 bottom-0 w-24 h-24 bg-orange-500/5 rounded-full blur-2xl pointer-events-none" />
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500 shrink-0">
+                  <span className="text-[9px] font-black uppercase tracking-widest border border-orange-500/30 px-1.5 py-0.5 rounded bg-orange-500/10">Ad</span>
+                </div>
+                <div className="text-left">
+                  <p className="font-black text-xs text-zinc-800 dark:text-zinc-200">🚀 Unlock the Ultimate POS Experience</p>
+                  <p className="text-[9px] font-bold text-zinc-400 mt-0.5 uppercase tracking-tighter">Get unlimited billing, rent tracker, barcode scanner & no ads!</p>
+                </div>
+              </div>
+              <Button 
+                onClick={() => setShowUpgradeModal(true)} 
+                className="h-8 px-4 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-black text-[9px] uppercase tracking-wider shrink-0 active:scale-95 transition-all shadow-md shadow-orange-500/20"
+              >
+                Remove Ads
+              </Button>
+            </div>
+          )}
 
         </div>
       </main>
@@ -3529,6 +3903,62 @@ Stay safe & eat healthy! 🍕
           </div>
         </div>
       )}
+
+      {/* PREMIUM UPGRADE DIALOG */}
+      <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
+        <DialogContent className="p-8 border-0 max-w-[340px] bg-gradient-to-br from-zinc-900 to-black text-white rounded-3xl shadow-2xl relative overflow-hidden">
+          <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:20px_20px]" />
+          <div className="absolute -left-10 -top-10 w-32 h-32 bg-orange-500/10 rounded-full blur-2xl animate-pulse" />
+          
+          <div className="text-center space-y-6 relative z-10 animate-in zoom-in-95 duration-500">
+            <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl flex items-center justify-center mx-auto shadow-xl shadow-orange-500/20">
+              <Lock className="h-8 w-8 text-white" />
+            </div>
+            
+            <div className="space-y-2">
+              <DialogTitle className="text-2xl font-black tracking-tight text-center uppercase">Premium Feature</DialogTitle>
+              <DialogDescription className="text-zinc-400 font-bold text-xs leading-relaxed text-center">
+                Upgrade to the Smart Business Plan to unlock this feature and supercharge your business!
+              </DialogDescription>
+            </div>
+
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-4 text-left space-y-2.5">
+              <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest text-center border-b border-white/5 pb-2">Smart Business Plan Features</p>
+              <div className="space-y-2">
+                {[
+                  "Unlimited Bills (No daily 40-bill limit)",
+                  "Automatic Rent Ledger & Daily Target Tracker",
+                  "High-Speed Barcode Checkout Scanner",
+                  "AI Rate Card / Menu Scanner",
+                  "Premium Eye-Care Night/Dark Theme",
+                  "Unlimited CRM Customer Outreach",
+                  "Remove Watermarks from Receipts"
+                ].map((feat, i) => (
+                  <div key={i} className="flex items-start gap-2">
+                    <Check className="h-3.5 w-3.5 text-[#00c875] shrink-0 mt-0.5" />
+                    <span className="text-[10px] font-bold text-zinc-300 leading-snug">{feat}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <Button 
+                onClick={() => window.open(`https://wa.me/917838229178?text=${encodeURIComponent(`Hi Zainul, I want to upgrade to the Paid Plan for: ${restaurantName} (${ownerMobile}). Please activate my account.`)}`, "_blank")}
+                className="w-full h-14 bg-[#00c875] hover:bg-[#00b067] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-3 active:scale-95 transition-all"
+              >
+                <MessageCircle className="h-5 w-5" /> UPGRADE NOW
+              </Button>
+              <button 
+                onClick={() => setShowUpgradeModal(false)}
+                className="text-[10px] font-black text-zinc-500 hover:text-white uppercase tracking-widest transition-colors py-1 block w-full text-center"
+              >
+                Maybe Later
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
