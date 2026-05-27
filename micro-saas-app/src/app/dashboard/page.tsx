@@ -1432,7 +1432,9 @@ Stay safe & eat healthy! 🍕
     const extraMatch = (lastOrderDetails.item || "").match(/\[EXTRA:(.+):(\d+)\]/);
     const extraPart = extraMatch ? `&ecn=${encodeURIComponent(extraMatch[1])}&eca=${extraMatch[2]}` : "";
 
-    const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+    const baseUrl = typeof window !== "undefined" && !window.location.origin.includes("localhost")
+      ? window.location.origin
+      : "https://instamunimapp.vercel.app";
     let invoiceUrl = `${baseUrl}/invoice?n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${lastOrderDetails.price}&d=${encodeURIComponent(lastOrderDetails.date.toISOString())}&t=${lastOrderDetails.type}&id=${lastOrderDetails.id}&m=${lastOrderDetails.mobile}&cn=${encodeURIComponent(lastOrderDetails.name)}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}${extraPart}`;
     if (!isSubscribed) {
       invoiceUrl += "&free=true";
