@@ -2,7 +2,7 @@
 <resources>
     <string name="app_name">InstaMunim</string>
     <string name="title_activity_main">InstaMunim</string>
-    <string name="package_name">com.zainul.instamunim</string>
-    <string name="custom_url_scheme">com.zainul.instamunim</string>
+    <string name="package_name">com.zainul.instamunimpos</string>
+    <string name="custom_url_scheme">com.zainul.instamunimpos</string>
     <string name="admob_app_id">ca-app-pub-6433517681109667~1474602455</string>
 </resources>
