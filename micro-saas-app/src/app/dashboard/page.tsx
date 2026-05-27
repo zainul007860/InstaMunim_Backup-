@@ -1042,6 +1042,13 @@ Stay safe & eat healthy! 🍕
     setIsLoading(true);
     setLoginError("");
     
+    // 1. Immediate navigator connection check
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setLoginError("Connection failed. Check internet.");
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       if (authMode === "login") {
         const { data, error } = await supabase
@@ -1049,8 +1056,15 @@ Stay safe & eat healthy! 🍕
             mobile: loginMobile, 
             input_pass: loginPassword 
           });
-
-        if (error || !data || data.length === 0) {
+ 
+        if (error) {
+          const errMsg = error.message || "";
+          if (errMsg.toLowerCase().includes("fetch") || errMsg.toLowerCase().includes("network") || error.status === 0) {
+            setLoginError("Connection failed. Check internet.");
+          } else {
+            setLoginError("Invalid mobile number or password.");
+          }
+        } else if (!data || data.length === 0) {
           setLoginError("Invalid mobile number or password.");
         } else {
           const storeData = data[0];
@@ -1070,7 +1084,7 @@ Stay safe & eat healthy! 🍕
               await Preferences.set({ key: 'saas_owner_mobile', value: loginMobile });
             }
           } catch (e) { console.log('Preferences save error:', e); }
-
+ 
           if (rememberMe) {
             localStorage.setItem("saas_rem_mobile", loginMobile);
             localStorage.setItem("saas_rem_pass", loginPassword);
@@ -1078,12 +1092,12 @@ Stay safe & eat healthy! 🍕
             localStorage.removeItem("saas_rem_mobile");
             localStorage.removeItem("saas_rem_pass");
           }
-
+ 
           setStoreCreatedAt(storeData.created_at);
           setSubscriptionExpiry(storeData.subscription_expiry);
           localStorage.setItem("saas_store_created_at", storeData.created_at || "");
           localStorage.setItem("saas_store_expiry", storeData.subscription_expiry || "");
-
+ 
           await fetchStoreData(storeData.id);
         }
       } else {
@@ -1097,9 +1111,14 @@ Stay safe & eat healthy! 🍕
           }])
           .select()
           .single();
-
+ 
         if (error) {
-          setLoginError("Mobile already registered or error occurred.");
+          const errMsg = error.message || "";
+          if (errMsg.toLowerCase().includes("fetch") || errMsg.toLowerCase().includes("network") || error.status === 0) {
+            setLoginError("Connection failed. Check internet.");
+          } else {
+            setLoginError("Mobile already registered or error occurred.");
+          }
         } else {
           setIsLoggedIn(true);
           setOwnerMobile(loginMobile);
@@ -1110,7 +1129,7 @@ Stay safe & eat healthy! 🍕
           localStorage.setItem("saas_owner_mobile", loginMobile);
           localStorage.setItem("saas_store_created_at", data.created_at || "");
           localStorage.setItem("saas_store_expiry", data.subscription_expiry || "");
-
+ 
           await fetchStoreData(data.id);
         }
       }
