@@ -93,8 +93,8 @@ export default function Dashboard() {
   const [admobDebugInfo, setAdmobDebugInfo] = useState("Not initialized");
   const [admobHeight, setAdmobHeight] = useState(60);
   const [adProvider, setAdProvider] = useState<"admob" | "web" | "none">("web");
-  const [webAdScriptUrl, setWebAdScriptUrl] = useState("");
-  const [webAdKey, setWebAdKey] = useState("");
+  const [webAdScriptUrl, setWebAdScriptUrl] = useState("https://nap5k.com/tag.min.js");
+  const [webAdKey, setWebAdKey] = useState("11070941");
   const admobRef = useRef<any>(null);
 
   const [mounted, setMounted] = useState(false);
@@ -1074,11 +1074,23 @@ Stay safe & eat healthy! 🍕
     if (savedDarkMode) setIsDarkMode(savedDarkMode === "true");
 
     const savedAdProvider = localStorage.getItem("saas_ad_provider");
-    if (savedAdProvider) setAdProvider(savedAdProvider as any);
+    if (savedAdProvider) {
+      setAdProvider(savedAdProvider as any);
+    } else {
+      setAdProvider("web");
+    }
     const savedAdScript = localStorage.getItem("saas_web_ad_script");
-    if (savedAdScript) setWebAdScriptUrl(savedAdScript);
+    if (savedAdScript) {
+      setWebAdScriptUrl(savedAdScript);
+    } else {
+      setWebAdScriptUrl("https://nap5k.com/tag.min.js");
+    }
     const savedAdKey = localStorage.getItem("saas_web_ad_key");
-    if (savedAdKey) setWebAdKey(savedAdKey);
+    if (savedAdKey) {
+      setWebAdKey(savedAdKey);
+    } else {
+      setWebAdKey("11070941");
+    }
 
     setDataLoaded(true);
 
