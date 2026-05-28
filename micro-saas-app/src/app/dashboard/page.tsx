@@ -67,6 +67,9 @@ export function WebAdBanner({ scriptUrl, adKey }: { scriptUrl: string; adKey: st
     script.type = "text/javascript";
     script.src = scriptUrl;
     script.async = true;
+    if (adKey) {
+      script.setAttribute("data-zone", adKey);
+    }
     wrapper.appendChild(script);
 
     containerRef.current.appendChild(wrapper);
