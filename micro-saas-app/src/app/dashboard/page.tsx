@@ -95,6 +95,7 @@ export default function Dashboard() {
   const [adProvider, setAdProvider] = useState<"admob" | "web" | "none">("web");
   const [webAdScriptUrl, setWebAdScriptUrl] = useState("https://nap5k.com/tag.min.js");
   const [webAdKey, setWebAdKey] = useState("11070941");
+  const [webAdDirectLink, setWebAdDirectLink] = useState("");
   const admobRef = useRef<any>(null);
 
   const [mounted, setMounted] = useState(false);
@@ -1091,6 +1092,10 @@ Stay safe & eat healthy! 🍕
     } else {
       setWebAdKey("11070941");
     }
+    const savedAdDirectLink = localStorage.getItem("saas_web_ad_direct_link");
+    if (savedAdDirectLink) {
+      setWebAdDirectLink(savedAdDirectLink);
+    }
 
     setDataLoaded(true);
 
@@ -1109,10 +1114,11 @@ Stay safe & eat healthy! 🍕
       localStorage.setItem("saas_ad_provider", adProvider);
       localStorage.setItem("saas_web_ad_script", webAdScriptUrl);
       localStorage.setItem("saas_web_ad_key", webAdKey);
+      localStorage.setItem("saas_web_ad_direct_link", webAdDirectLink);
       if (storeCreatedAt) localStorage.setItem("saas_store_created_at", storeCreatedAt);
       if (subscriptionExpiry) localStorage.setItem("saas_store_expiry", subscriptionExpiry);
     }
-  }, [sales, expenses, menuItems, restaurantName, monthlyRent, isDarkMode, dataLoaded, mounted, adProvider, webAdScriptUrl, webAdKey]);
+  }, [sales, expenses, menuItems, restaurantName, monthlyRent, isDarkMode, dataLoaded, mounted, adProvider, webAdScriptUrl, webAdKey, webAdDirectLink]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1478,13 +1484,22 @@ Stay safe & eat healthy! 🍕
       setExtraChargeAmount("");
 
       // Trigger Interstitial Ad after every sale
-      if (!isSubscribed && admobRef.current) {
-        try {
-          console.log("Triggering Interstitial Ad after sale...");
-          await admobRef.current.showInterstitial();
-        } catch (e) {
-          console.error("Error showing interstitial ad:", e);
-          prepareInterstitialAd();
+      if (!isSubscribed) {
+        if (adProvider === "admob" && admobRef.current) {
+          try {
+            console.log("Triggering Interstitial Ad after sale...");
+            await admobRef.current.showInterstitial();
+          } catch (e) {
+            console.error("Error showing interstitial ad:", e);
+            prepareInterstitialAd();
+          }
+        } else if (adProvider === "web" && webAdDirectLink) {
+          try {
+            console.log("Triggering Web Interstitial Direct Link Ad...");
+            window.open(webAdDirectLink, "_blank");
+          } catch (e) {
+            console.error("Error opening web interstitial ad:", e);
+          }
         }
       }
     } catch (err: any) {
@@ -3549,6 +3564,16 @@ Stay safe & eat healthy! 🍕
                                       onChange={(e) => setWebAdKey(e.target.value)}
                                       className="w-full h-11 px-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 font-bold text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-orange-500/20"
                                       placeholder="Adsterra Key / Monetag Zone ID"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1.5 ml-2">Web Interstitial / Direct Link URL</label>
+                                    <input 
+                                      type="text"
+                                      value={webAdDirectLink}
+                                      onChange={(e) => setWebAdDirectLink(e.target.value)}
+                                      className="w-full h-11 px-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 font-bold text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-orange-500/20"
+                                      placeholder="Paste Monetag Direct Link URL here"
                                     />
                                   </div>
                                 </div>
