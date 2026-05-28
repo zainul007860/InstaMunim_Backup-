@@ -95,7 +95,7 @@ export default function Dashboard() {
   const [adProvider, setAdProvider] = useState<"admob" | "web" | "none">("web");
   const [webAdScriptUrl, setWebAdScriptUrl] = useState("https://nap5k.com/tag.min.js");
   const [webAdKey, setWebAdKey] = useState("11070941");
-  const [webAdDirectLink, setWebAdDirectLink] = useState("");
+  const [webAdDirectLink, setWebAdDirectLink] = useState("https://omg10.com/4/11071013");
   const admobRef = useRef<any>(null);
 
   const [mounted, setMounted] = useState(false);
@@ -1095,6 +1095,8 @@ Stay safe & eat healthy! 🍕
     const savedAdDirectLink = localStorage.getItem("saas_web_ad_direct_link");
     if (savedAdDirectLink) {
       setWebAdDirectLink(savedAdDirectLink);
+    } else {
+      setWebAdDirectLink("https://omg10.com/4/11071013");
     }
 
     setDataLoaded(true);
