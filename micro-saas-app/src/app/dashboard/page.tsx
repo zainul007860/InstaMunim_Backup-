@@ -3620,11 +3620,21 @@ Stay safe & eat healthy! 🍕
                               {isSyncing ? "SYNCING..." : "MANUAL SYNC NOW"}
                             </Button>
                             
-                            {isNative && (
-                              <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 p-4 rounded-2xl text-center text-[10px] text-zinc-500 dark:text-zinc-400 font-mono mt-4">
-                                <span className="font-bold text-orange-500">AdMob Status:</span> {admobDebugInfo}
+                            <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 p-4 rounded-2xl text-left text-[10px] text-zinc-500 dark:text-zinc-400 font-mono mt-4 space-y-1">
+                              <div>
+                                <span className="font-bold text-zinc-500">Active Ad Network:</span> <span className="text-orange-500 font-bold uppercase">{adProvider === "admob" ? "Google AdMob" : adProvider === "web" ? "Web Ads (Monetag)" : "None / Disabled"}</span>
                               </div>
-                            )}
+                              {adProvider === "admob" && (
+                                <div>
+                                  <span className="font-bold text-orange-500">AdMob Status:</span> {admobDebugInfo}
+                                </div>
+                              )}
+                              {adProvider === "web" && (
+                                <div>
+                                  <span className="font-bold text-orange-500">Monetag Status:</span> {webAdScriptUrl ? "Loaded successfully" : "Not configured"}
+                                </div>
+                              )}
+                            </div>
                           </div>
                         )}
 
