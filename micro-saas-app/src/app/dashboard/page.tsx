@@ -38,6 +38,49 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import InventoryDiary from "./InventoryDiary";
 
+export function WebAdBanner({ scriptUrl, adKey }: { scriptUrl: string; adKey: string }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!scriptUrl || !containerRef.current) return;
+    containerRef.current.innerHTML = "";
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "flex justify-center items-center w-full min-h-[50px]";
+
+    if (adKey) {
+      const optionScript = document.createElement("script");
+      optionScript.type = "text/javascript";
+      optionScript.innerHTML = `
+        window.atOptions = {
+          'key' : '${adKey}',
+          'format' : 'iframe',
+          'height' : 50,
+          'width' : 320,
+          'params' : {}
+        };
+      `;
+      wrapper.appendChild(optionScript);
+    }
+
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src = scriptUrl;
+    script.async = true;
+    wrapper.appendChild(script);
+
+    containerRef.current.appendChild(wrapper);
+  }, [scriptUrl, adKey]);
+
+  return (
+    <div className="w-full flex justify-center py-2 bg-zinc-50 dark:bg-zinc-900 border-b border-zinc-100 dark:border-zinc-800 print:hidden transition-all duration-300">
+      <div ref={containerRef} className="w-[320px] h-[50px] overflow-hidden flex justify-center items-center">
+        <span className="text-[8px] font-black tracking-widest text-zinc-300 dark:text-zinc-700 uppercase animate-pulse">Sponsored Ad</span>
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [extraChargeName, setExtraChargeName] = useState("");
   const [extraChargeAmount, setExtraChargeAmount] = useState("");
@@ -46,6 +89,9 @@ export default function Dashboard() {
   const [isNative, setIsNative] = useState(false);
   const [admobDebugInfo, setAdmobDebugInfo] = useState("Not initialized");
   const [admobHeight, setAdmobHeight] = useState(60);
+  const [adProvider, setAdProvider] = useState<"admob" | "web" | "none">("web");
+  const [webAdScriptUrl, setWebAdScriptUrl] = useState("");
+  const [webAdKey, setWebAdKey] = useState("");
   const admobRef = useRef<any>(null);
 
   const [mounted, setMounted] = useState(false);
@@ -589,6 +635,12 @@ Stay safe & eat healthy! 🍕
     let interstitialFailedToLoadListener: any = null;
 
     const initAdMob = async () => {
+      if (adProvider !== "admob") {
+        setAdmobDebugInfo("AdMob is not selected provider");
+        setIsAdMobActive(false);
+        setAdmobHeight(0);
+        return;
+      }
       if (isSubscribed) {
         setAdmobDebugInfo("Subscribed user: AdMob inactive");
         setIsAdMobActive(false);
@@ -685,14 +737,14 @@ Stay safe & eat healthy! 🍕
       };
       cleanUp();
     };
-  }, [isSubscribed]);
+  }, [isSubscribed, adProvider]);
 
   // Hide AdMob banner when Sale popup is open, show when closed
   useEffect(() => {
     const toggleBanner = async () => {
       try {
         const { Capacitor } = await import('@capacitor/core');
-        if (!Capacitor.isNativePlatform() || !admobRef.current) return;
+        if (!Capacitor.isNativePlatform() || !admobRef.current || adProvider !== "admob") return;
         if (isSubscribed) return;
         const adModule = await import('@capacitor-community/admob');
         const BannerAdSize = adModule.BannerAdSize;
@@ -1018,6 +1070,13 @@ Stay safe & eat healthy! 🍕
     const savedDarkMode = localStorage.getItem("saas_dark_mode");
     if (savedDarkMode) setIsDarkMode(savedDarkMode === "true");
 
+    const savedAdProvider = localStorage.getItem("saas_ad_provider");
+    if (savedAdProvider) setAdProvider(savedAdProvider as any);
+    const savedAdScript = localStorage.getItem("saas_web_ad_script");
+    if (savedAdScript) setWebAdScriptUrl(savedAdScript);
+    const savedAdKey = localStorage.getItem("saas_web_ad_key");
+    if (savedAdKey) setWebAdKey(savedAdKey);
+
     setDataLoaded(true);
 
     return () => window.removeEventListener("popstate", handleBackButton);
@@ -1032,10 +1091,13 @@ Stay safe & eat healthy! 🍕
       localStorage.setItem("saas_rent", monthlyRent.toString());
       localStorage.setItem("saas_dark_mode", isDarkMode.toString());
       localStorage.setItem("saas_thermal_printer", isThermalPrinterEnabled.toString());
+      localStorage.setItem("saas_ad_provider", adProvider);
+      localStorage.setItem("saas_web_ad_script", webAdScriptUrl);
+      localStorage.setItem("saas_web_ad_key", webAdKey);
       if (storeCreatedAt) localStorage.setItem("saas_store_created_at", storeCreatedAt);
       if (subscriptionExpiry) localStorage.setItem("saas_store_expiry", subscriptionExpiry);
     }
-  }, [sales, expenses, menuItems, restaurantName, monthlyRent, isDarkMode, dataLoaded, mounted]);
+  }, [sales, expenses, menuItems, restaurantName, monthlyRent, isDarkMode, dataLoaded, mounted, adProvider, webAdScriptUrl, webAdKey]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1434,7 +1496,7 @@ Stay safe & eat healthy! 🍕
 
     const baseUrl = typeof window !== "undefined" && !window.location.origin.includes("localhost")
       ? window.location.origin
-      : "https://instamunimapp.vercel.app";
+      : "https://instamunim.com";
     let invoiceUrl = `${baseUrl}/invoice?n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${lastOrderDetails.price}&d=${encodeURIComponent(lastOrderDetails.date.toISOString())}&t=${lastOrderDetails.type}&id=${lastOrderDetails.id}&m=${lastOrderDetails.mobile}&cn=${encodeURIComponent(lastOrderDetails.name)}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}${extraPart}`;
     if (!isSubscribed) {
       invoiceUrl += "&free=true";
@@ -1454,7 +1516,7 @@ Stay safe & eat healthy! 🍕
       .replace("[LINK]", invoiceUrl);
       
     if (!isSubscribed) {
-      msg += "\n\nGenerated by InstaMunim POS\nDownload App Free: https://instamunim.vercel.app";
+      msg += "\n\nGenerated by InstaMunim POS\nDownload App Free: https://instamunim.com";
     }
       
     window.open(`https://wa.me/91${lastOrderDetails.mobile}?text=${encodeURIComponent(msg)}`, "_blank");
@@ -1841,8 +1903,11 @@ Stay safe & eat healthy! 🍕
   return (
     <div 
       className={`min-h-screen flex flex-col font-sans selection:bg-orange-500/30 ${isDarkMode ? 'dark bg-zinc-950 text-white' : 'bg-[#fafafa] text-zinc-900'}`}
-      style={{ paddingTop: isAdMobActive ? `${admobHeight}px` : "0px" }}
+      style={{ paddingTop: isAdMobActive && adProvider === "admob" ? `${admobHeight}px` : "0px" }}
     >
+      {adProvider === "web" && !isSubscribed && webAdScriptUrl && (
+        <WebAdBanner scriptUrl={webAdScriptUrl} adKey={webAdKey} />
+      )}
       <main className="flex-1 pb-24 overflow-y-auto">
         <div className="max-w-full px-2 sm:px-4 py-8">
           
@@ -3131,6 +3196,7 @@ Stay safe & eat healthy! 🍕
                   { id: "AccountSecurity", label: "Account Security", icon: Lock },
                   { id: "SystemCloud", label: "System & Cloud", icon: Cloud },
                   { id: "WhatsAppBot", label: "WhatsApp Bot", icon: MessageCircle },
+                  { id: "AdSettings", label: "Ad Monetization", icon: CreditCard },
                   { id: "FeesCommissions", label: "Fees & Commissions", icon: TrendingUp },
                   { id: "HardwareSettings", label: "Hardware Settings", icon: Printer },
                   { id: "FAQSecurity", label: "FAQ & Data Security", icon: ShieldCheck },
@@ -3138,11 +3204,11 @@ Stay safe & eat healthy! 🍕
                   <div key={item.id} className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 shadow-sm overflow-hidden transition-all duration-300">
                     <button 
                       onClick={() => setExpandedSetting(expandedSetting === item.id ? null : item.id)}
-                      className={`w-full p-5 flex items-center justify-between transition-all active:scale-95 group ${expandedSetting === item.id && (item.id === "StoreProfile" || item.id === "AccountSecurity" || item.id === "SystemCloud" || item.id === "WhatsAppBot" || item.id === "FeesCommissions" || item.id === "HardwareSettings" || item.id === "FAQSecurity") ? 'bg-zinc-900 text-white' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50'}`}
+                      className={`w-full p-5 flex items-center justify-between transition-all active:scale-95 group ${expandedSetting === item.id && (item.id === "StoreProfile" || item.id === "AccountSecurity" || item.id === "SystemCloud" || item.id === "WhatsAppBot" || item.id === "AdSettings" || item.id === "FeesCommissions" || item.id === "HardwareSettings" || item.id === "FAQSecurity") ? 'bg-zinc-900 text-white' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50'}`}
                     >
                       <div className="flex items-center gap-4">
-                        <item.icon className={`h-5 w-5 ${expandedSetting === item.id ? ((item.id === "StoreProfile" || item.id === "AccountSecurity" || item.id === "SystemCloud" || item.id === "WhatsAppBot" || item.id === "FeesCommissions" || item.id === "HardwareSettings") ? 'text-orange-500' : (item.id === "FAQSecurity" ? 'text-emerald-500' : 'text-zinc-900 dark:text-white')) : 'text-zinc-400'}`} />
-                        <span className={`font-bold text-sm ${expandedSetting === item.id ? ((item.id === "StoreProfile" || item.id === "AccountSecurity" || item.id === "SystemCloud" || item.id === "WhatsAppBot" || item.id === "FeesCommissions" || item.id === "HardwareSettings" || item.id === "FAQSecurity") ? 'text-white' : 'text-zinc-900 dark:text-white') : 'text-zinc-700 dark:text-zinc-300'}`}>{item.label}</span>
+                        <item.icon className={`h-5 w-5 ${expandedSetting === item.id ? ((item.id === "StoreProfile" || item.id === "AccountSecurity" || item.id === "SystemCloud" || item.id === "WhatsAppBot" || item.id === "AdSettings" || item.id === "FeesCommissions" || item.id === "HardwareSettings") ? 'text-orange-500' : (item.id === "FAQSecurity" ? 'text-emerald-500' : 'text-zinc-900 dark:text-white')) : 'text-zinc-400'}`} />
+                        <span className={`font-bold text-sm ${expandedSetting === item.id ? ((item.id === "StoreProfile" || item.id === "AccountSecurity" || item.id === "SystemCloud" || item.id === "WhatsAppBot" || item.id === "AdSettings" || item.id === "FeesCommissions" || item.id === "HardwareSettings" || item.id === "FAQSecurity") ? 'text-white' : 'text-zinc-900 dark:text-white') : 'text-zinc-700 dark:text-zinc-300'}`}>{item.label}</span>
                       </div>
                       <ChevronRight className={`h-4 w-4 transition-transform duration-300 ${expandedSetting === item.id ? 'rotate-90 text-white' : 'text-zinc-300'}`} />
                     </button>
@@ -3422,6 +3488,60 @@ Stay safe & eat healthy! 🍕
                               />
                             </div>
                             <p className="text-[8px] font-bold text-zinc-400 italic mt-3 ml-2 tracking-tight">● Use tags: [NAME], [SHOP], [ITEMS], [TOTAL]</p>
+                          </div>
+                        )}
+
+                        {item.id === "AdSettings" && (
+                          <div className="pt-6 space-y-4">
+                            <div className="bg-white dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 p-5 rounded-3xl shadow-sm space-y-4">
+                              <h4 className="font-black text-lg tracking-tight">Ad Monetization Mode</h4>
+                              <div className="flex gap-2">
+                                {[
+                                  { id: "admob", label: "Google AdMob" },
+                                  { id: "web", label: "Web Ads (Direct APK)" },
+                                  { id: "none", label: "No Ads" }
+                                ].map((prov) => (
+                                  <button
+                                    key={prov.id}
+                                    onClick={() => setAdProvider(prov.id as any)}
+                                    className={`flex-1 py-2.5 rounded-xl font-black text-xs transition-all active:scale-95 border ${adProvider === prov.id ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 border-transparent shadow-md' : 'bg-transparent text-zinc-400 border-zinc-200 dark:border-zinc-700 hover:text-zinc-700 dark:hover:text-zinc-200'}`}
+                                  >
+                                    {prov.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {adProvider === "web" && (
+                              <div className="bg-white dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 p-5 rounded-3xl shadow-sm space-y-4">
+                                <h4 className="font-black text-lg tracking-tight">Web Ads Configurations</h4>
+                                <div className="space-y-3">
+                                  <div>
+                                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1.5 ml-2">Ad Script URL</label>
+                                    <input 
+                                      type="text"
+                                      value={webAdScriptUrl}
+                                      onChange={(e) => setWebAdScriptUrl(e.target.value)}
+                                      className="w-full h-11 px-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 font-bold text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-orange-500/20"
+                                      placeholder="//www.highperformanceformat.com/abcd123/invoke.js"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1.5 ml-2">Ad Placement Key / ID (Optional)</label>
+                                    <input 
+                                      type="text"
+                                      value={webAdKey}
+                                      onChange={(e) => setWebAdKey(e.target.value)}
+                                      className="w-full h-11 px-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 font-bold text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-orange-500/20"
+                                      placeholder="Adsterra Key / Monetag Zone ID"
+                                    />
+                                  </div>
+                                </div>
+                                <p className="text-[8px] font-bold text-zinc-400 leading-normal ml-2">
+                                  * Paste the script details generated from your Monetag/Adsterra publisher panel. The app will automatically render ads on direct APK builds.
+                                </p>
+                              </div>
+                            )}
                           </div>
                         )}
 

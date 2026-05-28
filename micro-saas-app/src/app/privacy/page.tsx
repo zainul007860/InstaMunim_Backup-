@@ -102,7 +102,7 @@ export default function PrivacyPolicy() {
             </p>
             <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1">
               <p><strong>Support Email:</strong> Instamunim@gmail.com</p>
-              <p><strong>Website:</strong> https://instamunim.vercel.app</p>
+              <p><strong>Website:</strong> https://instamunim.com</p>
             </div>
           </div>
         </div>

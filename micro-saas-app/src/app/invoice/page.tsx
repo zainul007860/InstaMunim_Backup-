@@ -259,12 +259,12 @@ function InvoiceContent() {
                 <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
                 {isFree ? (
                   <a 
-                    href="https://instamunim.vercel.app" 
+                    href="https://instamunim.com" 
                     target="_blank" 
                     rel="noopener noreferrer" 
                     className="text-[10px] font-black text-orange-600 hover:text-orange-500 uppercase tracking-widest italic underline print-hide"
                   >
-                    Download App: instamunim.vercel.app
+                    Download App: instamunim.com
                   </a>
                 ) : (
                   <p className="text-[10px] font-black text-zinc-900 uppercase tracking-widest italic">
@@ -273,7 +273,7 @@ function InvoiceContent() {
                 )}
                 {isFree && (
                   <span className="hidden print:inline text-[10px] font-black text-zinc-900 uppercase tracking-widest italic">
-                    Download App: instamunim.vercel.app
+                    Download App: instamunim.com
                   </span>
                 )}
               </div>
