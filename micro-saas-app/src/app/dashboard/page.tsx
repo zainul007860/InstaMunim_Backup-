@@ -84,6 +84,28 @@ export function WebAdBanner({ scriptUrl, adKey }: { scriptUrl: string; adKey: st
   );
 }
 
+export function WebVignetteAd({ scriptUrl, adKey }: { scriptUrl: string; adKey: string }) {
+  useEffect(() => {
+    if (!scriptUrl || !adKey) return;
+
+    const existing = document.querySelector(`script[data-zone="${adKey}"]`);
+    if (existing) return;
+
+    const script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src = scriptUrl;
+    script.setAttribute("data-zone", adKey);
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      script.remove();
+    };
+  }, [scriptUrl, adKey]);
+
+  return null;
+}
+
 export default function Dashboard() {
   const [extraChargeName, setExtraChargeName] = useState("");
   const [extraChargeAmount, setExtraChargeAmount] = useState("");
@@ -96,6 +118,8 @@ export default function Dashboard() {
   const [webAdScriptUrl, setWebAdScriptUrl] = useState("https://nap5k.com/tag.min.js");
   const [webAdKey, setWebAdKey] = useState("11070941");
   const [webAdDirectLink, setWebAdDirectLink] = useState("https://omg10.com/4/11071013");
+  const [webAdVignetteUrl, setWebAdVignetteUrl] = useState("https://n6wxm.com/vignette.min.js");
+  const [webAdVignetteKey, setWebAdVignetteKey] = useState("11076598");
   const admobRef = useRef<any>(null);
 
   const [mounted, setMounted] = useState(false);
@@ -1098,6 +1122,18 @@ Stay safe & eat healthy! 🍕
     } else {
       setWebAdDirectLink("https://omg10.com/4/11071013");
     }
+    const savedAdVignetteUrl = localStorage.getItem("saas_web_ad_vignette_url");
+    if (savedAdVignetteUrl) {
+      setWebAdVignetteUrl(savedAdVignetteUrl);
+    } else {
+      setWebAdVignetteUrl("https://n6wxm.com/vignette.min.js");
+    }
+    const savedAdVignetteKey = localStorage.getItem("saas_web_ad_vignette_key");
+    if (savedAdVignetteKey) {
+      setWebAdVignetteKey(savedAdVignetteKey);
+    } else {
+      setWebAdVignetteKey("11076598");
+    }
 
     setDataLoaded(true);
 
@@ -1117,10 +1153,12 @@ Stay safe & eat healthy! 🍕
       localStorage.setItem("saas_web_ad_script", webAdScriptUrl);
       localStorage.setItem("saas_web_ad_key", webAdKey);
       localStorage.setItem("saas_web_ad_direct_link", webAdDirectLink);
+      localStorage.setItem("saas_web_ad_vignette_url", webAdVignetteUrl);
+      localStorage.setItem("saas_web_ad_vignette_key", webAdVignetteKey);
       if (storeCreatedAt) localStorage.setItem("saas_store_created_at", storeCreatedAt);
       if (subscriptionExpiry) localStorage.setItem("saas_store_expiry", subscriptionExpiry);
     }
-  }, [sales, expenses, menuItems, restaurantName, monthlyRent, isDarkMode, dataLoaded, mounted, adProvider, webAdScriptUrl, webAdKey, webAdDirectLink]);
+  }, [sales, expenses, menuItems, restaurantName, monthlyRent, isDarkMode, dataLoaded, mounted, adProvider, webAdScriptUrl, webAdKey, webAdDirectLink, webAdVignetteUrl, webAdVignetteKey]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1939,6 +1977,9 @@ Stay safe & eat healthy! 🍕
     >
       {adProvider === "web" && !isSubscribed && webAdScriptUrl && (
         <WebAdBanner scriptUrl={webAdScriptUrl} adKey={webAdKey} />
+      )}
+      {adProvider === "web" && !isSubscribed && webAdVignetteUrl && webAdVignetteKey && (
+        <WebVignetteAd scriptUrl={webAdVignetteUrl} adKey={webAdVignetteKey} />
       )}
       <main className="flex-1 pb-24 overflow-y-auto">
         <div className="max-w-full px-2 sm:px-4 py-8">
@@ -3576,6 +3617,26 @@ Stay safe & eat healthy! 🍕
                                       onChange={(e) => setWebAdDirectLink(e.target.value)}
                                       className="w-full h-11 px-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 font-bold text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-orange-500/20"
                                       placeholder="Paste Monetag Direct Link URL here"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1.5 ml-2">Vignette Video Script URL</label>
+                                    <input 
+                                      type="text"
+                                      value={webAdVignetteUrl}
+                                      onChange={(e) => setWebAdVignetteUrl(e.target.value)}
+                                      className="w-full h-11 px-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 font-bold text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-orange-500/20"
+                                      placeholder="https://n6wxm.com/vignette.min.js"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1.5 ml-2">Vignette Video Zone ID</label>
+                                    <input 
+                                      type="text"
+                                      value={webAdVignetteKey}
+                                      onChange={(e) => setWebAdVignetteKey(e.target.value)}
+                                      className="w-full h-11 px-4 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 font-bold text-sm text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-1 focus:ring-orange-500/20"
+                                      placeholder="Monetag Vignette Zone ID"
                                     />
                                   </div>
                                 </div>
