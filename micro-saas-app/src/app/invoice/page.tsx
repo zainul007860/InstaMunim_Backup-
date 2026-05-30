@@ -28,6 +28,7 @@ function InvoiceContent() {
   
   const extraChargeName = searchParams.get("ecn") || "";
   const extraChargeAmount = Number(searchParams.get("eca")) || 0;
+  const discountAmount = Number(searchParams.get("disc")) || 0;
 
   const logoFromUrl = searchParams.get("logo") || "";
 
@@ -61,12 +62,13 @@ function InvoiceContent() {
     return { name: parts[0] || "Item", price: parts[1] || "0" };
   }).filter(i => i.name !== "Item" || i.price !== "0");
 
-  const totalBase = Number(price) || 0;
-  const gstTotal = ((totalBase - extraChargeAmount) * 0.05);
+  const finalTotal = Number(price) || 0;
+  const grossTotal = finalTotal + discountAmount;
+  const actualTaxable = Math.max(0, finalTotal - extraChargeAmount);
+  const gstTotal = (actualTaxable * 0.05);
   const cgst = (gstTotal / 2).toFixed(2);
   const sgst = (gstTotal / 2).toFixed(2);
-  const subtotal = (totalBase - gstTotal - extraChargeAmount).toFixed(2);
-  const finalTotal = totalBase; // Since 'price' from dashboard already includes extraChargeAmount
+  const subtotal = (grossTotal - gstTotal - extraChargeAmount).toFixed(2);
 
   return (
     <div className="h-screen bg-zinc-100 flex justify-center py-0 sm:py-10 px-0 sm:px-4 font-sans print:bg-white print:p-0 overflow-y-auto">
@@ -187,6 +189,13 @@ function InvoiceContent() {
               <div className="flex justify-between text-[10px] font-black text-orange-400 uppercase tracking-widest pt-2">
                 <span>{extraChargeName || "Extra Charge"}</span>
                 <span>₹{extraChargeAmount.toFixed(2)}</span>
+              </div>
+            )}
+
+            {discountAmount > 0 && (
+              <div className="flex justify-between text-[10px] font-black text-red-400 uppercase tracking-widest pt-2">
+                <span>Discount</span>
+                <span>-₹{discountAmount.toFixed(2)}</span>
               </div>
             )}
 

@@ -109,6 +109,7 @@ export function WebVignetteAd({ scriptUrl, adKey }: { scriptUrl: string; adKey: 
 export default function Dashboard() {
   const [extraChargeName, setExtraChargeName] = useState("");
   const [extraChargeAmount, setExtraChargeAmount] = useState("");
+  const [discount, setDiscount] = useState("");
 
   const [isAdMobActive, setIsAdMobActive] = useState(false);
   const [isNative, setIsNative] = useState(false);
@@ -128,7 +129,7 @@ export default function Dashboard() {
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
   const [loginMobile, setLoginMobile] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [signupStoreName, setSignupStoreName] = useState("");
   const [ownerPassword, setOwnerPassword] = useState("admin");
@@ -1140,6 +1141,64 @@ Stay safe & eat healthy! 🍕
     return () => window.removeEventListener("popstate", handleBackButton);
   }, [isLoggedIn, activeTab]);
 
+  // 10 MINUTE INACTIVITY BACKGROUND AUTO-LOGOUT
+  useEffect(() => {
+    let appStateListener: any;
+
+    const checkInactivity = () => {
+      const savedIsLoggedIn = localStorage.getItem("saas_is_logged_in");
+      if (savedIsLoggedIn === "true") {
+        const inactiveTimeStr = localStorage.getItem("saas_inactive_timestamp");
+        if (inactiveTimeStr) {
+          const inactiveTime = parseInt(inactiveTimeStr, 10);
+          if (!isNaN(inactiveTime)) {
+            const elapsedMs = Date.now() - inactiveTime;
+            const elapsedMins = elapsedMs / (1000 * 60);
+            if (elapsedMins >= 10) {
+              console.log("Inactivity detected: >= 10 mins. Logging out...");
+              handleLogout();
+            }
+          }
+        }
+      }
+      localStorage.removeItem("saas_inactive_timestamp");
+    };
+
+    checkInactivity();
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        localStorage.setItem("saas_inactive_timestamp", Date.now().toString());
+      } else {
+        checkInactivity();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    const initAppStateListener = async () => {
+      try {
+        const { App } = await import('@capacitor/app');
+        appStateListener = await App.addListener('appStateChange', (state) => {
+          if (!state.isActive) {
+            localStorage.setItem("saas_inactive_timestamp", Date.now().toString());
+          } else {
+            checkInactivity();
+          }
+        });
+      } catch (e) {
+        console.log("Capacitor App state listener skipped.");
+      }
+    };
+    initAppStateListener();
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (appStateListener) {
+        appStateListener.remove();
+      }
+    };
+  }, [isLoggedIn]);
+
   useEffect(() => {
     if (dataLoaded && mounted) {
       localStorage.setItem("saas_sales", JSON.stringify(sales));
@@ -1409,6 +1468,7 @@ Stay safe & eat healthy! 🍕
       localStorage.removeItem("saas_rem_mobile");
       localStorage.removeItem("saas_rem_pass");
     }
+    setRememberMe(true);
   };
 
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -1446,7 +1506,8 @@ Stay safe & eat healthy! 🍕
       const cartDescription = cart.map(c => `${c.qty} x ${c.name} (₹${c.price * c.qty})`).join("\n");
       const cartTotalBase = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
       const extraAmt = Number(extraChargeAmount) || 0;
-      const cartTotal = cartTotalBase + extraAmt;
+      const discAmt = Number(discount) || 0;
+      const cartTotal = Math.max(0, cartTotalBase + extraAmt - discAmt);
       
       let commAmount = 0;
       if (newType === "Swiggy") {
@@ -1459,6 +1520,9 @@ Stay safe & eat healthy! 🍕
       let itemsWithMetadata = `${cartDescription}\n[COMM:${commAmount}]`;
       if (extraChargeName && extraAmt > 0) {
         itemsWithMetadata += `\n[EXTRA:${extraChargeName}:${extraAmt}]`;
+      }
+      if (discAmt > 0) {
+        itemsWithMetadata += `\n[DISCOUNT:${discAmt}]`;
       }
 
       const { data: newSale, error } = await supabase
@@ -1522,6 +1586,7 @@ Stay safe & eat healthy! 🍕
       setNewMobile("");
       setExtraChargeName("");
       setExtraChargeAmount("");
+      setDiscount("");
 
       // Trigger Interstitial Ad after every sale
       if (!isSubscribed) {
@@ -1564,10 +1629,13 @@ Stay safe & eat healthy! 🍕
     const extraMatch = (lastOrderDetails.item || "").match(/\[EXTRA:(.+):(\d+)\]/);
     const extraPart = extraMatch ? `&ecn=${encodeURIComponent(extraMatch[1])}&eca=${extraMatch[2]}` : "";
 
+    const discountMatch = (lastOrderDetails.item || "").match(/\[DISCOUNT:(\d+(\.\d+)?)\]/);
+    const discountPart = discountMatch ? `&disc=${discountMatch[1]}` : "";
+
     const baseUrl = typeof window !== "undefined" && !window.location.origin.includes("localhost")
       ? window.location.origin
       : "https://instamunim.com";
-    let invoiceUrl = `${baseUrl}/invoice?n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${lastOrderDetails.price}&d=${encodeURIComponent(lastOrderDetails.date.toISOString())}&t=${lastOrderDetails.type}&id=${lastOrderDetails.id}&m=${lastOrderDetails.mobile}&cn=${encodeURIComponent(lastOrderDetails.name)}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}${extraPart}`;
+    let invoiceUrl = `${baseUrl}/invoice?n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${lastOrderDetails.price}&d=${encodeURIComponent(lastOrderDetails.date.toISOString())}&t=${lastOrderDetails.type}&id=${lastOrderDetails.id}&m=${lastOrderDetails.mobile}&cn=${encodeURIComponent(lastOrderDetails.name)}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}${extraPart}${discountPart}`;
     if (!isSubscribed) {
       invoiceUrl += "&free=true";
     }
@@ -1575,7 +1643,13 @@ Stay safe & eat healthy! 🍕
     let displayItems = (lastOrderDetails.item || "").split("[COMM:")[0].trim();
     if (extraMatch) {
       displayItems = displayItems.split("[EXTRA:")[0].trim();
+    }
+    displayItems = displayItems.split("[DISCOUNT:")[0].trim();
+    if (extraMatch) {
       displayItems += `\n${extraMatch[1]}: ₹${extraMatch[2]}`;
+    }
+    if (discountMatch) {
+      displayItems += `\nDiscount: -₹${discountMatch[1]}`;
     }
 
     let msg = whatsappInvoiceTemplate
@@ -2120,11 +2194,24 @@ Stay safe & eat healthy! 🍕
                       </div>
                     </div>
 
+                    <div className="space-y-2 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                      <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest px-1">Discount (₹)</p>
+                      <div className="flex gap-2">
+                        <Input 
+                          type="number" 
+                          placeholder="0" 
+                          value={discount} 
+                          onChange={e => setDiscount(e.target.value)} 
+                          className="h-9 flex-1 rounded-xl bg-white dark:bg-zinc-800 border-0 font-bold px-4 text-[11px]" 
+                        />
+                      </div>
+                    </div>
+
                    <div className="flex justify-end">
                       <div className="text-right">
                         <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Grand Total</p>
                         <h3 className="text-4xl font-black tracking-tighter text-zinc-900 dark:text-white">
-                          ₹{cart.reduce((s,i) => s + (i.price*i.qty), 0) + (Number(extraChargeAmount) || 0)}
+                          ₹{Math.max(0, cart.reduce((s,i) => s + (i.price*i.qty), 0) + (Number(extraChargeAmount) || 0) - (Number(discount) || 0))}
                         </h3>
                       </div>
                    </div>
@@ -2156,7 +2243,7 @@ Stay safe & eat healthy! 🍕
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest pl-1">Return Change</span>
                             <span className="text-lg font-black text-emerald-600">
-                              ₹{Math.max(0, Number(cashReceived) - (cart.reduce((s,i) => s + (i.price*i.qty), 0) + (Number(extraChargeAmount) || 0)))}
+                              ₹{Math.max(0, Number(cashReceived) - Math.max(0, (cart.reduce((s,i) => s + (i.price*i.qty), 0) + (Number(extraChargeAmount) || 0) - (Number(discount) || 0))))}
                             </span>
                           </div>
                         </div>
