@@ -227,6 +227,16 @@ export default function Dashboard() {
   const [deleteError, setDeleteError] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const grandTotal = Math.max(0, cart.reduce((s,i) => s + (i.price*i.qty), 0) + (Number(extraChargeAmount) || 0) - (Number(discount) || 0));
+
+  useEffect(() => {
+    if (isSaleOpen) {
+      setCashReceived(grandTotal.toString());
+    } else {
+      setCashReceived("");
+    }
+  }, [isSaleOpen, grandTotal]);
+
   const checkSubscription = () => {
     // FORCE FREE PLAN FOR TESTING
     if (ownerMobile === "8130707236") return false;
@@ -2211,7 +2221,7 @@ Stay safe & eat healthy! 🍕
                       <div className="text-right">
                         <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Grand Total</p>
                         <h3 className="text-4xl font-black tracking-tighter text-zinc-900 dark:text-white">
-                          ₹{Math.max(0, cart.reduce((s,i) => s + (i.price*i.qty), 0) + (Number(extraChargeAmount) || 0) - (Number(discount) || 0))}
+                          ₹{grandTotal}
                         </h3>
                       </div>
                    </div>
@@ -2243,7 +2253,7 @@ Stay safe & eat healthy! 🍕
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest pl-1">Return Change</span>
                             <span className="text-lg font-black text-emerald-600">
-                              ₹{Math.max(0, Number(cashReceived) - Math.max(0, (cart.reduce((s,i) => s + (i.price*i.qty), 0) + (Number(extraChargeAmount) || 0) - (Number(discount) || 0))))}
+                              ₹{Math.max(0, Number(cashReceived) - grandTotal)}
                             </span>
                           </div>
                         </div>
