@@ -229,14 +229,6 @@ export default function Dashboard() {
 
   const grandTotal = Math.max(0, cart.reduce((s,i) => s + (i.price*i.qty), 0) + (Number(extraChargeAmount) || 0) - (Number(discount) || 0));
 
-  useEffect(() => {
-    if (isSaleOpen) {
-      setCashReceived(grandTotal.toString());
-    } else {
-      setCashReceived("");
-    }
-  }, [isSaleOpen, grandTotal]);
-
   const checkSubscription = () => {
     // FORCE FREE PLAN FOR TESTING
     if (ownerMobile === "8130707236") return false;
@@ -2244,6 +2236,7 @@ Stay safe & eat healthy! 🍕
                             <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest pl-1">Cash Received</span>
                             <Input 
                               type="number" 
+                              placeholder={grandTotal.toString()}
                               value={cashReceived} 
                               onChange={e => setCashReceived(e.target.value)} 
                               className="w-28 h-9 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-black text-sm text-center shadow-sm" 
