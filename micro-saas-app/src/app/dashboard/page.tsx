@@ -5,7 +5,7 @@ import { format, isBefore, isAfter } from "date-fns";
 import { 
   LayoutDashboard, FileText, Settings, LogOut, Search,
   PlusCircle, Loader2, Book, Trash2, Send, ShoppingCart, Package,
-  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera, Volume2
+  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera, Volume2, Globe
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -136,41 +136,538 @@ export default function Dashboard() {
   const [loginError, setLoginError] = useState("");
   const [ownerMobile, setOwnerMobile] = useState("");
   const [activeTab, setActiveTab] = useState("Dashboard");
-  const [lang, setLang] = useState<'hi'|'en'>('en');
+  const [lang, setLang] = useState<string>('en');
   const [lastSyncedTime, setLastSyncedTime] = useState(format(new Date(), "hh:mm:ss aa"));
   const [showExitDialog, setShowExitDialog] = useState(false);
   const [isAIDialogOpen, setIsAIDialogOpen] = useState(false);
   const [aiInsightText, setAiInsightText] = useState("");
 
   const t = (key: string) => {
-    const map: Record<string, string> = {
-      "Dashboard": "डैशबोर्ड",
-      "Menus": "मेन्यू",
-      "Sale": "बिक्री",
-      "Stats": "आंकड़े",
-      "More": "अन्य",
-      "Net Profit": "शुद्ध मुनाफा",
-      "Gross Sales": "कुल बिक्री",
-      "Total Expense": "कुल खर्चे",
-      "Pending Udhaar": "उधार बकाया",
-      "Cloud Sync": "क्लाउड सिंक",
-      "AI Insights": "AI सुझाव",
-      "Recent Sales": "हालिया बिक्री",
-      "View All": "सब देखें",
-      "After Expenses": "खर्चों के बाद",
-      "Gross Income": "कुल आय",
-      "Operational Costs": "संचालन लागत",
-      "From Khata": "खाता से",
-      "Online": "ऑनलाइन",
-      "Udhaar": "उधार",
-      "Mark as Paid": "पैसे मिल गए",
-      "Send WhatsApp Receipt": "WhatsApp बिल",
-      "Total Pending": "कुल उधार",
-      "Smart CRM": "स्मार्ट CRM",
-      "Voice Cashier": "वॉइस कैशियर (Soundbox)",
-      "Announcer Language": "आवाज की भाषा"
+    const translations: Record<string, Record<string, string>> = {
+      hi: {
+        "Dashboard": "डैशबोर्ड",
+        "Menus": "मेन्यू",
+        "Sale": "बिक्री",
+        "Stats": "आंकड़े",
+        "More": "अन्य",
+        "Net Profit": "शुद्ध मुनाफा",
+        "Gross Sales": "कुल बिक्री",
+        "Total Expense": "कुल खर्चे",
+        "Pending Udhaar": "उधार बकाया",
+        "Cloud Sync": "क्लाउड सिंक",
+        "AI Insights": "AI सुझाव",
+        "Recent Sales": "हालिया बिक्री",
+        "View All": "सब देखें",
+        "After Expenses": "खर्चों के बाद",
+        "Gross Income": "कुल आय",
+        "Operational Costs": "संचालन लागत",
+        "From Khata": "खाता से",
+        "Online": "ऑनलाइन",
+        "Udhaar": "उधार",
+        "Mark as Paid": "पैसे मिल गए",
+        "Send WhatsApp Receipt": "WhatsApp बिल",
+        "Total Pending": "कुल उधार",
+        "Smart CRM": "स्मार्ट CRM",
+        "Voice Cashier": "वॉइस कैशियर (Soundbox)",
+        "Announcer Language": "आवाज की भाषा",
+        "UDHAAR KHATA": "उधार खाता",
+        "Add Sale": "बिक्री जोड़ें",
+        "Add Expense": "खर्चा जोड़ें",
+        "Rent Mission": "किराया मिशन",
+        "Total Sale Report": "बिक्री रिपोर्ट",
+        "Marketing": "मार्केटिंग",
+        "Support": "सपोर्ट",
+        "Legal": "कानूनी",
+        "MoreMenu": "अधिक मेन्यू",
+        "Inventory": "इन्वेंटरी",
+        "Settings": "सेटिंग्स",
+        "Store Profile": "स्टोर प्रोफाइल",
+        "Account Security": "सुरक्षा",
+        "System Cloud": "सिस्टम क्लाउड",
+        "WhatsApp Bot": "WhatsApp बॉट",
+        "Ad Settings": "विज्ञापन सेटिंग्स",
+        "Fees & Commissions": "कमीशन",
+        "Hardware Settings": "हार्डवेयर सेटिंग्स",
+        "FAQ & Data Security": "अक्सर पूछे जाने वाले सवाल",
+        "More Options": "अधिक विकल्प",
+        "Daily Stock": "दैनिक स्टॉक",
+        "Rent Tracker": "किराया ट्रैकर",
+        "Help Center": "सहायता केंद्र",
+        "Daily Stock Locked": "दैनिक स्टॉक लॉक्ड",
+        "Are you sure you want to exit?": "क्या आप सचमुच बाहर निकलना चाहते हैं?",
+        "Success!": "सफलता!",
+        "Order has been completed and saved to cloud.": "ऑर्डर पूरा हो गया है और क्लाउड में सुरक्षित हो गया है।",
+        "Your current session will end. Do you want to leave InstaMunim?": "आपका वर्तमान सत्र समाप्त हो जाएगा। क्या आप सचमुच बाहर निकलना चाहते हैं?",
+        "Access additional tools and settings.": "अतिरिक्त उपकरण और सेटिंग्स का उपयोग करें।",
+        "Track your store raw items and recipe stock.": "स्टोर के कच्चे माल और रेसिपी स्टॉक को ट्रैक करें।",
+        "Synchronized with UI language": "यूआई भाषा के साथ सिंक किया गया"
+      },
+      mr: {
+        "Dashboard": "डॅशबोर्ड",
+        "Menus": "मेनू",
+        "Sale": "विक्री",
+        "Stats": "आकडेवारी",
+        "More": "इतर",
+        "Net Profit": "निव्वळ नफा",
+        "Gross Sales": "एकूण विक्री",
+        "Total Expense": "एकूण खर्च",
+        "Pending Udhaar": "उधारी बाकी",
+        "Cloud Sync": "क्लाउड सिंक",
+        "AI Insights": "AI सल्ला",
+        "Recent Sales": "अलीकडील विक्री",
+        "View All": "सर्व पहा",
+        "After Expenses": "खर्चानंतर",
+        "Gross Income": "एकूण उत्पन्न",
+        "Operational Costs": "कार्यरत खर्च",
+        "From Khata": "खात्यामधून",
+        "Online": "ऑनलाइन",
+        "Udhaar": "उधार",
+        "Mark as Paid": "पैसे मिळाले",
+        "Send WhatsApp Receipt": "WhatsApp पावती",
+        "Total Pending": "एकूण उधारी",
+        "Smart CRM": "स्मार्ट CRM",
+        "Voice Cashier": "व्हॉइस कॅशियर (Soundbox)",
+        "Announcer Language": "आवाजाची भाषा",
+        "UDHAAR KHATA": "उधार खाते",
+        "Add Sale": "विक्री जोडा",
+        "Add Expense": "खर्च जोडा",
+        "Rent Mission": "भाडे मिशन",
+        "Total Sale Report": "विक्री अहवाल",
+        "Marketing": "मार्केटिंग",
+        "Support": "मदत",
+        "Legal": "कायदेशीर",
+        "MoreMenu": "अधिक पर्याय",
+        "Inventory": "इन्व्हेंटरी",
+        "Settings": "सेटिंग्ज",
+        "Store Profile": "स्टोर प्रोफाइल",
+        "Account Security": "सुरक्षा",
+        "System Cloud": "सिस्टम क्लाउड",
+        "WhatsApp Bot": "WhatsApp बॉट",
+        "Ad Settings": "जाहिरात सेटिंग्ज",
+        "Fees & Commissions": "कमिशन",
+        "Hardware Settings": "हार्डवेअर सेटिंग्ज",
+        "FAQ & Data Security": "नेहमीचे प्रश्न",
+        "More Options": "अधिक पर्याय",
+        "Daily Stock": "दैनिक स्टॉक",
+        "Rent Tracker": "भाडे ट्रॅकर",
+        "Help Center": "मदत केंद्र",
+        "Daily Stock Locked": "दैनिक स्टॉक लॉक केले आहे",
+        "Are you sure you want to exit?": "तुम्हाला खात्री आहे की तुम्हाला बाहेर पडायचे आहे?",
+        "Success!": "यशस्वी!",
+        "Order has been completed and saved to cloud.": "ऑर्डर यशस्वीरित्या पूर्ण झाली असून क्लाउडवर जतन केली गेली आहे.",
+        "Your current session will end. Do you want to leave InstaMunim?": "तुमचे चालू सत्र संपेल. तुम्हाला बाहेर पडायचे आहे का?",
+        "Access additional tools and settings.": "अतिरिक्त साधने आणि सेटिंग्जमध्ये प्रवेश करा.",
+        "Track your store raw items and recipe stock.": "स्टोअर कच्च्या वस्तू आणि रेसिपी स्टॉकचा मागोवा घ्या.",
+        "Synchronized with UI language": "यूआय भाषेसह सिंक केले"
+      },
+      gu: {
+        "Dashboard": "ડેશબોર્ડ",
+        "Menus": "મેનૂ",
+        "Sale": "વેચાણ",
+        "Stats": "આંકડા",
+        "More": "બીજું",
+        "Net Profit": "ચોખ્ખો નફો",
+        "Gross Sales": "કુલ વેચાણ",
+        "Total Expense": "કુલ ખર્ચ",
+        "Pending Udhaar": "બાકી ઉધાર",
+        "Cloud Sync": "ક્લાઉડ સિંક",
+        "AI Insights": "AI સલાહ",
+        "Recent Sales": "તાજેતરનું વેચાણ",
+        "View All": "બધું જુઓ",
+        "After Expenses": "ખર્ચ પછી",
+        "Gross Income": "કુલ આવક",
+        "Operational Costs": "સંચાલન ખર્ચ",
+        "From Khata": "ખાતામાંથી",
+        "Online": "ઓનલાઇન",
+        "Udhaar": "ઉધાર",
+        "Mark as Paid": "પૈસા મળી ગયા",
+        "Send WhatsApp Receipt": "WhatsApp બિલ",
+        "Total Pending": "કુલ ઉધાર",
+        "Smart CRM": "સ્માર્ટ CRM",
+        "Voice Cashier": "વોઇસ કેશિયર (Soundbox)",
+        "Announcer Language": "અવાજની ભાષા",
+        "UDHAAR KHATA": "ઉધાર ખાતું",
+        "Add Sale": "વેચાણ ઉમેરો",
+        "Add Expense": "ખર્ચ ઉમેરો",
+        "Rent Mission": "ભાડું મિશન",
+        "Total Sale Report": "વેચાણ રીપોર્ટ",
+        "Marketing": "માર્કેટિંગ",
+        "Support": "સપોર્ટ",
+        "Legal": "કાયદાકીય",
+        "MoreMenu": "વધુ મેનૂ",
+        "Inventory": "ઇન્વેન્ટરી",
+        "Settings": "સેટિંગ્સ",
+        "Store Profile": "સ્ટોર પ્રોફાઇલ",
+        "Account Security": "સુરક્ષા",
+        "System Cloud": "સિસ્ટમ ક્લાઉડ",
+        "WhatsApp Bot": "WhatsApp બોટ",
+        "Ad Settings": "જાહેરાત સેટિંગ્સ",
+        "Fees & Commissions": "કમિશન",
+        "Hardware Settings": "હાર્ડવેર સેટિંગ્સ",
+        "FAQ & Data Security": "સામાન્ય પ્રશ્નો",
+        "More Options": "વધુ વિકલ્પો",
+        "Daily Stock": "દૈનિક સ્ટોક",
+        "Rent Tracker": "ભાડું ટ્રેકર",
+        "Help Center": "મદદ કેન્દ્ર",
+        "Daily Stock Locked": "દૈનિક સ્ટોક લૉક કરેલ છે",
+        "Are you sure you want to exit?": "શું vanity તમે ખરેખર બહાર નીકળવા માંગો છો?",
+        "Success!": "સફળતા!",
+        "Order has been completed and saved to cloud.": "ઓર્ડર સફળતાપૂર્વક પૂર્ણ થયો છે અને ક્લાઉડમાં સાચવવામાં આવ્યો છે.",
+        "Your current session will end. Do you want to leave InstaMunim?": "તમારું સત્ર સમાપ્ત થઈ જશે. શું તમે ખરેખર બહાર જવા માંગો છો?",
+        "Access additional tools and settings.": "વધારાના સાધનો અને સેટિંગ્સ ઍક્સેસ કરો.",
+        "Track your store raw items and recipe stock.": "સ્ટોરની કાચી વસ્તુઓ અને રેસીપી સ્ટોકને ટ્રૅક કરો.",
+        "Synchronized with UI language": "UI ભાષા સાથે સિંક કરેલ"
+      },
+      bn: {
+        "Dashboard": "ড্যাশবোর্ড",
+        "Menus": "মেনু",
+        "Sale": "বিক্রয়",
+        "Stats": "পরিসংখ্যান",
+        "More": "অন্যান্য",
+        "Net Profit": "নিট লাভ",
+        "Gross Sales": "মোট বিক্রয়",
+        "Total Expense": "মোট খরচ",
+        "Pending Udhaar": "বাকি ধার",
+        "Cloud Sync": "ক্লাউড সিঙ্ক",
+        "AI Insights": "AI পরামর্শ",
+        "Recent Sales": "সাম্প্রতিক বিক্রয়",
+        "View All": "সব দেখুন",
+        "After Expenses": "খরচের পর",
+        "Gross Income": "মোট আয়",
+        "Operational Costs": "পরিচালন ব্যয়",
+        "From Khata": "খাতা থেকে",
+        "Online": "অনলাইন",
+        "Udhaar": "ধার",
+        "Mark as Paid": "টাকা পেয়েছি",
+        "Send WhatsApp Receipt": "WhatsApp রসিদ",
+        "Total Pending": "মোট বাকি",
+        "Smart CRM": "স্মার্ট CRM",
+        "Voice Cashier": "ভয়েস ক্যাশিয়ার (Soundbox)",
+        "Announcer Language": "ভাষার নির্বাচন",
+        "UDHAAR KHATA": "খাতা খতিয়ান",
+        "Add Sale": "বিক্রয় যোগ করুন",
+        "Add Expense": "খরচ যোগ করুন",
+        "Rent Mission": "ভাড়া হিসাব",
+        "Total Sale Report": "বিক্রয় রিপোর্ট",
+        "Marketing": "মার্কেটিং",
+        "Support": "সহায়তা",
+        "Legal": "আইনি বিবরণ",
+        "MoreMenu": "আরও মেনু",
+        "Inventory": "ইনভেন্টরি",
+        "Settings": "সেটিংস",
+        "Store Profile": "স্টোর প্রোফাইল",
+        "Account Security": "নিরাপত্তা",
+        "System Cloud": "সিস্টেম ক্লাউড",
+        "WhatsApp Bot": "WhatsApp বট",
+        "Ad Settings": "বিজ্ঞাপন সেটিংস",
+        "Fees & Commissions": "কমিশন",
+        "Hardware Settings": "হার্ডওয়্যার সেটিংস",
+        "FAQ & Data Security": "জিজ্ঞাসাবাদ",
+        "More Options": "আরও অপশন",
+        "Daily Stock": "দৈনিক স্টক",
+        "Rent Tracker": "ভাড়া ট্র্যাকার",
+        "Help Center": "হেল্প সেন্টার",
+        "Daily Stock Locked": "দৈনিক স্টক লক করা হয়েছে",
+        "Are you sure you want to exit?": "আপনি কি নিশ্চিত যে আপনি প্রস্থান করতে চান?",
+        "Success!": "সফল!",
+        "Order has been completed and saved to cloud.": "অর্ডার সম্পন্ন হয়েছে এবং ক্লাউডে সংরক্ষিত হয়েছে।",
+        "Your current session will end. Do you want to leave InstaMunim?": "আপনার সেশন শেষ হবে। আপনি কি প্রস্থান করতে চান?",
+        "Access additional tools and settings.": "অতিরিক্ত সরঞ্জাম এবং সেটিংস অ্যাক্সেস করুন।",
+        "Track your store raw items and recipe stock.": "স্টোরের কাঁচামাল এবং রেসিপি স্টক ট্র্যাক করুন।",
+        "Synchronized with UI language": "UI ভাষার সাথে সিঙ্ক করা হয়েছে"
+      },
+      pa: {
+        "Dashboard": "ਡੈਸ਼ਬੋਰਡ",
+        "Menus": "ਮੇਨੂ",
+        "Sale": "ਵਿਕਰੀ",
+        "Stats": "ਅੰਕੜੇ",
+        "More": "ਹੋਰ",
+        "Net Profit": "ਸ਼ੁੱਧ ਮੁਨਾਫਾ",
+        "Gross Sales": "ਕੁੱਲ ਵਿਕਰੀ",
+        "Total Expense": "ਕੁੱਲ ਖਰਚੇ",
+        "Pending Udhaar": "ਬਾਕੀ ਉਧਾਰ",
+        "Cloud Sync": "ਕਲਾਊਡ ਸਿੰਕ",
+        "AI Insights": "AI ਸੁਝਾਅ",
+        "Recent Sales": "ਹਾਲੀਆ ਵਿਕਰੀ",
+        "View All": "ਸਭ ਦੇਖੋ",
+        "After Expenses": "ਖਰਚਿਆਂ ਤੋਂ ਬਾਅਦ",
+        "Gross Income": "ਕੁੱਲ ਆਮਦਨ",
+        "Operational Costs": "ਸੰਚਾਲਨ ਖਰਚੇ",
+        "From Khata": "ਖਾਤੇ ਤੋਂ",
+        "Online": "ਆਨਲਾਈਨ",
+        "Udhaar": "ਉਧਾਰ",
+        "Mark as Paid": "ਪੈਸੇ ਮਿਲ ਗਏ",
+        "Send WhatsApp Receipt": "WhatsApp ਰਸੀਦ",
+        "Total Pending": "ਕੁੱਲ ਉਧਾਰ",
+        "Smart CRM": "ਸਮਾਰਟ CRM",
+        "Voice Cashier": "ਵੌਇਸ ਕੈਸ਼ੀਅਰ (Soundbox)",
+        "Announcer Language": "ਆਵਾਜ਼ ਦੀ ਭਾਸ਼ਾ",
+        "UDHAAR KHATA": "ਉਧਾਰ ਖਾਤਾ",
+        "Add Sale": "ਵਿਕਰੀ ਜੋੜੋ",
+        "Add Expense": "ਖਰਚਾ ਜੋੜੋ",
+        "Rent Mission": "ਕਿਰਾਇਆ ਮਿਸ਼ਨ",
+        "Total Sale Report": "ਵਿਕਰੀ ਰਿਪੋਰਟ",
+        "Marketing": "ਮਾਰਕੀਟਿੰਗ",
+        "Support": "ਸਪੋਰਟ",
+        "Legal": "ਕਾਨੂੰਨੀ",
+        "MoreMenu": "ਹੋਰ ਮੇਨੂ",
+        "Inventory": "ਇਨਵੈਂਟਰੀ",
+        "Settings": "ਸੈਟਿੰਗਜ਼",
+        "Store Profile": "ਸਟੋਰ ਪ੍ਰੋਫਾਈਲ",
+        "Account Security": "ਸੁਰੱਖਿਆ",
+        "System Cloud": "ਸਿਸਟਮ ਕਲਾਊਡ",
+        "WhatsApp Bot": "WhatsApp ਬੌਟ",
+        "Ad Settings": "ਵਿਗਿਆਪਨ ਸੈਟਿੰਗਜ਼",
+        "Fees & Commissions": "ਕਮਿਸ਼ਨ",
+        "Hardware Settings": "ਹਾਰਡਵੇਅਰ ਸੈਟਿੰਗਜ਼",
+        "FAQ & Data Security": "ਆਮ ਸਵਾਲ",
+        "More Options": "ਹੋਰ ਵਿਕਲਪ",
+        "Daily Stock": "ਰੋਜ਼ਾਨਾ ਸਟਾਕ",
+        "Rent Tracker": "ਕਿਰਾਇਆ ਟ੍ਰੈਕਰ",
+        "Help Center": "ਮਦਦ ਕੇਂਦਰ",
+        "Daily Stock Locked": "ਰੋਜ਼ਾਨਾ ਸਟਾਕ ਲਾਕ ਹੈ",
+        "Are you sure you want to exit?": "ਕੀ ਤੁਸੀਂ ਯਕੀਨੀ ਤੌਰ 'ਤੇ ਬਾਹਰ ਜਾਣਾ ਚਾਹੁੰਦੇ ਹੋ?",
+        "Success!": "ਸਫ਼ਲਤਾ!",
+        "Order has been completed and saved to cloud.": "ਆਰਡਰ ਪੂਰਾ ਹੋ ਗਿਆ ਹੈ ਅਤੇ ਕਲਾਉਡ ਵਿੱਚ ਸੁਰੱਖਿਅਤ ਹੋ ਗਿਆ ਹੈ।",
+        "Your current session will end. Do you want to leave InstaMunim?": "ਤੁਹਾਡਾ ਚੱਲ ਰਹੀ ਸੈਸ਼ਨ ਖਤਮ ਹੋ ਜਾਵੇਗਾ। ਕੀ ਤੁਸੀਂ ਬਾਹਰ ਜਾਣਾ ਚਾਹੁੰਦੇ ਹੋ?",
+        "Access additional tools and settings.": "ਵਾਧੂ ਸਾਧਨਾਂ ਅਤੇ ਸੈਟਿੰਗਾਂ ਤੱਕ ਪਹੁੰਚ ਕਰੋ।",
+        "Track your store raw items and recipe stock.": "ਸਟੋਰ ਦੀਆਂ ਕੱਚੀਆਂ ਚੀਜ਼ਾਂ ਅਤੇ ਰੈਸਿਪੀ ਸਟਾਕ ਨੂੰ ਟ੍ਰੈਕ ਕਰੋ।",
+        "Synchronized with UI language": "UI ਭਾਸ਼ਾ ਨਾਲ ਸਿੰਕ ਕੀਤਾ ਗਿਆ"
+      },
+      ta: {
+        "Dashboard": "டாஷ்போர்டு",
+        "Menus": "மெனுக்கள்",
+        "Sale": "விற்பனை",
+        "Stats": "புள்ளிவிவரங்கள்",
+        "More": "மேலும்",
+        "Net Profit": "நிகர லாபம்",
+        "Gross Sales": "மொத்த விற்பனை",
+        "Total Expense": "மொத்த செலவு",
+        "Pending Udhaar": "கடன் நிலுவை",
+        "Cloud Sync": "கிளவுட் ஒத்திசைவு",
+        "AI Insights": "AI ஆலோசனைகள்",
+        "Recent Sales": "சமீபத்திய விற்பனை",
+        "View All": "அனைத்தையும் பார்",
+        "After Expenses": "செலவுகளுக்கு பின்",
+        "Gross Income": "மொத்த வருமானம்",
+        "Operational Costs": "இயக்க செலவுகள்",
+        "From Khata": "கணக்கில் இருந்து",
+        "Online": "ஆன்லைன்",
+        "Udhaar": "கடன்",
+        "Mark as Paid": "பணம் கிடைத்தது",
+        "Send WhatsApp Receipt": "WhatsApp ரசீது",
+        "Total Pending": "மொத்த கடன்",
+        "Smart CRM": "ஸ்மார்ட் CRM",
+        "Voice Cashier": "வாய்ஸ் கேஷியர் (Soundbox)",
+        "Announcer Language": "மொழி தேர்வு",
+        "UDHAAR KHATA": "கடன் கணக்கு",
+        "Add Sale": "விற்பனை சேர்",
+        "Add Expense": "செலவு சேர்",
+        "Rent Mission": "வாடகை கணக்கு",
+        "Total Sale Report": "விற்பனை அறிக்கை",
+        "Marketing": "விற்பனை மேம்பாடு",
+        "Support": "உதவி",
+        "Legal": "சட்ட விதிகள",
+        "MoreMenu": "கூடுதல் மெனு",
+        "Inventory": "சரக்கு இருப்பு",
+        "Settings": "அமைப்புகள்",
+        "Store Profile": "கடை சுயவிவரம்",
+        "Account Security": "பாதுகாப்பு",
+        "System Cloud": "கிளவுட் சிஸ்டம்",
+        "WhatsApp Bot": "WhatsApp பாட்",
+        "Ad Settings": "விளம்பர அமைப்புகள்",
+        "Fees & Commissions": "கமிஷன்",
+        "Hardware Settings": "வன்பொருள் அமைப்புகள்",
+        "FAQ & Data Security": "கேள்வி பதில்கள்",
+        "More Options": "கூடுதல் தேர்வுகள்",
+        "Daily Stock": "தினசரி இருப்பு",
+        "Rent Tracker": "வாடகை டிராக்கர்",
+        "Help Center": "உதவி மையம்",
+        "Daily Stock Locked": "தினசரி இருப்பு பூட்டப்பட்டுள்ளது",
+        "Are you sure you want to exit?": "நீங்கள் நிச்சயமாக வெளியேற விரும்புகிறீர்களா?",
+        "Success!": "வெற்றி!",
+        "Order has been completed and saved to cloud.": "ஆர்டர் வெற்றிகரமாக முடிக்கப்பட்டு கிளவுடில் சேமிக்கப்பட்டது.",
+        "Your current session will end. Do you want to leave InstaMunim?": "உங்கள் தற்போதைய அமர்வு முடிவடையும். வெளியேற வேண்டுமா?",
+        "Access additional tools and settings.": "கூடுதல் கருவிகள் மற்றும் அமைப்புகளை அணுகவும்.",
+        "Track your store raw items and recipe stock.": "கடையின் மூலப் பொருட்கள் மற்றும் சமையல் இருப்பைக் கண்காணிக்கவும்.",
+        "Synchronized with UI language": "UI மொழியுடன் ஒத்திசைக்கப்பட்டது"
+      },
+      te: {
+        "Dashboard": "డ్యాష్‌బోర్డ్",
+        "Menus": "మెనూలు",
+        "Sale": "విక్రయం",
+        "Stats": "గణాంకాలు",
+        "More": "మరింత",
+        "Net Profit": "నికర లాభం",
+        "Gross Sales": "మొత్తం అమ్మకాలు",
+        "Total Expense": "మొత్తం ఖర్చు",
+        "Pending Udhaar": "అప్పు బాకీ",
+        "Cloud Sync": "ക്లౌడ్ సింక్",
+        "AI Insights": "AI సలహాలు",
+        "Recent Sales": "ఇటీవలి విక్రయాలు",
+        "View All": "అన్నీ చూడు",
+        "After Expenses": "ఖర్చుల తర్వాత",
+        "Gross Income": "మొత్తం ఆదాయం",
+        "Operational Costs": "నిర్వహణ ఖర్చులు",
+        "From Khata": "ఖాతా నుండి",
+        "Online": "ఆన్‌లైన్",
+        "Udhaar": "అప్పు",
+        "Mark as Paid": "డబ్బులు వచ్చాయి",
+        "Send WhatsApp Receipt": "WhatsApp రశీదు",
+        "Total Pending": "మొత్తం అప్పు",
+        "Smart CRM": "స్మార్ట్ CRM",
+        "Voice Cashier": "వాయిస్ క్యాషియర్ (Soundbox)",
+        "Announcer Language": "వాయిస్ భాష",
+        "UDHAAR KHATA": "అప్పుల ఖాతా",
+        "Add Sale": "అమ్మకం జోడించు",
+        "Add Expense": "ఖర్చు జోడించు",
+        "Rent Mission": "అద్దె లక్ష్యం",
+        "Total Sale Report": "అమ్మకాల నివేదిక",
+        "Marketing": "మార్కెటింగ్",
+        "Support": "సహాయం",
+        "Legal": "చట్టపరమైన",
+        "MoreMenu": "మరిన్ని మెనూలు",
+        "Inventory": "ఇన్వెంటరీ",
+        "Settings": "సెట్టింగ్స్",
+        "Store Profile": "స్టోర్ ప్రొఫైల్",
+        "Account Security": "భద్రత",
+        "System Cloud": "సిస్టమ్ క్లౌడ్",
+        "WhatsApp Bot": "WhatsApp బాట్",
+        "Ad Settings": "ప్రకటనల సెట్టింగ్స్",
+        "Fees & Commissions": "కమిషన్",
+        "Hardware Settings": "హార్డ్‌వేర్ సెట్టింగ్స్",
+        "FAQ & Data Security": "తరచుగా అడిగే ప్రశ్నలు",
+        "More Options": "మరిన్ని ఎంపికలు",
+        "Daily Stock": "రోజువారీ స్టాక్",
+        "Rent Tracker": "అద్దె ట్రాకర్",
+        "Help Center": "സഹായ കേന്ദ്രം",
+        "Daily Stock Locked": "రోజువారీ స్టాక్ లాక్ చేయబడింది",
+        "Are you sure you want to exit?": "మీరు ఖచ్చితంగా నిష్క్రమించాలనుకుంటున్నారా?",
+        "Success!": "విజయం!",
+        "Order has been completed and saved to cloud.": "ఆర్డర్ పూర్తయింది మరియు క్లౌడ్‌లో భద్రపరచబడింది.",
+        "Your current session will end. Do you want to leave InstaMunim?": "మీ నిష్క్రమణతో ప్రస్తుత సెషన్ ముగిసిపోతుంది. నిష్క్రమించాలనుకుంటున్నారా?",
+        "Access additional tools and settings.": "అదనపు సాధనాలు మరియు సెట్టింగ్‌లను యాక్సెస్ చేయండి.",
+        "Track your store raw items and recipe stock.": "స్టోర్ ముడి వస్తువులు మరియు రెసిపీ స్టాక్‌ను ట్రాక్ చేయండి.",
+        "Synchronized with UI language": "UI భాషతో సింక్ చేయబడింది"
+      },
+      kn: {
+        "Dashboard": "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
+        "Menus": "ಮೆನುಗಳು",
+        "Sale": "ಮಾರಾಟ",
+        "Stats": "ಅಂಕಿಅಂಶಗಳು",
+        "More": "ಇನ್ನಷ್ಟು",
+        "Net Profit": "ನಿವ್ವಳ ಲಾಭ",
+        "Gross Sales": "ಒಟ್ಟು ಮಾರಾಟ",
+        "Total Expense": "ಒಟ್ಟು ಖರ್ಚು",
+        "Pending Udhaar": "ಬಾಕಿ ಉದ್ರಿ",
+        "Cloud Sync": "ಕ್ಲೌಡ್ ಸಿಂಕ್",
+        "AI Insights": "AI ಸಲಹೆಗಳು",
+        "Recent Sales": "ಇತ್ತೀಚಿನ ಮಾರಾಟ",
+        "View All": "ಎಲ್ಲವನ್ನೂ ವೀಕ್ಷಿಸಿ",
+        "After Expenses": "ಖರ್ಚುಗಳ ನಂತರ",
+        "Gross Income": "ಒಟ್ಟು ಆದಾಯ",
+        "Operational Costs": "ಕಾರ್ಯಾಚರಣೆ ವೆಚ್ಚ",
+        "From Khata": "ಖಾತೆಯಿಂದ",
+        "Online": "ಆನ್‌ಲೈನ್",
+        "Udhaar": "ಉದ್ರಿ",
+        "Mark as Paid": "ಹಣ ಸಂದಾಯವಾಗಿದೆ",
+        "Send WhatsApp Receipt": "WhatsApp ರಸೀದಿ",
+        "Total Pending": "ಒಟ್ಟು ಬಾಕಿ",
+        "Smart CRM": "ಸ್ಮಾರ್ಟ್ CRM",
+        "Voice Cashier": "ವಾಯ್ಸ್ ಕ್ಯಾಷಿಯರ್ (Soundbox)",
+        "Announcer Language": "ಘೋಷಕನ ಭಾಷೆ",
+        "UDHAAR KHATA": "ಉದ್ರಿ ಖಾತೆ",
+        "Add Sale": "ಮಾರಾಟ ಸೇರಿಸಿ",
+        "Add Expense": "ಖರ್ಚು ಸೇರಿಸಿ",
+        "Rent Mission": "ಬಾಡಿಗೆ ಲೆಕ್ಕ",
+        "Total Sale Report": "ಮಾರಾಟ ವರದಿ",
+        "Marketing": "ಮಾರ್ಕೆಟಿംഗ്",
+        "Support": "ಬೆಂಬಲ",
+        "Legal": "ಕಾನೂನು ಮಾಹಿತಿ",
+        "MoreMenu": "ಹೆಚ್ಚಿನ ಮೆನು",
+        "Inventory": "ದಾಸ್ತಾನು",
+        "Settings": "ಸೆಟ್ಟಿಂಗ್ಸ್",
+        "Store Profile": "ಅಂಗಡಿ ಪ್ರೊಫೈಲ್",
+        "Account Security": "ಭದ್ರತೆ",
+        "System Cloud": "ಸಿಸ್ಟಮ್ ಕ್ಲೌಡ್",
+        "WhatsApp Bot": "WhatsApp ಬಾಟ್",
+        "Ad Settings": "ಜಾಹೀರಾತು ಸೆಟ್ಟಿಂಗ್ಸ್",
+        "Fees & Commissions": "ಕಮಿಷನ್",
+        "Hardware Settings": "ಹಾರ್ಡ್‌ವೇರ್ ಸೆಟ್ಟಿಂಗ್ಸ್",
+        "FAQ & Data Security": "ಪ್ರಶ್ನೋತ್ತರಗಳು",
+        "More Options": "ಹೆಚ್ಚಿನ ಆಯ್ಕೆಗಳು",
+        "Daily Stock": "ದೈನಂದಿನ ದಾಸ್ತಾನು",
+        "Rent Tracker": "ಬಾಡಿಗೆ ಟ್ರ್ಯಾಕರ್",
+        "Help Center": "ಸಹಾಯ ಕೇಂದ್ರ",
+        "Daily Stock Locked": "ದೈನಂದิน ದಾಸ್ತಾನು ಲಾಕ್ ಆಗಿದೆ",
+        "Are you sure you want to exit?": "ನೀವು ಖಚಿತವಾಗಿ ನಿರ್ಗಮಿಸಲು ಬಯಸುವಿರಾ?",
+        "Success!": "ಯಶಸ್ವಿ!",
+        "Order has been completed and saved to cloud.": "ಆರ್ಡರ್ ಯಶಸ್ವಿಯಾಗಿ ಪೂರ್ಣಗೊಂಡಿದೆ ಮತ್ತು ಕ್ಲೌಡ್‌ನಲ್ಲಿ ಉಳಿಸಲಾಗಿದೆ.",
+        "Your current session will end. Do you want to leave InstaMunim?": "ನಿಮ್ಮ ಪ್ರಸ್ತುತ ಅವಧಿ ಮುಗಿಯುತ್ತದೆ. ನಿರ್ಗಮಿಸಲು ಬಯಸುವಿರಾ?",
+        "Access additional tools and settings.": "ಹೆಚ್ಚುವರಿ ಪರಿಕರಗಳು ಮತ್ತು ಸೆಟ್ಟಿಂಗ್‌ಗಳನ್ನು ಪ್ರವೇಶಿಸಿ.",
+        "Track your store raw items and recipe stock.": "ಅಂಗಡಿಯ ಕಚ್ಚಾ ವಸ್ತುಗಳು ಮತ್ತು ಪಾಕವಿಧಾನ ಸ್ಟಾಕ್ ಅನ್ನು ಟ್ರ್ಯಾಕ್ ಮಾಡಿ.",
+        "Synchronized with UI language": "UI ಭಾಷೆಯೊಂದಿಗೆ ಸಿಂಕ್ ಮಾಡಲಾಗಿದೆ"
+      },
+      ml: {
+        "Dashboard": "ഡാഷ്‌ബോർഡ്",
+        "Menus": "മെനുകൾ",
+        "Sale": "വിൽപന",
+        "Stats": "സ്ഥിതിവിവരക്കണക്കുകൾ",
+        "More": "കൂടുതൽ",
+        "Net Profit": "അറ്റാദായം",
+        "Gross Sales": "മൊത്തം വിൽപന",
+        "Total Expense": "മൊത്തം ചിലവ്",
+        "Pending Udhaar": "ബാക്കി കടം",
+        "Cloud Sync": "ക്ലൗഡ് സമന്വയം",
+        "AI Insights": "AI നിർദ്ദേശങ്ങൾ",
+        "Recent Sales": "സമീപകാല വിൽപനകൾ",
+        "View All": "എല്ലാം കാണുക",
+        "After Expenses": "ചിലവുകൾക്ക് ശേഷം",
+        "Gross Income": "മൊത്തം വരുമാനം",
+        "Operational Costs": "പ്രവർത്തന ചിലവുകൾ",
+        "From Khata": "കണക്കുപുസ്തകത്തിൽ നിന്ന്",
+        "Online": "ഓൺലൈൻ",
+        "Udhaar": "കടം",
+        "Mark as Paid": "പണം ലഭിച്ചു",
+        "Send WhatsApp Receipt": "WhatsApp രസീത്",
+        "Total Pending": "മൊത്തം കടം",
+        "Smart CRM": "സ്മാർട്ട് CRM",
+        "Voice Cashier": "വോയിസ് കാഷ്യർ (Soundbox)",
+        "Announcer Language": "അനൗൺസർ ഭാഷ",
+        "UDHAAR KHATA": "കടം കണക്ക്",
+        "Add Sale": "വിൽപന ചേർക്കുക",
+        "Add Expense": "ചിലവ് ചേർക്കുക",
+        "Rent Mission": "വാടക കണക്ക്",
+        "Total Sale Report": "വിൽപന റിപ്പോർട്ട്",
+        "Marketing": "മാർക്കറ്റിംഗ്",
+        "Support": "സഹായം",
+        "Legal": "നിയമപരം",
+        "MoreMenu": "കൂടുതൽ മെനുകൾ",
+        "Inventory": "ഇൻവെന്ററി",
+        "Settings": "സെറ്റിംഗ്സ്",
+        "Store Profile": "സ്റ്റോർ പ്രൊഫൈൽ",
+        "Account Security": "സുരക്ഷ",
+        "System Cloud": "സിസ്റ്റം ക്ലൗഡ്",
+        "WhatsApp Bot": "WhatsApp ബോട്ട്",
+        "Ad Settings": "പരസ്യ സെറ്റിംഗ്സ്",
+        "Fees & Commissions": "കമ്മീഷൻ",
+        "Hardware Settings": "ഹാർഡ്‌വെയർ സെറ്റിംഗ്സ്",
+        "FAQ & Data Security": "ചോദ്യോത്തരങ്ങൾ",
+        "More Options": "കൂടുതൽ ഓപ്ഷനുകൾ",
+        "Daily Stock": "ദിനചര്യ സ്റ്റോക്ക്",
+        "Rent Tracker": "വാടക ട്രാക്കർ",
+        "Help Center": "സഹായ കേന്ദ്രം",
+        "Daily Stock Locked": "ദിനചര്യ സ്റ്റോക്ക് ലോക്ക് ചെയ്തിരിക്കുന്നു",
+        "Are you sure you want to exit?": "നിങ്ങൾക്ക് പുറത്തുകടക്കണമെന്ന് ഉറപ്പാണോ?",
+        "Success!": "വിജയം!",
+        "Order has been completed and saved to cloud.": "ഓർഡർ പൂർത്തിയാക്കി ക്ലൗഡിൽ സൂക്ഷിച്ചിരിക്കുന്നു.",
+        "Your current session will end. Do you want to leave InstaMunim?": "നിങ്ങളുടെ നിലവിലെ സെഷൻ അവസാനിക്കും. പുറത്തുകടക്കണോ?",
+        "Access additional tools and settings.": "അധിക ഉപകരണങ്ങളും ക്രമീകരണങ്ങളും ആക്സസ് ചെയ്യുക.",
+        "Track your store raw items and recipe stock.": "സ്റ്റോറിലെ അസംസ്കൃത വസ്തുക്കളും പാചകക്കുറിപ്പ് സ്റ്റോക്കും ട്രാക്ക് ചെയ്യുക.",
+        "Synchronized with UI language": "UI ഭാഷയുമായി സമന്വയിപ്പിച്ചിരിക്കുന്നു"
+      }
     };
-    return lang === 'hi' && map[key] ? map[key] : key;
+    return translations[lang]?.[key] || key;
   };
 
   const [settingsActiveSection, setSettingsActiveSection] = useState("Identity");
@@ -1126,6 +1623,9 @@ Stay safe & eat healthy! 🍕
     const savedVoiceLang = localStorage.getItem("saas_voice_lang");
     if (savedVoiceLang) setVoiceAnnouncerLanguage(savedVoiceLang);
 
+    const savedUiLang = localStorage.getItem("saas_ui_lang");
+    if (savedUiLang) setLang(savedUiLang);
+
     const savedAdProvider = localStorage.getItem("saas_ad_provider");
     if (savedAdProvider) {
       setAdProvider(savedAdProvider as any);
@@ -1237,6 +1737,7 @@ Stay safe & eat healthy! 🍕
       localStorage.setItem("saas_thermal_printer", isThermalPrinterEnabled.toString());
       localStorage.setItem("saas_voice_enabled", isVoiceAnnouncerEnabled.toString());
       localStorage.setItem("saas_voice_lang", voiceAnnouncerLanguage);
+      localStorage.setItem("saas_ui_lang", lang);
       localStorage.setItem("saas_ad_provider", adProvider);
       localStorage.setItem("saas_web_ad_script", webAdScriptUrl);
       localStorage.setItem("saas_web_ad_key", webAdKey);
@@ -1246,7 +1747,7 @@ Stay safe & eat healthy! 🍕
       if (storeCreatedAt) localStorage.setItem("saas_store_created_at", storeCreatedAt);
       if (subscriptionExpiry) localStorage.setItem("saas_store_expiry", subscriptionExpiry);
     }
-  }, [sales, expenses, menuItems, restaurantName, monthlyRent, isDarkMode, dataLoaded, mounted, adProvider, webAdScriptUrl, webAdKey, webAdDirectLink, webAdVignetteUrl, webAdVignetteKey, isThermalPrinterEnabled, isVoiceAnnouncerEnabled, voiceAnnouncerLanguage]);
+  }, [sales, expenses, menuItems, restaurantName, monthlyRent, isDarkMode, dataLoaded, mounted, adProvider, webAdScriptUrl, webAdKey, webAdDirectLink, webAdVignetteUrl, webAdVignetteKey, isThermalPrinterEnabled, isVoiceAnnouncerEnabled, voiceAnnouncerLanguage, lang]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1507,12 +2008,22 @@ Stay safe & eat healthy! 🍕
     try {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      const langToUse = forceLang || voiceAnnouncerLanguage;
-      if (langToUse === "hi") {
-        utterance.lang = "hi-IN";
-      } else {
-        utterance.lang = "en-US";
-      }
+      const langToUse = forceLang || lang;
+      
+      const localeCodes: Record<string, string> = {
+        hi: "hi-IN",
+        mr: "mr-IN",
+        gu: "gu-IN",
+        bn: "bn-IN",
+        pa: "pa-IN",
+        ta: "ta-IN",
+        te: "te-IN",
+        kn: "kn-IN",
+        ml: "ml-IN",
+        en: "en-US"
+      };
+      
+      utterance.lang = localeCodes[langToUse] || "en-US";
       utterance.rate = 0.95;
       utterance.pitch = 1.0;
       window.speechSynthesis.speak(utterance);
@@ -1634,25 +2145,42 @@ Stay safe & eat healthy! 🍕
       try {
         const amt = sale.price;
         const type = sale.type; // Cash, Online, Udhaar, Swiggy, Zomato
-        if (voiceAnnouncerLanguage === "hi") {
-          let methodHindi = "कैश";
-          if (type === "Online") methodHindi = "ऑनलाइन";
-          if (type === "Swiggy") methodHindi = "स्वीगी";
-          if (type === "Zomato") methodHindi = "ज़ोमैटो";
-          
-          if (type === "Udhaar") {
-            announceVoice(`इंस्टामुनिम पर ${amt} रुपये का उधार दर्ज हुआ।`, "hi");
-          } else {
-            announceVoice(`इंस्टामुनिम पर ${methodHindi} के ${amt} रुपये प्राप्त हुए।`, "hi");
-          }
-        } else {
-          let methodEng = type;
-          if (type === "Udhaar") {
-            announceVoice(`Udhaar of ${amt} rupees recorded on InstaMunim.`, "en");
-          } else {
-            announceVoice(`Received ${amt} rupees on InstaMunim via ${methodEng}.`, "en");
-          }
-        }
+        
+        const announceTemplates: Record<string, string> = {
+          hi: type === "Udhaar" 
+            ? `इंस्टामुनिम पर ${amt} रुपये का उधार दर्ज हुआ।` 
+            : `इंस्टामुनिम पर ${type === "Online" ? "ऑनलाइन" : type === "Swiggy" ? "स्वीगी" : type === "Zomato" ? "ज़ोमैटो" : "कैश"} के ${amt} रुपये प्राप्त हुए।`,
+          mr: type === "Udhaar" 
+            ? `इन्स्टामुनिमवर ${amt} रुपयांची उधारी नोंदवली गेली.` 
+            : `इन्स्टामुनिमवर ${type === "Online" ? "ऑनलाइन" : type === "Swiggy" ? "स्वीगी" : type === "Zomato" ? "झोमॅटो" : "कॅश"}द्वारे ${amt} रुपये प्राप्त झाले.`,
+          gu: type === "Udhaar" 
+            ? `ઇન્સ્ટામુનિમ પર ${amt} રૂપિયાનું ઉધાર નોંધાયું છે.` 
+            : `ઇન્સ્ટામુનિમ પર ${type === "Online" ? "ઓનલાઇન" : type === "Swiggy" ? "સ્વીગી" : type === "Zomato" ? "ઝોમેટો" : "કેશ"} દ્વારા ${amt} રૂપિયા મળ્યા છે.`,
+          bn: type === "Udhaar" 
+            ? `ইনস্টামুনিমে ${amt} টাকার ধার নথিভুক্ত করা হয়েছে।` 
+            : `ইনস্টামুনিমে ${type === "Online" ? "অনলাইন" : type === "Swiggy" ? "সুইগি" : type === "Zomato" ? "জোম্যাটো" : "ক্যাশ"} এর মাধ্যমে ${amt} টাকা পাওয়া গেছে।`,
+          pa: type === "Udhaar" 
+            ? `ਇੰਸਟਾਮੁਨਿਮ 'ਤੇ ${amt} ਰੁਪਏ ਦਾ ਉਧਾਰ ਦਰਜ ਕੀਤਾ ਗਿਆ ਹੈ।` 
+            : `ਇੰਸਟਾਮੁਨਿਮ 'ਤੇ ${type === "Online" ? "ਆਨਲਾਈਨ" : type === "Swiggy" ? "ਸਵਿਗੀ" : type === "Zomato" ? "ਜ਼ੋਮੈਟੋ" : "ਕੈਸ਼"} ਰਾਹੀਂ ${amt} ਰੁਪਏ ਪ੍ਰਾਪਤ ਹੋਏ।`,
+          ta: type === "Udhaar" 
+            ? `இன்ஸ்டாமுனிமில் ${amt} ரூபாய் கடன் பதிவு செய்யப்பட்டது.` 
+            : `இன்ஸ்டாமுனிமில் ${type === "Online" ? "ஆன்லைன்" : type === "Swiggy" ? "ஸ்விக்கி" : type === "Zomato" ? "சொமாட்டோ" : "ரொக்கமாக"} மூலம் ${amt} ரூபாய் பெறப்பட்டது.`,
+          te: type === "Udhaar" 
+            ? `ఇన్‌స్టామునిమ్‌లో ${amt} రూపాయల అప్పు నమోదు చేయబడింది.` 
+            : `ఇన్‌స్టామునిమ్‌లో ${type === "Online" ? "ఆన్‌లైన్" : type === "Swiggy" ? "స్విగ్గీ" : type === "Zomato" ? "జొమాటో" : "నగదు"} ద్వారా ${amt} రూపాయలు వచ్చాయి.`,
+          kn: type === "Udhaar" 
+            ? `ಇನ್ಸ್ಟಾಮುನಿಮ್ನಲ್ಲಿ ${amt} ರೂಪಾಯಿ ಉದ್ರಿ ದಾಖಲಾಗಿದೆ.` 
+            : `ಇನ್ಸ್ಟಾಮುನಿಮ್ನಲ್ಲಿ ${type === "Online" ? "ಆನ್‌ಲೈನ್" : type === "Swiggy" ? "ಸ್ವಿಗ್ಗಿ" : type === "Zomato" ? "ಝೊಮ್ಯಾಟೊ" : "ನಗದು"} ಮೂಲಕ ${amt} ರೂಪಾಯಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ.`,
+          ml: type === "Udhaar" 
+            ? `ഇൻസ്റ്റാമുനിമിൽ ${amt} രൂപ കടം രേഖപ്പെടുത്തി.` 
+            : `ഇൻസ്റ്റാമുനിമിൽ ${type === "Online" ? "ഓൺലൈൻ" : type === "Swiggy" ? "സ്വിഗ്ഗി" : type === "Zomato" ? "സൊമാറ്റോ" : "പണമായി"} വഴി ${amt} രൂപ ലഭിച്ചു.`,
+          en: type === "Udhaar" 
+            ? `Udhaar of ${amt} rupees recorded on InstaMunim.` 
+            : `Received ${amt} rupees on InstaMunim via ${type}.`
+        };
+
+        const textToAnnounce = announceTemplates[lang] || announceTemplates['en'];
+        announceVoice(textToAnnounce, lang);
       } catch (voiceErr) {
         console.error("Voice announce error inside handleSale:", voiceErr);
       }
@@ -1890,11 +2418,20 @@ Stay safe & eat healthy! 🍕
       // Trigger voice cashier announcement for expense
       try {
         const amt = newExp.amount;
-        if (voiceAnnouncerLanguage === "hi") {
-          announceVoice(`इंस्टामुनिम पर ${amt} रुपये का खर्चा दर्ज हुआ।`, "hi");
-        } else {
-          announceVoice(`Expense of ${amt} rupees logged on InstaMunim.`, "en");
-        }
+        const announceTemplates: Record<string, string> = {
+          hi: `इंस्टामुनिम पर ${amt} रुपये का खर्चा दर्ज हुआ।`,
+          mr: `इन्स्टामुनिमवर ${amt} रुपयांचा खर्च नोंदवला गेला.`,
+          gu: `ઇન્સ્ટામుનિમ પર ${amt} રૂપિયાનો kharch નોંધાયો છે.`,
+          bn: `ইনস্টামুনিমে ${amt} টাকার খরচ নথিভুক্ত করা হয়েছে।`,
+          pa: `ਇੰਸਟਾਮੁਨਿਮ 'ਤੇ ${amt} ਰੁਪਏ ਦਾ ਖਰਚਾ ਦਰਜ ਕੀਤਾ ਗਿਆ ਹੈ।`,
+          ta: `இன்ஸ்டாமுனிமில் ${amt} ரூபாய் செலவு பதிவு செய்யப்பட்டது.`,
+          te: `ఇన్‌స్టామునిమ్‌లో ${amt} రూపాయల ఖర్చు నమోదు చేయబడింది.`,
+          kn: `ಇನ್ಸ್ಟಾಮುನಿಮ್ನಲ್ಲಿ ${amt} ರೂಪಾಯಿ ಖರ್ಚು ದಾಖಲಾಗಿದೆ.`,
+          ml: `ഇൻസ്റ്റാമുനിമിൽ ${amt} രൂപ ചിലവ് രേഖപ്പെടുത്തി.`,
+          en: `Expense of ${amt} rupees logged on InstaMunim.`
+        };
+        const textToAnnounce = announceTemplates[lang] || announceTemplates['en'];
+        announceVoice(textToAnnounce, lang);
       } catch (voiceErr) {
         console.error("Voice announce error inside handleAddExpense:", voiceErr);
       }
@@ -1915,11 +2452,20 @@ Stay safe & eat healthy! 🍕
       if (saleToPay) {
         const amt = saleToPay.price;
         try {
-          if (voiceAnnouncerLanguage === "hi") {
-            announceVoice(`उधार भुगतान के ${amt} रुपये प्राप्त हुए।`, "hi");
-          } else {
-            announceVoice(`Received ${amt} rupees for udhaar payment.`, "en");
-          }
+          const announceTemplates: Record<string, string> = {
+            hi: `उधार भुगतान के ${amt} रुपये प्राप्त हुए।`,
+            mr: `उधारी देयकाचे ${amt} रुपये प्राप्त झाले.`,
+            gu: `ઉધાર ચુકવણીના ${amt} રૂપિયા મળ્યા છે.`,
+            bn: `ধার পরিশোধ বাবদ ${amt} টাকা পাওয়া গেছে।`,
+            pa: `ਉਧਾਰ ਭੁਗਤਾਨ ਦੇ ${amt} ਰੁਪਏ ਪ੍ਰਾਪਤ ਹੋਏ।`,
+            ta: `கடன் செலுத்திய தொகையாக ${amt} ரூபாய் பெறப்பட்டது.`,
+            te: `అప్పు చెల్లింపుగా ${amt} రూపాయలు వచ్చాయి.`,
+            kn: `ಉದ್ರಿ ಪಾವತಿಯ ${amt} ರೂಪಾಯಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ.`,
+            ml: `കടം വീട്ടിയ ഇനത്തിൽ ${amt} രൂപ ലഭിച്ചു.`,
+            en: `Received ${amt} rupees for udhaar payment.`
+          };
+          const textToAnnounce = announceTemplates[lang] || announceTemplates['en'];
+          announceVoice(textToAnnounce, lang);
         } catch (voiceErr) {
           console.error("Voice announce error inside markAsPaid:", voiceErr);
         }
@@ -2413,7 +2959,42 @@ Stay safe & eat healthy! 🍕
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setLang(lang === 'en' ? 'hi' : 'en')} className="h-7 px-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-full font-bold text-[8px] flex items-center justify-center shadow-sm active:scale-90 transition-all">A/अ</button>
+                  <Select value={lang} onValueChange={(val) => {
+                    setLang(val || "en");
+                    const testPhrases: Record<string, string> = {
+                      en: "Language set to English",
+                      hi: "भाषा हिन्दी सेट की गई है",
+                      mr: "भाषा मराठी सेट केली आहे",
+                      gu: "ભાષા ગુજરાતી સેટ કરવામાં આવી છે",
+                      bn: "ভাষা বাংলা সেট করা হয়েছে",
+                      pa: "ਭਾਸ਼า ਪੰਜਾਬੀ ਸੈੱਟ ਕੀਤੀ ਗਈ ਹੈ",
+                      ta: "மொழி தமிழ் அமைக்கப்பட்டுள்ளது",
+                      te: "భాష తెలుగు సెట్ చేయబడింది",
+                      kn: "ಭಾಷೆ ಕನ್ನಡ ಹೊಂದಿಸಲಾಗಿದೆ",
+                      ml: "ഭാഷ മലയാളം സജ്ജമാക്കിയിരിക്കുന്നു"
+                    };
+                    const text = testPhrases[val || "en"] || "Language updated";
+                    setTimeout(() => {
+                      announceVoice(text, val || "en");
+                    }, 200);
+                  }}>
+                    <SelectTrigger className="h-7 rounded-full bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 shadow-sm font-bold text-[8px] px-2.5 gap-1 text-zinc-600 dark:text-zinc-300">
+                      <Globe className="h-3.5 w-3.5 text-zinc-400" />
+                      <SelectValue placeholder="Lang" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl border-0 shadow-2xl font-bold">
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="hi">हिन्दी (Hindi)</SelectItem>
+                      <SelectItem value="mr">मराठी (Marathi)</SelectItem>
+                      <SelectItem value="gu">ગુજરાતી (Gujarati)</SelectItem>
+                      <SelectItem value="bn">বাংলা (Bengali)</SelectItem>
+                      <SelectItem value="pa">ਪੰਜਾਬੀ (Punjabi)</SelectItem>
+                      <SelectItem value="ta">தமிழ் (Tamil)</SelectItem>
+                      <SelectItem value="te">తెలుగు (Telugu)</SelectItem>
+                      <SelectItem value="kn">ಕನ್ನಡ (Kannada)</SelectItem>
+                      <SelectItem value="ml">മലയാളം (Malayalam)</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Select value={selectedMonth} onValueChange={(val) => setSelectedMonth(val || "")}>
                     <SelectTrigger className="h-7 rounded-full bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 shadow-sm font-bold text-[8px] px-3 gap-1.5">
                       <SelectValue placeholder="Month" />
@@ -3316,19 +3897,19 @@ Stay safe & eat healthy! 🍕
           {activeTab === "MoreMenu" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-28 px-1">
               <header className="px-2">
-                <h2 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-white">More Options</h2>
-                <p className="text-zinc-500 font-bold mt-1">Access additional tools and settings.</p>
+                <h2 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-white">{t("More Options")}</h2>
+                <p className="text-zinc-500 font-bold mt-1">{t("Access additional tools and settings.")}</p>
               </header>
 
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { id: "Settings", label: "STORE SETTINGS", icon: Settings, color: "text-zinc-600", bg: "bg-zinc-50" },
-                  { id: "Inventory", label: "DAILY STOCK", icon: Package, color: "text-orange-500", bg: "bg-orange-50" },
-                  { id: "Rent", label: "RENT TRACKER", icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-50" },
+                  { id: "Settings", label: "Settings", icon: Settings, color: "text-zinc-600", bg: "bg-zinc-50" },
+                  { id: "Inventory", label: "Inventory", icon: Package, color: "text-orange-500", bg: "bg-orange-50" },
+                  { id: "Rent", label: "Rent", icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-50" },
                   { id: "Khata", label: "UDHAAR KHATA", icon: Book, color: "text-orange-500", bg: "bg-orange-50" },
-                  { id: "Marketing", label: "SMART CRM", icon: Send, color: "text-indigo-500", bg: "bg-indigo-50" },
-                  { id: "Legal", label: "LEGAL & PRIVACY", icon: ShieldCheck, color: "text-red-500", bg: "bg-red-50" },
-                  { id: "Support", label: "HELP CENTER", icon: Smartphone, color: "text-emerald-500", bg: "bg-emerald-50" },
+                  { id: "Marketing", label: "Smart CRM", icon: Send, color: "text-indigo-500", bg: "bg-indigo-50" },
+                  { id: "Legal", label: "Legal", icon: ShieldCheck, color: "text-red-500", bg: "bg-red-50" },
+                  { id: "Support", label: "Support", icon: Smartphone, color: "text-emerald-500", bg: "bg-emerald-50" },
                 ].map(item => (
                   <button 
                     key={item.id} 
@@ -3338,7 +3919,7 @@ Stay safe & eat healthy! 🍕
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${item.bg} dark:bg-opacity-10 border border-zinc-100 dark:border-zinc-800 shadow-sm`}>
                       <item.icon className={`h-5 w-5 ${item.color}`} />
                     </div>
-                    <span className="text-[9px] font-black text-zinc-900 dark:text-white tracking-widest text-center">{item.label}</span>
+                    <span className="text-[9px] font-black text-zinc-900 dark:text-white tracking-widest text-center">{t(item.label)}</span>
                   </button>
                 ))}
               </div>
@@ -3360,9 +3941,9 @@ Stay safe & eat healthy! 🍕
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8 pb-10 px-4 pt-4">
               <header className="relative">
                 <div className="absolute -left-10 -top-10 w-40 h-40 bg-orange-500/10 rounded-full blur-3xl" />
-                <h2 className="text-4xl font-black tracking-tighter">Daily Stock</h2>
+                <h2 className="text-4xl font-black tracking-tighter">{t("Daily Stock")}</h2>
                 <p className="text-zinc-500 font-bold flex items-center gap-2 mt-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" /> Track your store raw items and recipe stock.
+                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" /> {t("Track your store raw items and recipe stock.")}
                 </p>
               </header>
 
@@ -3373,7 +3954,7 @@ Stay safe & eat healthy! 🍕
                     <Lock className="h-10 w-10 text-orange-500" />
                   </div>
                   <div className="space-y-2 relative z-10">
-                    <h3 className="text-2xl font-black uppercase tracking-tight">Daily Stock Locked</h3>
+                    <h3 className="text-2xl font-black uppercase tracking-tight">{t("Daily Stock Locked")}</h3>
                     <p className="text-zinc-400 font-bold text-xs max-w-sm mx-auto leading-relaxed">
                       Daily stock diaries, consumption logs, and inventory alerts are premium features of the Smart Business Plan.
                     </p>
@@ -3394,7 +3975,7 @@ Stay safe & eat healthy! 🍕
           {activeTab === "Settings" && (
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 pb-28 px-4 pt-4">
               <header className="flex items-center justify-between px-2 mb-6">
-                <h2 className="text-3xl font-black tracking-tighter">Store Settings</h2>
+                <h2 className="text-3xl font-black tracking-tighter">{t("Settings")}</h2>
                 <div className="flex items-center gap-2">
                   <button 
                     onClick={() => {
@@ -3479,7 +4060,7 @@ Stay safe & eat healthy! 🍕
                     >
                       <div className="flex items-center gap-4">
                         <item.icon className={`h-5 w-5 ${expandedSetting === item.id ? ((item.id === "StoreProfile" || item.id === "AccountSecurity" || item.id === "SystemCloud" || item.id === "WhatsAppBot" || item.id === "AdSettings" || item.id === "FeesCommissions" || item.id === "HardwareSettings") ? 'text-orange-500' : (item.id === "FAQSecurity" ? 'text-emerald-500' : 'text-zinc-900 dark:text-white')) : 'text-zinc-400'}`} />
-                        <span className={`font-bold text-sm ${expandedSetting === item.id ? ((item.id === "StoreProfile" || item.id === "AccountSecurity" || item.id === "SystemCloud" || item.id === "WhatsAppBot" || item.id === "AdSettings" || item.id === "FeesCommissions" || item.id === "HardwareSettings" || item.id === "FAQSecurity") ? 'text-white' : 'text-zinc-900 dark:text-white') : 'text-zinc-700 dark:text-zinc-300'}`}>{item.label}</span>
+                        <span className={`font-bold text-sm ${expandedSetting === item.id ? ((item.id === "StoreProfile" || item.id === "AccountSecurity" || item.id === "SystemCloud" || item.id === "WhatsAppBot" || item.id === "AdSettings" || item.id === "FeesCommissions" || item.id === "HardwareSettings" || item.id === "FAQSecurity") ? 'text-white' : 'text-zinc-900 dark:text-white') : 'text-zinc-700 dark:text-zinc-300'}`}>{t(item.label)}</span>
                       </div>
                       <ChevronRight className={`h-4 w-4 transition-transform duration-300 ${expandedSetting === item.id ? 'rotate-90 text-white' : 'text-zinc-300'}`} />
                     </button>
@@ -3989,28 +4570,11 @@ Stay safe & eat healthy! 🍕
                                   <div className="flex items-center justify-between">
                                     <div className="space-y-0.5">
                                       <h5 className="font-bold text-sm tracking-tight">{t("Announcer Language")}</h5>
-                                      <p className="text-[10px] font-medium text-zinc-400 leading-none">Choose soundbox language</p>
+                                      <p className="text-[10px] font-medium text-zinc-400 leading-none">{t("Synchronized with UI language")}</p>
                                     </div>
-                                    <div className="flex gap-2 bg-zinc-100 dark:bg-zinc-700 p-1 rounded-2xl">
-                                      <button
-                                        onClick={() => {
-                                          setVoiceAnnouncerLanguage("hi");
-                                          announceVoice("इंस्टामुनिम वॉइस कैशियर हिन्दी में", "hi");
-                                        }}
-                                        className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${voiceAnnouncerLanguage === "hi" ? 'bg-white dark:bg-zinc-600 text-orange-500 shadow-md' : 'text-zinc-500 dark:text-zinc-300'}`}
-                                      >
-                                        हिन्दी (Hindi)
-                                      </button>
-                                      <button
-                                        onClick={() => {
-                                          setVoiceAnnouncerLanguage("en");
-                                          announceVoice("InstaMunim voice cashier in English", "en");
-                                        }}
-                                        className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${voiceAnnouncerLanguage === "en" ? 'bg-white dark:bg-zinc-600 text-orange-500 shadow-md' : 'text-zinc-500 dark:text-zinc-300'}`}
-                                      >
-                                        English
-                                      </button>
-                                    </div>
+                                    <span className="px-3.5 py-1.5 bg-orange-100 dark:bg-orange-900/30 text-[10px] font-black text-orange-600 uppercase tracking-widest rounded-xl">
+                                      {lang === "hi" ? "हिन्दी" : lang === "mr" ? "मराठी" : lang === "gu" ? "ગુજરાતી" : lang === "bn" ? "বাংলা" : lang === "pa" ? "ਪੰਜਾਬੀ" : lang === "ta" ? "தமிழ்" : lang === "te" ? "తెలుగు" : lang === "kn" ? "ಕನ್ನಡ" : lang === "ml" ? "മലയാളം" : "English"}
+                                    </span>
                                   </div>
 
                                   {/* Service status indicator */}
@@ -4114,29 +4678,29 @@ Stay safe & eat healthy! 🍕
       <nav className={`fixed bottom-0 left-0 right-0 h-14 border-t backdrop-blur-2xl z-50 flex items-center justify-around px-4 ${isDarkMode ? 'bg-zinc-950/90 border-zinc-800' : 'bg-white/90 border-zinc-100 shadow-[0_-10px_40px_rgba(0,0,0,0.04)]'}`}>
         <button onClick={() => setActiveTab("Dashboard")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'Dashboard' ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
           <div className={`p-1.5 rounded-xl ${activeTab === 'Dashboard' ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><LayoutDashboard className="h-5 w-5" /></div>
-          <span className="text-[8px] font-bold uppercase tracking-tighter">Home</span>
+          <span className="text-[8px] font-bold uppercase tracking-tighter">{t("Dashboard")}</span>
         </button>
  
         <button onClick={() => setActiveTab("Menu")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'Menu' ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
           <div className={`p-1.5 rounded-xl ${activeTab === 'Menu' ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><ShoppingCart className="h-5 w-5" /></div>
-          <span className="text-[8px] font-bold uppercase tracking-tighter">Menus</span>
+          <span className="text-[8px] font-bold uppercase tracking-tighter">{t("Menus")}</span>
         </button>
  
         <button onClick={() => setIsSaleOpen(true)} className="flex flex-col items-center -mt-8 group">
           <div className="w-16 h-16 bg-orange-600 rounded-xl flex items-center justify-center shadow-xl shadow-orange-600/30 border-4 border-[#fafafa] dark:border-zinc-950 group-active:scale-90 transition-all">
             <PlusCircle className="h-8 w-8 text-white" />
           </div>
-          <span className="text-[8px] font-bold uppercase text-orange-600 mt-1 tracking-widest">Sale</span>
+          <span className="text-[8px] font-bold uppercase text-orange-600 mt-1 tracking-widest">{t("Sale")}</span>
         </button>
 
         <button onClick={() => setActiveTab("Total Sale Report")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'Total Sale Report' ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
           <div className={`p-1.5 rounded-xl ${activeTab === 'Total Sale Report' ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><PieChart className="h-5 w-5" /></div>
-          <span className="text-[8px] font-bold uppercase tracking-tighter">Stats</span>
+          <span className="text-[8px] font-bold uppercase tracking-tighter">{t("Stats")}</span>
         </button>
 
         <button onClick={() => setActiveTab("MoreMenu")} className={`flex flex-col items-center gap-1 transition-all ${['MoreMenu', 'Settings', 'Rent', 'Support', 'Khata', 'Menu', 'Inventory'].includes(activeTab) ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
           <div className={`p-1.5 rounded-xl ${['MoreMenu', 'Settings', 'Rent', 'Support', 'Khata', 'Menu', 'Inventory'].includes(activeTab) ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><Settings className="h-5 w-5" /></div>
-          <span className="text-[8px] font-bold uppercase tracking-tighter">More</span>
+          <span className="text-[8px] font-bold uppercase tracking-tighter">{t("More")}</span>
         </button>
       </nav>
       {/* EXIT PROTECTION DIALOG */}
@@ -4147,9 +4711,9 @@ Stay safe & eat healthy! 🍕
               <LogOut className="h-8 w-8 text-white" />
             </div>
             <div className="space-y-2">
-              <DialogTitle className="text-xl font-black text-center">Are you sure you want to exit?</DialogTitle>
+              <DialogTitle className="text-xl font-black text-center">{t("Are you sure you want to exit?")}</DialogTitle>
               <DialogDescription className="text-zinc-400 text-xs font-bold leading-relaxed text-center">
-                Your current session will end. Do you want to leave InstaMunim?
+                {t("Your current session will end. Do you want to leave InstaMunim?")}
               </DialogDescription>
             </div>
             <div className="flex gap-3 pt-4">
@@ -4161,8 +4725,8 @@ Stay safe & eat healthy! 🍕
                 } catch (e) {
                   window.close();
                 }
-              }} className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-xs active:scale-95 transition-all">Yes</Button>
-              <Button onClick={() => setShowExitDialog(false)} variant="outline" className="flex-1 h-12 bg-transparent border-zinc-700 text-white hover:bg-white/5 font-black rounded-xl text-xs active:scale-95 transition-all">No</Button>
+              }} className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-xs active:scale-95 transition-all">{t("Yes")}</Button>
+              <Button onClick={() => setShowExitDialog(false)} variant="outline" className="flex-1 h-12 bg-transparent border-zinc-700 text-white hover:bg-white/5 font-black rounded-xl text-xs active:scale-95 transition-all">{t("No")}</Button>
             </div>
           </div>
         </DialogContent>
@@ -4175,9 +4739,9 @@ Stay safe & eat healthy! 🍕
               <CheckCircle2 className="h-14 w-14 text-emerald-500" />
             </div>
             <div className="space-y-2">
-              <DialogTitle className="text-3xl font-black tracking-tight text-center">Success!</DialogTitle>
+              <DialogTitle className="text-3xl font-black tracking-tight text-center">{t("Success!")}</DialogTitle>
               <DialogDescription className="text-zinc-500 font-bold italic text-center">
-                Order has been completed and saved to cloud.
+                {t("Order has been completed and saved to cloud.")}
               </DialogDescription>
             </div>
 
