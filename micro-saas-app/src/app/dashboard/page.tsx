@@ -5,7 +5,7 @@ import { format, isBefore, isAfter } from "date-fns";
 import { 
   LayoutDashboard, FileText, Settings, LogOut, Search,
   PlusCircle, Loader2, Book, Trash2, Send, ShoppingCart, Package,
-  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera
+  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera, Volume2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -166,7 +166,9 @@ export default function Dashboard() {
       "Mark as Paid": "पैसे मिल गए",
       "Send WhatsApp Receipt": "WhatsApp बिल",
       "Total Pending": "कुल उधार",
-      "Smart CRM": "स्मार्ट CRM"
+      "Smart CRM": "स्मार्ट CRM",
+      "Voice Cashier": "वॉइस कैशियर (Soundbox)",
+      "Announcer Language": "आवाज की भाषा"
     };
     return lang === 'hi' && map[key] ? map[key] : key;
   };
@@ -215,6 +217,8 @@ export default function Dashboard() {
   const [storeWebsite, setStoreWebsite] = useState("www.khankitchen.com");
   const [storeGstin, setStoreGstin] = useState("07AABCU1234F1Z5");
   const [isThermalPrinterEnabled, setIsThermalPrinterEnabled] = useState(false);
+  const [isVoiceAnnouncerEnabled, setIsVoiceAnnouncerEnabled] = useState(true);
+  const [voiceAnnouncerLanguage, setVoiceAnnouncerLanguage] = useState("hi");
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [storeCreatedAt, setStoreCreatedAt] = useState<string | null>(null);
@@ -1113,6 +1117,15 @@ Stay safe & eat healthy! 🍕
     const savedDarkMode = localStorage.getItem("saas_dark_mode");
     if (savedDarkMode) setIsDarkMode(savedDarkMode === "true");
 
+    const savedPrinter = localStorage.getItem("saas_thermal_printer");
+    if (savedPrinter) setIsThermalPrinterEnabled(savedPrinter === "true");
+
+    const savedVoiceEnabled = localStorage.getItem("saas_voice_enabled");
+    if (savedVoiceEnabled) setIsVoiceAnnouncerEnabled(savedVoiceEnabled === "true");
+
+    const savedVoiceLang = localStorage.getItem("saas_voice_lang");
+    if (savedVoiceLang) setVoiceAnnouncerLanguage(savedVoiceLang);
+
     const savedAdProvider = localStorage.getItem("saas_ad_provider");
     if (savedAdProvider) {
       setAdProvider(savedAdProvider as any);
@@ -1222,6 +1235,8 @@ Stay safe & eat healthy! 🍕
       localStorage.setItem("saas_rent", monthlyRent.toString());
       localStorage.setItem("saas_dark_mode", isDarkMode.toString());
       localStorage.setItem("saas_thermal_printer", isThermalPrinterEnabled.toString());
+      localStorage.setItem("saas_voice_enabled", isVoiceAnnouncerEnabled.toString());
+      localStorage.setItem("saas_voice_lang", voiceAnnouncerLanguage);
       localStorage.setItem("saas_ad_provider", adProvider);
       localStorage.setItem("saas_web_ad_script", webAdScriptUrl);
       localStorage.setItem("saas_web_ad_key", webAdKey);
@@ -1231,7 +1246,7 @@ Stay safe & eat healthy! 🍕
       if (storeCreatedAt) localStorage.setItem("saas_store_created_at", storeCreatedAt);
       if (subscriptionExpiry) localStorage.setItem("saas_store_expiry", subscriptionExpiry);
     }
-  }, [sales, expenses, menuItems, restaurantName, monthlyRent, isDarkMode, dataLoaded, mounted, adProvider, webAdScriptUrl, webAdKey, webAdDirectLink, webAdVignetteUrl, webAdVignetteKey]);
+  }, [sales, expenses, menuItems, restaurantName, monthlyRent, isDarkMode, dataLoaded, mounted, adProvider, webAdScriptUrl, webAdKey, webAdDirectLink, webAdVignetteUrl, webAdVignetteKey, isThermalPrinterEnabled, isVoiceAnnouncerEnabled, voiceAnnouncerLanguage]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1485,6 +1500,27 @@ Stay safe & eat healthy! 🍕
     setRememberMe(true);
   };
 
+  const announceVoice = (text: string, forceLang?: string) => {
+    if (!isVoiceAnnouncerEnabled) return;
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      const langToUse = forceLang || voiceAnnouncerLanguage;
+      if (langToUse === "hi") {
+        utterance.lang = "hi-IN";
+      } else {
+        utterance.lang = "en-US";
+      }
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.error("Speech Synthesis Error:", e);
+    }
+  };
+
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [lastOrderDetails, setLastOrderDetails] = useState<any>(null);
 
@@ -1593,6 +1629,33 @@ Stay safe & eat healthy! 🍕
       };
       setSales([sale, ...sales]);
       setLastOrderDetails(sale);
+
+      // Trigger voice cashier announcement
+      try {
+        const amt = sale.price;
+        const type = sale.type; // Cash, Online, Udhaar, Swiggy, Zomato
+        if (voiceAnnouncerLanguage === "hi") {
+          let methodHindi = "कैश";
+          if (type === "Online") methodHindi = "ऑनलाइन";
+          if (type === "Swiggy") methodHindi = "स्वीगी";
+          if (type === "Zomato") methodHindi = "ज़ोमैटो";
+          
+          if (type === "Udhaar") {
+            announceVoice(`इंस्टामुनिम पर ${amt} रुपये का उधार दर्ज हुआ।`, "hi");
+          } else {
+            announceVoice(`इंस्टामुनिम पर ${methodHindi} के ${amt} रुपये प्राप्त हुए।`, "hi");
+          }
+        } else {
+          let methodEng = type;
+          if (type === "Udhaar") {
+            announceVoice(`Udhaar of ${amt} rupees recorded on InstaMunim.`, "en");
+          } else {
+            announceVoice(`Received ${amt} rupees on InstaMunim via ${methodEng}.`, "en");
+          }
+        }
+      } catch (voiceErr) {
+        console.error("Voice announce error inside handleSale:", voiceErr);
+      }
       setIsSaleOpen(false);
       setShowSuccessDialog(true);
       setCart([]); 
@@ -1823,6 +1886,18 @@ Stay safe & eat healthy! 🍕
       if (error) throw error;
       setExpenses([{ id: newExp.id, title: newExp.title, amount: newExp.amount, date: new Date(newExp.expense_date) }, ...expenses]);
       setNewExpTitle(""); setNewExpAmount("");
+
+      // Trigger voice cashier announcement for expense
+      try {
+        const amt = newExp.amount;
+        if (voiceAnnouncerLanguage === "hi") {
+          announceVoice(`इंस्टामुनिम पर ${amt} रुपये का खर्चा दर्ज हुआ।`, "hi");
+        } else {
+          announceVoice(`Expense of ${amt} rupees logged on InstaMunim.`, "en");
+        }
+      } catch (voiceErr) {
+        console.error("Voice announce error inside handleAddExpense:", voiceErr);
+      }
     } catch (err: any) {
       alert("Expense Sync Error: " + (err.message || "Unknown error"));
     } finally {
@@ -1834,6 +1909,22 @@ Stay safe & eat healthy! 🍕
     try {
       const { error } = await supabase.from('sales').update({ payment_type: 'Cash' }).eq('id', id);
       if (error) throw error;
+      
+      // Trigger voice cashier announcement for Udhaar payment completion
+      const saleToPay = sales.find(s => s.id === id);
+      if (saleToPay) {
+        const amt = saleToPay.price;
+        try {
+          if (voiceAnnouncerLanguage === "hi") {
+            announceVoice(`उधार भुगतान के ${amt} रुपये प्राप्त हुए।`, "hi");
+          } else {
+            announceVoice(`Received ${amt} rupees for udhaar payment.`, "en");
+          }
+        } catch (voiceErr) {
+          console.error("Voice announce error inside markAsPaid:", voiceErr);
+        }
+      }
+
       setSales(sales.map(s => s.id === id ? { ...s, type: "Cash" } : s));
     } catch (err) {
       alert("Failed to update status on cloud.");
@@ -3834,7 +3925,8 @@ Stay safe & eat healthy! 🍕
                         )}
 
                         {item.id === "HardwareSettings" && (
-                          <div className="pt-6 animate-in fade-in slide-in-from-bottom-4">
+                          <div className="pt-6 space-y-4 animate-in fade-in slide-in-from-bottom-4">
+                            {/* Thermal Printer Card */}
                             <div className="bg-white dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 p-6 rounded-3xl flex items-center justify-between shadow-sm">
                               <div className="flex items-center gap-4">
                                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${isThermalPrinterEnabled ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-400'}`}>
@@ -3859,6 +3951,89 @@ Stay safe & eat healthy! 🍕
                                 <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest">Printer Service Active & Ready</p>
                               </div>
                             )}
+
+                            {/* Voice Cashier / Soundbox Card */}
+                            <div className="bg-white dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 p-6 rounded-3xl space-y-5 shadow-sm">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${isVoiceAnnouncerEnabled ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : 'bg-zinc-100 dark:bg-zinc-700 text-zinc-400'}`}>
+                                    <Volume2 className="h-6 w-6" />
+                                  </div>
+                                  <div className="space-y-0.5">
+                                    <h4 className="font-black text-lg tracking-tight">{t("Voice Cashier")}</h4>
+                                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest leading-none">Audio Soundbox</p>
+                                  </div>
+                                </div>
+                                <button 
+                                  onClick={() => {
+                                    const nextVal = !isVoiceAnnouncerEnabled;
+                                    setIsVoiceAnnouncerEnabled(nextVal);
+                                    if (nextVal) {
+                                      const testText = voiceAnnouncerLanguage === "hi" 
+                                        ? "इंस्टामुनिम वॉइस कैशियर चालू है" 
+                                        : "InstaMunim voice cashier is active";
+                                      setTimeout(() => {
+                                        announceVoice(testText, voiceAnnouncerLanguage);
+                                      }, 100);
+                                    }
+                                  }}
+                                  className={`w-16 h-9 rounded-2xl transition-all flex items-center px-1.5 ${isVoiceAnnouncerEnabled ? 'bg-orange-500 justify-end' : 'bg-zinc-200 dark:bg-zinc-700 justify-start'}`}
+                                >
+                                  <div className="w-6 h-6 bg-white rounded-full shadow-lg" />
+                                </button>
+                              </div>
+
+                              {isVoiceAnnouncerEnabled && (
+                                <div className="pt-4 border-t border-zinc-100 dark:border-zinc-700 space-y-4">
+                                  {/* Language Selector */}
+                                  <div className="flex items-center justify-between">
+                                    <div className="space-y-0.5">
+                                      <h5 className="font-bold text-sm tracking-tight">{t("Announcer Language")}</h5>
+                                      <p className="text-[10px] font-medium text-zinc-400 leading-none">Choose soundbox language</p>
+                                    </div>
+                                    <div className="flex gap-2 bg-zinc-100 dark:bg-zinc-700 p-1 rounded-2xl">
+                                      <button
+                                        onClick={() => {
+                                          setVoiceAnnouncerLanguage("hi");
+                                          announceVoice("इंस्टामुनिम वॉइस कैशियर हिन्दी में", "hi");
+                                        }}
+                                        className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${voiceAnnouncerLanguage === "hi" ? 'bg-white dark:bg-zinc-600 text-orange-500 shadow-md' : 'text-zinc-500 dark:text-zinc-300'}`}
+                                      >
+                                        हिन्दी (Hindi)
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          setVoiceAnnouncerLanguage("en");
+                                          announceVoice("InstaMunim voice cashier in English", "en");
+                                        }}
+                                        className={`px-4 py-2 rounded-xl text-xs font-black transition-all ${voiceAnnouncerLanguage === "en" ? 'bg-white dark:bg-zinc-600 text-orange-500 shadow-md' : 'text-zinc-500 dark:text-zinc-300'}`}
+                                      >
+                                        English
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  {/* Service status indicator */}
+                                  <div className="p-4 bg-orange-50/50 dark:bg-orange-900/10 rounded-2xl border border-orange-100 dark:border-orange-900/20 flex items-center justify-between gap-4">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                                      <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest leading-none">Voice Announcer Service Connected</p>
+                                    </div>
+                                    <button
+                                      onClick={() => {
+                                        const testText = voiceAnnouncerLanguage === "hi" 
+                                          ? "यह एक परीक्षण आवाज संदेश है।" 
+                                          : "This is a test voice announcement.";
+                                        announceVoice(testText);
+                                      }}
+                                      className="px-3 py-1.5 bg-orange-100 dark:bg-orange-900/30 hover:bg-orange-200 text-[10px] font-black text-orange-600 uppercase tracking-widest rounded-xl transition-all active:scale-95"
+                                    >
+                                      Test Voice
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         )}
 
