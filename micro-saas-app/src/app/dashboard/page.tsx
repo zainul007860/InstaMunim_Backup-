@@ -1478,8 +1478,8 @@ Stay safe & eat healthy! 🍕
 
   const handleSale = async () => {
     if (cart.length === 0) return alert("Cart is empty.");
-    if (!newMobile || newMobile.length !== 10) {
-      alert("Please enter a valid 10-digit mobile number.");
+    if (newMobile && newMobile.length !== 10) {
+      alert("Please enter a valid 10-digit mobile number or leave it blank.");
       return;
     }
 
@@ -1532,7 +1532,7 @@ Stay safe & eat healthy! 🍕
         .insert([{
           store_id: store.id,
           customer_name: newName || "Guest",
-          mobile: newMobile,
+          mobile: newMobile || "N/A",
           items: itemsWithMetadata,
           total_price: cartTotal,
           payment_type: newType
@@ -1617,7 +1617,7 @@ Stay safe & eat healthy! 🍕
   };
 
   const sendWhatsAppReceipt = () => {
-    if (!lastOrderDetails || lastOrderDetails.mobile === "N/A") return alert("No mobile number provided.");
+    if (!lastOrderDetails || lastOrderDetails.mobile === "N/A" || !lastOrderDetails.mobile) return alert("No mobile number provided.");
     
     // Construct items string for URL: Name:Price,Name:Price
     // lastOrderDetails.item is like "2 x Paneer Tikka (₹160)\n..."
@@ -3988,21 +3988,26 @@ Stay safe & eat healthy! 🍕
             </div>
 
             <div className="space-y-4 pt-4">
-              <Button 
-                onClick={() => {
-                  sendWhatsAppReceipt();
-                  setTimeout(() => setShowSuccessDialog(false), 1000);
-                }} 
-                className="w-full h-16 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-black text-lg shadow-xl shadow-orange-600/20 active:scale-95 transition-all flex items-center justify-center gap-3"
-              >
-                <MessageCircle className="h-6 w-6" /> SEND RECEIPT
-              </Button>
+              {lastOrderDetails?.mobile && lastOrderDetails.mobile !== "N/A" && lastOrderDetails.mobile !== "" && (
+                <Button 
+                  onClick={() => {
+                    sendWhatsAppReceipt();
+                    setTimeout(() => setShowSuccessDialog(false), 1000);
+                  }} 
+                  className="w-full h-16 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-black text-lg shadow-xl shadow-orange-600/20 active:scale-95 transition-all flex items-center justify-center gap-3"
+                >
+                  <MessageCircle className="h-6 w-6" /> SEND RECEIPT
+                </Button>
+              )}
               <Button 
                 onClick={() => setShowSuccessDialog(false)} 
-                variant="ghost" 
-                className="w-full h-12 text-zinc-400 font-black uppercase tracking-[0.2em] text-[10px] hover:text-zinc-600"
+                className={lastOrderDetails?.mobile && lastOrderDetails.mobile !== "N/A" && lastOrderDetails.mobile !== "" 
+                  ? "w-full h-12 text-zinc-400 font-black uppercase tracking-[0.2em] text-[10px] hover:text-zinc-600" 
+                  : "w-full h-16 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-lg shadow-xl shadow-emerald-600/20 active:scale-95 transition-all flex items-center justify-center gap-3 border-0"
+                }
+                variant={lastOrderDetails?.mobile && lastOrderDetails.mobile !== "N/A" && lastOrderDetails.mobile !== "" ? "ghost" : "default"}
               >
-                Done
+                {lastOrderDetails?.mobile && lastOrderDetails.mobile !== "N/A" && lastOrderDetails.mobile !== "" ? "Done" : "OK"}
               </Button>
             </div>
           </div>
