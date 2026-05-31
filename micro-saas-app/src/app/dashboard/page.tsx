@@ -2217,9 +2217,9 @@ Stay safe & eat healthy! 🍕
                    </div>
 
                    <div className="space-y-3">
-                      <Input placeholder="Customer Name" value={newName} onChange={e => setNewName(e.target.value)} className="h-11 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold px-4 text-sm" />
+                      <Input placeholder="Customer Name (Optional)" value={newName} onChange={e => setNewName(e.target.value)} className="h-11 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold px-4 text-sm" />
                       <Input 
-                        placeholder="Mobile Number" 
+                        placeholder="Mobile Number (Optional)" 
                         value={newMobile} 
                         onChange={e => {
                           const val = e.target.value.replace(/\D/g, "");

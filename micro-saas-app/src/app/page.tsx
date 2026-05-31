@@ -803,7 +803,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <a 
-                href="/InstaMunimSmartPOS_v1.2-release.apk?v=5"
+                href="/InstaMunimSmartPOS_v1.3-release.apk?v=6"
                 className="w-full bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-extrabold py-3.5 rounded-xl text-xs mt-8 transition-colors text-center uppercase tracking-widest border border-zinc-200 shadow-sm"
               >
                 Download Free APP
