@@ -1455,6 +1455,22 @@ Stay safe & eat healthy! 🍕
 
   useEffect(() => {
     setMounted(true);
+
+    // Unlock Speech Synthesis on first user interaction (critical for Android WebView)
+    const unlockSpeech = () => {
+      if (typeof window !== "undefined" && window.speechSynthesis) {
+        try {
+          const utterance = new SpeechSynthesisUtterance("");
+          window.speechSynthesis.speak(utterance);
+        } catch (e) {
+          console.log("Speech unlock error:", e);
+        }
+      }
+      document.removeEventListener("click", unlockSpeech);
+      document.removeEventListener("touchstart", unlockSpeech);
+    };
+    document.addEventListener("click", unlockSpeech);
+    document.addEventListener("touchstart", unlockSpeech);
     
     // Exit Protection Logic
     const handleBackButton = (e: PopStateEvent) => {
