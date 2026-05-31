@@ -19,3 +19,8 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Meta Audience Network Proguard Rules
+-dontwarn com.facebook.infer.annotation.**
+-dontwarn com.facebook.ads.internal.**
+
