@@ -1634,9 +1634,7 @@ Stay safe & eat healthy! 🍕
     const discountMatch = (lastOrderDetails.item || "").match(/\[DISCOUNT:(\d+(\.\d+)?)\]/);
     const discountPart = discountMatch ? `&disc=${discountMatch[1]}` : "";
 
-    const baseUrl = typeof window !== "undefined" && !window.location.origin.includes("localhost")
-      ? window.location.origin
-      : "https://instamunim.com";
+    const baseUrl = "https://www.instamunim.com";
     let invoiceUrl = `${baseUrl}/invoice?n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${lastOrderDetails.price}&d=${encodeURIComponent(lastOrderDetails.date.toISOString())}&t=${lastOrderDetails.type}&id=${lastOrderDetails.id}&m=${lastOrderDetails.mobile}&cn=${encodeURIComponent(lastOrderDetails.name)}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}${extraPart}${discountPart}`;
     if (!isSubscribed) {
       invoiceUrl += "&free=true";
