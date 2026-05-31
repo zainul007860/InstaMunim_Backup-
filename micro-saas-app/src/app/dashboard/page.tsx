@@ -197,6 +197,7 @@ export default function Dashboard() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [crmMessage, setCrmMessage] = useState("Hi [NAME], we miss you at [SHOP]! 🍕 Come back today for a special offer just for you!");
   const [cart, setCart] = useState<any[]>([]);
+  const [isAdMobBannerFailed, setIsAdMobBannerFailed] = useState(false);
   // Barcode Scanner states
   const [showScanner, setShowScanner] = useState(false);
   const [scannedBarcode, setScannedBarcode] = useState("");
@@ -701,12 +702,14 @@ Stay safe & eat healthy! 🍕
           console.log("AdMob banner loaded successfully");
           setAdmobDebugInfo("Loaded successfully");
           setIsAdMobActive(true);
+          setIsAdMobBannerFailed(false);
         });
 
         failedListener = await AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (info: any) => {
           console.error("AdMob banner failed to load:", info);
           setAdmobDebugInfo(`Failed to load: Code ${info?.code || "unknown"}, Msg: ${info?.message || "unknown"}`);
           setIsAdMobActive(false);
+          setIsAdMobBannerFailed(true);
         });
 
         sizeChangedListener = await AdMob.addListener(BannerAdPluginEvents.SizeChanged, (size: any) => {
@@ -775,8 +778,16 @@ Stay safe & eat healthy! 🍕
     const toggleBanner = async () => {
       try {
         const { Capacitor } = await import('@capacitor/core');
-        if (!Capacitor.isNativePlatform() || !admobRef.current || adProvider !== "admob") return;
-        if (isSubscribed) return;
+        if (!Capacitor.isNativePlatform() || !admobRef.current) return;
+        
+        if (isSubscribed || adProvider !== "admob") {
+          try {
+            await admobRef.current.hideBanner();
+          } catch (e) {}
+          setIsAdMobActive(false);
+          return;
+        }
+
         const adModule = await import('@capacitor-community/admob');
         const BannerAdSize = adModule.BannerAdSize;
         const BannerAdPosition = adModule.BannerAdPosition;
@@ -792,6 +803,7 @@ Stay safe & eat healthy! 🍕
               margin: 0,
               isTesting: false,
             });
+            setIsAdMobActive(true);
           } catch (e) {
             // already showing, ignore
           }
@@ -801,7 +813,7 @@ Stay safe & eat healthy! 🍕
       }
     };
     toggleBanner();
-  }, [isSaleOpen]);
+  }, [isSaleOpen, isSubscribed, adProvider]);
 
   // AI-SMART HINGLISH VOICE CASHIER (With Transliteration)
   useEffect(() => {
@@ -1597,8 +1609,15 @@ Stay safe & eat healthy! 🍕
             console.log("Triggering Interstitial Ad after sale...");
             await admobRef.current.showInterstitial();
           } catch (e) {
-            console.error("Error showing interstitial ad:", e);
+            console.error("Error showing interstitial ad, falling back to Web Ads direct link:", e);
             prepareInterstitialAd();
+            if (webAdDirectLink) {
+              try {
+                window.open(webAdDirectLink, "_blank");
+              } catch (webErr) {
+                console.error("Web Ad direct link error:", webErr);
+              }
+            }
           }
         } else if (adProvider === "web" && webAdDirectLink) {
           try {
@@ -2049,10 +2068,10 @@ Stay safe & eat healthy! 🍕
       className={`min-h-screen flex flex-col font-sans selection:bg-orange-500/30 ${isDarkMode ? 'dark bg-zinc-950 text-white' : 'bg-[#fafafa] text-zinc-900'}`}
       style={{ paddingTop: isAdMobActive && adProvider === "admob" ? `${admobHeight}px` : "0px" }}
     >
-      {adProvider === "web" && !isSubscribed && webAdScriptUrl && (
+      {((adProvider === "web" || (adProvider === "admob" && isAdMobBannerFailed)) && !isSubscribed && webAdScriptUrl) && (
         <WebAdBanner scriptUrl={webAdScriptUrl} adKey={webAdKey} />
       )}
-      {adProvider === "web" && !isSubscribed && webAdVignetteUrl && webAdVignetteKey && (
+      {((adProvider === "web" || (adProvider === "admob" && isAdMobBannerFailed)) && !isSubscribed && webAdVignetteUrl && webAdVignetteKey) && (
         <WebVignetteAd scriptUrl={webAdVignetteUrl} adKey={webAdVignetteKey} />
       )}
       <main className="flex-1 pb-24 overflow-y-auto">
@@ -3357,7 +3376,7 @@ Stay safe & eat healthy! 🍕
                   { id: "AccountSecurity", label: "Account Security", icon: Lock },
                   { id: "SystemCloud", label: "System & Cloud", icon: Cloud },
                   { id: "WhatsAppBot", label: "WhatsApp Bot", icon: MessageCircle },
-                  { id: "AdSettings", label: "Ad Monetization", icon: CreditCard },
+                  ...(ownerMobile === "7838229178" ? [{ id: "AdSettings", label: "Ad Monetization", icon: CreditCard }] : []),
                   { id: "FeesCommissions", label: "Fees & Commissions", icon: TrendingUp },
                   { id: "HardwareSettings", label: "Hardware Settings", icon: Printer },
                   { id: "FAQSecurity", label: "FAQ & Data Security", icon: ShieldCheck },
