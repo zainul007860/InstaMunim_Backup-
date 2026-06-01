@@ -2426,6 +2426,17 @@ Stay safe & eat healthy! 🍕
     return { dailyBase, carryOver, todaysTarget, todayActual, remaining: Math.max(0, todaysTarget - todayActual) };
   }, [monthlyRent, sales]);
 
+  const filteredMenuItems = useMemo(() => {
+    const query = itemSearch.toLowerCase().trim();
+    if (!query) return menuItems;
+    return menuItems.filter(item => item.name.toLowerCase().includes(query));
+  }, [menuItems, itemSearch]);
+
+  const udhaarSales = useMemo(() => {
+    return sales.filter(s => s.type === "Udhaar");
+  }, [sales]);
+
+
   const handleAddItem = async () => {
     if (!newItemName || !newItemPrice) return;
     setIsLoading(true);
@@ -2898,16 +2909,16 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     </button>
                   </div>
                   <div className="grid grid-cols-3 gap-1.5">
-                    {menuItems.filter(i => i.name.toLowerCase().includes(itemSearch.toLowerCase())).slice(0, 15).map(item => (
+                    {filteredMenuItems.slice(0, 15).map(item => (
                       <button key={item.id} onClick={() => addToCart(item)} className="p-1.5 bg-white dark:bg-zinc-900 rounded-xl text-left border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all active:scale-95 group">
                         <p className="font-bold text-[10px] text-zinc-900 dark:text-white lowercase leading-tight truncate">{item.name}</p>
                         <p className="text-[8px] font-bold text-zinc-400 mt-0.5">₹{item.price}</p>
                       </button>
                     ))}
                   </div>
-                  {menuItems.filter(i => i.name.toLowerCase().includes(itemSearch.toLowerCase())).length > 15 && (
+                  {filteredMenuItems.length > 15 && (
                     <p className="text-[9px] text-center text-zinc-400 font-bold mt-1 uppercase tracking-wider">
-                      + {menuItems.filter(i => i.name.toLowerCase().includes(itemSearch.toLowerCase())).length - 15} more items (search to find)
+                      + {filteredMenuItems.length - 15} more items (search to find)
                     </p>
                   )}
                 </div>
@@ -3601,16 +3612,16 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               <div className="grid grid-cols-2 gap-4">
                 <Card className="p-6 bg-white dark:bg-zinc-900 border-0 shadow-sm rounded-2xl flex flex-col justify-center">
                   <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Total Pending</p>
-                  <h4 className="text-3xl font-black text-red-600 tracking-tighter">₹{sales.filter(s => s.type === "Udhaar").reduce((sum, s) => sum + s.price, 0)}</h4>
+                  <h4 className="text-3xl font-black text-red-600 tracking-tighter">₹{udhaarSales.reduce((sum, s) => sum + s.price, 0)}</h4>
                 </Card>
                 <Card className="p-6 bg-white dark:bg-zinc-900 border-0 shadow-sm rounded-2xl flex flex-col justify-center">
                   <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Customers</p>
-                  <h4 className="text-3xl font-black tracking-tighter">{new Set(sales.filter(s => s.type === "Udhaar").map(s => s.mobile)).size} <span className="text-xs text-zinc-400">Accs</span></h4>
+                  <h4 className="text-3xl font-black tracking-tighter">{new Set(udhaarSales.map(s => s.mobile)).size} <span className="text-xs text-zinc-400">Accs</span></h4>
                 </Card>
               </div>
 
               <div className="space-y-4">
-                {sales.filter(s => s.type === "Udhaar").length === 0 ? (
+                {udhaarSales.length === 0 ? (
                   <div className="py-24 text-center space-y-4 animate-in fade-in duration-1000">
                     <div className="w-24 h-24 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl flex items-center justify-center mx-auto shadow-inner border border-emerald-100 dark:border-emerald-900/20">
                       <CheckCircle2 className="h-12 w-12 text-emerald-500" />
@@ -3621,7 +3632,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     </div>
                   </div>
                 ) : (
-                  sales.filter(s => s.type === "Udhaar").map(s => (
+                  udhaarSales.map(s => (
                     <Card key={s.id} className="p-6 bg-white dark:bg-zinc-900 rounded-2xl border-0 shadow-sm group relative overflow-hidden">
                       <div className="absolute left-0 top-0 w-1.5 h-full bg-red-500" />
                       <div className="flex justify-between items-center">
@@ -3845,7 +3856,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                          <p className="text-sm font-bold text-zinc-400 ">No items in menu. Add your first dish above!</p>
                       </div>
                     ) : (
-                      menuItems.filter(item => item.name.toLowerCase().includes(itemSearch.toLowerCase())).map(item => (
+                      filteredMenuItems.map(item => (
                         <div key={item.id} className="p-6 grid grid-cols-12 items-center hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors px-8">
                           <div className="col-span-7">
                             <p className="font-bold text-md text-zinc-900 dark:text-white leading-none">{item.name}</p>
