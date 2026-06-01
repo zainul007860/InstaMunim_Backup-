@@ -1646,7 +1646,20 @@ Stay safe & eat healthy! 🍕
     if (savedAdProvider) {
       setAdProvider(savedAdProvider as any);
     } else {
-      setAdProvider("web");
+      // Auto-select: Native Android App starts with AdMob (best revenue); Web browsers start with Web Ads (Monetag)
+      try {
+        import('@capacitor/core').then(({ Capacitor }) => {
+          if (Capacitor.isNativePlatform()) {
+            setAdProvider("admob");
+          } else {
+            setAdProvider("web");
+          }
+        }).catch(() => {
+          setAdProvider("web");
+        });
+      } catch (e) {
+        setAdProvider("web");
+      }
     }
     const savedAdScript = localStorage.getItem("saas_web_ad_script");
     if (savedAdScript) {
