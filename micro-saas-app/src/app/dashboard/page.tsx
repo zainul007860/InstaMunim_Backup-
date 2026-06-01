@@ -2030,34 +2030,56 @@ Stay safe & eat healthy! 🍕
     setRememberMe(true);
   };
 
-  const announceVoice = (text: string, forceLang?: string) => {
+  const announceVoice = async (text: string, forceLang?: string) => {
     if (!isVoiceAnnouncerEnabled) return;
-    if (typeof window === "undefined" || !window.speechSynthesis) return;
+    
+    const langToUse = forceLang || lang;
+    const localeCodes: Record<string, string> = {
+      hi: "hi-IN",
+      mr: "mr-IN",
+      gu: "gu-IN",
+      bn: "bn-IN",
+      pa: "pa-IN",
+      ta: "ta-IN",
+      te: "te-IN",
+      kn: "kn-IN",
+      ml: "ml-IN",
+      en: "en-US"
+    };
+    const ttsLang = localeCodes[langToUse] || "en-US";
 
+    // 1. Check if running inside native Android / iOS app
+    try {
+      const { Capacitor } = await import('@capacitor/core');
+      if (Capacitor.isNativePlatform()) {
+        const { TextToSpeech } = await import('@capacitor-community/text-to-speech');
+        await TextToSpeech.stop();
+        await TextToSpeech.speak({
+          text: text,
+          lang: ttsLang,
+          rate: 0.95,
+          pitch: 1.0,
+          volume: 1.0,
+          category: 'ambient',
+          queueStrategy: 1
+        });
+        return; // Successfully announced via native TTS
+      }
+    } catch (nativeErr) {
+      console.error("Native TTS failed, falling back to Web speech:", nativeErr);
+    }
+
+    // 2. Web fallback (for browser preview)
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
     try {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      const langToUse = forceLang || lang;
-      
-      const localeCodes: Record<string, string> = {
-        hi: "hi-IN",
-        mr: "mr-IN",
-        gu: "gu-IN",
-        bn: "bn-IN",
-        pa: "pa-IN",
-        ta: "ta-IN",
-        te: "te-IN",
-        kn: "kn-IN",
-        ml: "ml-IN",
-        en: "en-US"
-      };
-      
-      utterance.lang = localeCodes[langToUse] || "en-US";
+      utterance.lang = ttsLang;
       utterance.rate = 0.95;
       utterance.pitch = 1.0;
       window.speechSynthesis.speak(utterance);
     } catch (e) {
-      console.error("Speech Synthesis Error:", e);
+      console.error("Web Speech Synthesis Error:", e);
     }
   };
 
