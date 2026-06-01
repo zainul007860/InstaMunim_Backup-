@@ -2559,7 +2559,20 @@ Stay safe & eat healthy! 🍕
             contents: [{
               parts: [
                 {
-                  text: `You are a menu parser AI. Analyze this menu card image and extract ALL food/drink items with their prices. Return ONLY a minified valid JSON array without any newlines, spaces, or indentation, like this: [{"name":"Paneer Tikka","price":180},{"name":"Masala Chai","price":20}]. If price is not visible, use 0. Extract every single item you can see. Return ONLY the minified JSON array, no explanation.`
+                  text: `You are a menu parser AI. Analyze this menu card image and extract ALL food/drink items with their prices. 
+
+CRITICAL RULE FOR MULTIPLE PRICES/SIZES (e.g., Half, Full, Quarter, Qtr, Small, Medium, Large, Regular, Single, Double):
+If a menu item has multiple prices based on size/portion (usually written line-wise in columns next to the item), split them into separate items by appending the portion/size name in parentheses.
+Example: If "Dal Makhani" has Half = 60 and Full = 100, you must generate TWO separate items:
+1. {"name": "Dal Makhani (Half)", "price": 60}
+2. {"name": "Dal Makhani (Full)", "price": 100}
+
+If a pizza has Small = 150, Medium = 250, Large = 350, you must generate THREE separate items:
+1. {"name": "Cheese Pizza (Small)", "price": 150}
+2. {"name": "Cheese Pizza (Medium)", "price": 250}
+3. {"name": "Cheese Pizza (Large)", "price": 350}
+
+Extract every single item you can see. Return ONLY a minified valid JSON array without any newlines, spaces, or indentation, like this: [{"name":"Paneer Tikka","price":180},{"name":"Masala Chai","price":20}]. If price is not visible, use 0. Return ONLY the minified JSON array, no explanation.`
                 },
                 {
                   inline_data: {
