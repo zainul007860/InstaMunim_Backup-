@@ -2559,7 +2559,7 @@ Stay safe & eat healthy! 🍕
             contents: [{
               parts: [
                 {
-                  text: `You are a menu parser AI. Analyze this menu card image and extract ALL food/drink items with their prices. Return ONLY a valid JSON array like this: [{"name": "Paneer Tikka", "price": 180}, {"name": "Masala Chai", "price": 20}]. If price is not visible, use 0. Extract every single item you can see. Return ONLY the JSON array, no explanation.`
+                  text: `You are a menu parser AI. Analyze this menu card image and extract ALL food/drink items with their prices. Return ONLY a minified valid JSON array without any newlines, spaces, or indentation, like this: [{"name":"Paneer Tikka","price":180},{"name":"Masala Chai","price":20}]. If price is not visible, use 0. Extract every single item you can see. Return ONLY the minified JSON array, no explanation.`
                 },
                 {
                   inline_data: {
@@ -2569,7 +2569,25 @@ Stay safe & eat healthy! 🍕
                 }
               ]
             }],
-            generationConfig: { temperature: 0.1, maxOutputTokens: 2048 }
+            safetySettings: [
+              {
+                category: "HARM_CATEGORY_HARASSMENT",
+                threshold: "BLOCK_NONE"
+              },
+              {
+                category: "HARM_CATEGORY_HATE_SPEECH",
+                threshold: "BLOCK_NONE"
+              },
+              {
+                category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                threshold: "BLOCK_NONE"
+              },
+              {
+                category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+                threshold: "BLOCK_NONE"
+              }
+            ],
+            generationConfig: { temperature: 0.1, maxOutputTokens: 8192 }
           })
         }
       );
@@ -2582,12 +2600,42 @@ Stay safe & eat healthy! 🍕
       const data = await response.json();
       const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
       
-      // Extract JSON from response
-      const jsonMatch = rawText.match(/\[[\s\S]*\]/);
-      if (!jsonMatch) throw new Error("Could not parse menu items from image. Please try a clearer photo.");
+      // Attempt to extract JSON array or object
+      const arrayMatch = rawText.match(/\[[\s\S]*\]/);
+      const objectMatch = rawText.match(/\{[\s\S]*\}/);
       
-      const items = JSON.parse(jsonMatch[0]);
-      if (!Array.isArray(items) || items.length === 0) throw new Error("No items found in the image.");
+      let items: any[] = [];
+      
+      if (arrayMatch) {
+        try {
+          items = JSON.parse(arrayMatch[0]);
+        } catch (e) {
+          console.error("Failed to parse array JSON:", e);
+        }
+      } else if (objectMatch) {
+        try {
+          const obj = JSON.parse(objectMatch[0]);
+          const possibleArray = Object.values(obj).find(val => Array.isArray(val));
+          if (possibleArray) {
+            items = possibleArray;
+          } else {
+            items = Object.entries(obj).map(([key, val]: any) => {
+              const price = typeof val === 'number' ? val : (Number(val?.price) || Number(val) || 0);
+              return { name: key, price: price };
+            });
+          }
+        } catch (e) {
+          console.error("Failed to parse object JSON:", e);
+        }
+      }
+      
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        const blockReason = data.candidates?.[0]?.finishReason;
+        if (blockReason && blockReason !== "STOP") {
+          throw new Error(`Google Gemini blocked this image. Reason: ${blockReason}. Please try cropping the menu card.`);
+        }
+        throw new Error(`Could not parse menu. Gemini Output: ${rawText.replace(/[\r\n]+/g, ' ').substring(0, 150)}...`);
+      }
       
       setScanMenuResults(items.map((item: any) => ({
         name: String(item.name || '').trim(),
