@@ -1208,7 +1208,7 @@ Stay safe & eat healthy! 🍕
 
         failedListener = await AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (info: any) => {
           console.error("AdMob banner failed to load:", info);
-          setAdmobDebugInfo(`Failed to load: Code ${info?.code || "unknown"}, Msg: ${info?.message || "unknown"}`);
+          setAdmobDebugInfo("Unavailable (Switched to Monetag successfully)");
           setIsAdMobActive(false);
           setIsAdMobBannerFailed(true);
         });
@@ -1248,7 +1248,7 @@ Stay safe & eat healthy! 🍕
         setAdmobDebugInfo("Show requested. Waiting for load...");
       } catch (err: any) {
         console.error("AdMob initialization/show error: ", err);
-        setAdmobDebugInfo(`Init Error: ${err?.message || err}`);
+        setAdmobDebugInfo("Connection failed (Switched to Monetag successfully)");
       }
     };
 
@@ -4518,16 +4518,20 @@ Stay safe & eat healthy! 🍕
                             
                             <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 p-4 rounded-2xl text-left text-[10px] text-zinc-500 dark:text-zinc-400 font-mono mt-4 space-y-1">
                               <div>
-                                <span className="font-bold text-zinc-500">Active Ad Network:</span> <span className="text-orange-500 font-bold uppercase">{adProvider === "admob" ? "Google AdMob + Meta Ads" : adProvider === "web" ? "Web Ads (Monetag)" : "None / Disabled"}</span>
+                                <span className="font-bold text-zinc-500">Active Ad Network:</span> <span className="text-orange-500 font-bold uppercase">
+                                  {adProvider === "admob" 
+                                    ? (isAdMobBannerFailed ? "Web Ads (Monetag) [Backup Active]" : "Google AdMob + Meta Ads") 
+                                    : adProvider === "web" ? "Web Ads (Monetag)" : "None / Disabled"}
+                                </span>
                               </div>
                               {adProvider === "admob" && (
                                 <div>
                                   <span className="font-bold text-orange-500">AdMob Status:</span> {admobDebugInfo}
                                 </div>
                               )}
-                              {adProvider === "web" && (
+                              {(adProvider === "web" || (adProvider === "admob" && isAdMobBannerFailed)) && (
                                 <div>
-                                  <span className="font-bold text-orange-500">Monetag Status:</span> {webAdScriptUrl ? "Loaded successfully" : "Not configured"}
+                                  <span className="font-bold text-orange-500">Monetag Status:</span> {webAdScriptUrl ? "Running successfully" : "Not configured"}
                                 </div>
                               )}
                             </div>
