@@ -978,7 +978,7 @@ export default function LandingPage() {
               &copy; 2026 INSTAMUNIM SMART POS • BEYOND BILLING • ALL RIGHTS RESERVED
             </p>
             <div className="flex gap-6 text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
-              <a href="#" className="hover:text-orange-400 transition-colors">Privacy Policy</a>
+              <a href="/privacy" className="hover:text-orange-400 transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-orange-400 transition-colors">Terms of Use</a>
             </div>
           </div>

@@ -177,7 +177,7 @@ export default function Dashboard() {
         "Total Sale Report": "बिक्री रिपोर्ट",
         "Marketing": "मार्केटिंग",
         "Support": "सपोर्ट",
-        "Legal": "कानूनी",
+        "Privacy & Policy": "प्राइवेसी और पॉलिसी",
         "MoreMenu": "अधिक मेन्यू",
         "Inventory": "इन्वेंटरी",
         "Settings": "सेटिंग्स",
@@ -235,7 +235,7 @@ export default function Dashboard() {
         "Total Sale Report": "विक्री अहवाल",
         "Marketing": "मार्केटिंग",
         "Support": "मदत",
-        "Legal": "कायदेशीर",
+        "Privacy & Policy": "गोपनीयता आणि धोरण",
         "MoreMenu": "अधिक पर्याय",
         "Inventory": "इन्व्हेंटरी",
         "Settings": "सेटिंग्ज",
@@ -293,7 +293,7 @@ export default function Dashboard() {
         "Total Sale Report": "વેચાણ રીપોર્ટ",
         "Marketing": "માર્કેટિંગ",
         "Support": "સપોર્ટ",
-        "Legal": "કાયદાકીય",
+        "Privacy & Policy": "ગોપનીયતા અને નીતિ",
         "MoreMenu": "વધુ મેનૂ",
         "Inventory": "ઇન્વેન્ટરી",
         "Settings": "સેટિંગ્સ",
@@ -351,7 +351,7 @@ export default function Dashboard() {
         "Total Sale Report": "বিক্রয় রিপোর্ট",
         "Marketing": "মার্কেটিং",
         "Support": "সহায়তা",
-        "Legal": "আইনি বিবরণ",
+        "Privacy & Policy": "গোপনীয়তা ও নীতি",
         "MoreMenu": "আরও মেনু",
         "Inventory": "ইনভেন্টরি",
         "Settings": "সেটিংস",
@@ -409,7 +409,7 @@ export default function Dashboard() {
         "Total Sale Report": "ਵਿਕਰੀ ਰਿਪੋਰਟ",
         "Marketing": "ਮਾਰਕੀਟਿੰਗ",
         "Support": "ਸਪੋਰਟ",
-        "Legal": "ਕਾਨੂੰਨੀ",
+        "Privacy & Policy": "ਪ੍ਰਾਈਵੇਸੀ ਅਤੇ ਪਾਲਿਸੀ",
         "MoreMenu": "ਹੋਰ ਮੇਨੂ",
         "Inventory": "ਇਨਵੈਂਟਰੀ",
         "Settings": "ਸੈਟਿੰਗਜ਼",
@@ -467,7 +467,7 @@ export default function Dashboard() {
         "Total Sale Report": "விற்பனை அறிக்கை",
         "Marketing": "விற்பனை மேம்பாடு",
         "Support": "உதவி",
-        "Legal": "சட்ட விதிகள",
+        "Privacy & Policy": "தனியுரிமைக் கொள்கை",
         "MoreMenu": "கூடுதல் மெனு",
         "Inventory": "சரக்கு இருப்பு",
         "Settings": "அமைப்புகள்",
@@ -525,7 +525,7 @@ export default function Dashboard() {
         "Total Sale Report": "అమ్మకాల నివేదిక",
         "Marketing": "మార్కెటింగ్",
         "Support": "సహాయం",
-        "Legal": "చట్టపరమైన",
+        "Privacy & Policy": "గోప్యత & విధానం",
         "MoreMenu": "మరిన్ని మెనూలు",
         "Inventory": "ఇన్వెంటరీ",
         "Settings": "సెట్టింగ్స్",
@@ -583,7 +583,7 @@ export default function Dashboard() {
         "Total Sale Report": "ಮಾರಾಟ ವರದಿ",
         "Marketing": "ಮಾರ್ಕೆಟಿംഗ്",
         "Support": "ಬೆಂಬಲ",
-        "Legal": "ಕಾನೂನು ಮಾಹಿತಿ",
+        "Privacy & Policy": "ಗೌಪ್ಯತೆ ಮತ್ತು ನೀತಿ",
         "MoreMenu": "ಹೆಚ್ಚಿನ ಮೆನು",
         "Inventory": "ದಾಸ್ತಾನು",
         "Settings": "ಸೆಟ್ಟಿಂಗ್ಸ್",
@@ -641,7 +641,7 @@ export default function Dashboard() {
         "Total Sale Report": "വിൽപന റിപ്പോർട്ട്",
         "Marketing": "മാർക്കറ്റിംഗ്",
         "Support": "സഹായം",
-        "Legal": "നിയമപരം",
+        "Privacy & Policy": "സ്വകാര്യതാ നയം",
         "MoreMenu": "കൂടുതൽ മെനുകൾ",
         "Inventory": "ഇൻവെന്ററി",
         "Settings": "സെറ്റിംഗ്സ്",
@@ -4059,40 +4059,86 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
           {activeTab === "Legal" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-28 px-4">
               <header className="px-2 pt-4">
-                <h2 className="text-4xl font-black tracking-tighter">Legal & Privacy</h2>
-                <p className="text-zinc-500 font-bold mt-1">Please read our terms carefully.</p>
+                <h2 className="text-4xl font-black tracking-tighter">{t("Privacy & Policy")}</h2>
+                <p className="text-zinc-500 font-bold mt-1">{t("Please read our terms and policies carefully.")}</p>
               </header>
 
               <div className="space-y-4">
-                {/* 1. WhatsApp Usage Policy */}
+                {/* 1. Cloud Storage & Syncing */}
                 <Card className="p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900 border-0 shadow-sm space-y-4">
-                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">1. WhatsApp Usage Policy</h3>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center border border-blue-100 dark:border-blue-900/30 shrink-0">
+                      <Cloud className="h-6 w-6 text-blue-500" />
+                    </div>
+                    <h3 className="text-xl font-black text-zinc-900 dark:text-white">1. Cloud Storage & Syncing</h3>
+                  </div>
                   <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                    This application provides a utility to pre-fill WhatsApp messages for invoices. The "Shop Owner" (User) is solely responsible for sending these messages. The application does not automate spam. Overuse of WhatsApp features that results in a temporary or permanent ban of the User's number is not the responsibility of the application or its owners.
+                    InstaMunim utilizes a secure, enterprise-grade Supabase cloud database to back up and synchronize all your business sales invoices, customer details, credentials, and settings. This ensures real-time access across devices and safeguards your business operations from data loss.
                   </p>
                 </Card>
 
-                {/* 2. Data Privacy & Storage */}
+                {/* 2. Device & Camera Permissions */}
                 <Card className="p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900 border-0 shadow-sm space-y-4">
-                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">2. Data Privacy & Storage</h3>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-orange-50 dark:bg-orange-950/30 flex items-center justify-center border border-orange-100 dark:border-orange-900/30 shrink-0">
+                      <Camera className="h-6 w-6 text-orange-500" />
+                    </div>
+                    <h3 className="text-xl font-black text-zinc-900 dark:text-white">2. Device & Camera Permissions</h3>
+                  </div>
                   <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                    Currently, all business data including sales, menu items, and expenses are stored locally on your device (Browser Storage). While this ensures offline access, clearing browser data or uninstalling the app may result in data loss. We are not liable for any data loss occurring due to device failure or user error.
+                    Our application requires access to the camera exclusively to scan item barcodes for lightning-fast bill checkouts. Image frames are processed locally on your device in real-time and are never uploaded to any external server. Local storage is also utilized to cache settings for offline readiness.
                   </p>
                 </Card>
 
-                {/* 3. Subscription & Payments */}
+                {/* 3. WhatsApp Integration & Limits */}
                 <Card className="p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900 border-0 shadow-sm space-y-4">
-                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">3. Subscription & Payments</h3>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-950/30 flex items-center justify-center border border-emerald-100 dark:border-emerald-900/30 shrink-0">
+                      <MessageCircle className="h-6 w-6 text-emerald-500" />
+                    </div>
+                    <h3 className="text-xl font-black text-zinc-900 dark:text-white">3. WhatsApp Integration & Limits</h3>
+                  </div>
                   <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                    The usage of this application is subject to a monthly subscription fee (e.g., ₹299/month). Failure to pay the subscription may result in limited access to features or account suspension from the Admin Panel.
+                    This app provides a utility to pre-fill WhatsApp messages to send invoice links or digital receipts. The shop owner (user) remains solely responsible for initiating and sending these messages. Any suspension or ban from WhatsApp resulting from message overuse is not the responsibility of InstaMunim.
                   </p>
                 </Card>
 
-                {/* 4. Limitation of Liability */}
+                {/* 4. Subscriptions & Payments */}
                 <Card className="p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900 border-0 shadow-sm space-y-4">
-                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">4. Limitation of Liability</h3>
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 flex items-center justify-center border border-indigo-100 dark:border-indigo-900/30 shrink-0">
+                      <CreditCard className="h-6 w-6 text-indigo-500" />
+                    </div>
+                    <h3 className="text-xl font-black text-zinc-900 dark:text-white">4. Subscriptions & Payments</h3>
+                  </div>
                   <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                    In no event shall the application owners be liable for any indirect, incidental, or consequential damages arising out of the use of this service.
+                    Access to high-speed billing, advanced CRM templates, and multi-staff credentials relies on active monthly subscriptions. Failure to renew the service plan may restrict application utility or result in account suspension from the Admin Panel.
+                  </p>
+                </Card>
+
+                {/* 5. Account Deletion & Danger Zone */}
+                <Card className="p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900 border-0 shadow-sm space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/30 flex items-center justify-center border border-rose-100 dark:border-rose-900/30 shrink-0">
+                      <Trash2 className="h-6 w-6 text-rose-500" />
+                    </div>
+                    <h3 className="text-xl font-black text-zinc-900 dark:text-white">5. Account Deletion Policy</h3>
+                  </div>
+                  <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    We support complete user autonomy. You can instantly delete your account and wipe all associated sales, inventory, and profit data directly via the app dashboard under <span className="font-extrabold text-rose-500">Settings &gt; Account Security &gt; Danger Zone</span>. This action permanently and irreversibly purges your data from Supabase database.
+                  </p>
+                </Card>
+
+                {/* 6. Support & Contact */}
+                <Card className="p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900 border-0 shadow-sm space-y-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center border border-amber-100 dark:border-amber-900/30 shrink-0">
+                      <Send className="h-6 w-6 text-amber-500" />
+                    </div>
+                    <h3 className="text-xl font-black text-zinc-900 dark:text-white">6. Support Contact</h3>
+                  </div>
+                  <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                    For any support queries, data export assistance, or legal clarifications, reach out to our helpdesk at <span className="font-extrabold text-amber-600 dark:text-amber-400">Zainul007860@gmail.com</span> or message us directly on WhatsApp support.
                   </p>
                 </Card>
 
@@ -4103,7 +4149,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       <CheckCircle2 className="h-6 w-6 text-emerald-500" />
                     </div>
                     <p className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 italic italic">
-                      By using this application, you agree to these terms.
+                      By using this application, you agree to these policies and terms.
                     </p>
                   </div>
                 </div>
@@ -4129,7 +4175,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   { id: "Rent", label: "Rent", icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-50" },
                   { id: "Khata", label: "UDHAAR KHATA", icon: Book, color: "text-orange-500", bg: "bg-orange-50" },
                   { id: "Marketing", label: "Smart CRM", icon: Send, color: "text-indigo-500", bg: "bg-indigo-50" },
-                  { id: "Legal", label: "Legal", icon: ShieldCheck, color: "text-red-500", bg: "bg-red-50" },
+                  { id: "Legal", label: "Privacy & Policy", icon: ShieldCheck, color: "text-red-500", bg: "bg-red-50" },
                   { id: "Support", label: "Support", icon: Smartphone, color: "text-emerald-500", bg: "bg-emerald-50" },
                 ].map(item => (
                   <button 
