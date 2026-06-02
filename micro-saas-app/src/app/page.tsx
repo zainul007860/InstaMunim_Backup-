@@ -732,10 +732,10 @@ export default function LandingPage() {
               </div>
               <p className="text-zinc-655 text-xs font-semibold leading-relaxed mb-6">"Automatic database backup feature best hai. Mera phone toat gaya tha par naye phone me log in krte hi menu aur sales data wapas mil gaya."</p>
               <div className="flex items-center gap-3 border-t border-zinc-100 pt-4">
-                <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&h=120&q=80" alt="Zainul Khan Avatar" className="w-10 h-10 rounded-full object-cover border-2 border-orange-100" />
+                <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=120&h=120&q=80" alt="Zaid Khan Avatar" className="w-10 h-10 rounded-full object-cover border-2 border-orange-100" />
                 <div>
                   <p className="font-extrabold text-xs text-zinc-950 flex items-center gap-1.5">
-                    Zainul Khan 
+                    Zaid Khan 
                     <span class="inline-flex items-center bg-green-50 text-green-700 text-[8px] font-black px-1.5 py-0.5 rounded-full border border-green-200 shrink-0">
                       <Check className="w-2.5 h-2.5 mr-0.5 text-green-600" /> VERIFIED
                     </span>

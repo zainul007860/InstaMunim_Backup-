@@ -3403,7 +3403,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     </p>
                   </div>
                   <Button 
-                    onClick={() => window.open(`https://wa.me/917838229178?text=${encodeURIComponent(`Hi Zainul, I want to upgrade to the Paid Plan to unlock Rent Tracker for: ${restaurantName} (${ownerMobile}).`)}`, "_blank")}
+                    onClick={() => window.open(`https://wa.me/917838229178?text=${encodeURIComponent(`Hi Admin, I want to upgrade to the Paid Plan to unlock Rent Tracker for: ${restaurantName} (${ownerMobile}).`)}`, "_blank")}
                     className="h-14 px-8 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all z-10"
                   >
                     Activate Smart Business Plan
@@ -3999,18 +3999,18 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     <Users className="h-10 w-10 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-3xl font-black tracking-tighter">Zainul Khan</h3>
-                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mt-2">Platform Founder</p>
+                    <h3 className="text-3xl font-black tracking-tighter">InstaMunim Admin</h3>
+                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mt-2">Platform Admin</p>
                   </div>
                   <div className="w-full space-y-3 pt-2">
                     <Button 
-                      onClick={() => window.open(`https://wa.me/917838229178?text=${encodeURIComponent("Hi Zainul, I need help with my InstaMunim POS. Can you please assist me?")}`, "_blank")}
+                      onClick={() => window.open(`https://wa.me/917838229178?text=${encodeURIComponent("Hi Admin, I need help with my InstaMunim POS. Can you please assist me?")}`, "_blank")}
                       className="w-full h-16 bg-[#00c875] hover:bg-[#00b067] text-white rounded-3xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-3 active:scale-95 transition-all"
                     >
                       <MessageCircle className="h-5 w-5" /> Contact on WhatsApp
                     </Button>
                     <Button 
-                      onClick={() => window.location.href = "mailto:Zainul007860@gmail.com?subject=InstaMunim Support Request"}
+                      onClick={() => window.location.href = "mailto:instamunim@gmail.com?subject=InstaMunim Support Request"}
                       variant="outline"
                       className="w-full h-16 bg-white dark:bg-zinc-800 border-zinc-100 dark:border-zinc-700 rounded-3xl font-black text-xs uppercase tracking-widest shadow-sm flex items-center justify-center gap-3 active:scale-95 transition-all"
                     >
@@ -4041,7 +4041,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       </div>
                       <div>
                         <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Email Support</p>
-                        <p className="text-lg font-black tracking-tight truncate max-w-[180px]">Zainul007860@gmail.com</p>
+                        <p className="text-lg font-black tracking-tight truncate max-w-[180px]">instamunim@gmail.com</p>
                       </div>
                     </div>
                   </div>
@@ -4138,7 +4138,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     <h3 className="text-xl font-black text-zinc-900 dark:text-white">6. Support Contact</h3>
                   </div>
                   <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 leading-relaxed">
-                    For any support queries, data export assistance, or legal clarifications, reach out to our helpdesk at <span className="font-extrabold text-amber-600 dark:text-amber-400">Zainul007860@gmail.com</span> or message us directly on WhatsApp support.
+                    For any support queries, data export assistance, or legal clarifications, reach out to our helpdesk at <span className="font-extrabold text-amber-600 dark:text-amber-400">instamunim@gmail.com</span> or message us directly on WhatsApp support.
                   </p>
                 </Card>
 
@@ -4227,7 +4227,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     </p>
                   </div>
                   <Button 
-                    onClick={() => window.open(`https://wa.me/917838229178?text=${encodeURIComponent(`Hi Zainul, I want to upgrade to the Paid Plan to unlock Daily Stock for: ${restaurantName} (${ownerMobile}).`)}`, "_blank")}
+                    onClick={() => window.open(`https://wa.me/917838229178?text=${encodeURIComponent(`Hi Admin, I want to upgrade to the Paid Plan to unlock Daily Stock for: ${restaurantName} (${ownerMobile}).`)}`, "_blank")}
                     className="h-14 px-8 bg-orange-600 hover:bg-orange-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all z-10"
                   >
                     Activate Smart Business Plan
@@ -5320,7 +5320,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
             <div className="space-y-3 pt-2">
               <Button 
-                onClick={() => window.open(`https://wa.me/917838229178?text=${encodeURIComponent(`Hi Zainul, I want to upgrade to the Paid Plan for: ${restaurantName} (${ownerMobile}). Please activate my account.`)}`, "_blank")}
+                onClick={() => window.open(`https://wa.me/917838229178?text=${encodeURIComponent(`Hi Admin, I want to upgrade to the Paid Plan for: ${restaurantName} (${ownerMobile}). Please activate my account.`)}`, "_blank")}
                 className="w-full h-14 bg-[#00c875] hover:bg-[#00b067] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-3 active:scale-95 transition-all"
               >
                 <MessageCircle className="h-5 w-5" /> UPGRADE NOW
