@@ -841,6 +841,9 @@ Stay safe & eat healthy! 🍕
 ━━━━━━━━━━━━━━━━━━━━━`);
 
   const [itemSearch, setItemSearch] = useState("");
+  const [manualItemName, setManualItemName] = useState("");
+  const [manualItemPrice, setManualItemPrice] = useState("");
+  const [isManualMode, setIsManualMode] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [voicePhase, setVoicePhase] = useState<'items' | 'name' | 'mobile'>('items');
   const [voiceInstruction, setVoiceInstruction] = useState("Bolna shuru kijiye...");
@@ -2327,6 +2330,25 @@ Stay safe & eat healthy! 🍕
     window.open(`https://wa.me/91${lastOrderDetails.mobile}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
+  const handleAddManualItem = () => {
+    if (!manualItemName.trim()) {
+      alert("Bhai, product ka naam likho!");
+      return;
+    }
+    const priceNum = Number(manualItemPrice);
+    if (isNaN(priceNum) || priceNum <= 0) {
+      alert("Bhai, sahi price (rate) daalo!");
+      return;
+    }
+    addToCart({
+      name: manualItemName.trim(),
+      price: priceNum
+    });
+    setManualItemName("");
+    setManualItemPrice("");
+    setIsManualMode(false);
+  };
+
   const addToCart = (item: any) => {
     setCart(prev => {
       const existing = prev.find(c => c.name === item.name);
@@ -2888,38 +2910,114 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               <div className="flex-1 overflow-y-auto p-5 pt-0 space-y-4 scrollbar-hide">
                 {/* SELECT ITEMS SECTION */}
                 <div className="space-y-3">
-                  <h4 className="text-[9px] font-black uppercase text-zinc-400 tracking-[0.2em]">Select Items</h4>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-300" />
-                      <Input placeholder="Search dishes..." value={itemSearch} onChange={e => setItemSearch(e.target.value)} className="h-10 pl-10 rounded-xl bg-zinc-50 dark:bg-zinc-900 border-0 font-bold placeholder:text-zinc-300 text-xs w-full" />
-                    </div>
+                  <div className="flex justify-between items-center px-1">
+                    <h4 className="text-[9px] font-black uppercase text-zinc-400 tracking-[0.2em]">Select Items</h4>
                     <button 
                       onClick={() => {
-                        if (!isSubscribed) {
-                          setShowUpgradeModal(true);
-                        } else {
-                          setShowScanner(true);
+                        setIsManualMode(!isManualMode);
+                        if (!isManualMode) {
+                          setManualItemName(itemSearch); // Autofill manual name from search query if any
                         }
-                      }} 
-                      className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center hover:bg-orange-600 hover:text-white transition-colors active:scale-95 shadow-sm"
-                      title="Scan Barcode"
+                      }}
+                      className="text-[9px] font-black uppercase text-orange-600 tracking-wider hover:underline"
                     >
-                      <Camera className="h-5 w-5" />
+                      {isManualMode ? "← Show Menu" : "+ Custom Entry"}
                     </button>
                   </div>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {filteredMenuItems.slice(0, 15).map(item => (
-                      <button key={item.id} onClick={() => addToCart(item)} className="p-1.5 bg-white dark:bg-zinc-900 rounded-xl text-left border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all active:scale-95 group">
-                        <p className="font-bold text-[10px] text-zinc-900 dark:text-white lowercase leading-tight truncate">{item.name}</p>
-                        <p className="text-[8px] font-bold text-zinc-400 mt-0.5">₹{item.price}</p>
-                      </button>
-                    ))}
-                  </div>
-                  {filteredMenuItems.length > 15 && (
-                    <p className="text-[9px] text-center text-zinc-400 font-bold mt-1 uppercase tracking-wider">
-                      + {filteredMenuItems.length - 15} more items (search to find)
-                    </p>
+
+                  {isManualMode ? (
+                    <div className="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                      <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Custom Product Detail</p>
+                      <div className="space-y-2">
+                        <Input 
+                          placeholder="Product Name (e.g. Cold Drink)" 
+                          value={manualItemName}
+                          onChange={e => setManualItemName(e.target.value)}
+                          className="h-10 rounded-xl bg-white dark:bg-zinc-950 font-bold text-xs"
+                        />
+                        <div className="flex gap-2">
+                          <Input 
+                            type="number"
+                            placeholder="Price (₹)" 
+                            value={manualItemPrice}
+                            onChange={e => setManualItemPrice(e.target.value)}
+                            className="h-10 rounded-xl bg-white dark:bg-zinc-950 font-black text-xs flex-1"
+                          />
+                          <button 
+                            onClick={handleAddManualItem}
+                            className="h-10 px-4 bg-orange-600 text-white rounded-xl font-black text-xs hover:bg-orange-700 active:scale-95 transition-all shadow-md shadow-orange-600/20"
+                          >
+                            Add to Cart
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-300" />
+                          <Input placeholder="Search dishes..." value={itemSearch} onChange={e => setItemSearch(e.target.value)} className="h-10 pl-10 rounded-xl bg-zinc-50 dark:bg-zinc-900 border-0 font-bold placeholder:text-zinc-300 text-xs w-full" />
+                        </div>
+                        <button 
+                          onClick={() => {
+                            if (!isSubscribed) {
+                              setShowUpgradeModal(true);
+                            } else {
+                              setShowScanner(true);
+                            }
+                          }} 
+                          className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center hover:bg-orange-600 hover:text-white transition-colors active:scale-95 shadow-sm"
+                          title="Scan Barcode"
+                        >
+                          <Camera className="h-5 w-5" />
+                        </button>
+                      </div>
+
+                      {filteredMenuItems.length === 0 ? (
+                        itemSearch.trim() && (
+                          <div className="p-4 bg-orange-50/50 dark:bg-orange-900/10 rounded-2xl border border-dashed border-orange-200 dark:border-orange-900/30 text-center space-y-2 animate-in fade-in duration-300">
+                            <p className="text-[10px] font-bold text-zinc-500">"{itemSearch}" menu mein nahi mila.</p>
+                            <div className="flex gap-2 justify-center max-w-[260px] mx-auto">
+                              <Input 
+                                type="number"
+                                placeholder="Price (₹)"
+                                id="direct-price-input"
+                                className="h-8 rounded-lg bg-white dark:bg-zinc-950 font-black text-[10px] text-center w-24"
+                              />
+                              <button 
+                                onClick={() => {
+                                  const priceInput = document.getElementById("direct-price-input") as HTMLInputElement;
+                                  const price = Number(priceInput?.value || 0);
+                                  if (price <= 0) return alert("Bhai, sahi price daalo.");
+                                  addToCart({ name: itemSearch.trim(), price });
+                                  setItemSearch(""); // clear search
+                                }}
+                                className="h-8 px-3 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-black text-[10px] transition-all active:scale-95"
+                              >
+                                Add to Cart
+                              </button>
+                            </div>
+                          </div>
+                        )
+                      ) : (
+                        <>
+                          <div className="grid grid-cols-3 gap-1.5">
+                            {filteredMenuItems.slice(0, 15).map(item => (
+                              <button key={item.id} onClick={() => addToCart(item)} className="p-1.5 bg-white dark:bg-zinc-900 rounded-xl text-left border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all active:scale-95 group">
+                                <p className="font-bold text-[10px] text-zinc-900 dark:text-white lowercase leading-tight truncate">{item.name}</p>
+                                <p className="text-[8px] font-bold text-zinc-400 mt-0.5">₹{item.price}</p>
+                              </button>
+                            ))}
+                          </div>
+                          {filteredMenuItems.length > 15 && (
+                            <p className="text-[9px] text-center text-zinc-400 font-bold mt-1 uppercase tracking-wider">
+                              + {filteredMenuItems.length - 15} more items (search to find)
+                            </p>
+                          )}
+                        </>
+                      )}
+                    </>
                   )}
                 </div>
 
