@@ -2100,6 +2100,10 @@ Stay safe & eat healthy! 🍕
         };
         img.src = event.target?.result as string;
       };
+      reader.onerror = () => {
+        setScanError("Failed to read image file.");
+        setIsScanning(false);
+      };
       reader.readAsDataURL(file);
     } catch (err) {
       console.error(err);
