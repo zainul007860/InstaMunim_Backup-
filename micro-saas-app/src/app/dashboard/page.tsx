@@ -709,6 +709,11 @@ export default function Dashboard() {
   const [newScannedQty, setNewScannedQty] = useState("1");
   const [restaurantName, setRestaurantName] = useState("InstaMunim");
   const [storeLogo, setStoreLogo] = useState<string | null>(null);
+  const [storeUpiId, setStoreUpiId] = useState("");
+  const [storeUpiName, setStoreUpiName] = useState("");
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanError, setScanError] = useState("");
+  const [scanSuccessMessage, setScanSuccessMessage] = useState("");
   const [storeAddress, setStoreAddress] = useState("Premium Plaza, Main Road, New Delhi");
   const [storePhone, setStorePhone] = useState("+91 9999 888 777");
   const [storeWebsite, setStoreWebsite] = useState("www.khankitchen.com");
@@ -1490,6 +1495,8 @@ Stay safe & eat healthy! 🍕
           const savedWebsite = localStorage.getItem("saas_store_website");
           const savedGstin = localStorage.getItem("saas_store_gstin");
           const savedRent = localStorage.getItem("saas_monthly_rent");
+          const savedUpiId = localStorage.getItem("saas_store_upi_id");
+          const savedUpiName = localStorage.getItem("saas_store_upi_name");
 
           if (savedName) setRestaurantName(savedName);
           if (savedLogo) setStoreLogo(savedLogo);
@@ -1498,6 +1505,8 @@ Stay safe & eat healthy! 🍕
           if (savedWebsite) setStoreWebsite(savedWebsite);
           if (savedGstin) setStoreGstin(savedGstin);
           if (savedRent) setMonthlyRent(Number(savedRent));
+          if (savedUpiId) setStoreUpiId(savedUpiId);
+          if (savedUpiName) setStoreUpiName(savedUpiName);
           setShowExitDialog(true);
           window.history.pushState(null, "", window.location.pathname);
         }
@@ -1547,6 +1556,10 @@ Stay safe & eat healthy! 🍕
             if (savedZomato) setZomatoCommission(Number(savedZomato));
             const savedZomatoType = localStorage.getItem('saas_zomato_comm_type');
             if (savedZomatoType) setZomatoCommType(savedZomatoType);
+            const savedUpiId = localStorage.getItem('saas_store_upi_id');
+            if (savedUpiId) setStoreUpiId(savedUpiId);
+            const savedUpiName = localStorage.getItem('saas_store_upi_name');
+            if (savedUpiName) setStoreUpiName(savedUpiName);
             // Auto-fetch from cloud
             const { data } = await supabase.from('stores').select('*').eq('owner_mobile', nativeMobile).single();
             if (data) {
@@ -1586,6 +1599,10 @@ Stay safe & eat healthy! 🍕
         if (savedZomato) setZomatoCommission(Number(savedZomato));
         const savedZomatoType = localStorage.getItem("saas_zomato_comm_type");
         if (savedZomatoType) setZomatoCommType(savedZomatoType);
+        const savedUpiId = localStorage.getItem("saas_store_upi_id");
+        if (savedUpiId) setStoreUpiId(savedUpiId);
+        const savedUpiName = localStorage.getItem("saas_store_upi_name");
+        if (savedUpiName) setStoreUpiName(savedUpiName);
         // Auto-fetch from cloud for existing sessions
         const autoSync = async () => {
           const { data } = await supabase.from('stores').select('*').eq('owner_mobile', savedOwnerMobile).single();
@@ -2008,6 +2025,87 @@ Stay safe & eat healthy! 🍕
       }
       setAiInsightText(insight);
     }, 600);
+  };
+
+  const loadJsQR = () => {
+    return new Promise<any>((resolve, reject) => {
+      if ((window as any).jsQR) {
+        resolve((window as any).jsQR);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js";
+      script.onload = () => resolve((window as any).jsQR);
+      script.onerror = (err) => reject(err);
+      document.head.appendChild(script);
+    });
+  };
+
+  const handleQrUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsScanning(true);
+    setScanError("");
+    setScanSuccessMessage("");
+
+    try {
+      const jsQR = await loadJsQR();
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            setScanError("Failed to initialize scanner canvas context.");
+            setIsScanning(false);
+            return;
+          }
+
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0, img.width, img.height);
+
+          const imageData = ctx.getImageData(0, 0, img.width, img.height);
+          const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: "dontInvert",
+          });
+
+          if (code) {
+            const decodedData = code.data;
+            if (decodedData.startsWith("upi://")) {
+              const urlParams = new URLSearchParams(decodedData.split("?")[1]);
+              const upiId = urlParams.get("pa") || "";
+              const upiName = urlParams.get("pn") || "";
+
+              if (upiId) {
+                setStoreUpiId(upiId);
+                setStoreUpiName(upiName);
+                setScanSuccessMessage(`Successfully verified! UPI ID: ${upiId}, Name: ${upiName || 'N/A'}`);
+              } else {
+                setScanError("No UPI ID (pa) found in this QR code.");
+              }
+            } else {
+              setScanError("Not a standard UPI QR code. Please upload a standard payment QR code.");
+            }
+          } else {
+            setScanError("Could not find a clear QR code in this image. Please make sure the image is clear and contains a single QR code.");
+          }
+          setIsScanning(false);
+        };
+        img.onerror = () => {
+          setScanError("Failed to parse image file.");
+          setIsScanning(false);
+        };
+        img.src = event.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    } catch (err) {
+      console.error(err);
+      setScanError("Failed to load QR scanner library. Please check your internet connection.");
+      setIsScanning(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -3124,6 +3222,39 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                               ₹{Math.max(0, Number(cashReceived) - grandTotal)}
                             </span>
                           </div>
+                        </div>
+                      )}
+
+                      {newType === "Online" && (
+                        <div className="p-6 bg-zinc-950 text-white rounded-[2rem] border border-zinc-850 flex flex-col items-center justify-center space-y-4 text-center w-full">
+                          {storeUpiId ? (
+                            <>
+                              <div className="relative p-4 bg-white rounded-3xl overflow-hidden shadow-2xl flex items-center justify-center">
+                                <img 
+                                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                                    `upi://pay?pa=${storeUpiId}&pn=${encodeURIComponent(storeUpiName || restaurantName)}&am=${grandTotal}&cu=INR&tn=Invoice`
+                                  )}`} 
+                                  alt="UPI Payment QR Code" 
+                                  className="w-40 h-40 object-contain"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-[10px] font-black tracking-widest text-zinc-400 uppercase">SCAN TO PAY</p>
+                                <p className="text-2xl font-black text-orange-500">₹{grandTotal.toFixed(2)}</p>
+                                <p className="text-[9px] font-bold text-zinc-300 leading-none">
+                                  Paying to: <span className="text-white font-extrabold">{storeUpiName || restaurantName}</span>
+                                </p>
+                                <p className="text-[8px] font-bold text-zinc-500 leading-none mt-1 select-all" title="Click to copy UPI ID">{storeUpiId}</p>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="space-y-3 p-4">
+                              <p className="text-[11px] font-bold text-amber-500 leading-relaxed uppercase tracking-wider">⚠️ UPI ID Not Configured</p>
+                              <p className="text-[9px] text-zinc-400 leading-relaxed font-semibold">
+                                Please go to <span className="font-extrabold text-white">Settings &gt; Store Profile</span> and save or upload your UPI QR code scanner first.
+                              </p>
+                            </div>
+                          )}
                         </div>
                       )}
 
@@ -4272,6 +4403,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         localStorage.setItem("saas_swiggy_comm_type", swiggyCommType);
                         localStorage.setItem("saas_zomato_comm", zomatoCommission.toString());
                         localStorage.setItem("saas_zomato_comm_type", zomatoCommType);
+                        localStorage.setItem("saas_store_upi_id", storeUpiId || "");
+                        localStorage.setItem("saas_store_upi_name", storeUpiName || "");
                         
                         // Cloud Sync (Safe Mode via Secure RPC)
                         const { error: syncError } = await supabase
@@ -4412,6 +4545,70 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 className="h-20 rounded-3xl bg-zinc-50 dark:bg-zinc-800 border-0 shadow-inner text-3xl font-black px-6 focus:ring-2 ring-orange-500/20 transition-all" 
                                 placeholder="0"
                               />
+                            </div>
+
+                            {/* UPI ID & Payments Config */}
+                            <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800 space-y-6">
+                              <h4 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-wider pl-1">UPI Payments Configuration</h4>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-3">
+                                  <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Store UPI ID</Label>
+                                  <Input 
+                                    value={storeUpiId} 
+                                    onChange={e => setStoreUpiId(e.target.value)} 
+                                    className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-6 shadow-sm" 
+                                    placeholder="merchant@upi"
+                                  />
+                                </div>
+                                <div className="space-y-3">
+                                  <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">UPI Display Name (Merchant Name)</Label>
+                                  <Input 
+                                    value={storeUpiName} 
+                                    onChange={e => setStoreUpiName(e.target.value)} 
+                                    className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-6 shadow-sm" 
+                                    placeholder="Sharma Dhaba"
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="space-y-3">
+                                <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Upload UPI QR Scanner (PNG/JPG)</Label>
+                                <div className="flex flex-col sm:flex-row items-center gap-4 p-5 bg-zinc-50 dark:bg-zinc-950/40 rounded-3xl border border-zinc-150 dark:border-zinc-850">
+                                  <label className="cursor-pointer bg-orange-500 hover:bg-orange-600 text-white px-6 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest inline-flex items-center gap-2 active:scale-95 transition-all shadow-md shadow-orange-500/20 shrink-0">
+                                    <Camera className="h-4 w-4" /> Upload QR Code
+                                    <input 
+                                      type="file" 
+                                      className="hidden" 
+                                      accept="image/png, image/jpeg, image/jpg, .png, .jpg, .jpeg" 
+                                      onChange={handleQrUpload} 
+                                    />
+                                  </label>
+                                  <div className="text-left">
+                                    <p className="text-[10px] font-black text-zinc-650 dark:text-zinc-400 uppercase tracking-wide">AUTO-SCAN UPI QR</p>
+                                    <p className="text-[9px] text-zinc-400 font-semibold leading-relaxed mt-0.5">Upload screenshot or photo of your GooglePay/PhonePe business QR. System will scan and auto-extract UPI parameters.</p>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {isScanning && (
+                                <div className="p-4 bg-orange-50/50 dark:bg-orange-950/10 rounded-2xl border border-orange-100 dark:border-orange-900/20 flex items-center gap-2">
+                                  <Loader2 className="h-4 w-4 animate-spin text-orange-500" />
+                                  <span className="text-xs font-bold text-orange-600">Scanning uploaded QR image...</span>
+                                </div>
+                              )}
+
+                              {scanError && (
+                                <div className="p-4 bg-red-50 dark:bg-red-950/10 rounded-2xl border border-red-150 dark:border-red-900/20 text-xs font-bold text-red-500">
+                                  {scanError}
+                                </div>
+                              )}
+
+                              {scanSuccessMessage && (
+                                <div className="p-4 bg-emerald-50 dark:bg-emerald-950/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/20 text-xs font-bold text-emerald-600">
+                                  {scanSuccessMessage}
+                                </div>
+                              )}
                             </div>
                           </div>
                         )}
