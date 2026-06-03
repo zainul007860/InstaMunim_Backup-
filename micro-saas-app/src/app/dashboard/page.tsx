@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import { format, isBefore, isAfter } from "date-fns";
+import jsQR from "jsqr";
 import { 
   LayoutDashboard, FileText, Settings, LogOut, Search,
   PlusCircle, Loader2, Book, Trash2, Send, ShoppingCart, Package,
@@ -2027,20 +2028,6 @@ Stay safe & eat healthy! 🍕
     }, 600);
   };
 
-  const loadJsQR = () => {
-    return new Promise<any>((resolve, reject) => {
-      if ((window as any).jsQR) {
-        resolve((window as any).jsQR);
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = "https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.min.js";
-      script.onload = () => resolve((window as any).jsQR);
-      script.onerror = (err) => reject(err);
-      document.head.appendChild(script);
-    });
-  };
-
   const handleQrUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -2050,7 +2037,6 @@ Stay safe & eat healthy! 🍕
     setScanSuccessMessage("");
 
     try {
-      const jsQR = await loadJsQR();
       const reader = new FileReader();
       reader.onload = (event) => {
         const img = new Image();
@@ -2107,7 +2093,7 @@ Stay safe & eat healthy! 🍕
       reader.readAsDataURL(file);
     } catch (err) {
       console.error(err);
-      setScanError("Failed to load QR scanner library. Please check your internet connection.");
+      setScanError("Failed to scan QR code: " + (err instanceof Error ? err.message : String(err)));
       setIsScanning(false);
     }
   };
