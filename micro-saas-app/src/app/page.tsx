@@ -199,7 +199,7 @@ export default function LandingPage() {
             <a href="/dashboard" className="border border-zinc-200 hover:border-orange-500 text-zinc-700 hover:text-orange-600 px-4 py-2.5 rounded-2xl font-bold text-xs transition-colors">
               LOG IN
             </a>
-            <a href="/InstaMunimSmartPOS_v1.3-release.apk?v=7" className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-2xl font-bold text-xs transition-all shadow-md shadow-orange-500/10 flex items-center gap-2 active:scale-95">
+            <a href="/InstaMunimSmartPOS_v1.3-release.apk?v=8" className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-2xl font-bold text-xs transition-all shadow-md shadow-orange-500/10 flex items-center gap-2 active:scale-95">
               <Download className="w-3.5 h-3.5" /> DOWNLOAD APP
             </a>
           </div>
@@ -228,7 +228,7 @@ export default function LandingPage() {
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
-              <a href="/InstaMunimSmartPOS_v1.3-release.apk?v=7" className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4.5 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2.5 shadow-lg shadow-orange-500/20 active:scale-95">
+              <a href="/InstaMunimSmartPOS_v1.3-release.apk?v=8" className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4.5 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2.5 shadow-lg shadow-orange-500/20 active:scale-95">
                 <Download className="w-5 h-5" /> DOWNLOAD APP v1.3
               </a>
               <a href="/dashboard" className="bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-800 px-8 py-4.5 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95">
@@ -803,7 +803,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <a 
-                href="/InstaMunimSmartPOS_v1.3-release.apk?v=7"
+                href="/InstaMunimSmartPOS_v1.3-release.apk?v=8"
                 className="w-full bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-extrabold py-3.5 rounded-xl text-xs mt-8 transition-colors text-center uppercase tracking-widest border border-zinc-200 shadow-sm"
               >
                 Download Free APP

@@ -245,7 +245,7 @@ function InvoiceContent() {
                 </div>
               </div>
               <Button 
-                onClick={() => window.open("/InstaMunimSmartPOS_v1.3-release.apk?v=7", "_self")}
+                onClick={() => window.open("/InstaMunimSmartPOS_v1.3-release.apk?v=8", "_self")}
                 className="w-full h-12 bg-zinc-900 hover:bg-black text-white rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-md border-0"
               >
                 Download Free APP
