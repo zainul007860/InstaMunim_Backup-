@@ -3007,7 +3007,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           setManualItemName(itemSearch); // Autofill manual name from search query if any
                         }
                       }}
-                      className="text-[9px] font-black uppercase text-orange-600 tracking-wider hover:underline"
+                      className="text-[9px] font-black uppercase px-2.5 py-1 bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 dark:bg-orange-950/20 dark:border-orange-900/30 dark:text-orange-400 rounded-lg transition-all active:scale-95 shadow-sm"
                     >
                       {isManualMode ? "← Show Menu" : "+ Custom Entry"}
                     </button>
@@ -3410,18 +3410,18 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               {/* NO-SCROLL METRICS GRID */}
               <div className="grid grid-cols-2 gap-3">
                 <Card className="bg-gradient-to-br from-orange-500 to-red-600 text-white p-4 rounded-[1.5rem] border-0 shadow-lg shadow-orange-600/10 h-32 flex flex-col justify-between">
-                  <p className="text-[7px] font-bold uppercase opacity-70 tracking-widest">{t("Net Profit")}</p>
+                  <p className="text-[10px] font-black uppercase opacity-90 tracking-wider">{t("Net Profit")}</p>
                   <div>
-                    <h3 className="text-2xl font-bold tracking-tighter leading-none">₹{Math.round(netProfit)}</h3>
-                    <p className="text-[6px] font-medium uppercase opacity-60 mt-1 tracking-tighter leading-none">{t("After Expenses")}</p>
+                    <h3 className="text-2xl font-black tracking-tight leading-none">₹{Math.round(netProfit)}</h3>
+                    <p className="text-[9px] font-black uppercase opacity-80 mt-1 tracking-wider leading-none">{t("After Expenses")}</p>
                   </div>
                 </Card>
 
                 <Card className="bg-white dark:bg-zinc-900 p-4 rounded-[1.5rem] border-0 shadow-sm border-b-[3px] border-blue-500 h-32 flex flex-col justify-between">
-                  <p className="text-[7px] font-bold text-zinc-400 uppercase tracking-widest">{t("Gross Sales")}</p>
+                  <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">{t("Gross Sales")}</p>
                   <div>
-                    <h3 className="text-2xl font-bold tracking-tighter leading-none">₹{totalSales}</h3>
-                    <p className="text-[6px] font-bold">{t("Gross Income")}</p>
+                    <h3 className="text-2xl font-black tracking-tight leading-none">₹{totalSales}</h3>
+                    <p className="text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase mt-1 tracking-wider leading-none">{t("Gross Income")}</p>
                   </div>
                 </Card>
 
@@ -3429,18 +3429,18 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   onClick={() => setActiveTab("Khata")} 
                   className="bg-[#fff1f1] dark:bg-red-950/20 p-4 rounded-[1.5rem] border-0 h-32 flex flex-col justify-between active:scale-95 transition-all cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30"
                 >
-                  <p className="text-[7px] font-bold text-red-600 uppercase tracking-widest">{t("Pending Udhaar")}</p>
+                  <p className="text-[10px] font-black text-red-600 uppercase tracking-wider">{t("Pending Udhaar")}</p>
                   <div>
-                    <h3 className="text-2xl font-bold text-red-600 tracking-tighter leading-none">₹{totalUdhaar}</h3>
-                    <p className="text-[6px] font-bold text-red-400 uppercase mt-1 flex items-center gap-1 leading-none"><Users className="h-2 w-2" /> {t("From Khata")}</p>
+                    <h3 className="text-2xl font-black text-red-600 tracking-tight leading-none">₹{totalUdhaar}</h3>
+                    <p className="text-[9px] font-black text-red-400 uppercase mt-1 flex items-center gap-1 leading-none"><Users className="h-2.5 w-2.5" /> {t("From Khata")}</p>
                   </div>
                 </Card>
 
                 <Card className="bg-white dark:bg-zinc-900 p-4 rounded-[1.5rem] border-0 shadow-sm border-b-[3px] border-purple-500 h-32 flex flex-col justify-between">
-                  <p className="text-[7px] font-bold text-zinc-400 uppercase tracking-widest">{t("Total Expense")}</p>
+                  <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">{t("Total Expense")}</p>
                   <div>
-                    <h3 className="text-2xl font-bold tracking-tighter leading-none">₹{Math.round(totalExpenses)}</h3>
-                    <p className="text-[6px] font-bold text-zinc-400 uppercase mt-1 tracking-tighter leading-none">{t("Operational Costs")}</p>
+                    <h3 className="text-2xl font-black tracking-tight leading-none">₹{Math.round(totalExpenses)}</h3>
+                    <p className="text-[9px] font-black text-zinc-400 dark:text-zinc-500 uppercase mt-1 tracking-wider leading-none">{t("Operational Costs")}</p>
                   </div>
                 </Card>
               </div>
@@ -4307,7 +4307,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${item.bg} dark:bg-opacity-10 border border-zinc-100 dark:border-zinc-800 shadow-sm`}>
                       <item.icon className={`h-5 w-5 ${item.color}`} />
                     </div>
-                    <span className="text-[9px] font-black text-zinc-900 dark:text-white tracking-widest text-center">{t(item.label)}</span>
+                    <span className="text-[11px] font-black text-zinc-900 dark:text-white tracking-widest text-center uppercase">{t(item.label)}</span>
                   </button>
                 ))}
               </div>
