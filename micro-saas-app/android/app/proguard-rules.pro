@@ -24,3 +24,9 @@
 -dontwarn com.facebook.infer.annotation.**
 -dontwarn com.facebook.ads.internal.**
 
+# Keep Javascript Interfaces secure from obfuscation
+-keepattributes JavascriptInterface
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
+

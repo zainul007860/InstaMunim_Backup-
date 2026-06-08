@@ -38,58 +38,15 @@ public class MainActivity extends BridgeActivity {
             }
         });
         
-        java.util.ArrayList<String> permissions = new java.util.ArrayList<>();
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            permissions.add(Manifest.permission.RECORD_AUDIO);
-        }
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-            permissions.add(Manifest.permission.CAMERA);
-        }
-        if (!permissions.isEmpty()) {
-            ActivityCompat.requestPermissions(this, permissions.toArray(new String[0]), 1001);
-        }
-
         this.bridge.getWebView().addJavascriptInterface(new Object() {
             @JavascriptInterface
             public void startListening() {
                 runOnUiThread(() -> {
-                    if (speechRecognizer == null) {
-                        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
-                        speechRecognizer.setRecognitionListener(new RecognitionListener() {
-                            public void onReadyForSpeech(Bundle params) {
-                                bridge.getWebView().evaluateJavascript("if(window.onNativeSpeechStart) window.onNativeSpeechStart();", null);
-                            }
-                            public void onBeginningOfSpeech() {}
-                            public void onRmsChanged(float rmsdB) {}
-                            public void onBufferReceived(byte[] buffer) {}
-                            public void onEndOfSpeech() {}
-                            public void onError(int error) {
-                                bridge.getWebView().evaluateJavascript("if(window.onNativeSpeechError) window.onNativeSpeechError(" + error + ");", null);
-                            }
-                            public void onResults(Bundle results) {
-                                java.util.ArrayList<String> data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                                if (data != null && data.size() > 0) {
-                                    String text = data.get(0).replace("'", "\\'");
-                                    bridge.getWebView().evaluateJavascript("if(window.onNativeSpeechResult) window.onNativeSpeechResult('" + text + "');", null);
-                                } else {
-                                    bridge.getWebView().evaluateJavascript("if(window.onNativeSpeechResult) window.onNativeSpeechResult('');", null);
-                                }
-                            }
-                            public void onPartialResults(Bundle partialResults) {
-                                java.util.ArrayList<String> data = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-                                if (data != null && data.size() > 0) {
-                                    String text = data.get(0).replace("'", "\\'");
-                                    bridge.getWebView().evaluateJavascript("if(window.onNativeSpeechPartial) window.onNativeSpeechPartial('" + text + "');", null);
-                                }
-                            }
-                            public void onEvent(int eventType, Bundle params) {}
-                        });
+                    if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                        ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.RECORD_AUDIO}, 1002);
+                    } else {
+                        startListeningInternal();
                     }
-                    Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-                    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-                    intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "hi-IN");
-                    intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
-                    speechRecognizer.startListening(intent);
                 });
             }
             
@@ -102,6 +59,58 @@ public class MainActivity extends BridgeActivity {
                 });
             }
         }, "NativeSpeech");
+    }
+
+    private void startListeningInternal() {
+        if (speechRecognizer == null) {
+            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(MainActivity.this);
+            speechRecognizer.setRecognitionListener(new RecognitionListener() {
+                public void onReadyForSpeech(Bundle params) {
+                    bridge.getWebView().evaluateJavascript("if(window.onNativeSpeechStart) window.onNativeSpeechStart();", null);
+                }
+                public void onBeginningOfSpeech() {}
+                public void onRmsChanged(float rmsdB) {}
+                public void onBufferReceived(byte[] buffer) {}
+                public void onEndOfSpeech() {}
+                public void onError(int error) {
+                    bridge.getWebView().evaluateJavascript("if(window.onNativeSpeechError) window.onNativeSpeechError(" + error + ");", null);
+                }
+                public void onResults(Bundle results) {
+                    java.util.ArrayList<String> data = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                    if (data != null && data.size() > 0) {
+                        String text = data.get(0).replace("'", "\\'");
+                        bridge.getWebView().evaluateJavascript("if(window.onNativeSpeechResult) window.onNativeSpeechResult('" + text + "');", null);
+                    } else {
+                        bridge.getWebView().evaluateJavascript("if(window.onNativeSpeechResult) window.onNativeSpeechResult('');", null);
+                    }
+                }
+                public void onPartialResults(Bundle partialResults) {
+                    java.util.ArrayList<String> data = partialResults.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
+                    if (data != null && data.size() > 0) {
+                        String text = data.get(0).replace("'", "\\'");
+                        bridge.getWebView().evaluateJavascript("if(window.onNativeSpeechPartial) window.onNativeSpeechPartial('" + text + "');", null);
+                    }
+                }
+                public void onEvent(int eventType, Bundle params) {}
+            });
+        }
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "hi-IN");
+        intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true);
+        speechRecognizer.startListening(intent);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1002) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startListeningInternal();
+            } else {
+                bridge.getWebView().evaluateJavascript("if(window.onNativeSpeechError) window.onNativeSpeechError(9);", null);
+            }
+        }
     }
 
     @Override
