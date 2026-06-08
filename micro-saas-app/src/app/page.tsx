@@ -952,6 +952,7 @@ export default function LandingPage() {
                 <h5 className="font-black text-orange-400 text-[10px] tracking-widest uppercase mb-2">Company</h5>
                 <a href="#" className="hover:text-white transition-colors">About Us</a>
                 <a href="/privacy" className="hover:text-white transition-colors">Privacy Policy</a>
+                <a href="/delete-account" className="hover:text-white transition-colors">Delete Account</a>
                 <a href="#features" className="hover:text-white transition-colors">Features</a>
               </div>
               <div className="flex flex-col gap-4 text-sm font-bold text-zinc-400">
