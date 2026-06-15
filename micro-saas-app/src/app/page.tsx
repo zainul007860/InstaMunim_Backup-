@@ -174,7 +174,7 @@ export default function LandingPage() {
         <span className="bg-orange-500 text-black px-2 py-0.5 rounded text-[9px] font-black mr-2 animate-pulse">NEW</span>
         <span>🇮🇳 MAKE IN INDIA FOR LOCAL MERCHANT STORES</span>
         <span class="opacity-30">|</span>
-        <span className="text-orange-400">🔥 7-DAY UNLIMITED FREE TRIAL AVAILABLE</span>
+        <span className="text-orange-400">🔥 30-DAY FREE PREMIUM TRIAL ON APK DOWNLOAD</span>
       </div>
 
       {/* NAVIGATION */}
@@ -238,7 +238,7 @@ export default function LandingPage() {
 
             <div className="flex items-center gap-6 pt-4 text-xs font-bold text-zinc-400">
               <span className="flex items-center gap-1.5"><Check className="text-orange-500 w-4 h-4" /> NO SETUP CHARGES</span>
-              <span class="flex items-center gap-1.5"><Check className="text-orange-500 w-4 h-4" /> 7-DAY FREE TRIAL</span>
+              <span className="flex items-center gap-1.5"><Check className="text-orange-500 w-4 h-4" /> 30-DAY FREE PREMIUM TRIAL</span>
               <span class="flex items-center gap-1.5"><Check className="text-orange-500 w-4 h-4" /> CANCEL ANYTIME</span>
             </div>
           </div>
