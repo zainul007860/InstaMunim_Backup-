@@ -966,6 +966,11 @@ export default function LandingPage() {
                       <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
                     </svg>
                   </a>
+                  <a href="https://www.facebook.com/share/1D9WZHmjNw/" target="_blank" rel="noopener noreferrer" className="text-zinc-500 hover:text-orange-400 transition-colors flex items-center" title="Facebook Page">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" className="h-5.5 w-5.5">
+                      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                    </svg>
+                  </a>
                 </div>
               </div>
               <div className="flex flex-col gap-4 text-sm font-bold text-zinc-400">
