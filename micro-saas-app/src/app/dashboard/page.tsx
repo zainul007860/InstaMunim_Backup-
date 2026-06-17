@@ -6,7 +6,7 @@ import jsQR from "jsqr";
 import { 
   LayoutDashboard, FileText, Settings, LogOut, Search,
   PlusCircle, Loader2, Book, Trash2, Send, ShoppingCart, Package,
-  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera, Volume2, Globe
+  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera, Volume2, Globe, Wand2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -696,6 +696,89 @@ export default function Dashboard() {
   const [isWhatsAppEnabled, setIsWhatsAppEnabled] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [crmMessage, setCrmMessage] = useState("Hi [NAME], we miss you at [SHOP]! 🍕 Come back today for a special offer just for you!");
+  
+  // AI Banner Generator states
+  const [offerTitle, setOfferTitle] = useState("");
+  const [discountDetails, setDiscountDetails] = useState("");
+  const [productName, setProductName] = useState("");
+  const [aiImageUrl, setAiImageUrl] = useState("");
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [imageGenerationError, setImageGenerationError] = useState("");
+
+  const handleGenerateAIBanner = async () => {
+    if (!offerTitle || !discountDetails || !productName) {
+      setImageGenerationError("Please fill in all fields (Title, Discount, Product).");
+      return;
+    }
+    setIsGeneratingImage(true);
+    setImageGenerationError("");
+    try {
+      const cleanPrompt = `A premium professional commercial social media poster ad banner for a store named '${restaurantName}'. The banner displays: '${offerTitle}' in bold elegant font, and '${discountDetails} on ${productName}' as the deal. Vibrant orange and white accents, modern clean restaurant typography, clean product photography or vector layout, slate grey background, high resolution, engaging marketing ad design.`;
+      
+      const seed = Math.floor(Math.random() * 1000000);
+      const encodedPrompt = encodeURIComponent(cleanPrompt);
+      const generatedUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}`;
+      
+      const img = new Image();
+      img.src = generatedUrl;
+      img.onload = () => {
+        setAiImageUrl(generatedUrl);
+        setIsGeneratingImage(false);
+      };
+      img.onerror = () => {
+        setImageGenerationError("Failed to generate ad banner. Please try again.");
+        setIsGeneratingImage(false);
+      };
+    } catch (err) {
+      setImageGenerationError("An error occurred during generation.");
+      setIsGeneratingImage(false);
+    }
+  };
+
+  const handleShareAIBanner = async () => {
+    if (!aiImageUrl) return;
+    try {
+      const { Capacitor } = await import('@capacitor/core');
+      if (Capacitor.isNativePlatform()) {
+        const { Share } = await import('@capacitor/share');
+        const { Filesystem, Directory } = await import('@capacitor/filesystem');
+        
+        const response = await fetch(aiImageUrl);
+        const blob = await response.blob();
+        const base64Data = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+
+        const fileName = `InstaMunim_Offer_${Date.now()}.png`;
+        const savedFile = await Filesystem.writeFile({
+          path: fileName,
+          data: base64Data.split(',')[1],
+          directory: Directory.Cache
+        });
+
+        await Share.share({
+          title: offerTitle,
+          text: `Special offer at ${restaurantName}! 🛍️ Check out this deal:`,
+          url: savedFile.uri,
+          dialogTitle: 'Share Offer Banner via WhatsApp'
+        });
+      } else {
+        const link = document.createElement('a');
+        link.href = aiImageUrl;
+        link.download = `InstaMunim_Offer_${offerTitle}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        alert("Banner download completed! You can now share it manually on WhatsApp.");
+      }
+    } catch (err) {
+      console.error("Error sharing banner:", err);
+      window.open(aiImageUrl, '_blank');
+    }
+  };
+
   const [cart, setCart] = useState<any[]>([]);
   const [isAdMobBannerFailed, setIsAdMobBannerFailed] = useState(false);
   // Barcode Scanner states
@@ -3763,6 +3846,105 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         {template.label}
                       </button>
                     ))}
+                  </div>
+                </div>
+              </Card>
+
+              {/* AI MARKETING BANNER GENERATOR */}
+              <Card className="p-8 bg-orange-50/50 dark:bg-orange-950/10 rounded-[2.5rem] border border-orange-100 dark:border-orange-900/30 space-y-6 relative overflow-hidden shadow-sm">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
+                    <Label className="text-[10px] font-black uppercase text-orange-600 dark:text-orange-400 tracking-widest px-1">AI Marketing Banner (FREE)</Label>
+                  </div>
+                  <Badge className="bg-orange-500 text-white border-0 font-black text-[8px] px-3 py-1 rounded-full shadow-sm">INSTANT AI DESIGN</Badge>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Left Column - Form */}
+                  <div className="space-y-4">
+                    <div className="space-y-1.5 text-left">
+                      <Label className="text-[10px] font-black uppercase text-zinc-400">Offer Title</Label>
+                      <Input 
+                        value={offerTitle} 
+                        onChange={e => setOfferTitle(e.target.value)} 
+                        placeholder="e.g. Sunday Feast, Festival Discount" 
+                        className="rounded-xl border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 font-bold text-sm h-11"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 text-left">
+                      <Label className="text-[10px] font-black uppercase text-zinc-400">Discount Details</Label>
+                      <Input 
+                        value={discountDetails} 
+                        onChange={e => setDiscountDetails(e.target.value)} 
+                        placeholder="e.g. Buy 1 Get 1 FREE, 25% OFF" 
+                        className="rounded-xl border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 font-bold text-sm h-11"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 text-left">
+                      <Label className="text-[10px] font-black uppercase text-zinc-400">Product/Service Name</Label>
+                      <Input 
+                        value={productName} 
+                        onChange={e => setProductName(e.target.value)} 
+                        placeholder="e.g. Paneer Pizza, All Menu Items" 
+                        className="rounded-xl border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 font-bold text-sm h-11"
+                      />
+                    </div>
+
+                    {imageGenerationError && (
+                      <p className="text-red-500 text-[10px] font-bold uppercase tracking-wider pl-1">{imageGenerationError}</p>
+                    )}
+
+                    <Button 
+                      onClick={handleGenerateAIBanner} 
+                      disabled={isGeneratingImage}
+                      className="w-full h-11 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-black text-[10px] uppercase tracking-wider shadow-md active:scale-95 transition-all mt-4 flex items-center justify-center gap-2"
+                    >
+                      {isGeneratingImage ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Designing Banner...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="h-4 w-4" />
+                          Generate Custom Ad Banner
+                        </>
+                      )}
+                    </Button>
+                  </div>
+
+                  {/* Right Column - Preview & Share */}
+                  <div className="flex flex-col items-center justify-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-3xl p-4 min-h-[260px] bg-white/40 dark:bg-zinc-950/20 relative">
+                    {aiImageUrl ? (
+                      <div className="w-full space-y-4">
+                        <img 
+                          src={aiImageUrl} 
+                          alt="AI generated ad banner" 
+                          className="w-full aspect-square object-cover rounded-2xl shadow-md border border-zinc-100 dark:border-zinc-900"
+                        />
+                        <Button 
+                          onClick={handleShareAIBanner}
+                          className="w-full h-11 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-wider shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
+                        >
+                          <Send className="h-4 w-4" />
+                          Share Offer on WhatsApp
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="text-center space-y-2 py-8">
+                        <div className="w-12 h-12 rounded-2xl bg-orange-100 dark:bg-orange-950/30 flex items-center justify-center mx-auto text-orange-500">
+                          <Wand2 className="h-6 w-6" />
+                        </div>
+                        <p className="font-black text-xs uppercase tracking-wider text-zinc-400">Live Ad Preview</p>
+                        <p className="text-[10px] text-zinc-400 max-w-[200px] leading-normal mx-auto">
+                          Fill in the details on the left and click generate to instantly design your banner.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </Card>
