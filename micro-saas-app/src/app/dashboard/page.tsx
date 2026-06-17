@@ -779,6 +779,61 @@ export default function Dashboard() {
     }
   };
 
+  const handleSendImage = async (mobile: string, name: string) => {
+    if (!aiImageUrl) {
+      alert("Please generate an AI banner first!");
+      return;
+    }
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(mobile);
+      }
+      
+      const { Capacitor } = await import('@capacitor/core');
+      if (Capacitor.isNativePlatform()) {
+        const { Share } = await import('@capacitor/share');
+        const { Filesystem, Directory } = await import('@capacitor/filesystem');
+        
+        const response = await fetch(aiImageUrl);
+        const blob = await response.blob();
+        const base64Data = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+
+        const fileName = `Offer_${mobile}_${Date.now()}.png`;
+        const savedFile = await Filesystem.writeFile({
+          path: fileName,
+          data: base64Data.split(',')[1],
+          directory: Directory.Cache
+        });
+
+        alert(`Mobile number ${mobile} copied to clipboard! Select WhatsApp to share.`);
+
+        await Share.share({
+          title: offerTitle,
+          text: `Special offer for you, ${name}! 🛍️`,
+          url: savedFile.uri,
+          dialogTitle: `Send Image to ${name}`
+        });
+      } else {
+        const link = document.createElement('a');
+        link.href = aiImageUrl;
+        link.download = `InstaMunim_Offer_${name}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        alert(`Banner downloaded & Mobile number ${mobile} copied to clipboard!\nOpen WhatsApp, paste the number to search, and upload this banner.`);
+        window.open(`https://wa.me/91${mobile}`, "_blank");
+      }
+    } catch (err) {
+      console.error("Error sending image:", err);
+      window.open(aiImageUrl, '_blank');
+    }
+  };
+
   const [cart, setCart] = useState<any[]>([]);
   const [isAdMobBannerFailed, setIsAdMobBannerFailed] = useState(false);
   // Barcode Scanner states
@@ -3981,17 +4036,25 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           </td>
                           <td className="py-6 px-8 text-xs font-black text-zinc-500 uppercase tracking-widest">{cust.last}</td>
                           <td className="py-6 px-8">
-                            <Button 
-                              onClick={() => {
-                                const customMsg = crmMessage
-                                  .replace("[NAME]", cust.name)
-                                  .replace("[SHOP]", restaurantName);
-                                window.open(`https://wa.me/91${cust.mobile}?text=${encodeURIComponent(customMsg)}`, "_blank");
-                              }}
-                              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-2xl h-14 px-8 font-black text-xs shadow-lg shadow-indigo-500/30 flex items-center gap-3 active:scale-95 transition-all"
-                            >
-                              <Send className="h-4 w-4" /> SEND
-                            </Button>
+                            <div className="flex gap-2.5">
+                              <Button 
+                                onClick={() => {
+                                  const customMsg = crmMessage
+                                    .replace("[NAME]", cust.name)
+                                    .replace("[SHOP]", restaurantName);
+                                  window.open(`https://wa.me/91${cust.mobile}?text=${encodeURIComponent(customMsg)}`, "_blank");
+                                }}
+                                className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-2xl h-12 px-5 font-black text-[10px] shadow-md shadow-indigo-500/10 flex items-center gap-2 active:scale-95 transition-all uppercase tracking-wider"
+                              >
+                                <Send className="h-3.5 w-3.5" /> Text
+                              </Button>
+                              <Button 
+                                onClick={() => handleSendImage(cust.mobile, cust.name)}
+                                className="bg-orange-500 hover:bg-orange-600 text-white rounded-2xl h-12 px-5 font-black text-[10px] shadow-md shadow-orange-500/10 flex items-center gap-2 active:scale-95 transition-all uppercase tracking-wider"
+                              >
+                                <Camera className="h-3.5 w-3.5" /> Send Image
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))}
