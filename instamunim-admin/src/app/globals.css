@@ -1,13 +1,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
 
 :root {
-  --bg: #0c0c0e;
-  --card: #151518;
-  --border: #27272a;
+  --bg: #f4f4f5;
+  --card: #ffffff;
+  --border: #e4e4e7;
   --accent: #f97316; /* InstaMunim Orange */
   --accent-muted: rgba(249, 115, 22, 0.1);
-  --text: #ffffff;
-  --text-muted: #a1a1aa;
+  --text: #18181b;
+  --text-muted: #71717a;
 }
 
 * {
@@ -31,7 +31,7 @@ body {
 /* Sidebar */
 .sidebar {
   width: 280px;
-  background: #111113;
+  background: #ffffff;
   border-right: 1px solid var(--border);
   padding: 40px 24px;
   display: flex;
@@ -85,8 +85,8 @@ body {
 }
 
 .nav-item:hover {
-  background: #1c1c1f;
-  color: white;
+  background: #f4f4f5;
+  color: var(--text);
 }
 
 .nav-item.active {
@@ -114,7 +114,7 @@ body {
   font-weight: 900;
   letter-spacing: -2px;
   margin-bottom: 8px;
-  color: white;
+  color: var(--text);
 }
 
 .header p {
@@ -180,7 +180,7 @@ body {
   border-radius: 32px;
   border: 1px solid var(--border);
   overflow: hidden;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 40px rgba(24,24,27,0.05);
 }
 
 .table-header {
@@ -199,11 +199,11 @@ body {
 .search-input {
   width: 100%;
   height: 44px;
-  background: #0c0c0e;
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 0 16px 0 44px;
-  color: white;
+  color: var(--text);
   font-weight: 600;
   font-size: 13px;
   transition: all 0.3s ease;
@@ -227,7 +227,7 @@ body {
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1.5px;
-  background: #1a1a1d;
+  background: #f4f4f5;
 }
 
 .table-content td {
@@ -245,7 +245,7 @@ body {
 .merchant-avatar {
   width: 44px;
   height: 44px;
-  background: #1c1c1f;
+  background: #f4f4f5;
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -287,11 +287,11 @@ body {
 .broadcast-textarea {
   width: 100%;
   height: 200px;
-  background: #0c0c0e;
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 20px;
   padding: 24px;
-  color: white;
+  color: var(--text);
   font-family: inherit;
   font-size: 15px;
   line-height: 1.6;
@@ -311,27 +311,27 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: radial-gradient(circle at center, #1a1a1d 0%, #0c0c0e 100%);
+  background: radial-gradient(circle at center, #ffffff 0%, #f4f4f5 100%);
 }
 
 .login-card {
   width: 100%;
   max-width: 400px;
-  background: #111113;
+  background: #ffffff;
   border-radius: 40px;
   padding: 48px;
   border: 1px solid var(--border);
-  box-shadow: 0 20px 80px rgba(0,0,0,0.5);
+  box-shadow: 0 20px 80px rgba(24,24,27,0.08);
 }
 
 .login-input {
   width: 100%;
   height: 64px;
-  background: #0c0c0e;
+  background: #ffffff;
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 0 24px;
-  color: white;
+  color: var(--text);
   font-weight: 700;
   font-size: 18px;
   text-align: center;

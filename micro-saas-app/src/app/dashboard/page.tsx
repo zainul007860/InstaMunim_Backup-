@@ -19,6 +19,324 @@ const getDisplayCategory = (cat: string) => {
   return cat;
 };
 
+export const PARTNER_NAMES: Record<string, { swiggy: string; zomato: string; swiggyIcon: string; zomatoIcon: string; swiggyColor: string; zomatoColor: string }> = {
+  "Restaurant/Cafe": {
+    swiggy: "Swiggy",
+    zomato: "Zomato",
+    swiggyIcon: "S",
+    zomatoIcon: "Z",
+    swiggyColor: "bg-orange-500 text-white",
+    zomatoColor: "bg-red-600 text-white"
+  },
+  "Kirana/Grocery": {
+    swiggy: "Blinkit",
+    zomato: "Zepto",
+    swiggyIcon: "B",
+    zomatoIcon: "Z",
+    swiggyColor: "bg-yellow-500 text-black",
+    zomatoColor: "bg-purple-600 text-white"
+  },
+  "Saloon/Spa": {
+    swiggy: "Urban Company",
+    zomato: "Justdial",
+    swiggyIcon: "U",
+    zomatoIcon: "J",
+    swiggyColor: "bg-zinc-900 text-white",
+    zomatoColor: "bg-blue-500 text-white"
+  },
+  "Clothing/Retail": {
+    swiggy: "Amazon",
+    zomato: "Myntra",
+    swiggyIcon: "A",
+    zomatoIcon: "M",
+    swiggyColor: "bg-amber-500 text-white",
+    zomatoColor: "bg-pink-500 text-white"
+  },
+  "Laundry": {
+    swiggy: "Urban Company",
+    zomato: "Local Delivery",
+    swiggyIcon: "U",
+    zomatoIcon: "L",
+    swiggyColor: "bg-zinc-900 text-white",
+    zomatoColor: "bg-teal-500 text-white"
+  },
+  "Electric": {
+    swiggy: "IndiaMART",
+    zomato: "Justdial",
+    swiggyIcon: "I",
+    zomatoIcon: "J",
+    swiggyColor: "bg-teal-600 text-white",
+    zomatoColor: "bg-blue-500 text-white"
+  },
+  "Automobile": {
+    swiggy: "IndiaMART",
+    zomato: "Local Mechanic",
+    swiggyIcon: "I",
+    zomatoIcon: "M",
+    swiggyColor: "bg-teal-600 text-white",
+    zomatoColor: "bg-red-500 text-white"
+  },
+  "Gym": {
+    swiggy: "Cult.fit",
+    zomato: "Fitpass",
+    swiggyIcon: "C",
+    zomatoIcon: "F",
+    swiggyColor: "bg-zinc-900 text-white",
+    zomatoColor: "bg-blue-600 text-white"
+  },
+  "Cosmetic": {
+    swiggy: "Nykaa",
+    zomato: "Purplle",
+    swiggyIcon: "N",
+    zomatoIcon: "P",
+    swiggyColor: "bg-pink-600 text-white",
+    zomatoColor: "bg-purple-500 text-white"
+  },
+  "Stationary": {
+    swiggy: "Amazon",
+    zomato: "Jiomart",
+    swiggyIcon: "A",
+    zomatoIcon: "J",
+    swiggyColor: "bg-amber-500 text-white",
+    zomatoColor: "bg-blue-600 text-white"
+  }
+};
+
+export const getPartnerConfig = (businessType: string) => {
+  return PARTNER_NAMES[businessType] || PARTNER_NAMES["Restaurant/Cafe"];
+};
+
+export const getPartnerName = (businessType: string, type: string) => {
+  const cfg = getPartnerConfig(businessType);
+  if (type === "Swiggy") return cfg.swiggy;
+  if (type === "Zomato") return cfg.zomato;
+  return type;
+};
+
+export const BUSINESS_CATEGORIES: Record<string, {
+  name: string;
+  item: string;
+  items: string;
+  location: string;
+  presets: { name: string; price: number }[];
+  templates: { label: string; msg: string }[];
+  categories: string[];
+}> = {
+  "Restaurant/Cafe": {
+    name: "Restaurant / Cafe / Food Stall",
+    item: "Dish",
+    items: "Menu Items",
+    location: "Table No",
+    presets: [
+      { name: "Paneer Tikka", price: 180 },
+      { name: "Cold Coffee", price: 70 },
+      { name: "Veg Burger", price: 120 },
+      { name: "Masala Chai", price: 20 }
+    ],
+    templates: [
+      { label: "20% OFF", msg: "Hi [NAME], we miss you at [SHOP]! 🍕 Get 20% OFF on your next order today! Use code: MISSYOU20" },
+      { label: "BOGO Offer", msg: "Weekend Special at [SHOP]! 🍔 Buy 1 Get 1 FREE on all large orders! Valid only for today." },
+      { label: "New Menu", msg: "Hi [NAME], check out our NEW items at [SHOP]! 😋 From Paneer Tikka to fresh shakes, try them now!" },
+      { label: "Free Delivery", msg: "Hungry [NAME]? 🚚 Free Delivery for you from [SHOP] for the next 2 hours! Order now." },
+      { label: "Weekend", msg: "Happy Weekend [NAME]! 🎉 Relax and enjoy a delicious meal from [SHOP]. We've got special treats waiting!" }
+    ],
+    categories: ["Main Course", "Starters", "Chinese", "Beverages", "Snacks", "Breads", "Desserts/Sweets", "Others"]
+  },
+  "Kirana/Grocery": {
+    name: "Kirana / Grocery / General Store",
+    item: "Product",
+    items: "Products & Stock",
+    location: "Rack / Section",
+    presets: [
+      { name: "Mustard Oil 1L", price: 180 },
+      { name: "Basmati Rice 1kg", price: 110 },
+      { name: "Tata Salt 1kg", price: 28 },
+      { name: "Maggi 2-Min Noodles", price: 14 }
+    ],
+    templates: [
+      { label: "20% OFF", msg: "Hi [NAME], we miss you at [SHOP]! 🛒 Get 20% OFF on your grocery billing today! Use code: KIRANA20" },
+      { label: "Special Deal", msg: "Special Deal at [SHOP]! 🌾 Basmati Rice & Mustard Oil at discount prices! Valid till stocks last." },
+      { label: "New Stock", msg: "Hi [NAME], new fresh stock has arrived at [SHOP]! 🍎 Visit us today for all your daily needs!" },
+      { label: "Free Delivery", msg: "Need groceries [NAME]? 🚚 Free Home Delivery from [SHOP] for orders above ₹500! Order now." },
+      { label: "Weekly Deal", msg: "Happy Weekend [NAME]! 🛍️ Restock your pantry from [SHOP] with flat discounts on monthly essentials!" }
+    ],
+    categories: ["Daily Essentials", "Staples & Grains", "Snacks & Drinks", "Personal Care", "Household", "Packaged Foods", "Others"]
+  },
+  "Saloon/Spa": {
+    name: "Saloon / Spa / Beauty Parlour",
+    item: "Service",
+    items: "Services & Packages",
+    location: "Chair / Stylist",
+    presets: [
+      { name: "Haircut", price: 150 },
+      { name: "Beard Trim", price: 80 },
+      { name: "Facial Massage", price: 350 },
+      { name: "Hair Color", price: 600 }
+    ],
+    templates: [
+      { label: "20% OFF", msg: "Hi [NAME], we miss you at [SHOP]! 💇‍♂️ Get 20% OFF on any grooming service today! Use code: SHINE20" },
+      { label: "Combo Offer", msg: "Weekend Special at [SHOP]! 💆‍♂️ Haircut + Facial Massage combo at flat 30% OFF! Book today." },
+      { label: "New Services", msg: "Hi [NAME], check out our new styling & spa packages at [SHOP]! ✨ Pamper yourself this week!" },
+      { label: "Priority Slot", msg: "Hi [NAME]! 📅 Book your premium styling slot at [SHOP] today and skip the weekend rush!" },
+      { label: "Self Care", msg: "Happy Weekend [NAME]! 💅 Treat yourself to a relaxing service at [SHOP]. You deserve this premium care!" }
+    ],
+    categories: ["Hair Services", "Facial & Skin", "Shaving & Beard", "Massage & Spa", "Bridal & Makeup", "Packages", "Others"]
+  },
+  "Clothing/Retail": {
+    name: "Clothing / Footwear / Retail Shop",
+    item: "Apparel / Item",
+    items: "Apparel & Inventory",
+    location: "Aisle / Section",
+    presets: [
+      { name: "Cotton T-Shirt", price: 499 },
+      { name: "Blue Jeans", price: 999 },
+      { name: "Casual Shoes", price: 1200 },
+      { name: "Leather Belt", price: 350 }
+    ],
+    templates: [
+      { label: "20% OFF", msg: "Hi [NAME], we miss you at [SHOP]! 👕 Get 20% OFF on our new summer clothing collection today! Use code: STYLE20" },
+      { label: "Special Deal", msg: "Special Deal at [SHOP]! 👖 Buy any Jeans and get a Cotton T-shirt at 50% OFF! Limited time." },
+      { label: "New Arrival", msg: "Hi [NAME], fresh fashion arrivals have landed at [SHOP]! 👟 Step up your style with our latest collection!" },
+      { label: "Free Delivery", msg: "Shopping from home [NAME]? 🚚 Free Shipping from [SHOP] for orders above ₹999! Shop online now." },
+      { label: "Weekend Sale", msg: "Happy Weekend [NAME]! 🛍️ Flat 15% OFF storewide at [SHOP] this Saturday and Sunday! Upgrade your wardrobe!" }
+    ],
+    categories: ["Menswear", "Womenswear", "Kidswear", "Footwear", "Accessories", "Winterwear", "Others"]
+  },
+  "Laundry": {
+    name: "Laundry Business",
+    item: "Wash Service",
+    items: "Dry Clean & Laundry",
+    location: "Hanger / Rack No",
+    presets: [
+      { name: "Shirt Dry Clean", price: 60 },
+      { name: "Suit Dry Clean", price: 250 },
+      { name: "Normal Wash & Iron", price: 15 },
+      { name: "Only Ironing", price: 7 }
+    ],
+    templates: [
+      { label: "20% OFF", msg: "Hi [NAME], we miss you at [SHOP]! 🧺 Get 20% OFF on your next dry cleaning & laundry bill! Use code: CLEAN20" },
+      { label: "Special Deal", msg: "Special Deal at [SHOP]! 👔 Suit Dry Clean + 2 Shirts Dry Clean combo at just ₹300! Valid this week." },
+      { label: "Express Wash", msg: "Hi [NAME], need clothes fast? ⚡ Get Express 24-Hour Delivery on laundry from [SHOP] at no extra cost!" },
+      { label: "Pick & Drop", msg: "Too busy [NAME]? 🚚 Free Pick-up & Drop-off service from [SHOP]! Just reply to schedule." },
+      { label: "Fresh Clothes", msg: "Happy Weekend [NAME]! 🧼 Let us handle the laundry this weekend while you relax. Book now at [SHOP]!" }
+    ],
+    categories: ["Washing", "Dry Cleaning", "Ironing & Press", "Premium Care", "Shoes & Bags", "Others"]
+  },
+  "Electric": {
+    name: "Electric Shop",
+    item: "Component",
+    items: "Electrical Inventory",
+    location: "Shelf / Bin No",
+    presets: [
+      { name: "LED Bulb 9W", price: 90 },
+      { name: "Extension Board", price: 250 },
+      { name: "Copper Wire 1m", price: 40 },
+      { name: "Modular Switch", price: 35 }
+    ],
+    templates: [
+      { label: "20% OFF", msg: "Hi [NAME], we miss you at [SHOP]! 🔌 Get 20% OFF on LED bulbs and modular switches today! Use code: LIGHT20" },
+      { label: "Special Deal", msg: "Special Deal at [SHOP]! 💡 Extension Boards and premium Copper Wires at discount prices!" },
+      { label: "New Spares", msg: "Hi [NAME], we've restocked high-quality electrical spares and fittings at [SHOP]! Visit us for safety-certified gear." },
+      { label: "Home Delivery", msg: "Need parts urgently [NAME]? 🚚 Get electrical items delivered to your doorstep from [SHOP] in 1 hour!" },
+      { label: "Power Up", msg: "Happy Weekend [NAME]! 🛠️ Time for home repairs? Get special rates on switches and boards from [SHOP]!" }
+    ],
+    categories: ["Cables & Wires", "LED & Lighting", "Switches & Sockets", "Appliances", "Spares", "Tools", "Others"]
+  },
+  "Automobile": {
+    name: "Automobile Parts Shop",
+    item: "Part / Item",
+    items: "Spares & Inventory",
+    location: "Bin / Rack No",
+    presets: [
+      { name: "Engine Oil 1L", price: 380 },
+      { name: "Spark Plug", price: 120 },
+      { name: "Brake Pad Set", price: 450 },
+      { name: "Wiper Blade", price: 200 }
+    ],
+    templates: [
+      { label: "20% OFF", msg: "Hi [NAME], we miss you at [SHOP]! 🚗 Get 20% OFF on high-quality engine oils and wiper blades today! Use code: DRIVE20" },
+      { label: "Special Deal", msg: "Special Deal at [SHOP]! ⚙️ Brake Pad Set + Spark Plug replacement parts at flat 15% OFF!" },
+      { label: "New Stock", msg: "Hi [NAME], genuine automobile spares and lubricants have been restocked at [SHOP]! Keep your vehicle smooth!" },
+      { label: "Free Delivery", msg: "Mechanic/DIY help [NAME]? 🚚 Free delivery of auto parts from [SHOP] for all local garages & customers!" },
+      { label: "Maintenance", msg: "Happy Weekend [NAME]! 🔧 Time to service your car/bike? Get premium oils and wipers from [SHOP] today!" }
+    ],
+    categories: ["Engine & Lubricants", "Spares & Parts", "Electricals", "Accessories", "Cleaning & Care", "Others"]
+  },
+  "Gym": {
+    name: "GYM / Fitness Center",
+    item: "Plan / Item",
+    items: "Memberships & Items",
+    location: "Trainer / Locker",
+    presets: [
+      { name: "Monthly Gym Fee", price: 1000 },
+      { name: "Quarterly Gym Fee", price: 2700 },
+      { name: "Personal Training", price: 2500 },
+      { name: "Whey Protein Shake", price: 120 }
+    ],
+    templates: [
+      { label: "20% OFF", msg: "Hi [NAME], we miss you at [SHOP]! 🏋️‍♂️ Renew your gym membership today and get 20% OFF! Use code: FIT20" },
+      { label: "Combo Offer", msg: "Special Deal at [SHOP]! 💪 Join for 3 months and get 1 month of personal training absolutely FREE!" },
+      { label: "New Gear", msg: "Hi [NAME], we've added premium fitness equipment & imported supplements at [SHOP]! Check it out!" },
+      { label: "Free Trial", msg: "Ready to sweat [NAME]? 🎟️ Get a Free 3-Day Guest Pass to [SHOP] for your friend/family! Bring them along." },
+      { label: "Fitness Goal", msg: "Happy Weekend [NAME]! 🔥 Don't skip your workout! Stop by [SHOP] and fuel up with our protein shakes!" }
+    ],
+    categories: ["Memberships", "Personal Training", "Supplements & Shakes", "Merchandise", "Day Pass", "Others"]
+  },
+  "Cosmetic": {
+    name: "Cosmetic Shop",
+    item: "Cosmetic / Item",
+    items: "Cosmetics & Brands",
+    location: "Counter / Shelf",
+    presets: [
+      { name: "Matte Lipstick", price: 299 },
+      { name: "Eyeliner", price: 180 },
+      { name: "Face Moisturizer", price: 250 },
+      { name: "Nail Polish", price: 80 }
+    ],
+    templates: [
+      { label: "20% OFF", msg: "Hi [NAME], we miss you at [SHOP]! 💄 Get 20% OFF on premium matte lipsticks and eyeliners today! Use code: BEAUTY20" },
+      { label: "Combo Offer", msg: "Special Deal at [SHOP]! 💅 Buy 2 Nail Polishes and get 1 moisturizer at flat 50% OFF!" },
+      { label: "New Brands", msg: "Hi [NAME], new luxury cosmetics and skin-care brands have arrived at [SHOP]! Explore the glow!" },
+      { label: "Free Gift", msg: "Treat yourself [NAME]! 🎁 Get a free beauty sample pouch from [SHOP] on all purchases above ₹499!" },
+      { label: "Glow Up", msg: "Happy Weekend [NAME]! ✨ Get ready for the weekend party with makeup and beauty essentials from [SHOP]!" }
+    ],
+    categories: ["Makeup", "Skincare", "Haircare", "Fragrances", "Grooming Accessories", "Brands", "Others"]
+  },
+  "Stationary": {
+    name: "Stationary & Book Shop",
+    item: "Stationery / Book",
+    items: "Books & Stationery",
+    location: "Rack / Row No",
+    presets: [
+      { name: "Classmate Notebook", price: 60 },
+      { name: "Reynolds Gel Pen", price: 10 },
+      { name: "Geometry Box", price: 120 },
+      { name: "A4 Paper Ream", price: 320 }
+    ],
+    templates: [
+      { label: "20% OFF", msg: "Hi [NAME], we miss you at [SHOP]! 📚 Get 20% OFF on premium notebooks and stationery sets today! Use code: STUDY20" },
+      { label: "Special Deal", msg: "Special Deal at [SHOP]! 🖊️ Geometry Box + 3 Reynolds Gel Pens combo at flat 25% OFF!" },
+      { label: "New Arrivals", msg: "Hi [NAME], fresh stocks of school & office stationery have arrived at [SHOP]! Best quality notebooks!" },
+      { label: "Free Delivery", msg: "Studying/Working [NAME]? 🚚 Free delivery of books & school supplies from [SHOP] for orders above ₹300!" },
+      { label: "Creative", msg: "Happy Weekend [NAME]! 🎨 Unleash your creativity with colors, sketchbooks, and art supplies from [SHOP]!" }
+    ],
+    categories: ["Notebooks & Paper", "Pens & Writing", "Office Supplies", "Art & Craft", "Books", "Others"]
+  }
+};
+
+const getLabels = (type: string) => {
+  return BUSINESS_CATEGORIES[type] || BUSINESS_CATEGORIES["Restaurant/Cafe"];
+};
+
+const getTemplates = (type: string, shopName: string) => {
+  const cat = BUSINESS_CATEGORIES[type] || BUSINESS_CATEGORIES["Restaurant/Cafe"];
+  const list = cat.templates;
+  return list.map(t => ({
+    label: t.label,
+    msg: t.msg.replaceAll("[SHOP]", shopName)
+  }));
+};
+
 const getBarcode = (cat: string) => {
   if (!cat) return null;
   if (cat.includes("|Barcode:")) {
@@ -37,7 +355,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
-import InventoryDiary from "./InventoryDiary";
+import InventoryDiary, { INVENTORY_CATEGORY_CONFIGS } from "./InventoryDiary";
 
 export function WebAdBanner({ scriptUrl, adKey }: { scriptUrl: string; adKey: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -201,6 +519,15 @@ export default function Dashboard() {
         "Your current session will end. Do you want to leave InstaMunim?": "आपका वर्तमान सत्र समाप्त हो जाएगा। क्या आप सचमुच बाहर निकलना चाहते हैं?",
         "Access additional tools and settings.": "अतिरिक्त उपकरण और सेटिंग्स का उपयोग करें।",
         "Track your store raw items and recipe stock.": "स्टोर के कच्चे माल और रेसिपी स्टॉक को ट्रैक करें।",
+        "Track your store daily inventory and product stock.": "स्टोर के दैनिक सामान और उत्पाद स्टॉक को ट्रैक करें।",
+        "Track your saloon cosmetics, supplies and styling items.": "सैलून सौंदर्य प्रसाधन, आपूर्ति और स्टाइलिंग वस्तुओं को ट्रैक करें।",
+        "Track your clothing inventory, apparel stock and accessories.": "कपड़ों की इन्वेंटरी, परिधान स्टॉक और एक्सेसरीज़ को ट्रैक करें।",
+        "Track your cleaning agents, detergents and packaging supplies.": "सफाई एजेंटों, डिटर्जेंट और पैकेजिंग आपूर्ति को ट्रैक करें।",
+        "Track your electrical components, fittings and appliances stock.": "विद्युत घटकों, फिटिंग और उपकरणों के स्टॉक को ट्रैक करें।",
+        "Track your automobile spares and motor oil stock.": "ऑटोमोबाइल पुर्जों और मोटर ऑयल स्टॉक को ट्रैक करें।",
+        "Track your gym supplements, energy drinks and workout gear.": "जिम सप्लीमेंट्स, एनर्जी ड्रिंक्स और वर्कआउट गियर को ट्रैक करें।",
+        "Track your cosmetics, skin care items and display stock.": "सौंदर्य प्रसाधन, त्वचा की देखभाल की वस्तुओं और डिस्प्ले स्टॉक को ट्रैक करें।",
+        "Track your paper reams, writing items and books stock.": "पेपर रीम, लेखन सामग्री और पुस्तकों के स्टॉक को ट्रैक करें।",
         "Synchronized with UI language": "यूआई भाषा के साथ सिंक किया गया"
       },
       mr: {
@@ -680,7 +1007,7 @@ export default function Dashboard() {
 
   const [newItemName, setNewItemName] = useState("");
   const [newItemPrice, setNewItemPrice] = useState("");
-  const [newItemCategory, setNewItemCategory] = useState("Main Course");
+  const [newItemCategory, setNewItemCategory] = useState("General");
   const [newName, setNewName] = useState("");
   const [newMobile, setNewMobile] = useState("");
   const [newType, setNewType] = useState("Cash");
@@ -696,6 +1023,10 @@ export default function Dashboard() {
   const [isWhatsAppEnabled, setIsWhatsAppEnabled] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [crmMessage, setCrmMessage] = useState("Hi [NAME], we miss you at [SHOP]! 🍕 Come back today for a special offer just for you!");
+  
+  // Business Type / Category states
+  const [businessType, setBusinessType] = useState("Restaurant/Cafe");
+  const [signupBusinessType, setSignupBusinessType] = useState("Restaurant/Cafe");
   
   // AI Banner Generator states
   const [offerTitle, setOfferTitle] = useState("");
@@ -713,7 +1044,7 @@ export default function Dashboard() {
     setIsGeneratingImage(true);
     setImageGenerationError("");
     try {
-      const cleanPrompt = `A premium professional commercial social media poster ad banner for a store named '${restaurantName}'. The banner displays: '${offerTitle}' in bold elegant font, and '${discountDetails} on ${productName}' as the deal. Vibrant orange and white accents, modern clean restaurant typography, clean product photography or vector layout, slate grey background, high resolution, engaging marketing ad design.`;
+      const cleanPrompt = `A premium professional commercial social media poster ad banner for a business named '${restaurantName}'. The banner displays: '${offerTitle}' in bold elegant font, and '${discountDetails} on ${productName}' as the deal. Vibrant orange and white accents, modern clean ${getLabels(businessType).name.toLowerCase()} store typography, clean products or services photography or vector layout, slate grey background, high resolution, engaging marketing ad design.`;
       
       const seed = Math.floor(Math.random() * 1000000);
       const encodedPrompt = encodeURIComponent(cleanPrompt);
@@ -1681,6 +2012,8 @@ Stay safe & eat healthy! 🍕
             localStorage.setItem('saas_owner_mobile', nativeMobile);
             setIsLoggedIn(true);
             setOwnerMobile(nativeMobile);
+            const savedBType = localStorage.getItem('saas_business_type');
+            if (savedBType) setBusinessType(savedBType);
             const savedLogo = localStorage.getItem('saas_store_logo');
             if (savedLogo) setStoreLogo(savedLogo);
             const savedName = localStorage.getItem('saas_store_name');
@@ -1708,6 +2041,9 @@ Stay safe & eat healthy! 🍕
               setSubscriptionExpiry(data.subscription_expiry);
               localStorage.setItem('saas_store_created_at', data.created_at || '');
               localStorage.setItem('saas_store_expiry', data.subscription_expiry || '');
+              const storeBType = data.business_type || localStorage.getItem("saas_business_type") || "Restaurant/Cafe";
+              setBusinessType(storeBType);
+              localStorage.setItem("saas_business_type", storeBType);
               await fetchStoreData(data.id);
             }
           }
@@ -1723,6 +2059,8 @@ Stay safe & eat healthy! 🍕
         setOwnerMobile(savedOwnerMobile);
         
         // Restore local settings immediately for UX
+        const savedBType = localStorage.getItem("saas_business_type");
+        if (savedBType) setBusinessType(savedBType);
         const savedLogo = localStorage.getItem("saas_store_logo");
         if (savedLogo) setStoreLogo(savedLogo);
         const savedName = localStorage.getItem("saas_store_name");
@@ -1752,6 +2090,9 @@ Stay safe & eat healthy! 🍕
             setSubscriptionExpiry(data.subscription_expiry);
             localStorage.setItem("saas_store_created_at", data.created_at || "");
             localStorage.setItem("saas_store_expiry", data.subscription_expiry || "");
+            const storeBType = data.business_type || localStorage.getItem("saas_business_type") || "Restaurant/Cafe";
+            setBusinessType(storeBType);
+            localStorage.setItem("saas_business_type", storeBType);
             await fetchStoreData(data.id);
           }
         };
@@ -1782,6 +2123,9 @@ Stay safe & eat healthy! 🍕
 
     const savedRestName = localStorage.getItem("saas_rest_name");
     if (savedRestName) setRestaurantName(savedRestName);
+
+    const savedBType = localStorage.getItem("saas_business_type");
+    if (savedBType) setBusinessType(savedBType);
 
     const savedRent = localStorage.getItem("saas_rent");
     if (savedRent) setMonthlyRent(Number(savedRent));
@@ -1932,10 +2276,21 @@ Stay safe & eat healthy! 🍕
       localStorage.setItem("saas_web_ad_direct_link", webAdDirectLink);
       localStorage.setItem("saas_web_ad_vignette_url", webAdVignetteUrl);
       localStorage.setItem("saas_web_ad_vignette_key", webAdVignetteKey);
+      localStorage.setItem("saas_business_type", businessType);
       if (storeCreatedAt) localStorage.setItem("saas_store_created_at", storeCreatedAt);
       if (subscriptionExpiry) localStorage.setItem("saas_store_expiry", subscriptionExpiry);
     }
-  }, [sales, expenses, menuItems, restaurantName, monthlyRent, isDarkMode, dataLoaded, mounted, adProvider, webAdScriptUrl, webAdKey, webAdDirectLink, webAdVignetteUrl, webAdVignetteKey, isThermalPrinterEnabled, isVoiceAnnouncerEnabled, voiceAnnouncerLanguage, lang]);
+  }, [sales, expenses, menuItems, restaurantName, monthlyRent, isDarkMode, dataLoaded, mounted, adProvider, webAdScriptUrl, webAdKey, webAdDirectLink, webAdVignetteUrl, webAdVignetteKey, isThermalPrinterEnabled, isVoiceAnnouncerEnabled, voiceAnnouncerLanguage, lang, businessType]);
+
+  // Auto-default new item category when business type changes
+  useEffect(() => {
+    const cats = getLabels(businessType).categories;
+    if (cats && cats.length > 0) {
+      setNewItemCategory(cats[0]);
+    } else {
+      setNewItemCategory("General");
+    }
+  }, [businessType]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1973,8 +2328,11 @@ Stay safe & eat healthy! 🍕
           setOwnerMobile(loginMobile);
           setRestaurantName(storeData.store_name);
           setMonthlyRent(storeData.monthly_rent || 0);
+          const storeBType = storeData.business_type || localStorage.getItem("saas_business_type") || "Restaurant/Cafe";
+          setBusinessType(storeBType);
           localStorage.setItem("saas_is_logged_in", "true");
           localStorage.setItem("saas_owner_mobile", loginMobile);
+          localStorage.setItem("saas_business_type", storeBType);
           // Save to native Preferences for app restart persistence
           try {
             const { Capacitor } = await import('@capacitor/core');
@@ -2002,15 +2360,31 @@ Stay safe & eat healthy! 🍕
         }
       } else {
         // Signup
-        const { data, error } = await supabase
+        let insertResult = await supabase
           .from('stores')
           .insert([{ 
             owner_mobile: loginMobile, 
             store_name: signupStoreName, 
-            password: loginPassword 
+            password: loginPassword,
+            business_type: signupBusinessType
           }])
           .select()
           .single();
+
+        if (insertResult.error) {
+          console.warn("Primary signup insert failed, retrying fallback without business_type column:", insertResult.error);
+          insertResult = await supabase
+            .from('stores')
+            .insert([{ 
+              owner_mobile: loginMobile, 
+              store_name: signupStoreName, 
+              password: loginPassword
+            }])
+            .select()
+            .single();
+        }
+
+        const { data, error } = insertResult;
  
         if (error) {
           const errMsg = error.message || "";
@@ -2020,13 +2394,27 @@ Stay safe & eat healthy! 🍕
             setLoginError("Mobile already registered or error occurred.");
           }
         } else {
+          // Seed presets based on the selected business type
+          const categoryPresets = BUSINESS_CATEGORIES[signupBusinessType]?.presets || [];
+          if (categoryPresets.length > 0) {
+            const menuItemsToInsert = categoryPresets.map(preset => ({
+              store_id: data.id,
+              name: preset.name,
+              price: preset.price,
+              category: "General"
+            }));
+            await supabase.from('menu_items').insert(menuItemsToInsert);
+          }
+ 
           setIsLoggedIn(true);
           setOwnerMobile(loginMobile);
           setRestaurantName(signupStoreName);
+          setBusinessType(signupBusinessType);
           setStoreCreatedAt(data.created_at);
           setSubscriptionExpiry(data.subscription_expiry);
           localStorage.setItem("saas_is_logged_in", "true");
           localStorage.setItem("saas_owner_mobile", loginMobile);
+          localStorage.setItem("saas_business_type", signupBusinessType);
           localStorage.setItem("saas_store_created_at", data.created_at || "");
           localStorage.setItem("saas_store_expiry", data.subscription_expiry || "");
  
@@ -2059,6 +2447,9 @@ Stay safe & eat healthy! 🍕
       // 0. Update Store Profile Info
       if (storeInfo) {
         setRestaurantName(storeInfo.store_name || storeInfo.name || localStorage.getItem("saas_store_name") || "");
+        const storeBType = storeInfo.business_type || localStorage.getItem("saas_business_type") || "Restaurant/Cafe";
+        setBusinessType(storeBType);
+        localStorage.setItem("saas_business_type", storeBType);
         
         const cloudLogo = storeInfo.logo || storeInfo.store_logo || storeInfo.image;
         if (cloudLogo) {
@@ -2160,7 +2551,7 @@ Stay safe & eat healthy! 🍕
       } else if (totalUdhaarAmt > 2000) {
         insight = `Udhaar ₹${totalUdhaarAmt} ho gaya hai. Aaj recovery ka din banaiye! 💸`;
       } else {
-        insight = "Business badhiya chal raha hai! Naye products add karke menu ko fresh rakhiye. ✨";
+        insight = "Business badhiya chal raha hai! Naye items add karke list ko fresh rakhiye. ✨";
       }
       setAiInsightText(insight);
     }, 600);
@@ -2428,35 +2819,35 @@ Stay safe & eat healthy! 🍕
         
         const announceTemplates: Record<string, string> = {
           hi: type === "Udhaar" 
-            ? `इंस्टामुनिम पर ${amt} रुपये का उधार दर्ज हुआ।` 
-            : `इंस्टामुनिम पर ${type === "Online" ? "ऑनलाइन" : type === "Swiggy" ? "स्वीगी" : type === "Zomato" ? "ज़ोमैटो" : "कैश"} के ${amt} रुपये प्राप्त हुए।`,
+            ? `इंस्टामुनिम पर ${amt} रुपये का उधार दर्ज हुआ。` 
+            : `इंस्टामुनिम पर ${type === "Online" ? "ऑनलाइन" : type === "Swiggy" ? "स्वीगी" : type === "Zomato" ? "ज़ोमैटो" : "कैश"} के ${amt} रुपये प्राप्त हुए。`,
           mr: type === "Udhaar" 
-            ? `इन्स्टामुनिमवर ${amt} रुपयांची उधारी नोंदवली गेली.` 
-            : `इन्स्टामुनिमवर ${type === "Online" ? "ऑनलाइन" : type === "Swiggy" ? "स्वीगी" : type === "Zomato" ? "झोमॅटो" : "कॅश"}द्वारे ${amt} रुपये प्राप्त झाले.`,
+            ? `इन्स्टामुनिमवर ${amt} रुपयांची उधारी नोंदवली गेली。` 
+            : `इन्स्टामुनिमवर ${type === "Online" ? "ऑनलाइन" : type === "Swiggy" ? "स्वीगी" : type === "Zomato" ? "झोमॅटो" : "कॅश"}द्वारे ${amt} रुपये प्राप्त झाले。`,
           gu: type === "Udhaar" 
-            ? `ઇન્સ્ટામુનિમ પર ${amt} રૂપિયાનું ઉધાર નોંધાયું છે.` 
-            : `ઇન્સ્ટામુનિમ પર ${type === "Online" ? "ઓનલાઇન" : type === "Swiggy" ? "સ્વીગી" : type === "Zomato" ? "ઝોમેટો" : "કેશ"} દ્વારા ${amt} રૂપિયા મળ્યા છે.`,
+            ? `ઇન્સ્ટામુનિમ પર ${amt} રૂપિયાનું ઉધાર નોંધાયું છે。` 
+            : `ઇન્સ્ટામુનિમ પર ${type === "Online" ? "ઓનલાઇન" : type === "Swiggy" ? "સ્વીગી" : type === "Zomato" ? "ઝોમેટો" : "કેશ"} દ્વારા ${amt} રૂપિયા મળ્યા છે。`,
           bn: type === "Udhaar" 
-            ? `ইনস্টামুনিমে ${amt} টাকার ধার নথিভুক্ত করা হয়েছে।` 
-            : `ইনস্টামুনিমে ${type === "Online" ? "অনলাইন" : type === "Swiggy" ? "সুইগি" : type === "Zomato" ? "জোম্যাটো" : "ক্যাশ"} এর মাধ্যমে ${amt} টাকা পাওয়া গেছে।`,
+            ? `ইনস্টামুনিমে ${amt} টাকার ধার নথিভুক্ত করা হয়েছে。` 
+            : `ইনস্টামুনিমে ${type === "Online" ? "অনলাইন" : type === "Swiggy" ? "সুইগি" : type === "Zomato" ? "জোম্যাটো" : "ক্যাশ"} এর মাধ্যমে ${amt} টাকা পাওয়া গেছে。`,
           pa: type === "Udhaar" 
-            ? `ਇੰਸਟਾਮੁਨਿਮ 'ਤੇ ${amt} ਰੁਪਏ ਦਾ ਉਧਾਰ ਦਰਜ ਕੀਤਾ ਗਿਆ ਹੈ।` 
-            : `ਇੰਸਟਾਮੁਨਿਮ 'ਤੇ ${type === "Online" ? "ਆਨਲਾਈਨ" : type === "Swiggy" ? "ਸਵਿਗੀ" : type === "Zomato" ? "ਜ਼ੋਮੈਟੋ" : "ਕੈਸ਼"} ਰਾਹੀਂ ${amt} ਰੁਪਏ ਪ੍ਰਾਪਤ ਹੋਏ।`,
+            ? `ਇੰਸਟਾਮੁਨਿਮ 'ਤੇ ${amt} ਰੁਪਏ ਦਾ ਉਧਾਰ ਦਰਜ ਕੀਤਾ ਗਿਆ ਹੈ。` 
+            : `ਇੰਸਟਾਮੁਨਿਮ 'ਤੇ ${type === "Online" ? "ਆਨਲਾਈਨ" : type === "Swiggy" ? "ਸਵਿਗੀ" : type === "Zomato" ? "ਜ਼ੋਮੈਟੋ" : "ਕੈਸ਼"} ਰਾਹੀਂ ${amt} ਰੁਪਏ ਪ੍ਰਾਪਤ ਹੋਏ。`,
           ta: type === "Udhaar" 
-            ? `இன்ஸ்டாமுனிமில் ${amt} ரூபாய் கடன் பதிவு செய்யப்பட்டது.` 
-            : `இன்ஸ்டாமுனிமில் ${type === "Online" ? "ஆன்லைன்" : type === "Swiggy" ? "ஸ்விக்கி" : type === "Zomato" ? "சொமாட்டோ" : "ரொக்கமாக"} மூலம் ${amt} ரூபாய் பெறப்பட்டது.`,
+            ? `இன்ஸ்டாமுனிமில் ${amt} ரூபாய் கடன் பதிவு செய்யப்பட்டது。` 
+            : `இன்ஸ்டாமுனிமில் ${type === "Online" ? "ஆன்லைன்" : type === "Swiggy" ? "ஸ்விக்கி" : type === "Zomato" ? "சொமாட்டோ" : "ரொக்கமாக"} மூலம் ${amt} ரூபாய் பெறப்பட்டது。`,
           te: type === "Udhaar" 
-            ? `ఇన్‌స్టామునిమ్‌లో ${amt} రూపాయల అప్పు నమోదు చేయబడింది.` 
-            : `ఇన్‌స్టామునిమ్‌లో ${type === "Online" ? "ఆన్‌లైన్" : type === "Swiggy" ? "స్విగ్గీ" : type === "Zomato" ? "జొమాటో" : "నగదు"} ద్వారా ${amt} రూపాయలు వచ్చాయి.`,
+            ? `ఇన్‌స్టామునిమ్‌లో ${amt} రూపాయల అప్పు నమోదు చేయబడింది。` 
+            : `ఇన్‌స్టామునిమ్‌లో ${type === "Online" ? "ఆన్‌లైన్" : type === "Swiggy" ? "స్విగ్గీ" : type === "Zomato" ? "జొమాటో" : "నగదు"} ద్వారా ${amt} రూపాయలు వచ్చాయి。`,
           kn: type === "Udhaar" 
-            ? `ಇನ್ಸ್ಟಾಮುನಿಮ್ನಲ್ಲಿ ${amt} ರೂಪಾಯಿ ಉದ್ರಿ ದಾಖಲಾಗಿದೆ.` 
-            : `ಇನ್ಸ್ಟಾಮುನಿಮ್ನಲ್ಲಿ ${type === "Online" ? "ಆನ್‌ಲೈನ್" : type === "Swiggy" ? "ಸ್ವಿಗ್ಗಿ" : type === "Zomato" ? "ಝೊಮ್ಯಾಟೊ" : "ನಗದು"} ಮೂಲಕ ${amt} ರೂಪಾಯಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ.`,
+            ? `ಇನ್ಸ್ಟಾಮುನಿಮ್ನಲ್ಲಿ ${amt} ರೂಪಾಯಿ ಉದ್ರಿ ದಾಖಲಾಗಿದೆ。` 
+            : `ಇನ್ಸ್ಟಾಮುನಿಮ್ನಲ್ಲಿ ${type === "Online" ? "ಆನ್‌ಲೈನ್" : type === "Swiggy" ? "ಸ್ವಿಗ್ಗಿ" : type === "Zomato" ? "ಝೊಮ್ಯಾಟೊ" : "ನಗದು"} ಮೂಲಕ ${amt} ರೂಪಾಯಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ。`,
           ml: type === "Udhaar" 
-            ? `ഇൻസ്റ്റാമുനിമിൽ ${amt} രൂപ കടം രേഖപ്പെടുത്തി.` 
-            : `ഇൻസ്റ്റാമുനിമിൽ ${type === "Online" ? "ഓൺലൈൻ" : type === "Swiggy" ? "സ്വിഗ്ഗി" : type === "Zomato" ? "സൊമാറ്റോ" : "പണമായി"} വഴി ${amt} രൂപ ലഭിച്ചു.`,
+            ? `ഇൻസ്റ്റാമുനിമിൽ ${amt} രൂപ കടം രേഖപ്പെടുത്തി。` 
+            : `ഇൻസ്റ്റാമുനിമിൽ ${type === "Online" ? "ഓൺലൈൻ" : type === "Swiggy" ? "സ്വിഗ്ഗി" : type === "Zomato" ? "സൊമാറ്റോ" : "പണമായി"} വഴി ${amt} രൂപ ലഭിച്ചു。`,
           en: type === "Udhaar" 
-            ? `Udhaar of ${amt} rupees recorded on InstaMunim.` 
-            : `Received ${amt} rupees on InstaMunim via ${type}.`
+            ? `Udhaar of ${amt} rupees recorded on InstaMunim。` 
+            : `Received ${amt} rupees on InstaMunim via ${type}。`
         };
 
         const textToAnnounce = announceTemplates[lang] || announceTemplates['en'];
@@ -2566,9 +2957,12 @@ Stay safe & eat healthy! 🍕
       alert("Bhai, sahi price (rate) daalo!");
       return;
     }
+    const isNew = !menuItems.some(m => m.name.toLowerCase() === manualItemName.trim().toLowerCase());
     addToCart({
       name: manualItemName.trim(),
-      price: priceNum
+      price: priceNum,
+      isNewProduct: isNew,
+      barcode: ""
     });
     setManualItemName("");
     setManualItemPrice("");
@@ -2729,16 +3123,16 @@ Stay safe & eat healthy! 🍕
       try {
         const amt = newExp.amount;
         const announceTemplates: Record<string, string> = {
-          hi: `इंस्टामुनिम पर ${amt} रुपये का खर्चा दर्ज हुआ।`,
-          mr: `इन्स्टामुनिमवर ${amt} रुपयांचा खर्च नोंदवला गेला.`,
-          gu: `ઇન્સ્ટામుનિમ પર ${amt} રૂપિયાનો kharch નોંધાયો છે.`,
-          bn: `ইনস্টামুনিমে ${amt} টাকার খরচ নথিভুক্ত করা হয়েছে।`,
-          pa: `ਇੰਸਟਾਮੁਨਿਮ 'ਤੇ ${amt} ਰੁਪਏ ਦਾ ਖਰਚਾ ਦਰਜ ਕੀਤਾ ਗਿਆ ਹੈ।`,
-          ta: `இன்ஸ்டாமுனிமில் ${amt} ரூபாய் செலவு பதிவு செய்யப்பட்டது.`,
-          te: `ఇన్‌స్టామునిమ్‌లో ${amt} రూపాయల ఖర్చు నమోదు చేయబడింది.`,
-          kn: `ಇನ್ಸ್ಟಾಮುನಿಮ್ನಲ್ಲಿ ${amt} ರೂಪಾಯಿ ಖರ್ಚು ದಾಖಲಾಗಿದೆ.`,
-          ml: `ഇൻസ്റ്റാമുനിമിൽ ${amt} രൂപ ചിലവ് രേഖപ്പെടുത്തി.`,
-          en: `Expense of ${amt} rupees logged on InstaMunim.`
+          hi: `इंस्टामुनिम पर ${amt} रुपये का खर्चा दर्ज हुआ。`,
+          mr: `इन्स्टामुनिमवर ${amt} रुपयांचा खर्च नोंदवला गेला。`,
+          gu: `ઇન્સ્ટામુનિમ પર ${amt} રૂપિયાનો kharch નોંધાયો છે。`,
+          bn: `ইনস্টামুনিমে ${amt} টাকার খরচ নথিভুক্ত করা হয়েছে。`,
+          pa: `ਇੰਸਟਾਮੁਨਿਮ 'ਤੇ ${amt} ਰੁਪਏ ਦਾ ਖਰਚਾ ਦਰਜ ਕੀਤਾ ਗਿਆ ਹੈ。`,
+          ta: `இன்ஸ்டாமுனிமில் ${amt} ரூபாய் செலவு பதிவு செய்யப்பட்டது。`,
+          te: `ఇన్‌స్టామునిమ్‌లో ${amt} రూపాయల ఖర్చు నమోదు చేయబడింది。`,
+          kn: `ಇನ್ಸ್ಟಾಮುನಿಮ್ನಲ್ಲಿ ${amt} ರೂಪಾಯಿ ಖರ್ಚು ದಾಖಲಾಗಿದೆ。`,
+          ml: `ഇൻസ്റ്റാമുനിമിൽ ${amt} രൂപ ചിലവ് രേഖപ്പെടുത്തി。`,
+          en: `Expense of ${amt} rupees logged on InstaMunim。`
         };
         const textToAnnounce = announceTemplates[lang] || announceTemplates['en'];
         announceVoice(textToAnnounce, lang);
@@ -2763,16 +3157,16 @@ Stay safe & eat healthy! 🍕
         const amt = saleToPay.price;
         try {
           const announceTemplates: Record<string, string> = {
-            hi: `उधार भुगतान के ${amt} रुपये प्राप्त हुए।`,
-            mr: `उधारी देयकाचे ${amt} रुपये प्राप्त झाले.`,
-            gu: `ઉધાર ચુકવણીના ${amt} રૂપિયા મળ્યા છે.`,
-            bn: `ধার পরিশোধ বাবদ ${amt} টাকা পাওয়া গেছে।`,
-            pa: `ਉਧਾਰ ਭੁਗਤਾਨ ਦੇ ${amt} ਰੁਪਏ ਪ੍ਰਾਪਤ ਹੋਏ।`,
-            ta: `கடன் செலுத்திய தொகையாக ${amt} ரூபாய் பெறப்பட்டது.`,
-            te: `అప్పు చెల్లింపుగా ${amt} రూపాయలు వచ్చాయి.`,
-            kn: `ಉದ್ರಿ ಪಾವತಿಯ ${amt} ರೂಪಾಯಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ.`,
-            ml: `കടം വീട്ടിയ ഇനത്തിൽ ${amt} രൂപ ലഭിച്ചു.`,
-            en: `Received ${amt} rupees for udhaar payment.`
+            hi: `उधार भुगतान के ${amt} रुपये प्राप्त हुए。`,
+            mr: `उधारी देयकाचे ${amt} रुपये प्राप्त झाले。`,
+            gu: `ઉધાર ચુકવણીના ${amt} રૂપિયા મળ્યા છે。`,
+            bn: `ধার পরিশোধ বাবদ ${amt} টাকা পাওয়া গেছে。`,
+            pa: `ਉਧਾਰ ਭੁਗਤਾਨ ਦੇ ${amt} ਰੁਪਏ ਪ੍ਰਾਪਤ ਹੋਏ。`,
+            ta: `கடன் செலுத்திய தொகையாக ${amt} ரூபாய் பெறப்பட்டது。`,
+            te: `అప్పు చెల్లింపుగా ${amt} రూపాయలు వచ్చాయి。`,
+            kn: `ಉದ್ರಿ ಪಾವತಿಯ ${amt} ರೂಪಾಯಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ。`,
+            ml: `കടം വീട്ടിയ ഇനത്തിൽ ${amt} രൂപ ലഭിച്ചു。`,
+            en: `Received ${amt} rupees for udhaar payment。`
           };
           const textToAnnounce = announceTemplates[lang] || announceTemplates['en'];
           announceVoice(textToAnnounce, lang);
@@ -2818,20 +3212,19 @@ Stay safe & eat healthy! 🍕
             contents: [{
               parts: [
                 {
-                  text: `You are a menu parser AI. Analyze this menu card image and extract ALL food/drink items with their prices. 
+                  text: `You are an inventory parser AI. Analyze this card/menu/price-list image and extract ALL ${getLabels(businessType).items.toLowerCase()} with their prices. 
 
-CRITICAL RULE FOR MULTIPLE PRICES/SIZES (e.g., Half, Full, Quarter, Qtr, Small, Medium, Large, Regular, Single, Double):
-If a menu item has multiple prices based on size/portion (usually written line-wise in columns next to the item), split them into separate items by appending the portion/size name in parentheses.
-Example: If "Dal Makhani" has Half = 60 and Full = 100, you must generate TWO separate items:
-1. {"name": "Dal Makhani (Half)", "price": 60}
-2. {"name": "Dal Makhani (Full)", "price": 100}
+CRITICAL RULE FOR MULTIPLE PRICES/SIZES (e.g., Half, Full, Quarter, Qtr, Small, Medium, Large, Regular, Single, Double, or different package durations/options):
+If an item/service has multiple prices based on size/portion/type, split them into separate items by appending the option name in parentheses.
+Example: If "Haircut" has Adult = 150 and Child = 80, you must generate TWO separate items:
+1. {"name": "Haircut (Adult)", "price": 150}
+2. {"name": "Haircut (Child)", "price": 80}
 
-If a pizza has Small = 150, Medium = 250, Large = 350, you must generate THREE separate items:
-1. {"name": "Cheese Pizza (Small)", "price": 150}
-2. {"name": "Cheese Pizza (Medium)", "price": 250}
-3. {"name": "Cheese Pizza (Large)", "price": 350}
+If a product has 500g = 150, 1kg = 280, you must generate TWO separate items:
+1. {"name": "Basmati Rice (500g)", "price": 150}
+2. {"name": "Basmati Rice (1kg)", "price": 280}
 
-Extract every single item you can see. Return ONLY a minified valid JSON array without any newlines, spaces, or indentation, like this: [{"name":"Paneer Tikka","price":180},{"name":"Masala Chai","price":20}]. If price is not visible, use 0. Return ONLY the minified JSON array, no explanation.`
+Extract every single item you can see. Return ONLY a minified valid JSON array without any newlines, spaces, or indentation, like this: [{"name":"Haircut","price":150},{"name":"Beard Trim","price":80}]. If price is not visible, use 0. Return ONLY the minified JSON array, no explanation.`
                 },
                 {
                   inline_data: {
@@ -2933,7 +3326,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
       
       const { data: insertedData, error } = await supabase
         .from('menu_items')
-        .insert(selectedItems.map(item => ({ store_id: store.id, name: item.name, price: item.price, category: 'Main Course' })))
+        .insert(selectedItems.map(item => ({ store_id: store.id, name: item.name, price: item.price, category: 'General' })))
         .select();
       
       if (error) throw error;
@@ -2976,16 +3369,33 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
             <form onSubmit={handleAuth} className="space-y-4">
               {authMode === "signup" && (
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">Store Name</Label>
-                  <Input 
-                    placeholder="e.g. Khan Kitchen" 
-                    value={signupStoreName} 
-                    onChange={e => setSignupStoreName(e.target.value)} 
-                    required 
-                    className={`h-14 rounded-xl border-0 font-bold px-6 focus-visible:ring-2 focus-visible:ring-orange-500 transition-all text-sm ${isDarkMode ? 'bg-zinc-800 text-white' : 'bg-zinc-50'}`} 
-                  />
-                </div>
+                <>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">Store Name</Label>
+                    <Input 
+                      placeholder="e.g. Khan Kitchen" 
+                      value={signupStoreName} 
+                      onChange={e => setSignupStoreName(e.target.value)} 
+                      required 
+                      className={`h-14 rounded-xl border-0 font-bold px-6 focus-visible:ring-2 focus-visible:ring-orange-500 transition-all text-sm ${isDarkMode ? 'bg-zinc-800 text-white' : 'bg-zinc-50'}`} 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">Business Type</Label>
+                    <Select value={signupBusinessType} onValueChange={setSignupBusinessType}>
+                      <SelectTrigger className={`h-14 rounded-xl border-0 font-bold px-6 focus:ring-2 focus:ring-orange-500 transition-all text-sm ${isDarkMode ? 'bg-zinc-800 text-white' : 'bg-zinc-50'}`}>
+                        <SelectValue placeholder="Select Business Type" />
+                      </SelectTrigger>
+                      <SelectContent className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-white border-zinc-100'}`}>
+                        {Object.entries(BUSINESS_CATEGORIES).map(([key, value]) => (
+                          <SelectItem key={key} value={key} className="font-bold py-3">
+                            {value.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
               )}
               
               <div className="space-y-2">
@@ -3137,7 +3547,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 {/* SELECT ITEMS SECTION */}
                 <div className="space-y-3">
                   <div className="flex justify-between items-center px-1">
-                    <h4 className="text-[9px] font-black uppercase text-zinc-400 tracking-[0.2em]">Select Items</h4>
+                    <h4 className="text-[9px] font-black uppercase text-zinc-400 tracking-[0.2em]">Select {getLabels(businessType).items}</h4>
                     <button 
                       onClick={() => {
                         setIsManualMode(!isManualMode);
@@ -3183,7 +3593,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       <div className="flex gap-2">
                         <div className="relative flex-1">
                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-300" />
-                          <Input placeholder="Search dishes..." value={itemSearch} onChange={e => setItemSearch(e.target.value)} className="h-10 pl-10 rounded-xl bg-zinc-50 dark:bg-zinc-900 border-0 font-bold placeholder:text-zinc-300 text-xs w-full" />
+                          <Input placeholder={`Search ${getLabels(businessType).items.toLowerCase()}...`} value={itemSearch} onChange={e => setItemSearch(e.target.value)} className="h-10 pl-10 rounded-xl bg-zinc-50 dark:bg-zinc-900 border-0 font-bold placeholder:text-zinc-300 text-xs w-full" />
                         </div>
                         <button 
                           onClick={() => {
@@ -3203,7 +3613,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       {filteredMenuItems.length === 0 ? (
                         itemSearch.trim() && (
                           <div className="p-4 bg-orange-50/50 dark:bg-orange-900/10 rounded-2xl border border-dashed border-orange-200 dark:border-orange-900/30 text-center space-y-2 animate-in fade-in duration-300">
-                            <p className="text-[10px] font-bold text-zinc-500">"{itemSearch}" menu mein nahi mila.</p>
+                            <p className="text-[10px] font-bold text-zinc-500">"{itemSearch}" nahi mila.</p>
                             <div className="flex gap-2 justify-center max-w-[260px] mx-auto">
                               <Input 
                                 type="number"
@@ -3395,8 +3805,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           <option value="Cash">Cash Sale</option>
                           <option value="Online">Online/UPI</option>
                           <option value="Udhaar">Udhaar Khata</option>
-                          <option value="Swiggy">Swiggy</option>
-                          <option value="Zomato">Zomato</option>
+                          <option value="Swiggy">{getPartnerName(businessType, "Swiggy")}</option>
+                          <option value="Zomato">{getPartnerName(businessType, "Zomato")}</option>
                         </select>
                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 pointer-events-none" />
                       </div>
@@ -3447,7 +3857,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       mr: "भाषा मराठी सेट केली आहे",
                       gu: "ભાષા ગુજરાતી સેટ કરવામાં આવી છે",
                       bn: "ভাষা বাংলা সেট করা হয়েছে",
-                      pa: "ਭਾਸ਼า ਪੰਜਾਬੀ ਸੈੱਟ ਕੀਤੀ ਗਈ ਹੈ",
+                      pa: "ਭਾਸ਼ਾ ਪੰਜਾਬੀ ਸੈੱਟ ਕੀਤੀ ਗਈ ਹੈ",
                       ta: "மொழி தமிழ் அமைக்கப்பட்டுள்ளது",
                       te: "భాష తెలుగు సెట్ చేయబడింది",
                       kn: "ಭಾಷೆ ಕನ್ನಡ ಹೊಂದಿಸಲಾಗಿದೆ",
@@ -3589,14 +3999,14 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   <h3 className="text-lg font-bold tracking-tight">{t("Recent Sales")}</h3>
                   <button onClick={() => setActiveTab("Total Sale Report")} className="text-[9px] font-bold text-orange-500 uppercase tracking-widest">{t("View All")}</button>
                 </div>
-                <Card className="rounded-2xl border-0 bg-white dark:bg-zinc-900 shadow-sm divide-y dark:divide-zinc-800 overflow-hidden">
+                <Card className="rounded-2xl border-0 shadow-sm bg-white dark:bg-zinc-900 divide-y dark:divide-zinc-800 overflow-hidden">
                   {filteredSales.slice(0, 3).map(s => (
                     <div key={s.id} className="p-4 flex justify-between items-center hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                       <div className="space-y-0.5">
                         <p className="font-bold text-[13px] leading-tight">{s.name}</p>
                         <div className="text-[8px] font-medium text-zinc-400 flex items-center gap-1.5">
                           {format(new Date(s.date), "hh:mm aa")} • 
-                          <span className={`px-1 rounded-sm font-bold ${s.type === 'Cash' ? 'text-emerald-600 bg-emerald-50' : 'text-blue-600 bg-blue-50'}`}>{s.type}</span>
+                          <span className={`px-1 rounded-sm font-bold ${s.type === 'Cash' ? 'text-emerald-600 bg-emerald-50' : s.type === 'Swiggy' || s.type === 'Zomato' ? 'text-orange-600 bg-orange-50 dark:bg-orange-950/20' : 'text-blue-600 bg-blue-50'}`}>{getPartnerName(businessType, s.type)}</span>
                         </div>
                       </div>
                       <p className="text-base font-bold tracking-tight">
@@ -3611,7 +4021,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               </div>
 
               {/* QUICK EXPENSE CARD */}
-              <Card className="rounded-2xl border-0 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-150">
+              <Card className="rounded-2xl border-0 shadow-sm bg-white dark:bg-zinc-900 overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-150">
                 <div className="bg-[#fff1f1] dark:bg-red-950/20 py-4 px-6">
                   <h3 className="text-red-600 font-bold text-sm uppercase tracking-widest">Quick Expense</h3>
                 </div>
@@ -3716,8 +4126,6 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
             </div>
           )}
 
-          {/* Old Marketing Tab Removed */}
-
           {activeTab === "Total Sale Report" && (
             <div className="max-w-full space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-28 px-2 sm:px-4 pt-4">
               <header className="px-2">
@@ -3785,8 +4193,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                               <td className="py-2 px-4 font-bold text-sm text-zinc-500 whitespace-nowrap">{s.mobile}</td>
                               <td className="py-2 px-4 font-bold text-xs text-zinc-800 dark:text-zinc-200 whitespace-nowrap">{s.item || "General Order"}</td>
                               <td className="py-2 px-4 text-center">
-                                <Badge className={`text-[8px] font-bold px-2 py-0.5 rounded-lg border-0 ${s.type === 'Cash' ? 'bg-emerald-100 text-emerald-600' : 'bg-blue-100 text-blue-600'}`}>
-                                  {s.type.toUpperCase()}
+                                <Badge className={`text-[8px] font-bold px-2 py-0.5 rounded-lg border-0 ${s.type === 'Cash' ? 'bg-emerald-100 text-emerald-600' : s.type === 'Swiggy' || s.type === 'Zomato' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}`}>
+                                  {getPartnerName(businessType, s.type).toUpperCase()}
                                 </Badge>
                               </td>
                               <td className="py-2 px-4 text-right font-bold text-lg tracking-tighter text-zinc-900 dark:text-white whitespace-nowrap">
@@ -3886,13 +4294,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 <div className="space-y-3">
                   <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest pl-2">Quick Sample Texts</p>
                   <div className="flex gap-2 flex-wrap">
-                    {[
-                      { label: "20% OFF", msg: `Hi [NAME], we miss you at ${restaurantName}! 🍕 Get 20% OFF on your next order today! Use code: MISSYOU20` },
-                      { label: "BOGO Offer", msg: `Weekend Special at ${restaurantName}! 🥤 Buy 1 Get 1 FREE on all large orders! Valid only for today.` },
-                      { label: "New Menu", msg: `Hi [NAME], check out our NEW items at ${restaurantName}! 😋 From spicy rolls to fresh shakes, try them now!` },
-                      { label: "Free Delivery", msg: `Hungry [NAME]? 🚚 Free Delivery for you at ${restaurantName} for the next 2 hours! Order now.` },
-                      { label: "Weekend", msg: `Happy Weekend [NAME]! 🎉 Relax and enjoy a meal from ${restaurantName}. We've got special treats waiting!` }
-                    ].map(template => (
+                    {getTemplates(businessType, restaurantName).map(template => (
                       <button 
                         key={template.label} 
                         onClick={() => setCrmMessage(template.msg)} 
@@ -3940,11 +4342,11 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     </div>
 
                     <div className="space-y-1.5 text-left">
-                      <Label className="text-[10px] font-black uppercase text-zinc-400">Product/Service Name</Label>
+                      <Label className="text-[10px] font-black uppercase text-zinc-400">{getLabels(businessType).item} Name</Label>
                       <Input 
                         value={productName} 
                         onChange={e => setProductName(e.target.value)} 
-                        placeholder="e.g. Paneer Pizza, All Menu Items" 
+                        placeholder={`e.g. ${getLabels(businessType).presets[0]?.name || "Item"}, All ${getLabels(businessType).items}`} 
                         className="rounded-xl border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 font-bold text-sm h-11"
                       />
                     </div>
@@ -4139,8 +4541,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
           {activeTab === "Menu" && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24 px-3">
               <header className="px-2 pt-4">
-                <h2 className="text-5xl font-bold tracking-tighter leading-tight text-zinc-900 dark:text-white">Inventory<br/>Control</h2>
-                <p className="text-sm font-medium text-zinc-400 mt-3 leading-relaxed">Update your digital menu items and pricing.</p>
+                <h2 className="text-5xl font-bold tracking-tighter leading-tight text-zinc-900 dark:text-white">{getLabels(businessType).items.split(" & ")[0]}<br/>Control</h2>
+                <p className="text-sm font-medium text-zinc-400 mt-3 leading-relaxed">Update your digital {getLabels(businessType).items.toLowerCase()} and pricing.</p>
               </header>
 
               {/* SMART MENU AI SCANNER BUTTON */}
@@ -4172,13 +4574,13 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               {/* NEW ITEM CARD - PREMIUM STYLE */}
               <Card className="rounded-2xl border-0 shadow-2xl shadow-zinc-200 dark:shadow-none bg-white dark:bg-zinc-900 overflow-hidden">
                 <div className="bg-zinc-900 dark:bg-zinc-800 p-6">
-                  <h3 className="text-xl font-bold text-white">New Item</h3>
+                  <h3 className="text-xl font-bold text-white">New {getLabels(businessType).item}</h3>
                 </div>
                 <div className="p-8 space-y-6">
                   <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-1">Dish Name</Label>
+                    <Label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-1">{getLabels(businessType).item} Name</Label>
                     <Input 
-                      placeholder="e.g. Double Cheese Roll" 
+                      placeholder={`e.g. ${getLabels(businessType).presets[0]?.name || "Item Name"}`} 
                       value={newItemName} 
                       onChange={e => setNewItemName(e.target.value)} 
                       className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-6 focus-visible:ring-2 focus-visible:ring-blue-500/20" 
@@ -4196,19 +4598,16 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-1">Category</Label>
-                    <Select value={newItemCategory} onValueChange={(v) => setNewItemCategory(v || "Main Course")}>
+                    <Select value={newItemCategory} onValueChange={(v) => setNewItemCategory(v || "Others")}>
                       <SelectTrigger className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-6 focus-visible:ring-2 focus-visible:ring-blue-500/20">
                         <SelectValue placeholder="Select Category" />
                       </SelectTrigger>
                       <SelectContent className="rounded-2xl border-0 shadow-2xl">
-                        <SelectItem value="Main Course">🍛 Main Course</SelectItem>
-                        <SelectItem value="Starters">🥟 Starters</SelectItem>
-                        <SelectItem value="Chinese">🥢 Chinese</SelectItem>
-                        <SelectItem value="Beverages">🥤 Beverages</SelectItem>
-                        <SelectItem value="Snacks">🍟 Snacks</SelectItem>
-                        <SelectItem value="Breads">🍞 Breads</SelectItem>
-                        <SelectItem value="Desserts">🍰 Desserts/Sweets</SelectItem>
-                        <SelectItem value="Others">📁 Others</SelectItem>
+                        {(getLabels(businessType).categories || ["General", "Others"]).map(cat => (
+                          <SelectItem key={cat} value={cat} className="font-bold py-3">
+                            {cat}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -4216,7 +4615,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     onClick={handleAddItem} 
                     className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-md shadow-xl shadow-blue-500/30 active:scale-95 transition-all mt-4 uppercase tracking-wider"
                   >
-                    ADD TO MENU
+                    ADD {getLabels(businessType).item.toUpperCase()}
                   </Button>
                 </div>
               </Card>
@@ -4224,9 +4623,9 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               {/* LIVE MENU LIST */}
               <div className="space-y-4 pt-4">
                 <div className="flex justify-between items-center px-2">
-                  <h3 className="text-2xl font-bold tracking-tight">Live Menu</h3>
+                  <h3 className="text-2xl font-bold tracking-tight">Live {getLabels(businessType).items.split(" & ")[0]}</h3>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="rounded-full px-3 py-1 font-bold bg-white dark:bg-zinc-800 border-zinc-100 dark:border-zinc-800 shadow-sm">{menuItems.length} Items</Badge>
+                    <Badge variant="outline" className="rounded-full px-3 py-1 font-bold bg-white dark:bg-zinc-800 border-zinc-100 dark:border-zinc-800 shadow-sm">{menuItems.length} {getLabels(businessType).items.includes("Stock") || getLabels(businessType).items.includes("Inventory") ? "Products" : "Items"}</Badge>
                     <button 
                       onClick={() => {
                         const csvContent = "Name,Price,Category"; // Clean header only
@@ -4576,7 +4975,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 <div className="absolute -left-10 -top-10 w-40 h-40 bg-orange-500/10 rounded-full blur-3xl" />
                 <h2 className="text-4xl font-black tracking-tighter">{t("Daily Stock")}</h2>
                 <p className="text-zinc-500 font-bold flex items-center gap-2 mt-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" /> {t("Track your store raw items and recipe stock.")}
+                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" /> {t(INVENTORY_CATEGORY_CONFIGS[businessType]?.subtext || "Track your store raw items and recipe stock.")}
                 </p>
               </header>
 
@@ -4600,7 +4999,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   </Button>
                 </Card>
               ) : (
-                <InventoryDiary />
+                <InventoryDiary businessType={businessType} />
               )}
             </div>
           )}
@@ -4712,6 +5111,22 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 className="h-16 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 shadow-inner text-xl font-black px-6 focus:ring-2 ring-orange-500/20 transition-all" 
                                 placeholder="Enter Business Name"
                               />
+                            </div>
+
+                            <div className="space-y-3">
+                              <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Business Category</Label>
+                              <Select value={businessType} onValueChange={setBusinessType}>
+                                <SelectTrigger className="h-16 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 shadow-inner text-base font-bold px-6">
+                                  <SelectValue placeholder="Select Business Type" />
+                                </SelectTrigger>
+                                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800">
+                                  {Object.keys(BUSINESS_CATEGORIES).map((key) => (
+                                    <SelectItem key={key} value={key} className="font-bold text-sm">
+                                      {BUSINESS_CATEGORIES[key].name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
                             </div>
 
                             <div className="space-y-4">
@@ -5130,8 +5545,10 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           <div className="pt-6 space-y-3">
                             <div className="bg-white dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 p-5 rounded-3xl flex items-center justify-between shadow-sm">
                               <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white font-black">S</div>
-                                <span className="font-black">Swiggy</span>
+                                <div className={`w-10 h-10 rounded-full ${getPartnerConfig(businessType).swiggyColor} flex items-center justify-center font-black`}>
+                                  {getPartnerConfig(businessType).swiggyIcon}
+                                </div>
+                                <span className="font-black">{getPartnerName(businessType, "Swiggy")}</span>
                               </div>
                               <div className="flex items-center gap-4">
                                 <select 
@@ -5148,8 +5565,10 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
                             <div className="bg-white dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 p-5 rounded-3xl flex items-center justify-between shadow-sm">
                               <div className="flex items-center gap-4">
-                                <div className="w-10 h-10 rounded-full bg-red-600 flex items-center justify-center text-white font-black">Z</div>
-                                <span className="font-black">Zomato</span>
+                                <div className={`w-10 h-10 rounded-full ${getPartnerConfig(businessType).zomatoColor} flex items-center justify-center font-black`}>
+                                  {getPartnerConfig(businessType).zomatoIcon}
+                                </div>
+                                <span className="font-black">{getPartnerName(businessType, "Zomato")}</span>
                               </div>
                               <div className="flex items-center gap-4">
                                 <select 

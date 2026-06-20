@@ -208,17 +208,17 @@ export default function AdminDashboard() {
 
   if (!isAdminLoggedIn) {
     return (
-      <div className="login-container" style={{ background: '#000000', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div className="login-card" style={{ background: 'transparent', boxShadow: 'none', border: 'none' }}>
+      <div className="login-container" style={{ background: 'var(--bg)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="login-card">
           <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <img src="/assets/logo-dark.png" alt="InstaMunim Logo" style={{ width: '450px', height: '450px', objectFit: 'contain' }} />
+            <img src="/assets/logo-light.png" alt="InstaMunim Logo" style={{ width: '450px', height: '450px', objectFit: 'contain' }} />
           </div>
           <div className="login-header" style={{ marginBottom: '24px', textAlign: 'center' }}>
-            <h1 style={{ fontSize: '20px', fontWeight: 900, color: 'white', letterSpacing: '-1px' }}>COMMAND CENTER</h1>
+            <h1 style={{ fontSize: '20px', fontWeight: 900, color: 'var(--text)', letterSpacing: '-1px' }}>COMMAND CENTER</h1>
             <p style={{ color: '#f97316', fontWeight: 700, letterSpacing: '2px', marginTop: '8px', fontSize: '10px' }}>ADMIN ACCESS SECURED</p>
           </div>
           <form onSubmit={handleAdminLogin}>
-            <input type="password" value={adminPass} onChange={(e) => setAdminPass(e.target.value)} placeholder="••••••••" className="login-input" style={{ background: '#1c1c1f', border: 'none', color: 'white' }} />
+            <input type="password" value={adminPass} onChange={(e) => setAdminPass(e.target.value)} placeholder="••••••••" className="login-input" style={{ background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)' }} />
             <div style={{ display: 'flex', justifyContent: 'center', marginTop: '16px' }}>
               <button type="submit" className="login-btn" style={{ width: '100%', maxWidth: '260px', background: '#f97316' }}>INITIALIZE SESSION</button>
             </div>
@@ -232,7 +232,7 @@ export default function AdminDashboard() {
     <div className="admin-container">
       <aside className="sidebar">
         <div className="logo-section" style={{ marginBottom: '40px' }}>
-          <img src="/assets/logo-dark.png" alt="InstaMunim" style={{ width: '100%', height: 'auto', maxHeight: '150px', objectFit: 'contain' }} />
+          <img src="/assets/logo-light.png" alt="InstaMunim" style={{ width: '100%', height: 'auto', maxHeight: '150px', objectFit: 'contain' }} />
         </div>
         <nav className="nav-links">
           {["Dashboard", "Merchants", "Sales", "Broadcast", "Subscriptions"].map(tab => (
@@ -253,7 +253,7 @@ export default function AdminDashboard() {
         <header className="header" style={{ marginBottom: '40px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
             <div>
-              <h1 style={{ fontSize: '32px', fontWeight: 900, color: 'white', letterSpacing: '-1.5px', marginBottom: '4px' }}>{activeTab.toUpperCase()}</h1>
+              <h1 style={{ fontSize: '32px', fontWeight: 900, color: 'var(--text)', letterSpacing: '-1.5px', marginBottom: '4px' }}>{activeTab.toUpperCase()}</h1>
               <p style={{ color: '#f97316', fontSize: '10px', fontWeight: 800, letterSpacing: '2px' }}>COMMAND CENTER • GLOBAL NETWORK</p>
             </div>
             <button 
@@ -262,9 +262,9 @@ export default function AdminDashboard() {
               style={{ 
                 width: '48px', 
                 height: '48px', 
-                background: '#1c1c1f', 
+                background: '#ffffff', 
                 borderRadius: '14px', 
-                border: '1px solid #27272a',
+                border: '1px solid var(--border)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -272,7 +272,7 @@ export default function AdminDashboard() {
                 transition: 'all 0.3s'
               }}
             >
-              <RefreshCw size={20} color={isRefreshing ? "#ffffff" : "#f97316"} />
+              <RefreshCw size={20} color={isRefreshing ? "var(--text)" : "#f97316"} />
             </button>
           </div>
           
@@ -286,14 +286,14 @@ export default function AdminDashboard() {
               style={{ 
                 width: '100%', 
                 height: '56px', 
-                background: '#111113', 
-                border: '1px solid #27272a', 
+                background: '#ffffff', 
+                border: '1px solid var(--border)', 
                 borderRadius: '18px', 
                 paddingLeft: '56px', 
-                color: 'white', 
+                color: 'var(--text)', 
                 fontWeight: 600, 
                 fontSize: '14px', 
-                boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+                boxShadow: '0 4px 20px rgba(24,24,27,0.02)'
               }}
             />
           </div>
@@ -307,7 +307,7 @@ export default function AdminDashboard() {
               <div className="stat-card"><p>Est. Revenue</p><h3 style={{ color: '#f97316' }}>₹{stores.reduce((sum, s) => sum + ((s.monthly_rent === null || s.monthly_rent === undefined) ? 299 : Number(s.monthly_rent)), 0).toLocaleString()}</h3></div>
             </div>
             <div className="data-table-container">
-               <div className="table-header"><h4 style={{ fontSize: '16px', fontWeight: 900, color: 'white' }}>RECENT ONBOARDING</h4></div>
+               <div className="table-header"><h4 style={{ fontSize: '16px', fontWeight: 900, color: 'var(--text)' }}>RECENT ONBOARDING</h4></div>
                 <table className="table-content">
                   <thead><tr><th>Store</th><th>Contact</th><th>Status</th><th>Expiry</th></tr></thead>
                   <tbody>{stores.slice(0, 10).map(s => {
@@ -344,19 +344,19 @@ export default function AdminDashboard() {
         {activeTab === "Sales" && (
           <div className="animate-fade-in">
             <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
-               <select value={selectedMerchant} onChange={(e) => setSelectedMerchant(e.target.value)} style={{ flex: 1, height: '44px', background: '#1c1c1f', color: 'white', borderRadius: '12px', padding: '0 12px' }}>
+               <select value={selectedMerchant} onChange={(e) => setSelectedMerchant(e.target.value)} style={{ flex: 1, height: '44px', background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)', borderRadius: '12px', padding: '0 12px' }}>
                   <option value="all">All Merchants</option>
                   {stores.map(s => <option key={s.id} value={s.id}>{s.store_name}</option>)}
                </select>
-               <select value={selectedPayment} onChange={(e) => setSelectedPayment(e.target.value)} style={{ width: '150px', height: '44px', background: '#1c1c1f', color: 'white', borderRadius: '12px', padding: '0 12px' }}>
+               <select value={selectedPayment} onChange={(e) => setSelectedPayment(e.target.value)} style={{ width: '150px', height: '44px', background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)', borderRadius: '12px', padding: '0 12px' }}>
                   <option value="all">All Modes</option><option value="Cash">Cash</option><option value="Online">Online</option>
                </select>
-               <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} style={{ width: '150px', height: '44px', background: '#1c1c1f', color: 'white', borderRadius: '12px', padding: '0 12px' }}>
+               <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} style={{ width: '150px', height: '44px', background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)', borderRadius: '12px', padding: '0 12px' }}>
                   <option value="all">Lifetime</option><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="week">7 Days</option>
                </select>
             </div>
             <div className="data-table-container">
-               <div className="table-header"><h4 style={{ color: 'white' }}>SALES LOG ({filteredSales.length})</h4><div style={{ color: '#f97316', fontWeight: 900 }}>Total: ₹{filteredSales.reduce((s, a) => s + Number(a.total_price), 0).toLocaleString()}</div></div>
+               <div className="table-header"><h4 style={{ color: 'var(--text)' }}>SALES LOG ({filteredSales.length})</h4><div style={{ color: '#f97316', fontWeight: 900 }}>Total: ₹{filteredSales.reduce((s, a) => s + Number(a.total_price), 0).toLocaleString()}</div></div>
                <table className="table-content">
                   <thead><tr><th>Store</th><th>Customer</th><th>Amount</th><th>Date</th></tr></thead>
                   <tbody>{filteredSales.map(sale => (
@@ -369,7 +369,7 @@ export default function AdminDashboard() {
 
         {activeTab === "Subscriptions" && (
           <div className="data-table-container animate-fade-in">
-             <div className="table-header"><h4 style={{ color: 'white' }}>SUBSCRIPTIONS</h4></div>
+             <div className="table-header"><h4 style={{ color: 'var(--text)' }}>SUBSCRIPTIONS</h4></div>
              <table className="table-content">
                 <thead><tr><th>Merchant</th><th>Plan</th><th>Expiry</th><th>Status</th><th>Action</th></tr></thead>
                 <tbody>{filteredStores.map(s => {
@@ -468,7 +468,7 @@ export default function AdminDashboard() {
 
         {activeTab === "Merchants" && (
           <div className="data-table-container animate-fade-in">
-             <div className="table-header"><h4 style={{ color: 'white' }}>MERCHANTS</h4></div>
+             <div className="table-header"><h4 style={{ color: 'var(--text)' }}>MERCHANTS</h4></div>
              <table className="table-content">
                 <thead><tr><th>Store</th><th>Contact</th><th>Action</th></tr></thead>
                 <tbody>{filteredStores.map(s => (
@@ -483,7 +483,7 @@ export default function AdminDashboard() {
 
         {activeTab === "Broadcast" && (
            <div className="broadcast-box animate-fade-in">
-              <h3 style={{ color: 'white' }}>GLOBAL BROADCAST</h3>
+              <h3 style={{ color: 'var(--text)' }}>GLOBAL BROADCAST</h3>
               <textarea className="broadcast-textarea" value={broadcastMessage} onChange={(e) => setBroadcastMessage(e.target.value)} placeholder="Type announcement..." />
               <button onClick={() => setActiveTab("Merchants")} className="login-btn">GO TO MERCHANTS</button>
            </div>
