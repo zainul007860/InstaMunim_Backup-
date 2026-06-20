@@ -88,7 +88,7 @@ export default function AdminDashboard() {
     // Immediate Feedback
     if (!confirm(`Confirm: Extend ${store.store_name} by ${days} days?`)) return;
     
-    const planPrice = days === 365 ? 3600 : 299;
+    const planPrice = days === 365 ? 1999 : 199;
     
     setUpdatingStoreId(store.id);
     try {
@@ -119,7 +119,7 @@ export default function AdminDashboard() {
       if (isCurrentlyActive) {
         newExpiry = subDays(new Date(), 1);
       } else {
-        const days = Number(store.monthly_rent) === 3600 ? 365 : 30;
+        const days = Number(store.monthly_rent) === 1999 ? 365 : 30;
         newExpiry = addDays(new Date(), days);
       }
       
@@ -304,7 +304,7 @@ export default function AdminDashboard() {
             <div className="stats-grid">
               <div className="stat-card"><p>Total Merchants</p><h3>{stores.length}</h3></div>
               <div className="stat-card"><p>Global GMV</p><h3>₹{totalSalesVal.toLocaleString()}</h3></div>
-              <div className="stat-card"><p>Est. Revenue</p><h3 style={{ color: '#f97316' }}>₹{stores.reduce((sum, s) => sum + ((s.monthly_rent === null || s.monthly_rent === undefined) ? 299 : Number(s.monthly_rent)), 0).toLocaleString()}</h3></div>
+              <div className="stat-card"><p>Est. Revenue</p><h3 style={{ color: '#f97316' }}>₹{stores.reduce((sum, s) => sum + ((s.monthly_rent === null || s.monthly_rent === undefined) ? 199 : Number(s.monthly_rent)), 0).toLocaleString()}</h3></div>
             </div>
             <div className="data-table-container">
                <div className="table-header"><h4 style={{ fontSize: '16px', fontWeight: 900, color: 'var(--text)' }}>RECENT ONBOARDING</h4></div>
@@ -386,10 +386,12 @@ export default function AdminDashboard() {
                       <td>{s.store_name}</td>
                       <td>
                         {isPaidActive ? (
-                          s.monthly_rent === 3600 ? (
-                            <span style={{ color: '#10b981', fontWeight: 800 }}>Yearly (₹3600)</span>
+                          s.monthly_rent === 1999 ? (
+                            <span style={{ color: '#10b981', fontWeight: 800 }}>Yearly (₹1999)</span>
                           ) : (
-                            <span style={{ color: '#f97316', fontWeight: 800 }}>Monthly (₹299)</span>
+                            <span style={{ color: '#f97316', fontWeight: 800 }}>
+                              Monthly (<span style={{ textDecoration: 'line-through', opacity: 0.5 }}>₹299</span> ₹199)
+                            </span>
                           )
                         ) : (
                           <span style={{ color: '#a1a1aa', fontWeight: 800 }}>Freemium</span>

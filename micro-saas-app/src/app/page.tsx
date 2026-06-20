@@ -814,8 +814,9 @@ export default function LandingPage() {
             <div className="bg-white border border-zinc-200 p-8 rounded-3xl flex flex-col justify-between shadow-sm text-left hover:border-zinc-300 transition-colors">
               <div className="space-y-4">
                 <span className="text-xs font-black text-orange-500 uppercase tracking-widest">Monthly Smart Plan</span>
-                <div className="flex items-end gap-1">
-                  <span className="text-4xl font-extrabold text-zinc-900">₹299</span>
+                <div className="flex items-end gap-2">
+                  <span className="text-xl font-bold text-zinc-400 line-through">₹299</span>
+                  <span className="text-4xl font-extrabold text-zinc-900 text-orange-600">₹199</span>
                   <span className="text-zinc-400 text-xs font-bold">/ month</span>
                 </div>
                 <p className="text-zinc-500 text-xs font-bold">Billed monthly. Cancel anytime.</p>
@@ -832,7 +833,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <a 
-                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Monthly Smart Business Plan (\u20B9299/mo) for my store. \uD83D\uDE80\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. \uD83D\uDCC8")}`}
+                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Monthly Smart Business Plan (\u20B9199/mo) for my store. \uD83D\uDE80\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. \uD83D\uDCC8")}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full bg-zinc-900 hover:bg-orange-500 text-white font-extrabold py-3.5 rounded-xl text-xs mt-8 transition-colors text-center uppercase tracking-widest"
@@ -846,11 +847,12 @@ export default function LandingPage() {
               <div className="absolute -top-3.5 right-6 bg-orange-500 text-white px-3.5 py-1 rounded-full font-black text-[9px] uppercase tracking-wider shadow-md animate-bounce">SAVE 25%</div>
               <div className="space-y-4">
                 <span className="text-xs font-black text-orange-600 uppercase tracking-widest">Yearly Smart Plan</span>
-                <div className="flex items-end gap-1">
-                  <span className="text-4xl font-extrabold text-zinc-900">₹3,600</span>
+                <div className="flex items-end gap-2">
+                  <span className="text-xl font-bold text-zinc-400 line-through">₹3,600</span>
+                  <span className="text-4xl font-extrabold text-zinc-900 text-orange-600">₹1,999</span>
                   <span className="text-zinc-400 text-xs font-bold">/ year</span>
                 </div>
-                <p className="text-orange-600 text-xs font-black uppercase">Equivalent to ₹300/mo (Save ₹1,188/yr)</p>
+                <p className="text-orange-600 text-xs font-black uppercase">Equivalent to ₹166/mo (Save ₹389/yr)</p>
                 <div className="border-t border-zinc-100 pt-4 space-y-3.5 text-xs font-semibold text-zinc-750">
                   <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> Unlimited Invoicing & Sales Bills</div>
                   <div className="flex items-center gap-2"><Check className="text-emerald-500 w-4 h-4 shrink-0" /> Smart CRM (Unlimited Outreach)</div>
@@ -867,7 +869,7 @@ export default function LandingPage() {
                 </div>
               </div>
               <a 
-                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Yearly Smart Business Plan (\u20B93600/yr) for my store. \uD83D\uDE80\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. \uD83D\uDCC8")}`}
+                href={`https://wa.me/917838229178?text=${encodeURIComponent("Hi InstaMunim Team, I want to activate the Yearly Smart Business Plan (\u20B91999/yr) for my store. \uD83D\uDE80\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process. \uD83D\uDCC8")}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full bg-orange-500 hover:bg-orange-600 text-white font-extrabold py-3.5 rounded-xl text-xs mt-8 transition-colors shadow-md shadow-orange-500/10 text-center uppercase tracking-widest"
