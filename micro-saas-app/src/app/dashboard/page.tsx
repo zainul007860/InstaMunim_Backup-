@@ -2864,29 +2864,34 @@ Stay safe & eat healthy! 🍕
       setExtraChargeAmount("");
       setDiscount("");
 
-      // Trigger Interstitial Ad after every sale
+      // Trigger Interstitial Ad after every 2nd sale
       if (!isSubscribed) {
-        if (adProvider === "admob" && admobRef.current) {
-          try {
-            console.log("Triggering Interstitial Ad after sale...");
-            await admobRef.current.showInterstitial();
-          } catch (e) {
-            console.error("Error showing interstitial ad, falling back to Web Ads direct link:", e);
-            prepareInterstitialAd();
-            if (webAdDirectLink) {
-              try {
-                window.open(webAdDirectLink, "_blank");
-              } catch (webErr) {
-                console.error("Web Ad direct link error:", webErr);
+        const nextCount = (Number(localStorage.getItem('ad_sale_count') || '0') + 1) % 2;
+        localStorage.setItem('ad_sale_count', nextCount.toString());
+        
+        if (nextCount === 0) {
+          if (adProvider === "admob" && admobRef.current) {
+            try {
+              console.log("Triggering Interstitial Ad after sale...");
+              await admobRef.current.showInterstitial();
+            } catch (e) {
+              console.error("Error showing interstitial ad, falling back to Web Ads direct link:", e);
+              prepareInterstitialAd();
+              if (webAdDirectLink) {
+                try {
+                  window.open(webAdDirectLink, "_blank");
+                } catch (webErr) {
+                  console.error("Web Ad direct link error:", webErr);
+                }
               }
             }
-          }
-        } else if (adProvider === "web" && webAdDirectLink) {
-          try {
-            console.log("Triggering Web Interstitial Direct Link Ad...");
-            window.open(webAdDirectLink, "_blank");
-          } catch (e) {
-            console.error("Error opening web interstitial ad:", e);
+          } else if (adProvider === "web" && webAdDirectLink) {
+            try {
+              console.log("Triggering Web Interstitial Direct Link Ad...");
+              window.open(webAdDirectLink, "_blank");
+            } catch (e) {
+              console.error("Error opening web interstitial ad:", e);
+            }
           }
         }
       }
