@@ -162,6 +162,43 @@ export default function AdminDashboard() {
     }
   };
 
+  const deleteStore = async (store: any) => {
+    const doubleConfirm = confirm(`⚠️ DANGER: Are you sure you want to permanently DELETE "${store.store_name}"?\nAll sales data, menu items, expenses, and the store account itself will be deleted forever. This cannot be undone!`);
+    if (!doubleConfirm) return;
+
+    const finalConfirm = prompt(`To confirm deletion, please type the store name: "${store.store_name}"`);
+    if (finalConfirm !== store.store_name) {
+      alert("Store name did not match. Deletion cancelled.");
+      return;
+    }
+
+    setUpdatingStoreId(store.id);
+    try {
+      // 1. Delete dependent data first to satisfy foreign keys
+      const salesRes = await supabase.from('sales').delete().eq('store_id', store.id);
+      if (salesRes.error) console.warn("Failed to delete sales:", salesRes.error);
+      
+      const expensesRes = await supabase.from('expenses').delete().eq('store_id', store.id);
+      if (expensesRes.error) console.warn("Failed to delete expenses:", expensesRes.error);
+
+      const menuRes = await supabase.from('menu_items').delete().eq('store_id', store.id);
+      if (menuRes.error) console.warn("Failed to delete menu items:", menuRes.error);
+
+      // 2. Delete the store itself
+      const { error } = await supabase.from('stores').delete().eq('id', store.id);
+      
+      if (error) throw error;
+      
+      alert(`SUCCESS: ${store.store_name} and all its data have been permanently deleted.`);
+      await fetchAdminData();
+    } catch (err: any) {
+      console.error(err);
+      alert("Delete Error: " + (err.message || JSON.stringify(err) || "Unknown error"));
+    } finally {
+      setUpdatingStoreId(null);
+    }
+  };
+
   const openWhatsApp = (mobile: string) => {
     const msg = encodeURIComponent(broadcastMessage || "Hello from InstaMunim!");
     const cleanMobile = mobile.replace(/[^0-9]/g, "");
@@ -458,6 +495,23 @@ export default function AdminDashboard() {
                             }}
                           >
                             {updatingStoreId === s.id ? '...' : 'MAKE FREEMIUM'}
+                          </button>
+                          <button 
+                            disabled={updatingStoreId === s.id}
+                            onClick={() => deleteStore(s)} 
+                            style={{ 
+                              padding: '8px 12px', 
+                              background: '#ef4444', 
+                              color: 'white', 
+                              borderRadius: '10px', 
+                              border: 'none', 
+                              fontWeight: 900, 
+                              cursor: 'pointer', 
+                              fontSize: '10px', 
+                              opacity: updatingStoreId === s.id ? 0.5 : 1 
+                            }}
+                          >
+                            {updatingStoreId === s.id ? '...' : 'DELETE'}
                           </button>
                         </div>
                       </td>
