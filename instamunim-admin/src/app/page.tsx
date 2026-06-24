@@ -167,7 +167,7 @@ export default function AdminDashboard() {
     if (!doubleConfirm) return;
 
     const finalConfirm = prompt(`To confirm deletion, please type the store name: "${store.store_name}"`);
-    if (finalConfirm !== store.store_name) {
+    if (!finalConfirm || finalConfirm.trim().toLowerCase() !== store.store_name.trim().toLowerCase()) {
       alert("Store name did not match. Deletion cancelled.");
       return;
     }
