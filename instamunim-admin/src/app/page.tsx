@@ -23,6 +23,7 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [updatingStoreId, setUpdatingStoreId] = useState<string | null>(null);
+  const [customPrices, setCustomPrices] = useState<{[key: string]: string}>({});
   
   // Sales Filters
   const [selectedMerchant, setSelectedMerchant] = useState("all");
@@ -85,10 +86,14 @@ export default function AdminDashboard() {
       : now;
     const newExpiry = addDays(currentExpiry, days);
     
+    // Check if custom price/discount is set
+    const typedPrice = customPrices[store.id];
+    const planPrice = typedPrice && !isNaN(Number(typedPrice)) && Number(typedPrice) >= 0 
+      ? Number(typedPrice) 
+      : (days === 365 ? 1999 : 199);
+
     // Immediate Feedback
-    if (!confirm(`Confirm: Extend ${store.store_name} by ${days} days?`)) return;
-    
-    const planPrice = days === 365 ? 1999 : 199;
+    if (!confirm(`Confirm: Extend ${store.store_name} by ${days} days? (Plan Price: ₹${planPrice})`)) return;
     
     setUpdatingStoreId(store.id);
     try {
@@ -445,7 +450,25 @@ export default function AdminDashboard() {
                         )}
                       </td>
                       <td>
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <input 
+                            type="number" 
+                            placeholder="Custom ₹" 
+                            value={customPrices[s.id] || ""}
+                            onChange={(e) => setCustomPrices({ ...customPrices, [s.id]: e.target.value })}
+                            style={{ 
+                              width: '75px', 
+                              height: '32px', 
+                              borderRadius: '8px', 
+                              border: '1px solid var(--border)', 
+                              padding: '0 8px', 
+                              fontSize: '11px', 
+                              fontWeight: 600,
+                              outline: 'none',
+                              color: 'var(--text)',
+                              background: '#ffffff'
+                            }}
+                          />
                           <button 
                             disabled={updatingStoreId === s.id}
                             onClick={() => addSubscriptionDays(s, 30)} 
