@@ -12,11 +12,51 @@ import { Button } from "@/components/ui/button";
 
 const getDisplayCategory = (cat: string) => {
   if (!cat) return "General";
-  if (cat.includes("|Barcode:")) {
-    return cat.split("|Barcode:")[0] || "General";
+  let clean = cat;
+  if (clean.includes("|Barcode:")) {
+    clean = clean.split("|Barcode:")[0];
   }
-  if (cat.startsWith("Barcode:")) return "General";
-  return cat;
+  if (clean.includes("|IMEIs:")) {
+    clean = clean.split("|IMEIs:")[0];
+  }
+  if (clean.startsWith("Barcode:")) return "General";
+  return clean || "General";
+};
+
+const getImeis = (cat: string): string[] => {
+  if (!cat) return [];
+  if (cat.includes("|IMEIs:")) {
+    return cat.split("|IMEIs:")[1].split(",").filter(Boolean);
+  }
+  return [];
+};
+
+const ImeiInput = ({ 
+  value, 
+  onChange, 
+  placeholder, 
+  className 
+}: { 
+  value: string; 
+  onChange: (val: string) => void; 
+  placeholder: string; 
+  className?: string; 
+}) => {
+  const [localVal, setLocalVal] = useState(value);
+
+  useEffect(() => {
+    setLocalVal(value);
+  }, [value]);
+
+  return (
+    <Input
+      placeholder={placeholder}
+      value={localVal}
+      onChange={e => setLocalVal(e.target.value)}
+      onBlur={() => onChange(localVal)}
+      className={className}
+    />
+  );
 };
 
 export const PARTNER_NAMES: Record<string, { swiggy: string; zomato: string; swiggyIcon: string; zomatoIcon: string; swiggyColor: string; zomatoColor: string }> = {
@@ -98,6 +138,14 @@ export const PARTNER_NAMES: Record<string, { swiggy: string; zomato: string; swi
     swiggyIcon: "A",
     zomatoIcon: "J",
     swiggyColor: "bg-amber-500 text-white",
+    zomatoColor: "bg-blue-600 text-white"
+  },
+  "Mobile/Electronics": {
+    swiggy: "Amazon",
+    zomato: "Flipkart",
+    swiggyIcon: "A",
+    zomatoIcon: "F",
+    swiggyColor: "bg-amber-500 text-black",
     zomatoColor: "bg-blue-600 text-white"
   }
 };
@@ -321,6 +369,26 @@ export const BUSINESS_CATEGORIES: Record<string, {
       { label: "Creative", msg: "Happy Weekend [NAME]! 🎨 Unleash your creativity with colors, sketchbooks, and art supplies from [SHOP]!" }
     ],
     categories: ["Notebooks & Paper", "Pens & Writing", "Office Supplies", "Art & Craft", "Books", "Others"]
+  },
+  "Mobile/Electronics": {
+    name: "Mobile & Electronics Shop",
+    item: "Product",
+    items: "Mobiles & Electronics",
+    location: "Rack / Showcase",
+    presets: [
+      { name: "Vivo V69 (Black, 128GB)", price: 13990 },
+      { name: "iPhone 15 (Blue, 128GB)", price: 79900 },
+      { name: "Boat Airdopes 131", price: 1299 },
+      { name: "Type-C Fast Charger", price: 499 }
+    ],
+    templates: [
+      { label: "20% OFF", msg: "Hi [NAME], we miss you at [SHOP]! 📱 Get 20% OFF on high-quality phone accessories today! Use code: GEAR20" },
+      { label: "Special Deal", msg: "Special Deal at [SHOP]! 🎧 Buy any smartphone and get Bluetooth Airdopes at flat 30% OFF!" },
+      { label: "New Arrival", msg: "Hi [NAME], latest smartphones and smartwatches have arrived at [SHOP]! Upgrade your tech today!" },
+      { label: "Free Delivery", msg: "Need accessories [NAME]? 🚚 Free delivery of chargers & headphones from [SHOP]! Order now." },
+      { label: "Tech Weekend", msg: "Happy Weekend [NAME]! ⚡ Time for a tech upgrade? Get special exchange rates on old phones from [SHOP] today!" }
+    ],
+    categories: ["Smartphones", "Smartwatches", "Accessories", "Chargers & Cables", "Laptops", "Others"]
   }
 };
 
@@ -429,6 +497,8 @@ export default function Dashboard() {
   const [extraChargeName, setExtraChargeName] = useState("");
   const [extraChargeAmount, setExtraChargeAmount] = useState("");
   const [discount, setDiscount] = useState("");
+  const [availableCoupons, setAvailableCoupons] = useState<any[]>([]);
+  const [appliedCouponId, setAppliedCouponId] = useState<string | null>(null);
 
   const [isAdMobActive, setIsAdMobActive] = useState(false);
   const [isNative, setIsNative] = useState(false);
@@ -1008,9 +1078,13 @@ export default function Dashboard() {
   const [newItemName, setNewItemName] = useState("");
   const [newItemPrice, setNewItemPrice] = useState("");
   const [newItemCategory, setNewItemCategory] = useState("General");
+  const [newItemImeis, setNewItemImeis] = useState<string[]>([]);
   const [newName, setNewName] = useState("");
   const [newMobile, setNewMobile] = useState("");
   const [newType, setNewType] = useState("Cash");
+  const [financeCompany, setFinanceCompany] = useState("Bajaj Finserv");
+  const [financeDownPayment, setFinanceDownPayment] = useState("");
+  const [financeFileId, setFinanceFileId] = useState("");
   const [cashReceived, setCashReceived] = useState("");
   const [isSaleOpen, setIsSaleOpen] = useState(false);
   const [newExpTitle, setNewExpTitle] = useState("");
@@ -1170,6 +1244,12 @@ export default function Dashboard() {
   // Barcode Scanner states
   const [showScanner, setShowScanner] = useState(false);
   const [scannedBarcode, setScannedBarcode] = useState("");
+  const [scanningImeiItem, setScanningImeiItem] = useState<string | null>(null);
+  const [scanningNewItemIndex, setScanningNewItemIndex] = useState<number | null>(null);
+  const [editingItem, setEditingItem] = useState<any | null>(null);
+  const [editingItemImeis, setEditingItemImeis] = useState<string[]>([]);
+  const [showEditStockModal, setShowEditStockModal] = useState(false);
+  const [scanningEditItemIndex, setScanningEditItemIndex] = useState<number | null>(null);
   const [scannerError, setScannerError] = useState("");
   const [scannerDebugInfo, setScannerDebugInfo] = useState("Initializing...");
   const [isApiLoading, setIsApiLoading] = useState(false);
@@ -1179,6 +1259,7 @@ export default function Dashboard() {
   const [newScannedQty, setNewScannedQty] = useState("1");
   const [restaurantName, setRestaurantName] = useState("InstaMunim");
   const [storeLogo, setStoreLogo] = useState<string | null>(null);
+  const [currentStoreId, setCurrentStoreId] = useState<string>("");
   const [storeUpiId, setStoreUpiId] = useState("");
   const [storeUpiName, setStoreUpiName] = useState("");
   const [isScanning, setIsScanning] = useState(false);
@@ -1188,6 +1269,8 @@ export default function Dashboard() {
   const [storePhone, setStorePhone] = useState("+91 9999 888 777");
   const [storeWebsite, setStoreWebsite] = useState("www.khankitchen.com");
   const [storeGstin, setStoreGstin] = useState("07AABCU1234F1Z5");
+  const [isGstEnabled, setIsGstEnabled] = useState(true);
+  const [gstRate, setGstRate] = useState(5);
   const [isThermalPrinterEnabled, setIsThermalPrinterEnabled] = useState(false);
   const [isVoiceAnnouncerEnabled, setIsVoiceAnnouncerEnabled] = useState(true);
   const [voiceAnnouncerLanguage, setVoiceAnnouncerLanguage] = useState("hi");
@@ -1207,6 +1290,11 @@ export default function Dashboard() {
   const grandTotal = Math.max(0, cart.reduce((s,i) => s + (i.price*i.qty), 0) + (Number(extraChargeAmount) || 0) - (Number(discount) || 0));
 
   const checkSubscription = () => {
+    // Force active subscription for local testing on localhost
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      return true;
+    }
+
     // FORCE FREE PLAN FOR TESTING
     if (ownerMobile === "8130707236") return false;
 
@@ -1342,20 +1430,7 @@ Stay safe & eat healthy! 🍕
   };
   
   const qrCodeRef = useRef<any>(null);
-  const scannerTargetRef = useRef<"cart" | "imei">("cart");
   const lastScannedRef = useRef<{ barcode: string; time: number } | null>(null);
-  const [imeiScanned, setImeiScanned] = useState("");
-  // Buyback / Exchange Ledger States
-  const [buybackCustName, setBuybackCustName] = useState("");
-  const [buybackCustMobile, setBuybackCustMobile] = useState("");
-  const [buybackAadhaar, setBuybackAadhaar] = useState("");
-  const [buybackBrandModel, setBuybackBrandModel] = useState("");
-  const [buybackImei, setBuybackImei] = useState("");
-  const [buybackPrice, setBuybackPrice] = useState("");
-  const [buybackIdPhoto, setBuybackIdPhoto] = useState("");
-  const [buybackIdPhotoBack, setBuybackIdPhotoBack] = useState("");
-  const [buybackList, setBuybackList] = useState<any[]>([]);
-  const [buybackLoading, setBuybackLoading] = useState(false);
   const [lastScannedMsg, setLastScannedMsg] = useState("");
 
   // Smart Menu Scanner states
@@ -1532,19 +1607,6 @@ Stay safe & eat healthy! 🍕
   const handleScanSuccess = async (barcode: string, html5QrCodeInstance?: any) => {
     playBeep();
     setScannedBarcode(barcode);
-    if (scannerTargetRef.current === "imei") {
-      setImeiScanned(barcode);
-      setBuybackImei(barcode);
-      const sc = html5QrCodeInstance || qrCodeRef.current;
-      if (sc) { try { await sc.stop(); } catch(e) {} }
-      qrCodeRef.current = null;
-      setShowScanner(false);
-      return;
-    }
-    const matchedItem = menuItems.find(item => {
-      const itemBarcode = getBarcode(item.category);
-      return itemBarcode === barcode;
-    });
 
     const scanner = html5QrCodeInstance || qrCodeRef.current;
     if (scanner) {
@@ -1556,6 +1618,51 @@ Stay safe & eat healthy! 🍕
     }
     qrCodeRef.current = null;
     setShowScanner(false);
+
+    if (scanningImeiItem) {
+      updateCartItemImei(scanningImeiItem, barcode);
+      setScanningImeiItem(null);
+      return;
+    }
+
+    if (scanningNewItemIndex !== null) {
+      setNewItemImeis(prev => {
+        const updated = [...prev];
+        updated[scanningNewItemIndex] = barcode;
+        return updated;
+      });
+      setScanningNewItemIndex(null);
+      return;
+    }
+
+    if (scanningEditItemIndex !== null) {
+      setEditingItemImeis(prev => {
+        const updated = [...prev];
+        updated[scanningEditItemIndex] = barcode;
+        return updated;
+      });
+      setScanningEditItemIndex(null);
+      return;
+    }
+
+    if (businessType === "Mobile/Electronics") {
+      const matchedImeiItem = menuItems.find(item => {
+        const imeis = getImeis(item.category);
+        return imeis.includes(barcode);
+      });
+      if (matchedImeiItem) {
+        addToCart({
+          ...matchedImeiItem,
+          imei: barcode
+        });
+        return;
+      }
+    }
+    
+    const matchedItem = menuItems.find(item => {
+      const itemBarcode = getBarcode(item.category);
+      return itemBarcode === barcode;
+    });
 
     if (matchedItem) {
       addToCart(matchedItem);
@@ -1640,6 +1747,33 @@ Stay safe & eat healthy! 🍕
       if (backListener) backListener.remove();
     };
   }, [activeTab, isSaleOpen, setShowExitDialog]);
+
+  // Fetch available unused coupons for customer mobile number
+  useEffect(() => {
+    if (newMobile.length === 10 && ownerMobile) {
+      const fetchCustomerCoupons = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("coupons")
+            .select("*")
+            .eq("customer_mobile", newMobile)
+            .eq("store_mobile", ownerMobile)
+            .eq("status", "unused");
+          if (!error && data) {
+            setAvailableCoupons(data);
+          } else {
+            setAvailableCoupons([]);
+          }
+        } catch (e) {
+          console.error("Failed to fetch customer coupons", e);
+        }
+      };
+      fetchCustomerCoupons();
+    } else {
+      setAvailableCoupons([]);
+      setAppliedCouponId(null);
+    }
+  }, [newMobile, ownerMobile]);
 
   const prepareInterstitialAd = async () => {
     if (isSubscribed) return;
@@ -1985,6 +2119,8 @@ Stay safe & eat healthy! 🍕
           const savedPhone = localStorage.getItem("saas_store_phone");
           const savedWebsite = localStorage.getItem("saas_store_website");
           const savedGstin = localStorage.getItem("saas_store_gstin");
+          const savedGstEnabled = localStorage.getItem("saas_gst_enabled");
+          const savedGstRate = localStorage.getItem("saas_gst_rate");
           const savedRent = localStorage.getItem("saas_monthly_rent");
           const savedUpiId = localStorage.getItem("saas_store_upi_id");
           const savedUpiName = localStorage.getItem("saas_store_upi_name");
@@ -1995,6 +2131,8 @@ Stay safe & eat healthy! 🍕
           if (savedPhone) setStorePhone(savedPhone);
           if (savedWebsite) setStoreWebsite(savedWebsite);
           if (savedGstin) setStoreGstin(savedGstin);
+          if (savedGstEnabled !== null) setIsGstEnabled(savedGstEnabled === "true");
+          if (savedGstRate !== null) setGstRate(Number(savedGstRate));
           if (savedRent) setMonthlyRent(Number(savedRent));
           if (savedUpiId) setStoreUpiId(savedUpiId);
           if (savedUpiName) setStoreUpiName(savedUpiName);
@@ -2053,6 +2191,18 @@ Stay safe & eat healthy! 🍕
             if (savedUpiId) setStoreUpiId(savedUpiId);
             const savedUpiName = localStorage.getItem('saas_store_upi_name');
             if (savedUpiName) setStoreUpiName(savedUpiName);
+            const savedAddress = localStorage.getItem("saas_store_address");
+            if (savedAddress) setStoreAddress(savedAddress);
+            const savedPhone = localStorage.getItem("saas_store_phone");
+            if (savedPhone) setStorePhone(savedPhone);
+            const savedWebsite = localStorage.getItem("saas_store_website");
+            if (savedWebsite) setStoreWebsite(savedWebsite);
+            const savedGstin = localStorage.getItem("saas_store_gstin");
+            if (savedGstin) setStoreGstin(savedGstin);
+            const savedGstEnabled = localStorage.getItem("saas_gst_enabled");
+            if (savedGstEnabled !== null) setIsGstEnabled(savedGstEnabled === "true");
+            const savedGstRate = localStorage.getItem("saas_gst_rate");
+            if (savedGstRate !== null) setGstRate(Number(savedGstRate));
             // Auto-fetch from cloud
             const { data } = await supabase.from('stores').select('*').eq('owner_mobile', nativeMobile).single();
             if (data) {
@@ -2101,10 +2251,23 @@ Stay safe & eat healthy! 🍕
         if (savedUpiId) setStoreUpiId(savedUpiId);
         const savedUpiName = localStorage.getItem("saas_store_upi_name");
         if (savedUpiName) setStoreUpiName(savedUpiName);
+        const savedAddress = localStorage.getItem("saas_store_address");
+        if (savedAddress) setStoreAddress(savedAddress);
+        const savedPhone = localStorage.getItem("saas_store_phone");
+        if (savedPhone) setStorePhone(savedPhone);
+        const savedWebsite = localStorage.getItem("saas_store_website");
+        if (savedWebsite) setStoreWebsite(savedWebsite);
+        const savedGstin = localStorage.getItem("saas_store_gstin");
+        if (savedGstin) setStoreGstin(savedGstin);
+        const savedGstEnabled = localStorage.getItem("saas_gst_enabled");
+        if (savedGstEnabled !== null) setIsGstEnabled(savedGstEnabled === "true");
+        const savedGstRate = localStorage.getItem("saas_gst_rate");
+        if (savedGstRate !== null) setGstRate(Number(savedGstRate));
         // Auto-fetch from cloud for existing sessions
         const autoSync = async () => {
           const { data } = await supabase.from('stores').select('*').eq('owner_mobile', savedOwnerMobile).single();
           if (data) {
+            setCurrentStoreId(data.id);
             setRestaurantName(data.store_name);
             setMonthlyRent(data.monthly_rent || 0);
             setStoreCreatedAt(data.created_at);
@@ -2451,6 +2614,7 @@ Stay safe & eat healthy! 🍕
 
   const fetchStoreData = async (storeId: string) => {
     setIsSyncing(true);
+    setCurrentStoreId(storeId);
     try {
       // Fetch all data in parallel for maximum speed
       const [
@@ -2540,9 +2704,40 @@ Stay safe & eat healthy! 🍕
   const syncAllData = async () => {
     setIsSyncing(true);
     try {
-      const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
-      if (store) {
-        await fetchStoreData(store.id);
+      let storeId = currentStoreId;
+      if (!storeId) {
+        const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
+        if (store) {
+          storeId = store.id;
+          setCurrentStoreId(store.id);
+        }
+      }
+      if (storeId) {
+        const getVoicePartnerName = (t: string, langCode: string) => {
+          if (t === "Online") {
+            return { hi: "ऑनलाइन", mr: "ऑनलाइन", gu: "ઓનલાઇન", bn: "অনলাইন", pa: "ਆਨਲਾਈਨ", ta: "ஆன்லைன்", te: "ఆన్‌లైన్", kn: "ಆನ್‌ಲೈನ್", ml: "ഓൺലൈൻ" }[langCode] || "Online";
+          }
+          if (t === "Swiggy") {
+            if (businessType === "Mobile/Electronics") {
+              return { hi: "अमेज़न", mr: "अमेझॉन", gu: "એમેઝોન", bn: "আমাজন", pa: "ਅਮੇਜ਼ਨ", ta: "அமேசான்", te: "అమెజాన్", kn: "ಅಮೆಜಾನ್", ml: "ആമസോൺ" }[langCode] || "Amazon";
+            }
+            if (businessType === "Kirana/Grocery") {
+              return { hi: "ब्लिंकिट", mr: "ब्लिंकिट", gu: "બ્લિંકિટ", bn: "ব্লিনকিট", pa: "ਬਲਿੰਕਿਟ", ta: "பிலிங்கிட்", te: "బ్లింకిట్", kn: "ಬ್ಲಿಂಕಿಟ್", ml: "ಬಂಡಾರ" }[langCode] || "Blinkit";
+            }
+            return { hi: "स्वीगी", mr: "स्वीगी", gu: "સ્વીગી", bn: "সুইগি", pa: "ਸਵਿਗੀ", ta: "ஸ்விக்கி", te: "స్విగ్గీ", kn: "ಸ್ವಿಗ್ಗಿ", ml: "സ്വിഗ്ഗി" }[langCode] || "Swiggy";
+          }
+          if (t === "Zomato") {
+            if (businessType === "Mobile/Electronics") {
+              return { hi: "फ्लिपकार्ट", mr: "फ्लिपकार्ट", gu: "ફ્લિપકાર્ટ", bn: "ফ্লিপকার্ট", pa: "ਫਲਿੱਪਕਾਰਟ", ta: "பிளிப்கார்ட்", te: "ఫ్లిప్‌కార్ట్", kn: "ಫ್ಲಿಪ್‌ಕಾರ್ಟ್", ml: "ഫ്ലിപ്കാർട്ട്" }[langCode] || "Flipkart";
+            }
+            if (businessType === "Kirana/Grocery") {
+              return { hi: "ઝેપ્ટો", mr: "झेप्टो", gu: "ઝેપ્ટો", bn: "জেপ্টো", pa: "ਜ਼ੈਪટો", ta: "ஜெப்டோ", te: "జెప్టో", kn: "ಜೆಪ್ಟೋ", ml: "സെപ്റ്റോ" }[langCode] || "Zepto";
+            }
+            return { hi: "ज़ोमैटो", mr: "झोमॅटो", gu: "ઝોમેટો", bn: "조ম্যাটো", pa: "ਜ਼ੋਮੈટો", ta: "சொமாட்டோ", te: "జొమాటో", kn: "ಝೊಮ್ಯಾಟೊ", ml: "സൊമാറ്റോ" }[langCode] || "Zomato";
+          }
+          return { hi: "कैश", mr: "कॅश", gu: "કેશ", bn: "ক্যাশ", pa: "ਕੈਸ਼", ta: "ரொக்கமாக", te: "నగదు", kn: "ನಗದು", ml: "പണമായി" }[langCode] || "Cash";
+        };
+        await fetchStoreData(storeId);
         setLastSyncedTime(format(new Date(), "hh:mm:ss aa"));
       }
     } catch (e) {
@@ -2753,10 +2948,22 @@ Stay safe & eat healthy! 🍕
     
     try {
       // Get Store ID
-      const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
-      if (!store) throw new Error("Store ID not found");
+      let storeId = currentStoreId;
+      if (!storeId) {
+        const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
+        if (!store) throw new Error("Store ID not found");
+        storeId = store.id;
+        setCurrentStoreId(storeId);
+      }
 
-      const cartDescription = cart.map(c => `${c.qty} x ${c.name} (₹${c.price * c.qty})`).join("\n");
+      const cartDescription = cart.map(c => {
+        let desc = `${c.qty} x ${c.name}`;
+        if (c.imei) {
+          desc += ` [IMEI-${c.imei}]`;
+        }
+        desc += ` (₹${c.price * c.qty})`;
+        return desc;
+      }).join("\n");
       const cartTotalBase = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
       const extraAmt = Number(extraChargeAmount) || 0;
       const discAmt = Number(discount) || 0;
@@ -2777,11 +2984,17 @@ Stay safe & eat healthy! 🍕
       if (discAmt > 0) {
         itemsWithMetadata += `\n[DISCOUNT:${discAmt}]`;
       }
+      
+      // Embed Finance details
+      if (newType === "Finance") {
+        const loanAmt = Math.max(0, cartTotal - (Number(financeDownPayment) || 0));
+        itemsWithMetadata += `\n[FINANCE:${financeCompany}:${loanAmt}:${Number(financeDownPayment) || 0}:${financeFileId || "N/A"}:Pending]`;
+      }
 
       const { data: newSale, error } = await supabase
         .from('sales')
         .insert([{
-          store_id: store.id,
+          store_id: storeId,
           customer_name: newName || "Guest",
           mobile: newMobile || "N/A",
           items: itemsWithMetadata,
@@ -2793,12 +3006,49 @@ Stay safe & eat healthy! 🍕
 
       if (error) throw error;
 
+      // Update coupon status to used if applied
+      if (appliedCouponId) {
+        await supabase
+          .from("coupons")
+          .update({ status: "used" })
+          .eq("id", appliedCouponId);
+      }
+
+      // Autocut IMEIs from stock
+      if (businessType === "Mobile/Electronics") {
+        for (const cartItem of cart) {
+          if (cartItem.imei) {
+            const matchedItem = menuItems.find(m => m.name === cartItem.name);
+            if (matchedItem) {
+              const imeis = getImeis(matchedItem.category);
+              const remainingImeis = imeis.filter(x => x !== cartItem.imei);
+              const cleanCategory = getDisplayCategory(matchedItem.category);
+              const updatedCategory = remainingImeis.length > 0 
+                ? `${cleanCategory}|IMEIs:${remainingImeis.join(",")}` 
+                : cleanCategory;
+
+              supabase
+                .from('menu_items')
+                .update({ category: updatedCategory })
+                .eq('id', matchedItem.id)
+                .then(({ error }) => {
+                  if (!error) {
+                    setMenuItems(prev => prev.map(m => 
+                      m.id === matchedItem.id ? { ...m, category: updatedCategory } : m
+                    ));
+                  }
+                });
+            }
+          }
+        }
+      }
+
       // Save new products to menu_items in background
       try {
         const newProducts = cart.filter(c => c.isNewProduct);
         if (newProducts.length > 0) {
           const inserts = newProducts.map(item => ({
-            store_id: store.id,
+            store_id: storeId,
             name: item.name,
             price: Number(item.price),
             category: `General|Barcode:${item.barcode}`
@@ -2838,6 +3088,31 @@ Stay safe & eat healthy! 🍕
         const amt = sale.price;
         const type = sale.type; // Cash, Online, Udhaar, Swiggy, Zomato
         
+        const getVoicePartnerName = (t: string, langCode: string) => {
+          if (t === "Online") {
+            return { hi: "ऑनलाइन", mr: "ऑनलाइन", gu: "ઓનલાઇન", bn: "অনলাইন", pa: "ਆਨਲਾਈਨ", ta: "ஆன்லைன்", te: "ఆన్‌లైన్", kn: "ಆನ್‌ಲೈನ್", ml: "ഓൺലൈൻ" }[langCode] || "Online";
+          }
+          if (t === "Swiggy") {
+            if (businessType === "Mobile/Electronics") {
+              return { hi: "अमेज़न", mr: "अमेझॉन", gu: "એમેઝોન", bn: "আমাজন", pa: "ਅਮੇਜ਼ਨ", ta: "அமேசான்", te: "అమెజాన్", kn: "ಅಮೆಜಾನ್", ml: "ആമസോൺ" }[langCode] || "Amazon";
+            }
+            if (businessType === "Kirana/Grocery") {
+              return { hi: "ब्लिंकिट", mr: "ब्लिंकिट", gu: "બ્લિંકિટ", bn: "ব্লিনکیট", pa: "ਬਲਿੰਕਿટ", ta: "பிலிங்கிட்", te: "బ్లింకిట్", kn: "ಬ್লিಂಕಿಟ್", ml: "ബ്ലിങ്കിറ്റ്" }[langCode] || "Blinkit";
+            }
+            return { hi: "स्वीगी", mr: "स्वीगी", gu: "સ્વીગી", bn: "সুইগি", pa: "ਸਵਿਗੀ", ta: "ஸ்விக்கி", te: "ಸ್виггీ", kn: "ಸ್ವಿಗ್ಗಿ", ml: "സ്വിഗ്ഗി" }[langCode] || "Swiggy";
+          }
+          if (t === "Zomato") {
+            if (businessType === "Mobile/Electronics") {
+              return { hi: "फ्लिपकार्ट", mr: "फ्लिपकार्ट", gu: "ફ્લિપકાર્ટ", bn: "ফ্লিপকার্ট", pa: "ਫਲਿੱਪਕਾਰਟ", ta: "பிளிப்கார்ட்", te: "ಫ್లిప్‌కార్ట్", kn: "ಫ್ಲಿಪ್‌ਕਾਰ்ட்", ml: "ഫ്ലിപ്കാർട്ട്" }[langCode] || "Flipkart";
+            }
+            if (businessType === "Kirana/Grocery") {
+              return { hi: "ઝેપ્ટો", mr: "झेप्टो", gu: "ઝેપ્ટો", bn: "જેપ્ટો", pa: "ਜ਼ੈપટો", ta: "ஜெப்டோ", te: "జెప్టో", kn: "జెప్టో", ml: "സെപ്റ്റോ" }[langCode] || "Zepto";
+            }
+            return { hi: "ज़ोमैटो", mr: "झोमॅटो", gu: "ઝોમેટો", bn: "조ம্যাটো", pa: "ਜ਼ોमैटो", ta: "சொமாட்டோ", te: "జొమాటో", kn: "ಝೊಮ್ಯಾಟೊ", ml: "സൊമാറ്റോ" }[langCode] || "Zomato";
+          }
+          return { hi: "कैश", mr: "कॅश", gu: "કેશ", bn: "ক্যাশ", pa: "ਕੈਸ਼", ta: "ரொக்கமாக", te: "నగదు", kn: "ನಗದು", ml: "പണമായി" }[langCode] || "Cash";
+        };
+
         const announceTemplates: Record<string, string> = {
           hi: type === "Udhaar" 
             ? `इंस्टामुनिम पर ${amt} रुपये का उधार दर्ज हुआ。` 
@@ -2871,7 +3146,35 @@ Stay safe & eat healthy! 🍕
             : `Received ${amt} rupees on InstaMunim via ${type}。`
         };
 
-        const textToAnnounce = announceTemplates[lang] || announceTemplates['en'];
+        let textToAnnounce = announceTemplates[lang] || announceTemplates['en'];
+        
+        // Dynamically replace platform names in announcement speech for correct branding
+        const p1 = getPartnerName(businessType, "Swiggy");
+        const p2 = getPartnerName(businessType, "Zomato");
+        const vp1 = getVoicePartnerName("Swiggy", lang);
+        const vp2 = getVoicePartnerName("Zomato", lang);
+        
+        textToAnnounce = textToAnnounce
+          .replaceAll("Swiggy", p1)
+          .replaceAll("Zomato", p2)
+          .replaceAll("स्वीगी", vp1)
+          .replaceAll("ज़ोमैटो", vp2)
+          .replaceAll("झोमॅटो", vp2)
+          .replaceAll("ઝોમેટો", vp2)
+          .replaceAll("સ્વીગી", vp1)
+          .replaceAll("જોમ্যাટો", vp2)
+          .replaceAll("সুইগি", vp1)
+          .replaceAll("ਜ਼ੋਮੈਟੋ", vp2)
+          .replaceAll("ਸਵਿਗੀ", vp1)
+          .replaceAll("சொமாட்டோ", vp2)
+          .replaceAll("ஸ்விக்கி", vp1)
+          .replaceAll("జొమాటో", vp2)
+          .replaceAll("స్విగ్గీ", vp1)
+          .replaceAll("ಸ್ವಿಗ್ಗಿ", vp1)
+          .replaceAll("ಝೊಮ್ಯಾಟೊ", vp2)
+          .replaceAll("സൊമാറ്റോ", vp2)
+          .replaceAll("സ്വിഗ്ഗി", vp1);
+
         announceVoice(textToAnnounce, lang);
       } catch (voiceErr) {
         console.error("Voice announce error inside handleSale:", voiceErr);
@@ -2884,6 +3187,11 @@ Stay safe & eat healthy! 🍕
       setExtraChargeName("");
       setExtraChargeAmount("");
       setDiscount("");
+      setAvailableCoupons([]);
+      setAppliedCouponId(null);
+      setFinanceCompany("Bajaj Finserv");
+      setFinanceDownPayment("");
+      setFinanceFileId("");
 
       // Trigger Interstitial Ad after every 2nd sale
       if (!isSubscribed) {
@@ -2941,8 +3249,13 @@ Stay safe & eat healthy! 🍕
     const discountMatch = (lastOrderDetails.item || "").match(/\[DISCOUNT:(\d+(\.\d+)?)\]/);
     const discountPart = discountMatch ? `&disc=${discountMatch[1]}` : "";
 
-    const baseUrl = "https://www.instamunim.com";
-    let invoiceUrl = `${baseUrl}/invoice?n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${lastOrderDetails.price}&d=${encodeURIComponent(lastOrderDetails.date.toISOString())}&t=${lastOrderDetails.type}&id=${lastOrderDetails.id}&m=${lastOrderDetails.mobile}&cn=${encodeURIComponent(lastOrderDetails.name)}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}${extraPart}${discountPart}`;
+    const financeMatch = (lastOrderDetails.item || "").match(/\[FINANCE:([^:]+):(\d+(?:\.\d+)?):(\d+(?:\.\d+)?):([^:]+):(Pending|Settled)\]/);
+    const financePart = financeMatch ? `&fin=true&fco=${encodeURIComponent(financeMatch[1])}&flo=${financeMatch[2]}&fdp=${financeMatch[3]}&fid=${encodeURIComponent(financeMatch[4])}` : "";
+
+    const baseUrl = (typeof window !== 'undefined' && window.location.hostname === 'localhost')
+      ? "http://localhost:3000"
+      : "https://www.instamunim.com";
+    let invoiceUrl = `${baseUrl}/invoice?gst=${isGstEnabled}&gstRate=${gstRate}&n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${lastOrderDetails.price}&d=${encodeURIComponent(lastOrderDetails.date.toISOString())}&t=${lastOrderDetails.type}&id=${lastOrderDetails.id}&m=${lastOrderDetails.mobile}&cn=${encodeURIComponent(lastOrderDetails.name)}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}${extraPart}${discountPart}${financePart}`;
     if (!isSubscribed) {
       invoiceUrl += "&free=true";
     }
@@ -2973,6 +3286,64 @@ Stay safe & eat healthy! 🍕
     window.open(`https://wa.me/91${lastOrderDetails.mobile}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
+  const getInvoiceUrlForSale = (s: any) => {
+    const rawItemString = s.item || "";
+    const itemsParam = rawItemString.split("\n").map((line: string) => {
+      const parts = line.match(/(.+) \(₹(\d+)\)/);
+      if (parts) return `${parts[1].trim()}:${parts[2]}`;
+      return null;
+    }).filter(Boolean).join(",");
+
+    const extraMatch = rawItemString.match(/\[EXTRA:(.+):(\d+)\]/);
+    const extraPart = extraMatch ? `&ecn=${encodeURIComponent(extraMatch[1])}&eca=${extraMatch[2]}` : "";
+
+    const discountMatch = rawItemString.match(/\[DISCOUNT:(\d+(\.\d+)?)\]/);
+    const discountPart = discountMatch ? `&disc=${discountMatch[1]}` : "";
+
+    const financeMatch = rawItemString.match(/\[FINANCE:([^:]+):(\d+(?:\.\d+)?):(\d+(?:\.\d+)?):([^:]+):(Pending|Settled)\]/);
+    const financePart = financeMatch ? `&fin=true&fco=${encodeURIComponent(financeMatch[1])}&flo=${financeMatch[2]}&fdp=${financeMatch[3]}&fid=${encodeURIComponent(financeMatch[4])}` : "";
+
+    const baseUrl = (typeof window !== 'undefined' && window.location.hostname === 'localhost')
+      ? "http://localhost:3000"
+      : "https://www.instamunim.com";
+    let url = `${baseUrl}/invoice?gst=${isGstEnabled}&gstRate=${gstRate}&n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${s.price}&d=${encodeURIComponent(new Date(s.date).toISOString())}&t=${s.type}&id=${s.id}&m=${s.mobile || ""}&cn=${encodeURIComponent(s.name || "")}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}${extraPart}${discountPart}${financePart}`;
+    if (!isSubscribed) {
+      url += "&free=true";
+    }
+    return url;
+  };
+
+  const handleResendWhatsAppInvoice = (s: any) => {
+    const invoiceUrl = getInvoiceUrlForSale(s);
+    const extraMatch = (s.item || "").match(/\[EXTRA:(.+):(\d+)\]/);
+    const discountMatch = (s.item || "").match(/\[DISCOUNT:(\d+(\.\d+)?)\]/);
+
+    let displayItems = (s.item || "").split("[COMM:")[0].trim();
+    if (extraMatch) {
+      displayItems = displayItems.split("[EXTRA:")[0].trim();
+    }
+    displayItems = displayItems.split("[DISCOUNT:")[0].trim();
+    if (extraMatch) {
+      displayItems += `\n${extraMatch[1]}: ₹${extraMatch[2]}`;
+    }
+    if (discountMatch) {
+      displayItems += `\nDiscount: -₹${discountMatch[1]}`;
+    }
+
+    let msg = whatsappInvoiceTemplate
+      .replace("[NAME]", s.name || "Customer")
+      .replace("[SHOP]", restaurantName)
+      .replace("[ITEMS]", displayItems)
+      .replace("[TOTAL]", s.price.toString())
+      .replace("[LINK]", invoiceUrl);
+      
+    if (!isSubscribed) {
+      msg += "\n\nGenerated by InstaMunim POS\nDownload App Free: https://instamunim.com";
+    }
+      
+    window.open(`https://wa.me/91${s.mobile}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
   const handleAddManualItem = () => {
     if (!manualItemName.trim()) {
       alert("Bhai, product ka naam likho!");
@@ -2997,9 +3368,22 @@ Stay safe & eat healthy! 🍕
 
   const addToCart = (item: any) => {
     setCart(prev => {
+      let matchedImei = item.imei || "";
+      if (!matchedImei && businessType === "Mobile/Electronics" && itemSearch.trim()) {
+        const query = itemSearch.trim().toLowerCase();
+        const imeis = getImeis(item.category);
+        const exactOrPartialMatch = imeis.find(x => x.toLowerCase().includes(query));
+        if (exactOrPartialMatch) {
+          matchedImei = exactOrPartialMatch;
+          setItemSearch("");
+        }
+      }
+
       const existing = prev.find(c => c.name === item.name);
-      if (existing) return prev.map(c => c.name === item.name ? {...c, qty: c.qty + 1} : c);
-      return [...prev, { ...item, qty: 1 }];
+      if (existing) {
+        return prev.map(c => c.name === item.name ? {...c, qty: c.qty + 1, imei: matchedImei || c.imei} : c);
+      }
+      return [...prev, { ...item, qty: 1, imei: matchedImei }];
     });
   };
 
@@ -3009,6 +3393,55 @@ Stay safe & eat healthy! 🍕
       if (item && item.qty > 1) return prev.map(c => c.name === name ? {...c, qty: c.qty - 1} : c);
       return prev.filter(c => c.name !== name);
     });
+  };
+
+  const updateCartItemImei = (name: string, imei: string) => {
+    setCart(prev => prev.map(c => c.name === name ? { ...c, imei } : c));
+  };
+
+  const handleScanImei = (itemName: string) => {
+    setScanningImeiItem(itemName);
+    setShowScanner(true);
+  };
+
+  const handleScanNewItemImei = (index: number) => {
+    setScanningNewItemIndex(index);
+    setShowScanner(true);
+  };
+
+  const handleScanEditItemImei = (index: number) => {
+    setScanningEditItemIndex(index);
+    setShowScanner(true);
+  };
+
+  const handleSaveEditStock = async () => {
+    if (!editingItem) return;
+    setIsLoading(true);
+    try {
+      const cleanCategory = getDisplayCategory(editingItem.category);
+      const filteredImeis = editingItemImeis.filter(Boolean).map(x => x.trim());
+      const updatedCategory = filteredImeis.length > 0 
+        ? `${cleanCategory}|IMEIs:${filteredImeis.join(",")}` 
+        : cleanCategory;
+
+      const { error } = await supabase
+        .from('menu_items')
+        .update({ category: updatedCategory })
+        .eq('id', editingItem.id);
+
+      if (error) throw error;
+
+      setMenuItems(prev => prev.map(item => 
+        item.id === editingItem.id ? { ...item, category: updatedCategory } : item
+      ));
+
+      setShowEditStockModal(false);
+      setEditingItem(null);
+    } catch (err: any) {
+      alert("Error saving stock: " + (err.message || "Unknown error"));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const filteredSales = useMemo(() => sales.filter(s => format(new Date(s.date), "yyyy-MM") === selectedMonth), [sales, selectedMonth]);
@@ -3097,8 +3530,17 @@ Stay safe & eat healthy! 🍕
   const filteredMenuItems = useMemo(() => {
     const query = itemSearch.toLowerCase().trim();
     if (!query) return menuItems;
-    return menuItems.filter(item => item.name.toLowerCase().includes(query));
-  }, [menuItems, itemSearch]);
+    return menuItems.filter(item => {
+      const nameMatch = item.name.toLowerCase().includes(query);
+      if (nameMatch) return true;
+
+      if (businessType === "Mobile/Electronics") {
+        const imeis = getImeis(item.category).map(x => x.toLowerCase());
+        return imeis.some(imei => imei.includes(query));
+      }
+      return false;
+    });
+  }, [menuItems, itemSearch, businessType]);
 
   const udhaarSales = useMemo(() => {
     return sales.filter(s => s.type === "Udhaar");
@@ -3109,18 +3551,29 @@ Stay safe & eat healthy! 🍕
     if (!newItemName || !newItemPrice) return;
     setIsLoading(true);
     try {
-      const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
-      if (!store) throw new Error("Store ID not found");
+      let storeId = currentStoreId;
+      if (!storeId) {
+        const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
+        if (!store) throw new Error("Store ID not found");
+        storeId = store.id;
+        setCurrentStoreId(store.id);
+      }
+
+      let finalCategory = newItemCategory;
+      if (businessType === "Mobile/Electronics" && newItemImeis.length > 0) {
+        finalCategory = `${newItemCategory}|IMEIs:${newItemImeis.filter(Boolean).map(x => x.trim()).join(",")}`;
+      }
 
       const { data: newItem, error } = await supabase
         .from('menu_items')
-        .insert([{ store_id: store.id, name: newItemName, price: Number(newItemPrice), category: newItemCategory }])
+        .insert([{ store_id: storeId, name: newItemName, price: Number(newItemPrice), category: finalCategory }])
         .select()
         .single();
 
       if (error) throw error;
       setMenuItems([...menuItems, { id: newItem.id, name: newItem.name, price: newItem.price, category: newItem.category }]);
       setNewItemName(""); setNewItemPrice("");
+      setNewItemImeis([]);
     } catch (err: any) {
       alert("Menu Sync Error: " + (err.message || "Unknown error"));
     } finally {
@@ -3128,60 +3581,21 @@ Stay safe & eat healthy! 🍕
     }
   };
 
-  const handleSaveBuyback = async () => {
-    if (!buybackCustName || !buybackImei || !buybackPrice) {
-      alert("Please fill Customer Name, IMEI and Price fields.");
-      return;
-    }
-    setBuybackLoading(true);
-    try {
-      const { data: store } = await supabase.from("stores").select("id").eq("owner_mobile", ownerMobile).single();
-      if (!store) throw new Error("Store not found");
-      const title = `Exchange Buyback: ${buybackBrandModel || "Phone"} | IMEI: ${buybackImei} | Customer: ${buybackCustName} (${buybackCustMobile}) | Aadhaar: ${buybackAadhaar}`;
-      const { data: newExp, error } = await supabase
-        .from("expenses")
-        .insert([{ store_id: store.id, title, amount: Number(buybackPrice) }])
-        .select()
-        .single();
-      if (error) throw error;
-      const record = {
-        id: newExp.id,
-        custName: buybackCustName,
-        custMobile: buybackCustMobile,
-        aadhaar: buybackAadhaar,
-        brandModel: buybackBrandModel,
-        imei: buybackImei,
-        price: buybackPrice,
-        idPhoto: buybackIdPhoto,
-        idPhotoBack: buybackIdPhotoBack,
-        date: new Date().toLocaleDateString("en-IN"),
-      };
-      setBuybackList(prev => [record, ...prev]);
-      setBuybackCustName(""); setBuybackCustMobile(""); setBuybackAadhaar("");
-      setBuybackBrandModel(""); setBuybackImei(""); setBuybackPrice("");
-      setBuybackIdPhoto(""); setBuybackIdPhotoBack(""); setImeiScanned("");
-      alert("Exchange Buyback saved and logged in expenses!");
-    } catch (err: any) {
-      alert("Error: " + (err.message || "Unknown error"));
-    } finally {
-      setBuybackLoading(false);
-    }
-  };
-
-  const handleDeleteBuyback = (id: any) => {
-    if (!confirm("Delete this buyback record?")) return;
-    setBuybackList(prev => prev.filter(r => r.id !== id));
-  };
   const handleAddExpense = async () => {
     if (!newExpTitle || !newExpAmount) return;
     setIsLoading(true);
     try {
-      const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
-      if (!store) throw new Error("Store ID not found");
+      let storeId = currentStoreId;
+      if (!storeId) {
+        const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
+        if (!store) throw new Error("Store ID not found");
+        storeId = store.id;
+        setCurrentStoreId(store.id);
+      }
 
       const { data: newExp, error } = await supabase
         .from('expenses')
-        .insert([{ store_id: store.id, title: newExpTitle, amount: Number(newExpAmount) }])
+        .insert([{ store_id: storeId, title: newExpTitle, amount: Number(newExpAmount) }])
         .select()
         .single();
 
@@ -3391,12 +3805,17 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
     
     setIsLoading(true);
     try {
-      const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
-      if (!store) throw new Error("Store ID not found");
+      let storeId = currentStoreId;
+      if (!storeId) {
+        const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
+        if (!store) throw new Error("Store ID not found");
+        storeId = store.id;
+        setCurrentStoreId(store.id);
+      }
       
       const { data: insertedData, error } = await supabase
         .from('menu_items')
-        .insert(selectedItems.map(item => ({ store_id: store.id, name: item.name, price: item.price, category: 'General' })))
+        .insert(selectedItems.map(item => ({ store_id: storeId, name: item.name, price: item.price, category: 'General' })))
         .select();
       
       if (error) throw error;
@@ -3663,7 +4082,32 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       <div className="flex gap-2">
                         <div className="relative flex-1">
                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-300" />
-                          <Input placeholder={`Search ${getLabels(businessType).items.toLowerCase()}...`} value={itemSearch} onChange={e => setItemSearch(e.target.value)} className="h-10 pl-10 rounded-xl bg-zinc-50 dark:bg-zinc-900 border-0 font-bold placeholder:text-zinc-300 text-xs w-full" />
+                          <Input 
+                            placeholder={`Search ${getLabels(businessType).items.toLowerCase()}...`} 
+                            value={itemSearch} 
+                            onChange={e => {
+                              const val = e.target.value;
+                              setItemSearch(val);
+                              if (businessType === "Mobile/Electronics") {
+                                const query = val.trim();
+                                if (query) {
+                                  const matchedItem = menuItems.find(item => {
+                                    const imeis = getImeis(item.category);
+                                    return imeis.some(x => x.toLowerCase() === query.toLowerCase());
+                                  });
+                                  if (matchedItem) {
+                                    playBeep();
+                                    addToCart({
+                                      ...matchedItem,
+                                      imei: query
+                                    });
+                                    setItemSearch("");
+                                  }
+                                }
+                              }
+                            }} 
+                            className="h-10 pl-10 rounded-xl bg-zinc-50 dark:bg-zinc-900 border-0 font-bold placeholder:text-zinc-300 text-xs w-full" 
+                          />
                         </div>
                         <button 
                           onClick={() => {
@@ -3743,16 +4187,35 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       ) : (
                         <div className="w-full divide-y dark:divide-zinc-800">
                           {cart.map(c => (
-                            <div key={c.name} className="flex justify-between items-center py-2 first:pt-0 last:pb-0">
-                              <div className="flex flex-col">
-                                <span className="font-bold text-[11px]">{c.name}</span>
-                                <span className="text-[9px] text-zinc-400">₹{c.price} per unit</span>
+                            <div key={c.name} className="flex flex-col py-2 first:pt-0 last:pb-0 gap-2">
+                              <div className="flex justify-between items-center w-full">
+                                <div className="flex flex-col">
+                                  <span className="font-bold text-[11px]">{c.name}</span>
+                                  <span className="text-[9px] text-zinc-400">₹{c.price} per unit</span>
+                                </div>
+                                <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-1 rounded-lg">
+                                  <button onClick={() => removeFromCart(c.name)} className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-red-500 transition-colors"><Minus className="h-3 w-3" /></button>
+                                  <span className="font-black text-xs px-1 min-w-[20px] text-center">{c.qty}</span>
+                                  <button onClick={() => addToCart({ name: c.name, price: c.price })} className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-orange-600 transition-colors"><Plus className="h-3 w-3" /></button>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-1 rounded-lg">
-                                <button onClick={() => removeFromCart(c.name)} className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-red-500 transition-colors"><Minus className="h-3 w-3" /></button>
-                                <span className="font-black text-xs px-1 min-w-[20px] text-center">{c.qty}</span>
-                                <button onClick={() => addToCart({ name: c.name, price: c.price })} className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-orange-600 transition-colors"><Plus className="h-3 w-3" /></button>
-                              </div>
+                              {businessType === "Mobile/Electronics" && (
+                                <div className="flex items-center gap-2 mt-1 w-full">
+                                  <ImeiInput 
+                                    placeholder="IMEI / Serial Number" 
+                                    value={c.imei || ""} 
+                                    onChange={val => updateCartItemImei(c.name, val)} 
+                                    className="h-8 flex-1 rounded-xl bg-white dark:bg-zinc-800 border-0 font-bold px-3 text-[10px]" 
+                                  />
+                                  <Button 
+                                    size="sm"
+                                    onClick={() => handleScanImei(c.name)}
+                                    className="h-8 w-8 p-0 bg-orange-500 hover:bg-orange-600 rounded-lg flex items-center justify-center border-0 text-white"
+                                  >
+                                    <Camera className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -3789,6 +4252,45 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         />
                       </div>
                     </div>
+
+                    {availableCoupons.length > 0 && (
+                      <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl border border-dashed border-emerald-200 dark:border-emerald-800/40 space-y-2">
+                        <p className="text-[8px] font-black text-[#00c875] uppercase tracking-widest px-1">Available Coupons 🎉</p>
+                        <div className="space-y-1.5">
+                          {availableCoupons.map((coupon) => (
+                            <div key={coupon.id} className="flex justify-between items-center bg-white dark:bg-zinc-900 p-2 rounded-xl border border-zinc-100 dark:border-zinc-800">
+                              <div>
+                                <span className="font-mono text-xs font-black text-orange-500 tracking-wider block">{coupon.code}</span>
+                                <span className="text-[8px] font-bold text-zinc-400">Save ₹{coupon.discount_amount} on this bill</span>
+                              </div>
+                              {appliedCouponId === coupon.id ? (
+                                <Button 
+                                  size="sm"
+                                  onClick={() => {
+                                    setDiscount("");
+                                    setAppliedCouponId(null);
+                                  }}
+                                  className="h-7 bg-red-500 hover:bg-red-600 text-white rounded-lg text-[9px] font-black uppercase tracking-wider px-2 border-0"
+                                >
+                                  Remove
+                                </Button>
+                              ) : (
+                                <Button 
+                                  size="sm"
+                                  onClick={() => {
+                                    setDiscount(coupon.discount_amount.toString());
+                                    setAppliedCouponId(coupon.id);
+                                  }}
+                                  className="h-7 bg-[#00c875] hover:bg-[#00b067] text-white rounded-lg text-[9px] font-black uppercase tracking-wider px-3 border-0"
+                                >
+                                  Apply
+                                </Button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                    <div className="flex justify-end">
                       <div className="text-right">
@@ -3844,7 +4346,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                   )}`} 
                                   alt="UPI Payment QR Code" 
                                   className="w-40 h-40 object-contain"
-                                />
+                                  />
                               </div>
                               <div className="space-y-1">
                                 <p className="text-[10px] font-black tracking-widest text-zinc-400 uppercase">SCAN TO PAY</p>
@@ -3866,6 +4368,54 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         </div>
                       )}
 
+                      {newType === "Finance" && (
+                        <div className="p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-900/20 space-y-3 text-left">
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest pl-1">Finance Company</span>
+                            <select 
+                              value={financeCompany} 
+                              onChange={e => setFinanceCompany(e.target.value)}
+                              className="h-9 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold px-2 text-xs shadow-sm"
+                            >
+                              <option value="Bajaj Finserv">Bajaj Finserv</option>
+                              <option value="HDB Finance">HDB Finance</option>
+                              <option value="IDFC First Bank">IDFC First Bank</option>
+                              <option value="TVS Credit">TVS Credit</option>
+                              <option value="Home Credit">Home Credit</option>
+                              <option value="Other">Other Finance</option>
+                            </select>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest pl-1">Down Payment (₹)</span>
+                            <Input 
+                              type="number" 
+                              placeholder="0"
+                              value={financeDownPayment} 
+                              onChange={e => setFinanceDownPayment(e.target.value)} 
+                              className="w-28 h-9 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-black text-sm text-center shadow-sm" 
+                            />
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest pl-1">Loan Amount (₹)</span>
+                            <span className="text-lg font-black text-emerald-600">
+                              ₹{Math.max(0, grandTotal - (Number(financeDownPayment) || 0))}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest pl-1">File / App ID</span>
+                            <Input 
+                              placeholder="e.g. BJ-9921"
+                              value={financeFileId} 
+                              onChange={e => setFinanceFileId(e.target.value)} 
+                              className="w-32 h-9 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold text-xs text-center shadow-sm" 
+                            />
+                          </div>
+                        </div>
+                      )}
+
                       <div className="relative w-40">
                         <select 
                           value={newType} 
@@ -3877,6 +4427,9 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           <option value="Udhaar">Udhaar Khata</option>
                           <option value="Swiggy">{getPartnerName(businessType, "Swiggy")}</option>
                           <option value="Zomato">{getPartnerName(businessType, "Zomato")}</option>
+                          {businessType === "Mobile/Electronics" && (
+                            <option value="Finance">Finance / EMI</option>
+                          )}
                         </select>
                         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 pointer-events-none" />
                       </div>
@@ -3976,9 +4529,16 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   variant="outline" 
                   onClick={async () => {
                     setIsSyncing(true);
-                    const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
-                    if (store) {
-                      await fetchStoreData(store.id);
+                    let storeId = currentStoreId;
+                    if (!storeId) {
+                      const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
+                      if (store) {
+                        storeId = store.id;
+                        setCurrentStoreId(store.id);
+                      }
+                    }
+                    if (storeId) {
+                      await fetchStoreData(storeId);
                       setLastSyncedTime(format(new Date(), "hh:mm:ss aa"));
                     }
                     setIsSyncing(false);
@@ -4250,11 +4810,12 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           <th className="py-2 px-4 text-[9px] font-bold text-zinc-400 uppercase tracking-widest">Order Details</th>
                           <th className="py-2 px-4 text-[9px] font-bold text-zinc-400 uppercase tracking-widest text-center">Type</th>
                           <th className="py-2 px-4 text-[9px] font-bold text-zinc-400 uppercase tracking-widest text-right">Amount</th>
+                          <th className="py-2 px-4 text-[9px] font-bold text-zinc-400 uppercase tracking-widest text-right w-[140px]">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y dark:divide-zinc-800">
                         {filteredSales.length === 0 ? (
-                          <tr><td colSpan={6} className="p-10 text-center text-zinc-300 font-bold italic">No transactions yet</td></tr>
+                          <tr><td colSpan={7} className="p-10 text-center text-zinc-300 font-bold italic">No transactions yet</td></tr>
                         ) : (
                           filteredSales.map(s => (
                             <tr key={s.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
@@ -4268,8 +4829,26 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 </Badge>
                               </td>
                               <td className="py-2 px-4 text-right font-bold text-lg tracking-tighter text-zinc-900 dark:text-white whitespace-nowrap">
-                              ₹{s.price - (s.commission || 0)}
-                            </td>
+                                ₹{s.price - (s.commission || 0)}
+                              </td>
+                              <td className="py-2 px-4 text-right whitespace-nowrap">
+                                <div className="flex gap-2 justify-end">
+                                  <button 
+                                    onClick={() => window.open(getInvoiceUrlForSale(s), "_blank")}
+                                    className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 font-bold text-[9px] uppercase tracking-wider rounded-lg transition-all active:scale-95"
+                                  >
+                                    View
+                                  </button>
+                                  {s.mobile && s.mobile !== "N/A" && s.mobile.length === 10 && (
+                                    <button 
+                                      onClick={() => handleResendWhatsAppInvoice(s)}
+                                      className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/20 hover:bg-emerald-600 hover:text-white text-emerald-600 dark:text-emerald-400 font-bold text-[9px] uppercase tracking-wider rounded-lg transition-all active:scale-95"
+                                    >
+                                      Resend
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
                             </tr>
                           ))
                         )}
@@ -4510,7 +5089,15 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           <td className="py-6 px-8">
                             <div className="flex gap-2.5">
                               <Button 
-                                onClick={() => {
+                                onClick={async () => {
+                                  let storeId = currentStoreId;
+                                  if (!storeId) {
+                                    const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
+                                    if (!store) throw new Error("Store ID not found");
+                                    storeId = store.id;
+                                    setCurrentStoreId(store.id);
+                                  }
+                                  
                                   const customMsg = crmMessage
                                     .replace("[NAME]", cust.name)
                                     .replace("[SHOP]", restaurantName);
@@ -4534,6 +5121,126 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   </table>
                 </div>
               </div>
+            </div>
+          )}
+
+          {activeTab === "FinanceTracker" && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8 pb-10">
+              <header className="relative px-2">
+                <div className="absolute -left-10 -top-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl" />
+                <h2 className="text-4xl font-black tracking-tighter text-blue-600">EMI & Finance Ledger</h2>
+                <p className="text-zinc-500 font-bold mt-1">Track finance settlements and loan payouts.</p>
+              </header>
+
+              {/* METRICS CARDS */}
+              {(() => {
+                const financeSales = sales.map(s => {
+                  const m = (s.item || "").match(/\[FINANCE:([^:]+):(\d+(?:\.\d+)?):(\d+(?:\.\d+)?):([^:]+):(Pending|Settled)\]/);
+                  if (!m) return null;
+                  return {
+                    id: s.id,
+                    name: s.name,
+                    mobile: s.mobile,
+                    price: s.price,
+                    date: s.date,
+                    item: s.item,
+                    company: m[1],
+                    loanAmount: Number(m[2]),
+                    downPayment: Number(m[3]),
+                    fileId: m[4],
+                    status: m[5]
+                  };
+                }).filter(Boolean) as any[];
+
+                const totalPending = financeSales.filter(fs => fs.status === "Pending").reduce((sum, fs) => sum + fs.loanAmount, 0);
+                const totalSettled = financeSales.filter(fs => fs.status === "Settled").reduce((sum, fs) => sum + fs.loanAmount, 0);
+
+                // Group by company
+                const pendingByCompany: Record<string, number> = {};
+                financeSales.filter(fs => fs.status === "Pending").forEach(fs => {
+                  pendingByCompany[fs.company] = (pendingByCompany[fs.company] || 0) + fs.loanAmount;
+                });
+
+                return (
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <Card className="p-6 bg-white dark:bg-zinc-900 border-0 shadow-sm rounded-2xl flex flex-col justify-center">
+                        <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Total Pending</p>
+                        <h4 className="text-3xl font-black text-red-600 tracking-tighter">₹{totalPending}</h4>
+                      </Card>
+                      <Card className="p-6 bg-white dark:bg-zinc-900 border-0 shadow-sm rounded-2xl flex flex-col justify-center">
+                        <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Total Settled</p>
+                        <h4 className="text-3xl font-black text-emerald-600 tracking-tighter">₹{totalSettled}</h4>
+                      </Card>
+                    </div>
+
+                    {Object.keys(pendingByCompany).length > 0 && (
+                      <Card className="p-5 bg-white dark:bg-zinc-900 border-0 shadow-sm rounded-2xl">
+                        <h4 className="text-xs font-black text-zinc-400 uppercase tracking-wider mb-3">Pending Partner Breakup</h4>
+                        <div className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                          {Object.entries(pendingByCompany).map(([co, amt]) => (
+                            <div key={co} className="flex justify-between py-2.5 text-sm">
+                              <span className="font-extrabold text-zinc-700 dark:text-zinc-300">{co}</span>
+                              <span className="font-black text-red-600">₹{amt}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </Card>
+                    )}
+
+                    {/* LEDGER LIST */}
+                    <Card className="p-5 bg-white dark:bg-zinc-900 border-0 shadow-sm rounded-2xl">
+                      <h4 className="text-xs font-black text-zinc-400 uppercase tracking-wider mb-4">Finance Transactions</h4>
+                      {financeSales.length === 0 ? (
+                        <div className="text-center py-10">
+                          <p className="text-sm font-bold text-zinc-400">No finance sales recorded yet.</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {financeSales.map(fs => (
+                            <div key={fs.id} className="p-4 bg-zinc-50 dark:bg-zinc-950 rounded-2xl border border-zinc-100 dark:border-zinc-850/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                              <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[9px] font-black tracking-widest text-zinc-400 uppercase">{format(new Date(fs.date), "dd MMM yyyy")}</span>
+                                  <span className={`text-[8px] font-black tracking-wider px-2 py-0.5 rounded-full ${fs.status === "Settled" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20" : "bg-red-50 text-red-600 dark:bg-red-950/20"}`}>
+                                    {fs.status.toUpperCase()}
+                                  </span>
+                                </div>
+                                <h5 className="font-black text-zinc-900 dark:text-white">{fs.name} ({fs.mobile})</h5>
+                                <p className="text-[11px] font-bold text-zinc-500">
+                                  Partner: <span className="text-zinc-800 dark:text-zinc-200 font-extrabold">{fs.company}</span> | File ID: <span className="text-zinc-800 dark:text-zinc-200 font-extrabold">{fs.fileId}</span>
+                                </p>
+                              </div>
+                              <div className="flex items-center justify-between md:justify-end gap-6">
+                                <div className="text-right">
+                                  <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Financed Loan</p>
+                                  <h4 className="text-lg font-black text-zinc-900 dark:text-white">₹{fs.loanAmount}</h4>
+                                  <p className="text-[9px] font-bold text-zinc-400">DP: ₹{fs.downPayment}</p>
+                                </div>
+                                {fs.status === "Pending" && (
+                                  <Button 
+                                    size="sm"
+                                    onClick={async () => {
+                                      const updatedItems = fs.item.replace(":Pending]", ":Settled]");
+                                      const { error } = await supabase.from('sales').update({ items: updatedItems }).eq('id', fs.id);
+                                      if (!error) {
+                                        setSales(prev => prev.map(sale => sale.id === fs.id ? { ...sale, item: updatedItems } : sale));
+                                      }
+                                    }}
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-black uppercase tracking-wider px-3 h-8 shadow-sm"
+                                  >
+                                    Mark Settled
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </Card>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -4592,6 +5299,14 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           className="flex-1 h-14 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-2xl text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
                         >
                           <CheckCircle2 className="h-4 w-4" /> MARK AS PAID
+                        </Button>
+                        <Button 
+                          onClick={() => window.open(getInvoiceUrlForSale(s), "_blank")}
+                          variant="outline" 
+                          className="w-14 h-14 p-0 rounded-2xl border-zinc-100 dark:border-zinc-800 text-zinc-400 hover:text-blue-500 hover:border-blue-500 transition-all shadow-sm"
+                          title="View Invoice"
+                        >
+                          <FileText className="h-5 w-5" />
                         </Button>
                         <Button 
                           onClick={() => window.open(`https://wa.me/91${s.mobile}?text=${encodeURIComponent(`Hi ${s.name}, a friendly reminder for your pending Udhaar of ₹${s.price} at ${restaurantName}. Please pay soon! Thanks.`)}`, "_blank")}
@@ -4681,6 +5396,62 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       </SelectContent>
                     </Select>
                   </div>
+                  {businessType === "Mobile/Electronics" && (
+                    <div className="space-y-3 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200/50 dark:border-zinc-800">
+                      <div className="flex justify-between items-center px-1">
+                        <Label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Stock IMEIs / Serials ({newItemImeis.length} Units)</Label>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => setNewItemImeis([...newItemImeis, ""])}
+                          className="h-6 text-[9px] font-black text-blue-500 hover:text-blue-600 uppercase tracking-wider p-0 bg-transparent"
+                        >
+                          + Add Unit
+                        </Button>
+                      </div>
+                      
+                      {newItemImeis.length === 0 ? (
+                        <p className="text-[10px] text-zinc-400 italic px-1">No units added yet. Click "+ Add Unit" to log IMEIs.</p>
+                      ) : (
+                        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                          {newItemImeis.map((imei, index) => (
+                            <div key={index} className="flex gap-2 items-center">
+                              <span className="text-[9px] font-bold text-zinc-400 w-8">#{index + 1}</span>
+                              <ImeiInput 
+                                placeholder={`Unit ${index + 1} IMEI`} 
+                                value={imei} 
+                                onChange={val => {
+                                  const updated = [...newItemImeis];
+                                  updated[index] = val;
+                                  setNewItemImeis(updated);
+                                }} 
+                                className="h-9 flex-1 rounded-xl bg-white dark:bg-zinc-900 border-0 font-bold px-3 text-[11px]" 
+                              />
+                              <Button 
+                                size="sm"
+                                onClick={() => {
+                                  handleScanNewItemImei(index);
+                                }}
+                                className="h-9 w-9 p-0 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-xl text-zinc-500 flex items-center justify-center border-0"
+                              >
+                                <Camera className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  setNewItemImeis(newItemImeis.filter((_, idx) => idx !== index));
+                                }}
+                                className="h-9 w-9 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl flex items-center justify-center border-0"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <Button 
                     onClick={handleAddItem} 
                     className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-md shadow-xl shadow-blue-500/30 active:scale-95 transition-all mt-4 uppercase tracking-wider"
@@ -4740,12 +5511,17 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                               if (newItemsFromCsv.length > 0) {
                                 setIsLoading(true);
                                 try {
-                                  const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
-                                  if (!store) throw new Error("Store ID not found");
+                                  let storeId = currentStoreId;
+                                  if (!storeId) {
+                                    const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
+                                    if (!store) throw new Error("Store ID not found");
+                                    storeId = store.id;
+                                    setCurrentStoreId(store.id);
+                                  }
                                   
                                   const { data: insertedData, error } = await supabase
                                     .from('menu_items')
-                                    .insert(newItemsFromCsv.map(item => ({ ...item, store_id: store.id })))
+                                    .insert(newItemsFromCsv.map(item => ({ ...item, store_id: storeId })))
                                     .select();
                                   
                                   if (error) throw error;
@@ -4789,25 +5565,53 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                          <p className="text-sm font-bold text-zinc-400 ">No items in menu. Add your first dish above!</p>
                       </div>
                     ) : (
-                      filteredMenuItems.map(item => (
-                        <div key={item.id} className="p-6 grid grid-cols-12 items-center hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors px-8">
-                          <div className="col-span-7">
-                            <p className="font-bold text-md text-zinc-900 dark:text-white leading-none">{item.name}</p>
-                            <p className="text-[9px] font-bold text-zinc-400 uppercase mt-1 tracking-wider">{getDisplayCategory(item.category)}</p>
+                      filteredMenuItems.map(item => {
+                        const itemImeis = getImeis(item.category);
+                        const isMobile = businessType === "Mobile/Electronics";
+                        return (
+                          <div 
+                            key={item.id} 
+                            onClick={() => {
+                              if (isMobile) {
+                                setEditingItem(item);
+                                setEditingItemImeis(itemImeis);
+                                setShowEditStockModal(true);
+                              }
+                            }}
+                            className={`p-6 grid grid-cols-12 items-center hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors px-8 ${isMobile ? 'cursor-pointer' : ''}`}
+                          >
+                            <div className="col-span-7">
+                              <p className="font-bold text-md text-zinc-900 dark:text-white leading-none">{item.name}</p>
+                              <div className="flex flex-col gap-1 mt-1.5">
+                                <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">{getDisplayCategory(item.category)}</p>
+                                {isMobile && (
+                                  <>
+                                    {itemImeis.length === 0 ? (
+                                      <span className="text-[9px] font-black text-red-500 uppercase tracking-widest bg-red-50 dark:bg-red-950/20 px-2 py-0.5 rounded-md w-fit">Out of Stock</span>
+                                    ) : (
+                                      <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded-md w-fit">{itemImeis.length} Units in Stock</span>
+                                    )}
+                                    {itemImeis.length > 0 && (
+                                      <p className="text-[9px] text-zinc-400 italic max-w-xs truncate">IMEIs: {itemImeis.join(", ")}</p>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            <div className="col-span-3 text-center">
+                              <p className="font-bold text-lg tracking-tight">₹{item.price}</p>
+                            </div>
+                            <div className="col-span-2 text-right flex justify-end gap-2" onClick={e => e.stopPropagation()}>
+                              <button 
+                                onClick={() => handleDeleteItem(item.id)} 
+                                className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all active:scale-90"
+                              >
+                                <Trash2 className="h-5 w-5" />
+                              </button>
+                            </div>
                           </div>
-                          <div className="col-span-3 text-center">
-                            <p className="font-bold text-lg tracking-tight">₹{item.price}</p>
-                          </div>
-                          <div className="col-span-2 text-right">
-                            <button 
-                              onClick={() => handleDeleteItem(item.id)} 
-                              className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all active:scale-90"
-                            >
-                              <Trash2 className="h-5 w-5" />
-                            </button>
-                          </div>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
                 </Card>
@@ -5006,10 +5810,10 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { id: "Settings", label: "Settings", icon: Settings, color: "text-zinc-600", bg: "bg-zinc-50" },
-                  { id: "Inventory", label: "Inventory", icon: Package, color: "text-orange-500", bg: "bg-orange-50" },
+                  ...(businessType !== "Mobile/Electronics" ? [{ id: "Inventory", label: "Inventory", icon: Package, color: "text-orange-500", bg: "bg-orange-50" }] : []),
+                  ...(businessType === "Mobile/Electronics" ? [{ id: "FinanceTracker", label: "EMI Tracker", icon: CreditCard, color: "text-blue-600", bg: "bg-blue-50" }] : []),
                   { id: "Rent", label: "Rent", icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-50" },
                   { id: "Khata", label: "UDHAAR KHATA", icon: Book, color: "text-orange-500", bg: "bg-orange-50" },
-                  { id: "BuybackTracker", label: "Exchange Ledger", icon: RefreshCw, color: "text-orange-600", bg: "bg-orange-50" },
                   { id: "Marketing", label: "Smart CRM", icon: Send, color: "text-indigo-500", bg: "bg-indigo-50" },
                   { id: "Legal", label: "Privacy & Policy", icon: ShieldCheck, color: "text-red-500", bg: "bg-red-50" },
                   { id: "Support", label: "Support", icon: Smartphone, color: "text-emerald-500", bg: "bg-emerald-50" },
@@ -5037,156 +5841,6 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 </button>
                 <p className="text-center text-[8px] font-black text-zinc-300 uppercase tracking-[0.3em] mt-6">Version 2.0.4 Enterprise</p>
               </div>
-            </div>
-          )}
-
-          {activeTab === "BuybackTracker" && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-6 pb-28 px-4 pt-4">
-              <header>
-                <button onClick={() => setActiveTab("MoreMenu")} className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-2 flex items-center gap-1"><span>â†</span> More</button>
-                <h2 className="text-3xl font-black tracking-tight text-zinc-900 dark:text-white flex items-center gap-3">
-                  <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-2xl flex items-center justify-center">
-                    <RefreshCw className="h-5 w-5 text-orange-600" />
-                  </div>
-                  Exchange Ledger
-                </h2>
-                <p className="text-zinc-500 font-bold mt-1 text-sm">Record used phone / device buyback with customer ID proof</p>
-              </header>
-
-              <div className="bg-white dark:bg-zinc-900 rounded-3xl p-5 space-y-4 shadow-sm border border-zinc-100 dark:border-zinc-800">
-                <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest">New Buyback Entry</p>
-
-                {/* Customer Info */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Customer Name *</label>
-                    <input type="text" placeholder="Full Name" value={buybackCustName} onChange={e => setBuybackCustName(e.target.value)}
-                      className="w-full h-11 px-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 font-bold text-sm" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Mobile No</label>
-                    <input type="tel" placeholder="10-digit" value={buybackCustMobile} onChange={e => setBuybackCustMobile(e.target.value)}
-                      className="w-full h-11 px-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 font-bold text-sm" />
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Aadhaar No</label>
-                  <input type="text" placeholder="12-digit Aadhaar" value={buybackAadhaar} onChange={e => setBuybackAadhaar(e.target.value)}
-                    className="w-full h-11 px-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 font-bold text-sm" />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Device Brand & Model *</label>
-                  <input type="text" placeholder="e.g. Samsung Galaxy A54" value={buybackBrandModel} onChange={e => setBuybackBrandModel(e.target.value)}
-                    className="w-full h-11 px-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 font-bold text-sm" />
-                </div>
-
-                {/* IMEI with Camera Scanner */}
-                <div className="space-y-1">
-                  <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">IMEI Number * (Scan or Type)</label>
-                  <div className="flex gap-2">
-                    <input type="text" placeholder="15-digit IMEI" value={buybackImei} onChange={e => setBuybackImei(e.target.value)}
-                      className="flex-1 h-11 px-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 font-bold text-sm" />
-                    <button
-                      onClick={() => {
-                        scannerTargetRef.current = "imei";
-                        setScannedBarcode("");
-                        setLastScannedMsg("");
-                        setShowScanner(true);
-                      }}
-                      className="h-11 w-11 bg-orange-600 hover:bg-orange-700 text-white rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-md shadow-orange-500/20 flex-shrink-0"
-                    >
-                      <Camera className="h-4 w-4" />
-                    </button>
-                  </div>
-                  {imeiScanned && <p className="text-[9px] font-bold text-emerald-600 flex items-center gap-1">âœ“ IMEI scanned: {imeiScanned}</p>}
-                </div>
-
-                {/* Buy Price */}
-                <div className="space-y-1">
-                  <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Buy Price (â‚¹) *</label>
-                  <input type="number" placeholder="Amount paid to customer" value={buybackPrice} onChange={e => setBuybackPrice(e.target.value)}
-                    className="w-full h-11 px-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-700 text-zinc-900 dark:text-white focus:outline-none focus:border-orange-500 font-bold text-sm" />
-                </div>
-
-                {/* ID Photo front/back */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">ID Proof (Front)</label>
-                    {buybackIdPhoto ? (
-                      <div className="relative aspect-[3/2] rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-700">
-                        <img src={buybackIdPhoto} alt="ID Front" className="w-full h-full object-cover" />
-                        <button onClick={() => setBuybackIdPhoto("")} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5"><X className="h-3 w-3" /></button>
-                      </div>
-                    ) : (
-                      <label className="aspect-[3/2] rounded-xl border-2 border-dashed border-zinc-200 dark:border-zinc-700 flex flex-col items-center justify-center gap-1 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
-                        <Camera className="h-5 w-5 text-zinc-300" />
-                        <span className="text-[9px] font-bold text-zinc-400">Take Photo</span>
-                        <input type="file" accept="image/*" capture="environment" className="hidden" onChange={e => {
-                          const f = e.target.files?.[0]; if (!f) return;
-                          const r = new FileReader(); r.onloadend = () => setBuybackIdPhoto(r.result as string); r.readAsDataURL(f);
-                        }} />
-                      </label>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">ID Proof (Back)</label>
-                    {buybackIdPhotoBack ? (
-                      <div className="relative aspect-[3/2] rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-700">
-                        <img src={buybackIdPhotoBack} alt="ID Back" className="w-full h-full object-cover" />
-                        <button onClick={() => setBuybackIdPhotoBack("")} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5"><X className="h-3 w-3" /></button>
-                      </div>
-                    ) : (
-                      <label className="aspect-[3/2] rounded-xl border-2 border-dashed border-zinc-200 dark:border-zinc-700 flex flex-col items-center justify-center gap-1 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
-                        <Camera className="h-5 w-5 text-zinc-300" />
-                        <span className="text-[9px] font-bold text-zinc-400">Take Photo</span>
-                        <input type="file" accept="image/*" capture="environment" className="hidden" onChange={e => {
-                          const f = e.target.files?.[0]; if (!f) return;
-                          const r = new FileReader(); r.onloadend = () => setBuybackIdPhotoBack(r.result as string); r.readAsDataURL(f);
-                        }} />
-                      </label>
-                    )}
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleSaveBuyback}
-                  disabled={buybackLoading}
-                  className="w-full h-13 py-3.5 bg-orange-600 hover:bg-orange-700 text-white font-black rounded-2xl text-sm uppercase tracking-widest shadow-lg shadow-orange-600/20 active:scale-95 transition-all disabled:opacity-50"
-                >
-                  {buybackLoading ? "Saving..." : "âœ“ Save Exchange Record"}
-                </button>
-              </div>
-
-              {/* Records List */}
-              {buybackList.length > 0 && (
-                <div className="space-y-3">
-                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1">Past Records ({buybackList.length})</p>
-                  {buybackList.map((rec, i) => (
-                    <div key={rec.id || i} className="bg-white dark:bg-zinc-900 rounded-2xl p-4 shadow-sm border border-zinc-100 dark:border-zinc-800 space-y-2">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <p className="font-black text-zinc-900 dark:text-white text-sm">{rec.brandModel || "Device"}</p>
-                          <p className="text-[10px] font-bold text-zinc-500">{rec.custName} â€¢ {rec.custMobile}</p>
-                          <p className="text-[10px] font-bold text-orange-600">IMEI: {rec.imei}</p>
-                          <p className="text-[10px] font-bold text-zinc-400">{rec.date}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-black text-lg text-zinc-900 dark:text-white">â‚¹{rec.price}</p>
-                          <button onClick={() => handleDeleteBuyback(rec.id)} className="text-[9px] font-black text-red-400 hover:text-red-600 uppercase tracking-wider mt-1">Delete</button>
-                        </div>
-                      </div>
-                      {(rec.idPhoto || rec.idPhotoBack) && (
-                        <div className="flex gap-2 pt-1">
-                          {rec.idPhoto && <img src={rec.idPhoto} alt="ID Front" className="h-14 rounded-lg object-cover border border-zinc-100" />}
-                          {rec.idPhotoBack && <img src={rec.idPhotoBack} alt="ID Back" className="h-14 rounded-lg object-cover border border-zinc-100" />}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           )}
 
@@ -5253,6 +5907,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         localStorage.setItem("saas_store_phone", storePhone);
                         localStorage.setItem("saas_store_website", storeWebsite);
                         localStorage.setItem("saas_store_gstin", storeGstin);
+                        localStorage.setItem("saas_gst_enabled", isGstEnabled.toString());
+                        localStorage.setItem("saas_gst_rate", gstRate.toString());
                         localStorage.setItem("saas_monthly_rent", monthlyRent.toString());
                         localStorage.setItem("saas_swiggy_comm", swiggyCommission.toString());
                         localStorage.setItem("saas_swiggy_comm_type", swiggyCommType);
@@ -5340,7 +5996,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 <SelectTrigger className="h-16 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 shadow-inner text-base font-bold px-6">
                                   <SelectValue placeholder="Select Business Type" />
                                 </SelectTrigger>
-                                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 max-h-[300px] overflow-y-auto">
+                                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800">
                                   {Object.keys(BUSINESS_CATEGORIES).map((key) => (
                                     <SelectItem key={key} value={key} className="font-bold text-sm">
                                       {BUSINESS_CATEGORIES[key].name}
@@ -5404,6 +6060,39 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                               <div className="space-y-3">
                                 <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">GSTIN Number</Label>
                                 <Input value={storeGstin} onChange={e => setStoreGstin(e.target.value)} className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-6" />
+                              </div>
+                              <div className="space-y-3">
+                                <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">GST Billing Mode</Label>
+                                <div className="flex gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsGstEnabled(true)}
+                                    className={`h-14 flex-1 rounded-2xl font-black text-xs uppercase tracking-wider transition-all border-0 ${isGstEnabled ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'}`}
+                                  >
+                                    GST ON
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => setIsGstEnabled(false)}
+                                    className={`h-14 flex-1 rounded-2xl font-black text-xs uppercase tracking-wider transition-all border-0 ${!isGstEnabled ? 'bg-zinc-900 text-white shadow-lg' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500'}`}
+                                  >
+                                    GST OFF
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="space-y-3">
+                                <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">GST Rate (%)</Label>
+                                <select 
+                                  value={gstRate}
+                                  onChange={e => setGstRate(Number(e.target.value))}
+                                  disabled={!isGstEnabled}
+                                  className="w-full h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-6 text-sm text-zinc-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500/20 disabled:opacity-40"
+                                >
+                                  <option value={5}>5% (Retail/Food)</option>
+                                  <option value={12}>12% (Services/Goods)</option>
+                                  <option value={18}>18% (Standard Services)</option>
+                                  <option value={28}>28% (Luxury Goods)</option>
+                                </select>
                               </div>
                             </div>
 
@@ -6041,8 +6730,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
           <span className="text-[8px] font-bold uppercase tracking-tighter">{t("Stats")}</span>
         </button>
 
-        <button onClick={() => setActiveTab("MoreMenu")} className={`flex flex-col items-center gap-1 transition-all ${['MoreMenu', 'Settings', 'Rent', 'Support', 'Khata', 'Menu', 'Inventory', 'BuybackTracker'].includes(activeTab) ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
-          <div className={`p-1.5 rounded-xl ${['MoreMenu', 'Settings', 'Rent', 'Support', 'Khata', 'Menu', 'Inventory', 'BuybackTracker'].includes(activeTab) ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><Settings className="h-5 w-5" /></div>
+        <button onClick={() => setActiveTab("MoreMenu")} className={`flex flex-col items-center gap-1 transition-all ${['MoreMenu', 'Settings', 'Rent', 'Support', 'Khata', 'Menu', 'Inventory'].includes(activeTab) ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
+          <div className={`p-1.5 rounded-xl ${['MoreMenu', 'Settings', 'Rent', 'Support', 'Khata', 'Menu', 'Inventory'].includes(activeTab) ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><Settings className="h-5 w-5" /></div>
           <span className="text-[8px] font-bold uppercase tracking-tighter">{t("More")}</span>
         </button>
       </nav>
@@ -6216,6 +6905,96 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               </Button>
               <Button 
                 onClick={() => setShowNewProductModal(false)} 
+                variant="outline" 
+                className="h-12 rounded-xl font-black text-xs active:scale-95 transition-all"
+              >
+                CANCEL
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* EDIT STOCK / IMEI MODAL */}
+      <Dialog open={showEditStockModal} onOpenChange={setShowEditStockModal}>
+        <DialogContent className="p-6 border-0 max-w-[360px] bg-white dark:bg-zinc-900 rounded-xl shadow-2xl">
+          <div className="space-y-5">
+            <div className="text-center space-y-1">
+              <DialogTitle className="text-lg font-black tracking-tight uppercase text-zinc-950 dark:text-white">Edit Stock / IMEIs</DialogTitle>
+              <DialogDescription className="text-zinc-500 font-bold text-xs uppercase tracking-tighter">
+                {editingItem?.name}
+              </DialogDescription>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex justify-between items-center px-1">
+                <Label className="text-[10px] font-black uppercase text-zinc-400">IMEI List ({editingItemImeis.length} Units)</Label>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={() => setEditingItemImeis([...editingItemImeis, ""])}
+                  className="h-6 text-[9px] font-black text-blue-500 hover:text-blue-600 uppercase tracking-wider p-0 bg-transparent"
+                >
+                  + Add Unit
+                </Button>
+              </div>
+
+              {editingItemImeis.length === 0 ? (
+                <p className="text-[10px] text-zinc-400 italic text-center py-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">Stock empty. Click "+ Add Unit" to add units.</p>
+              ) : (
+                <div className="space-y-2 max-h-60 overflow-y-auto pr-1 animate-in fade-in duration-300">
+                  {editingItemImeis.map((imei, index) => (
+                    <div key={index} className="flex gap-2 items-center">
+                      <span className="text-[9px] font-bold text-zinc-400 w-8">#{index + 1}</span>
+                      <ImeiInput 
+                        placeholder={`Unit ${index + 1} IMEI`} 
+                        value={imei} 
+                        onChange={val => {
+                          const updated = [...editingItemImeis];
+                          updated[index] = val;
+                          setEditingItemImeis(updated);
+                        }} 
+                        className="h-9 flex-1 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-3 text-[11px]" 
+                      />
+                      <Button 
+                        size="sm"
+                        onClick={() => {
+                          handleScanEditItemImei(index);
+                        }}
+                        className="h-9 w-9 p-0 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-xl text-zinc-500 flex items-center justify-center border-0"
+                      >
+                        <Camera className="h-4 w-4" />
+                      </Button>
+                      <Button 
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setEditingItemImeis(editingItemImeis.filter((_, idx) => idx !== index));
+                        }}
+                        className="h-9 w-9 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl flex items-center justify-center border-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2.5 pt-2">
+              <Button 
+                onClick={handleSaveEditStock} 
+                disabled={isLoading}
+                className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-xs active:scale-95 transition-all flex items-center justify-center gap-1.5"
+              >
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                SAVE STOCK
+              </Button>
+              <Button 
+                onClick={() => {
+                  setShowEditStockModal(false);
+                  setEditingItem(null);
+                }} 
                 variant="outline" 
                 className="h-12 rounded-xl font-black text-xs active:scale-95 transition-all"
               >
