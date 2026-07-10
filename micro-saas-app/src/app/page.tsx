@@ -5,7 +5,7 @@ import {
   Download, Shield, ShieldCheck, ArrowRight, CheckCircle2, Check, X,
   RefreshCw, Heart, Zap, BarChart3, Camera, CreditCard, Lock,
   Users, HelpCircle, ChevronDown, MessageSquare, Star, Eye,
-  Receipt, Wallet, Scan, Home, Wand2, Cpu
+  Receipt, Wallet, Scan, Home, Wand2, Cpu, Smartphone
 } from "lucide-react";
 import Dashboard from "./dashboard/page";
 
@@ -171,10 +171,10 @@ export default function LandingPage() {
 
       {/* TOP INFO BAR */}
       <div className="bg-zinc-950 text-white text-[11px] font-extrabold tracking-widest py-2.5 px-4 text-center flex items-center justify-center gap-2">
-        <span className="bg-orange-500 text-black px-2 py-0.5 rounded text-[9px] font-black mr-2 animate-pulse">NEW</span>
-        <span>🇮🇳 MAKE IN INDIA FOR LOCAL MERCHANT STORES</span>
-        <span class="opacity-30">|</span>
-        <span className="text-orange-400">🔥 30-DAY FREE PREMIUM TRIAL ON APK DOWNLOAD</span>
+        <span className="bg-orange-500 text-black px-2 py-0.5 rounded text-[9px] font-black mr-2 animate-pulse">LIVE</span>
+        <span>🇮🇳 NOW LIVE ON GOOGLE PLAY STORE</span>
+        <span className="opacity-30">|</span>
+        <span className="text-orange-400">🔥 DOWNLOAD INSTAMUNIM APP DIRECTLY FROM PLAY STORE NOW</span>
       </div>
 
       {/* NAVIGATION */}
@@ -199,8 +199,8 @@ export default function LandingPage() {
             <a href="/dashboard" className="border border-zinc-200 hover:border-orange-500 text-zinc-700 hover:text-orange-600 px-4 py-2.5 rounded-2xl font-bold text-xs transition-colors">
               LOG IN
             </a>
-            <a href="/InstaMunimSmartPOS_v1.3-release.apk?v=9" className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-2xl font-bold text-xs transition-all shadow-md shadow-orange-500/10 flex items-center gap-2 active:scale-95">
-              <Download className="w-3.5 h-3.5" /> DOWNLOAD APP
+            <a href="https://play.google.com/store/apps/details?id=com.zainul.instamunimpos" target="_blank" rel="noopener noreferrer" className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-2xl font-bold text-xs transition-all shadow-md shadow-orange-500/10 flex items-center gap-2 active:scale-95">
+              <Smartphone className="w-3.5 h-3.5" /> GET IT ON PLAY STORE
             </a>
           </div>
         </div>
@@ -227,11 +227,20 @@ export default function LandingPage() {
               India's most trusted POS solution built for shopkeepers. Create high-speed receipts, sync material inventory, and manage daily profits automatically right on your mobile phone.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 pt-2">
-              <a href="/InstaMunimSmartPOS_v1.3-release.apk?v=9" className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-4.5 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2.5 shadow-lg shadow-orange-500/20 active:scale-95">
-                <Download className="w-5 h-5" /> DOWNLOAD APP v1.3
+            <div className="flex flex-col sm:flex-row items-center gap-4 pt-2">
+              <a 
+                href="https://play.google.com/store/apps/details?id=com.zainul.instamunimpos" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="transition-all active:scale-95 hover:opacity-90 inline-block"
+              >
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" 
+                  alt="Download InstaMunim from Google Play Store" 
+                  className="h-16 w-auto object-contain" 
+                />
               </a>
-              <a href="/dashboard" className="bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-800 px-8 py-4.5 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95">
+              <a href="/dashboard" className="bg-white hover:bg-zinc-50 border border-zinc-200 text-zinc-800 px-8 py-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 shadow-sm active:scale-95 h-[48px]">
                 FREE WEB TRIAL <ArrowRight className="w-4 h-4 text-orange-500" />
               </a>
             </div>
@@ -803,10 +812,12 @@ export default function LandingPage() {
                 </div>
               </div>
               <a 
-                href="/InstaMunimSmartPOS_v1.3-release.apk?v=9"
-                className="w-full bg-zinc-100 hover:bg-zinc-200 text-zinc-800 font-extrabold py-3.5 rounded-xl text-xs mt-8 transition-colors text-center uppercase tracking-widest border border-zinc-200 shadow-sm"
+                href="https://play.google.com/store/apps/details?id=com.zainul.instamunimpos"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full bg-zinc-950 hover:bg-zinc-900 text-white font-extrabold py-3.5 rounded-xl text-xs mt-8 transition-colors text-center uppercase tracking-widest border-0 shadow-sm flex items-center justify-center gap-1.5 active:scale-95"
               >
-                Download Free APP
+                <Smartphone className="w-4 h-4 text-orange-500" /> Get it on Play Store
               </a>
             </div>
 

@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { Suspense, useEffect, useState } from "react";
-import { Printer, ShoppingBag, CheckCircle2, QrCode, Camera, Globe, Phone, MapPin, ReceiptText, Download } from "lucide-react";
+import { Printer, ShoppingBag, CheckCircle2, QrCode, Camera, Globe, Phone, MapPin, ReceiptText, Download, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 
@@ -245,10 +245,10 @@ function InvoiceContent() {
                 </div>
               </div>
               <Button 
-                onClick={() => window.open("/InstaMunimSmartPOS_v1.3-release.apk?v=8", "_self")}
-                className="w-full h-12 bg-zinc-900 hover:bg-black text-white rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-md border-0"
+                onClick={() => window.open("https://play.google.com/store/apps/details?id=com.zainul.instamunimpos", "_blank")}
+                className="w-full h-12 bg-zinc-900 hover:bg-black text-white rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-md border-0 flex items-center justify-center gap-2"
               >
-                Download Free APP
+                <Smartphone className="w-4 h-4 text-orange-500" /> Get it on Play Store
               </Button>
             </div>
           )}

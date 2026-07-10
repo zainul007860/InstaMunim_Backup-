@@ -6,7 +6,7 @@ import jsQR from "jsqr";
 import { 
   LayoutDashboard, FileText, Settings, LogOut, Search,
   PlusCircle, Loader2, Book, Trash2, Send, ShoppingCart, Package,
-  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera, Volume2, Globe, Wand2
+  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera, Volume2, Globe, Wand2, Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -31,31 +31,269 @@ const getImeis = (cat: string): string[] => {
   return [];
 };
 
+interface BarcodeScannerResult {
+  barcode: string;
+  format?: string;
+  cancelled?: boolean;
+}
+
 const ImeiInput = ({ 
   value, 
   onChange, 
   placeholder, 
-  className 
+  className, 
+  onScan, 
+  onCancel 
 }: { 
   value: string; 
   onChange: (val: string) => void; 
   placeholder: string; 
   className?: string; 
+  onScan?: (scanned: BarcodeScannerResult) => void;
+  onCancel?: () => void;
 }) => {
   const [localVal, setLocalVal] = useState(value);
+  const [isScanning, setIsScanning] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [scanProgress, setScanProgress] = useState(0);
+  
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const scanIntervalRef = useRef<any>(null);
+  const lastFrameTimeRef = useRef<number>(0);
 
   useEffect(() => {
     setLocalVal(value);
   }, [value]);
 
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => {
+          track.stop();
+          track.enabled = false;
+        });
+        streamRef.current = null;
+      }
+      if (scanIntervalRef.current) {
+        clearInterval(scanIntervalRef.current);
+      }
+    };
+  }, []);
+
+  const startAdvancedScan = async () => {
+    try {
+      if (isScanning) return;
+      
+      setIsScanning(true);
+      setScanError(null);
+      setScanProgress(0);
+      
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          frameRate: { ideal: 30 }
+        }
+      });
+
+      streamRef.current = stream;
+      
+      setTimeout(async () => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          try {
+            await videoRef.current.play();
+          } catch (err) {
+            console.error("Video play error:", err);
+          }
+          startScanLoop();
+        }
+      }, 150);
+
+      const progressInterval = setInterval(() => {
+        setScanProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 5;
+        });
+      }, 100);
+
+    } catch (err) {
+      console.error('Camera access error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Camera access denied';
+      setScanError(errorMessage);
+      setIsScanning(false);
+      if (onCancel) onCancel();
+    }
+  };
+
+  const stopAdvancedScan = () => {
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
+    
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
+        track.stop();
+        track.enabled = false;
+      });
+      streamRef.current = null;
+    }
+    
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.srcObject = null;
+    }
+    
+    setIsScanning(false);
+    setScanProgress(0);
+    setScanError(null);
+    
+    if (onCancel) onCancel();
+  };
+
+  const processFrame = async () => {
+    if (!videoRef.current || !canvasRef.current || !streamRef.current) {
+      return;
+    }
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx || video.videoWidth === 0) {
+      return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    try {
+      if ('BarcodeDetector' in window) {
+        const detector = new (window as any).BarcodeDetector({
+          formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'qr_code']
+        });
+        const detected = await detector.detect(video);
+        if (detected && detected.length > 0) {
+          const codeVal = detected[0].rawValue;
+          stopAdvancedScan();
+          if ('vibrate' in navigator) {
+            navigator.vibrate(100);
+          }
+          setScanProgress(100);
+          onChange(codeVal);
+          setLocalVal(codeVal);
+          onScan?.({ barcode: codeVal });
+          return;
+        }
+      }
+    } catch (detectErr) {
+      console.warn("Real-time native BarcodeDetector warning:", detectErr);
+    }
+
+    try {
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const code = jsQR(imageData.data, canvas.width, canvas.height);
+      if (code && code.data) {
+        const scannedValue = code.data;
+        stopAdvancedScan();
+        if ('vibrate' in navigator) {
+          navigator.vibrate(100);
+        }
+        setScanProgress(100);
+        onChange(scannedValue);
+        setLocalVal(scannedValue);
+        onScan?.({ barcode: scannedValue, format: 'QR_CODE' });
+        return;
+      }
+    } catch (err) {
+      // Silent frame error
+    }
+  };
+
+  const startScanLoop = () => {
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+    }
+    
+    scanIntervalRef.current = setInterval(() => {
+      const currentTime = performance.now();
+      if (currentTime - lastFrameTimeRef.current > 100) {
+        lastFrameTimeRef.current = currentTime;
+        processFrame();
+      }
+    }, 50);
+  };
+
   return (
-    <Input
-      placeholder={placeholder}
-      value={localVal}
-      onChange={e => setLocalVal(e.target.value)}
-      onBlur={() => onChange(localVal)}
-      className={className}
-    />
+    <div className="relative w-full">
+      <div className="relative flex items-center">
+        <Input
+          placeholder={placeholder}
+          value={localVal}
+          onChange={e => setLocalVal(e.target.value)}
+          onBlur={() => onChange(localVal)}
+          className={`${className} pr-12`}
+        />
+        
+        <button
+          type="button"
+          onClick={isScanning ? stopAdvancedScan : startAdvancedScan}
+          className={`absolute right-2 h-8 w-8 rounded-lg flex items-center justify-center transition-all active:scale-95 z-10 ${isScanning 
+            ? 'bg-red-500 hover:bg-red-650 text-white shadow-lg animate-pulse' 
+            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-300 hover:bg-zinc-200'
+          }`}
+          title={isScanning ? "Stop scanning" : "Scan barcode"}
+        >
+          {isScanning ? (
+            <X className="h-4 w-4" />
+          ) : (
+            <Camera className="h-4 w-4" />
+          )}
+        </button>
+      </div>
+
+      <canvas ref={canvasRef} className="hidden" />
+
+      {isScanning && (
+        <div className="relative mt-2 w-full h-44 bg-zinc-950 rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-lg z-20 flex flex-col justify-center">
+          <video 
+            ref={videoRef} 
+            className="w-full h-full object-cover" 
+            playsInline 
+            muted 
+          />
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <div className="w-[85%] h-[2px] bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)] animate-pulse" />
+          </div>
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-sm px-3.5 py-1 rounded-full border border-zinc-800 flex items-center gap-2">
+            <div className="w-2 h-2 bg-orange-500 rounded-full animate-ping" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-orange-500">
+              Scanning: {scanProgress}%
+            </span>
+          </div>
+        </div>
+      )}
+
+      {scanError && (
+        <div className="absolute top-full mt-2 left-0 right-0 flex justify-center z-30">
+          <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950/80 text-red-700 dark:text-red-300 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-md border border-red-200 dark:border-red-900/50">
+            <X className="h-3.5 w-3.5" />
+            <span>{scanError}</span>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -1082,6 +1320,26 @@ export default function Dashboard() {
   const [newName, setNewName] = useState("");
   const [newMobile, setNewMobile] = useState("");
   const [newType, setNewType] = useState("Cash");
+
+  // Buyback State Hooks
+  const [buybackCustName, setBuybackCustName] = useState("");
+  const [buybackCustMobile, setBuybackCustMobile] = useState("");
+  const [buybackAadhaar, setBuybackAadhaar] = useState("");
+  const [buybackBrandModel, setBuybackBrandModel] = useState("");
+  const [buybackImei, setBuybackImei] = useState("");
+  const [buybackPrice, setBuybackPrice] = useState("");
+  const [buybackIdPhoto, setBuybackIdPhoto] = useState("");
+  const [buybackIdPhotoBack, setBuybackIdPhotoBack] = useState("");
+  const [buybackDevicePhoto, setBuybackDevicePhoto] = useState("");
+  const [buybackDeclared, setBuybackDeclared] = useState(false);
+  const [showExpenseBreakdown, setShowExpenseBreakdown] = useState(false);
+  const [viewingIdPhoto, setViewingIdPhoto] = useState<string | null>(null);
+  const [printingBuybackItem, setPrintingBuybackItem] = useState<any>(null);
+
+  // Camera Zoom States
+  const [hasZoomCapability, setHasZoomCapability] = useState(false);
+  const [zoomRange, setZoomRange] = useState({ min: 1, max: 4, step: 0.1 });
+  const [currentZoom, setCurrentZoom] = useState(1);
   const [financeCompany, setFinanceCompany] = useState("Bajaj Finserv");
   const [financeDownPayment, setFinanceDownPayment] = useState("");
   const [financeFileId, setFinanceFileId] = useState("");
@@ -1109,6 +1367,263 @@ export default function Dashboard() {
   const [aiImageUrl, setAiImageUrl] = useState("");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [imageGenerationError, setImageGenerationError] = useState("");
+
+  // Image compression helper
+  const compressAndSetIdPhoto = (file: File, side: 'front' | 'back') => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 600;
+        const MAX_HEIGHT = 600;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
+          if (side === 'front') {
+            setBuybackIdPhoto(dataUrl);
+          } else if (side === 'back') {
+            setBuybackIdPhotoBack(dataUrl);
+          } else {
+            setBuybackDevicePhoto(dataUrl);
+          }
+        }
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  // Save buyback to Supabase as an expense with tags
+  const handleSaveBuyback = async () => {
+    if (!buybackCustName || !buybackBrandModel || !buybackPrice) {
+      alert("Please fill Name, Device Model and Purchase Price.");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      let storeId = currentStoreId;
+      if (!storeId) {
+        const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
+        if (!store) throw new Error("Store ID not found");
+        storeId = store.id;
+        setCurrentStoreId(store.id);
+      }
+
+      const photoFrontStr = buybackIdPhoto ? buybackIdPhoto : "N/A";
+      const photoBackStr = buybackIdPhotoBack ? buybackIdPhotoBack : "N/A";
+      const photoDeviceStr = buybackDevicePhoto ? buybackDevicePhoto : "N/A";
+      const photoStr = `${photoFrontStr}|${photoBackStr}|${photoDeviceStr}`;
+      const buybackMeta = `[BUYBACK:${buybackBrandModel}:${buybackImei || "N/A"}:${buybackAadhaar || "N/A"}:${buybackCustName}:${buybackCustMobile || "N/A"}:${photoStr}]`;
+      const expenseTitle = `Used Phone Buyback: ${buybackBrandModel} (IMEI: ${buybackImei || "N/A"}) ${buybackMeta}`;
+
+      const { data: newExp, error } = await supabase
+        .from('expenses')
+        .insert([{ store_id: storeId, title: expenseTitle, amount: Number(buybackPrice) }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setExpenses([{ id: newExp.id, title: newExp.title, amount: newExp.amount, date: new Date(newExp.expense_date) }, ...expenses]);
+
+      setBuybackCustName("");
+      setBuybackCustMobile("");
+      setBuybackAadhaar("");
+      setBuybackBrandModel("");
+      setBuybackImei("");
+      setBuybackPrice("");
+      setBuybackIdPhoto("");
+      setBuybackIdPhotoBack("");
+      setBuybackDevicePhoto("");
+      setBuybackDeclared(false);
+      
+      alert("Buyback purchase successfully saved & logged in expenses!");
+    } catch (err: any) {
+      alert("Error saving buyback: " + err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDownloadPdfBuyback = (item: any) => {
+    const el = document.createElement("div");
+    el.style.position = "fixed";
+    el.style.top = "0";
+    el.style.left = "0";
+    el.style.width = "700px";
+    el.style.padding = "25px";
+    el.style.background = "#ffffff";
+    el.style.color = "#0f172a";
+    el.style.fontFamily = "system-ui, -apple-system, sans-serif";
+    el.style.zIndex = "-9999";
+    el.style.pointerEvents = "none";
+    
+    el.innerHTML = `
+      <div style="border: 2px solid #e2e8f0; border-radius: 20px; padding: 30px; background: #fff;">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #ea580c; padding-bottom: 15px; margin-bottom: 20px;">
+          <div>
+            ${storeLogo ? `<img src="${storeLogo}" style="max-height: 48px; object-fit: contain;" />` : `<div style="font-size: 24px; font-weight: 900; color: #ea580c; text-transform: uppercase;">${restaurantName || "InstaMunim"}</div>`}
+          </div>
+          <div style="text-align: right;">
+            <h1 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase;">${restaurantName || "InstaMunim"}</h1>
+            <p style="font-size: 10px; color: #64748b; margin: 2px 0 0 0; font-weight: 600;">${storeAddress || "Smart Business Partner Log"}</p>
+            ${storePhone ? `<p style="font-size: 10px; color: #64748b; margin: 2px 0 0 0; font-weight: 600;">Mob: +91 ${storePhone}</p>` : ""}
+          </div>
+        </div>
+
+        <div style="display: inline-block; background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; padding: 4px 12px; border-radius: 6px; font-size: 9px; font-weight: 800; text-transform: uppercase; margin-bottom: 20px;">
+          Proof of Trade-in & Buyback Receipt
+        </div>
+
+        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #475569; margin: 15px 0 8px 0; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 4px;">
+          Transaction Information
+        </div>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+          <tr>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; background-color: #f8fafc; font-weight: 700; color: #475569; width: 25%;">Customer Name</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #0f172a; font-weight: 600;">${item.custName}</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; background-color: #f8fafc; font-weight: 700; color: #475569; width: 25%;">Brand & Model</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #0f172a; font-weight: 600;">${item.brandModel}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; background-color: #f8fafc; font-weight: 700; color: #475569;">Customer Mobile</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #0f172a; font-weight: 600;">+91 ${item.custMobile}</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; background-color: #f8fafc; font-weight: 700; color: #475569;">IMEI Number</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #0f172a; font-weight: 600;">${item.imei}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; background-color: #f8fafc; font-weight: 700; color: #475569;">Aadhaar / ID Card</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #0f172a; font-weight: 600;">${item.aadhaar}</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #0f172a; font-weight: 600;">${format(new Date(item.date), "dd MMM yyyy")}</td>
+          </tr>
+          <tr>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; background-color: #f8fafc; font-weight: 700; color: #475569;">Identification Status</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #16a34a; font-weight: bold;">VERIFIED (ID PHOTO ATTACHED)</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; background-color: #f8fafc; font-weight: 700; color: #ea580c;">Amount Paid</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 14px; font-weight: 900; color: #ea580c;">₹${item.amount}</td>
+          </tr>
+        </table>
+
+        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #475569; margin: 15px 0 8px 0; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 4px;">
+          Legal Declaration & Ownership Transfer
+        </div>
+        <div style="background-color: #fafaf9; border: 1px solid #e7e5e4; border-radius: 10px; padding: 12px; font-size: 10px; line-height: 1.6; color: #44403c; text-align: justify; font-weight: 500;">
+          I hereby declare that this mobile device / item details specified above belongs strictly to me, is my personal property, and has not been obtained by any illegal means, theft, or fraudulent actions. The identification card and photograph submitted are genuine and belong to me. I hereby transfer absolute ownership and user rights of this device to the store owner in exchange for the trade-in buyback amount of ₹${item.amount} received by me.
+        </div>
+
+        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #475569; margin: 15px 0 8px 0; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 4px;">
+          Verification Documents & Device Photo
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 10px;">
+          <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; text-align: center; background: #fff;">
+            <div style="font-size: 8px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 5px;">Aadhaar Front</div>
+            ${item.photo && item.photo !== "N/A" ? `<img src="${item.photo}" style="max-width: 100%; height: 110px; object-fit: contain; border-radius: 4px;" />` : `<div style="font-size: 9px; color: #94a3b8; font-weight: 700; padding: 30px 0;">Not Provided</div>`}
+          </div>
+          <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; text-align: center; background: #fff;">
+            <div style="font-size: 8px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 5px;">Aadhaar Back</div>
+            ${item.photoBack && item.photoBack !== "N/A" ? `<img src="${item.photoBack}" style="max-width: 100%; height: 110px; object-fit: contain; border-radius: 4px;" />` : `<div style="font-size: 9px; color: #94a3b8; font-weight: 700; padding: 30px 0;">Not Provided</div>`}
+          </div>
+          <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; text-align: center; background: #fff;">
+            <div style="font-size: 8px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 5px;">Device Photo</div>
+            ${item.photoDevice && item.photoDevice !== "N/A" ? `<img src="${item.photoDevice}" style="max-width: 100%; height: 110px; object-fit: contain; border-radius: 4px;" />` : `<div style="font-size: 9px; color: #94a3b8; font-weight: 700; padding: 30px 0;">Not Provided</div>`}
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; margin-top: 40px;">
+          <div style="width: 180px; border-top: 1.5px dashed #cbd5e1; text-align: center; padding-top: 6px; font-size: 9px; font-weight: 800; color: #475569; text-transform: uppercase;">Store Representative</div>
+          <div style="width: 180px; border-top: 1.5px dashed #cbd5e1; text-align: center; padding-top: 6px; font-size: 9px; font-weight: 800; color: #475569; text-transform: uppercase;">Seller / Customer</div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(el);
+
+    const runPdfExport = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      const opt = {
+        margin: 10,
+        filename: `Buyback_Receipt_${item.custName.replace(/\s+/g, '_')}_${item.brandModel.replace(/\s+/g, '_')}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      try {
+        const isCapacitor = !!(window as any).Capacitor;
+        if (isCapacitor) {
+          const pdfBase64 = await window.html2pdf().from(el).set(opt).outputPdf('datauristring');
+          const base64Data = pdfBase64.split(',')[1];
+          const fileName = `Buyback_Receipt_${item.custName.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
+
+          const writeResult = await (window as any).Capacitor.Plugins.Filesystem.writeFile({
+            path: fileName,
+            data: base64Data,
+            directory: 'CACHE'
+          });
+
+          await (window as any).Capacitor.Plugins.Share.share({
+            title: 'Buyback Receipt',
+            url: writeResult.uri,
+            dialogTitle: 'Save or Share Buyback Receipt'
+          });
+          document.body.removeChild(el);
+        } else {
+          window.html2pdf().from(el).set(opt).save().then(() => {
+            document.body.removeChild(el);
+          });
+        }
+      } catch (err) {
+        console.error("PDF generation failed:", err);
+        alert("PDF Generation Failed: " + err.message);
+        try { document.body.removeChild(el); } catch(e){}
+      }
+    };
+
+    if (!window.html2pdf) {
+      const script = document.createElement("script");
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+      script.onload = runPdfExport;
+      document.head.appendChild(script);
+    } else {
+      runPdfExport();
+    }
+  };
+
+  const handleZoomChange = (value: number) => {
+    try {
+      const scanner = qrCodeRef.current;
+      if (scanner) {
+        const track = scanner.getRunningTrack();
+        if (track) {
+          track.applyConstraints({
+            advanced: [{ zoom: value }]
+          } as any);
+          setCurrentZoom(value);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to apply camera zoom constraint:", e);
+    }
+  };
 
   const handleGenerateAIBanner = async () => {
     if (!offerTitle || !discountDetails || !productName) {
@@ -1431,6 +1946,8 @@ Stay safe & eat healthy! 🍕
   
   const qrCodeRef = useRef<any>(null);
   const lastScannedRef = useRef<{ barcode: string; time: number } | null>(null);
+  const scannerTargetRef = useRef<"cart" | "imei">("cart");
+  const [imeiScanned, setImeiScanned] = useState("");
   const [lastScannedMsg, setLastScannedMsg] = useState("");
 
   // Smart Menu Scanner states
@@ -1482,11 +1999,15 @@ Stay safe & eat healthy! 🍕
         return html5QrCode.start(
           cameraIdOrConfig,
           {
-            fps: 20,
+            fps: 25,
             qrbox: (width: number, height: number) => {
-              return { width: Math.min(width * 0.85, 290), height: 140 };
+              return { width: Math.min(width * 0.9, 320), height: 100 };
             },
-            videoConstraints: videoConstraints,
+            videoConstraints: videoConstraints || {
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+              facingMode: "environment"
+            },
             formatsToSupport: formats,
             experimentalFeatures: {
               useBarCodeDetectorIfSupported: true
@@ -1494,7 +2015,28 @@ Stay safe & eat healthy! 🍕
           },
           successCallback,
           () => {}
-        );
+        ).then(() => {
+          try {
+            const track = html5QrCode.getRunningTrack();
+            if (track) {
+              const capabilities = track.getCapabilities() as any;
+              if (capabilities && capabilities.zoom) {
+                setHasZoomCapability(true);
+                setZoomRange({
+                  min: capabilities.zoom.min || 1,
+                  max: capabilities.zoom.max || 4,
+                  step: capabilities.zoom.step || 0.1
+                });
+                setCurrentZoom(1);
+              } else {
+                setHasZoomCapability(false);
+              }
+            }
+          } catch (e) {
+            console.warn("Failed to read camera zoom capabilities:", e);
+            setHasZoomCapability(false);
+          }
+        });
       };
 
       // Get all available cameras and look specifically for the back/rear camera
@@ -1607,6 +2149,22 @@ Stay safe & eat healthy! 🍕
   const handleScanSuccess = async (barcode: string, html5QrCodeInstance?: any) => {
     playBeep();
     setScannedBarcode(barcode);
+
+    if (scannerTargetRef.current === "imei") {
+      setBuybackImei(barcode);
+      setImeiScanned(barcode);
+      const sc = html5QrCodeInstance || qrCodeRef.current;
+      if (sc) {
+        try {
+          await sc.stop();
+        } catch (e) {
+          console.error("Error stopping scanner:", e);
+        }
+      }
+      qrCodeRef.current = null;
+      setShowScanner(false);
+      return;
+    }
 
     const scanner = html5QrCodeInstance || qrCodeRef.current;
     if (scanner) {
@@ -3400,16 +3958,19 @@ Stay safe & eat healthy! 🍕
   };
 
   const handleScanImei = (itemName: string) => {
+    scannerTargetRef.current = "cart";
     setScanningImeiItem(itemName);
     setShowScanner(true);
   };
 
   const handleScanNewItemImei = (index: number) => {
+    scannerTargetRef.current = "cart";
     setScanningNewItemIndex(index);
     setShowScanner(true);
   };
 
   const handleScanEditItemImei = (index: number) => {
+    scannerTargetRef.current = "cart";
     setScanningEditItemIndex(index);
     setShowScanner(true);
   };
@@ -3875,7 +4436,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       <SelectTrigger className={`h-14 rounded-xl border-0 font-bold px-6 focus:ring-2 focus:ring-orange-500 transition-all text-sm ${isDarkMode ? 'bg-zinc-800 text-white' : 'bg-zinc-50'}`}>
                         <SelectValue placeholder="Select Business Type" />
                       </SelectTrigger>
-                      <SelectContent className={`${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-white border-zinc-100'}`}>
+                      <SelectContent className={`max-h-[300px] overflow-y-auto ${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-white' : 'bg-white border-zinc-100'}`}>
                         {Object.entries(BUSINESS_CATEGORIES).map(([key, value]) => (
                           <SelectItem key={key} value={key} className="font-bold py-3">
                             {value.name}
@@ -4114,6 +4675,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                             if (!isSubscribed) {
                               setShowUpgradeModal(true);
                             } else {
+                              scannerTargetRef.current = "cart";
                               setShowScanner(true);
                             }
                           }} 
@@ -4614,7 +5176,10 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   </div>
                 </Card>
 
-                <Card className="bg-white dark:bg-zinc-900 p-4 rounded-[1.5rem] border-0 shadow-sm border-b-[3px] border-purple-500 h-32 flex flex-col justify-between">
+                <Card 
+                  onClick={() => setShowExpenseBreakdown(true)} 
+                  className="bg-white dark:bg-zinc-900 p-4 rounded-[1.5rem] border-0 shadow-sm border-b-[3px] border-purple-500 h-32 flex flex-col justify-between active:scale-95 transition-all cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/30"
+                >
                   <p className="text-[13px] font-black text-zinc-700 dark:text-zinc-200 uppercase tracking-wider">{t("Total Expense")}</p>
                   <div>
                     <h3 className="text-[28px] font-black tracking-tight leading-none">₹{Math.round(totalExpenses)}</h3>
@@ -5244,7 +5809,363 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
             </div>
           )}
 
-          {activeTab === "Khata" && (
+{activeTab === "BuybackTracker" && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8 pb-10">
+              <header className="relative px-2">
+                <div className="absolute -left-10 -top-10 w-40 h-40 bg-orange-500/10 rounded-full blur-3xl" />
+                <h2 className="text-4xl font-black tracking-tighter text-orange-600">Exchange Ledger</h2>
+                <p className="text-zinc-500 font-bold mt-1">Log used phone trade-ins, capture Aadhaar IDs, and track buyback expenses.</p>
+              </header>
+
+              {(() => {
+                const buybackExpenses = expenses.map(e => {
+                  const m = (e.title || "").match(/\[BUYBACK:([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^\]]+)\]/);
+                  if (!m) return null;
+                  const photos = m[6].split("|");
+                  return {
+                    id: e.id,
+                    title: e.title,
+                    amount: e.amount,
+                    date: e.date,
+                    brandModel: m[1],
+                    imei: m[2],
+                    aadhaar: m[3],
+                    custName: m[4],
+                    custMobile: m[5],
+                    photo: photos[0] || "N/A",
+                    photoBack: photos[1] || "N/A",
+                    photoDevice: photos[2] || "N/A"
+                  };
+                }).filter(Boolean) as any[];
+
+                const totalBuybackAmount = buybackExpenses.reduce((sum, item) => sum + item.amount, 0);
+                const totalDevicesCount = buybackExpenses.length;
+
+                return (
+                  <div className="space-y-6">
+                    {/* METRICS CARDS */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <Card className="p-6 bg-white dark:bg-zinc-900 border-0 shadow-sm rounded-2xl flex flex-col justify-center">
+                        <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Total Spent</p>
+                        <h4 className="text-3xl font-black text-orange-600 tracking-tighter">₹{totalBuybackAmount}</h4>
+                      </Card>
+                      <Card className="p-6 bg-white dark:bg-zinc-900 border-0 shadow-sm rounded-2xl flex flex-col justify-center">
+                        <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Devices Bought</p>
+                        <h4 className="text-3xl font-black text-zinc-900 dark:text-white tracking-tighter">{totalDevicesCount}</h4>
+                      </Card>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                      {/* NEW BUYBACK FORM */}
+                      <Card className="lg:col-span-5 p-6 bg-white dark:bg-zinc-900 border-0 shadow-sm rounded-3xl space-y-4">
+                        <h3 className="text-lg font-black text-zinc-900 dark:text-white tracking-tight uppercase">Log Used Phone Purchase</h3>
+                        <div className="space-y-3">
+                          <div>
+                            <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1">Customer Name</Label>
+                            <Input 
+                              value={buybackCustName}
+                              onChange={e => setBuybackCustName(e.target.value)}
+                              placeholder="Customer Name"
+                              className="h-12 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold shadow-sm"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1">Customer Mobile</Label>
+                            <Input 
+                              value={buybackCustMobile}
+                              onChange={e => setBuybackCustMobile(e.target.value)}
+                              placeholder="Mobile Number"
+                              type="tel"
+                              className="h-12 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold shadow-sm"
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1">Aadhaar / ID Card No.</Label>
+                            <Input 
+                              value={buybackAadhaar}
+                              onChange={e => setBuybackAadhaar(e.target.value)}
+                              placeholder="12 Digit Aadhaar No."
+                              className="h-12 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold shadow-sm"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1">Brand & Model</Label>
+                              <Input 
+                                value={buybackBrandModel}
+                                onChange={e => setBuybackBrandModel(e.target.value)}
+                                placeholder="e.g. Vivo Y11"
+                                className="h-12 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold shadow-sm"
+                              />
+                            </div>
+                            <div>
+                              <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1">IMEI Number (Scan / Type)</Label>
+                              <ImeiInput 
+                                value={buybackImei}
+                                onChange={(val) => setBuybackImei(val)}
+                                placeholder="15 Digit IMEI"
+                                className="h-12 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold shadow-sm w-full"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1">Purchase / Buyback Price (₹)</Label>
+                            <Input 
+                              value={buybackPrice}
+                              onChange={e => setBuybackPrice(e.target.value)}
+                              placeholder="Amount Paid to Customer"
+                              type="number"
+                              className="h-12 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold shadow-sm text-orange-600"
+                            />
+                          </div>
+                          
+                          {/* THREE PHOTO ATTACHMENT SLOTS */}
+                          <div className="space-y-3 pt-2">
+                            <span className="text-[10px] font-black text-zinc-450 uppercase tracking-wider block border-b border-zinc-100 dark:border-zinc-800 pb-1">Required Photo Captures</span>
+                            <div className="grid grid-cols-3 gap-3">
+                              {/* Aadhaar Front */}
+                              <div className="flex flex-col items-center gap-1.5">
+                                <Label className="text-[8px] font-black text-zinc-400 uppercase text-center leading-none">Aadhaar Front</Label>
+                                <label className="cursor-pointer bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-300 px-3 py-2 rounded-xl font-bold text-[9px] uppercase tracking-wider text-center w-full block shadow-sm border border-zinc-200 dark:border-zinc-700/50 hover:bg-orange-50 hover:text-orange-600 transition-colors">
+                                  Capture
+                                  <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    capture="environment" 
+                                    className="hidden" 
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) compressAndSetIdPhoto(file, 'front');
+                                    }}
+                                  />
+                                </label>
+                                {buybackIdPhoto ? (
+                                  <div className="relative">
+                                    <img src={buybackIdPhoto} alt="Front ID" className="w-10 h-10 object-cover rounded-lg border border-zinc-250" />
+                                    <button type="button" onClick={() => setBuybackIdPhoto("")} className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 text-white rounded-full flex items-center justify-center text-[7px] font-bold">✕</button>
+                                  </div>
+                                ) : (
+                                  <div className="w-10 h-10 bg-zinc-50 dark:bg-zinc-850 rounded-lg flex items-center justify-center text-[8px] text-zinc-400 font-bold uppercase">No Pic</div>
+                                )}
+                              </div>
+
+                              {/* Aadhaar Back */}
+                              <div className="flex flex-col items-center gap-1.5">
+                                <Label className="text-[8px] font-black text-zinc-400 uppercase text-center leading-none">Aadhaar Back</Label>
+                                <label className="cursor-pointer bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-300 px-3 py-2 rounded-xl font-bold text-[9px] uppercase tracking-wider text-center w-full block shadow-sm border border-zinc-200 dark:border-zinc-700/50 hover:bg-orange-50 hover:text-orange-600 transition-colors">
+                                  Capture
+                                  <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    capture="environment" 
+                                    className="hidden" 
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) compressAndSetIdPhoto(file, 'back');
+                                    }}
+                                  />
+                                </label>
+                                {buybackIdPhotoBack ? (
+                                  <div className="relative">
+                                    <img src={buybackIdPhotoBack} alt="Back ID" className="w-10 h-10 object-cover rounded-lg border border-zinc-250" />
+                                    <button type="button" onClick={() => setBuybackIdPhotoBack("")} className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 text-white rounded-full flex items-center justify-center text-[7px] font-bold">✕</button>
+                                  </div>
+                                ) : (
+                                  <div className="w-10 h-10 bg-zinc-50 dark:bg-zinc-850 rounded-lg flex items-center justify-center text-[8px] text-zinc-400 font-bold uppercase">No Pic</div>
+                                )}
+                              </div>
+
+                              {/* Mobile Phone Device Pic */}
+                              <div className="flex flex-col items-center gap-1.5">
+                                <Label className="text-[8px] font-black text-zinc-400 uppercase text-center leading-none">Device Photo</Label>
+                                <label className="cursor-pointer bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-300 px-3 py-2 rounded-xl font-bold text-[9px] uppercase tracking-wider text-center w-full block shadow-sm border border-zinc-200 dark:border-zinc-700/50 hover:bg-orange-50 hover:text-orange-600 transition-colors">
+                                  Capture
+                                  <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    capture="environment" 
+                                    className="hidden" 
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) compressAndSetIdPhoto(file, 'device');
+                                    }}
+                                  />
+                                </label>
+                                {buybackDevicePhoto ? (
+                                  <div className="relative">
+                                    <img src={buybackDevicePhoto} alt="Device Pic" className="w-10 h-10 object-cover rounded-lg border border-zinc-250" />
+                                    <button type="button" onClick={() => setBuybackDevicePhoto("")} className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 text-white rounded-full flex items-center justify-center text-[7px] font-bold">✕</button>
+                                  </div>
+                                ) : (
+                                  <div className="w-10 h-10 bg-zinc-50 dark:bg-zinc-850 rounded-lg flex items-center justify-center text-[8px] text-zinc-400 font-bold uppercase">No Pic</div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* DECLARATION CHECKBOX */}
+                          <div className="flex items-start gap-2.5 p-3.5 bg-orange-50/50 dark:bg-orange-950/15 rounded-2xl border border-orange-100/50 dark:border-orange-900/20 mt-2">
+                            <input 
+                              type="checkbox" 
+                              id="buybackDeclaration" 
+                              checked={buybackDeclared} 
+                              onChange={(e) => setBuybackDeclared(e.target.checked)} 
+                              className="mt-0.5 rounded accent-orange-600 h-4 w-4"
+                            />
+                            <label htmlFor="buybackDeclaration" className="text-[10px] font-bold text-zinc-650 dark:text-zinc-300 leading-snug cursor-pointer select-none">
+                              I declare that this device belongs to me and is not stolen/illegal, and I agree to transfer complete ownership of the device.
+                            </label>
+                          </div>
+                        </div>
+
+                        <Button 
+                          onClick={handleSaveBuyback} 
+                          className="w-full h-12 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-black text-xs uppercase tracking-widest mt-4 disabled:opacity-50"
+                          disabled={isLoading || !buybackDeclared}
+                        >
+                          {isLoading ? "Saving..." : "Save Buyback Entry"}
+                        </Button>
+                      </Card>
+
+                      {/* BUYBACK HISTORY LEDGER */}
+                      <Card className="lg:col-span-7 p-6 bg-white dark:bg-zinc-900 border-0 shadow-sm rounded-3xl space-y-4">
+                        <h3 className="text-lg font-black text-zinc-900 dark:text-white tracking-tight uppercase">Recent Buyback Purchases</h3>
+                        {buybackExpenses.length === 0 ? (
+                          <div className="text-center py-20">
+                            <p className="text-sm font-bold text-zinc-400">No buyback transactions found.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-4 max-h-[500px] overflow-y-auto pr-1">
+                            {buybackExpenses.map(item => (
+                              <div key={item.id} className="p-4 bg-zinc-50 dark:bg-zinc-950 rounded-2xl border border-zinc-100 dark:border-zinc-850/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[9px] font-black tracking-widest text-zinc-400 uppercase">{format(new Date(item.date), "dd MMM yyyy")}</span>
+                                  </div>
+                                  <h5 className="font-black text-zinc-900 dark:text-white uppercase leading-none">{item.brandModel}</h5>
+                                  <p className="text-[10px] font-bold text-zinc-500">
+                                    IMEI: <span className="text-zinc-800 dark:text-zinc-200 font-extrabold">{item.imei}</span>
+                                  </p>
+                                  <div className="h-[1px] bg-zinc-200/50 dark:bg-zinc-800 w-full my-1" />
+                                  <p className="text-[11px] font-bold text-zinc-650 dark:text-zinc-450">
+                                    Seller: <span className="text-zinc-900 dark:text-white font-black">{item.custName}</span> (+91 {item.custMobile})
+                                  </p>
+                                  <p className="text-[10px] font-bold text-zinc-500">
+                                    Aadhaar ID: <span className="text-zinc-800 dark:text-zinc-200 font-extrabold">{item.aadhaar}</span>
+                                  </p>
+                                </div>
+                                <div className="flex items-center justify-between md:justify-end gap-6">
+                                  <div className="text-right">
+                                    <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Amount Paid</p>
+                                    <h4 className="text-lg font-black text-orange-600">₹{item.amount}</h4>
+                                  </div>
+                                  <div className="flex flex-col gap-2 min-w-[130px]">
+                                    <div className="flex flex-wrap gap-1.5 justify-end">
+                                      {item.photo && item.photo !== "N/A" && (
+                                        <Button 
+                                          size="sm"
+                                          onClick={() => setViewingIdPhoto(item.photo)}
+                                          className="bg-orange-50 hover:bg-orange-100 text-orange-600 dark:bg-zinc-800 dark:text-zinc-200 border border-orange-100 dark:border-zinc-700 rounded-lg text-[8px] font-black uppercase tracking-wider px-2 h-7 shadow-sm"
+                                        >
+                                          ID Front
+                                        </Button>
+                                      )}
+                                      {item.photoBack && item.photoBack !== "N/A" && (
+                                        <Button 
+                                          size="sm"
+                                          onClick={() => setViewingIdPhoto(item.photoBack)}
+                                          className="bg-orange-50 hover:bg-orange-100 text-orange-600 dark:bg-zinc-800 dark:text-zinc-200 border border-orange-100 dark:border-zinc-700 rounded-lg text-[8px] font-black uppercase tracking-wider px-2 h-7 shadow-sm"
+                                        >
+                                          ID Back
+                                        </Button>
+                                      )}
+                                      {item.photoDevice && item.photoDevice !== "N/A" && (
+                                        <Button 
+                                          size="sm"
+                                          onClick={() => setViewingIdPhoto(item.photoDevice)}
+                                          className="bg-orange-50 hover:bg-orange-100 text-orange-600 dark:bg-zinc-800 dark:text-zinc-200 border border-orange-100 dark:border-zinc-700 rounded-lg text-[8px] font-black uppercase tracking-wider px-2 h-7 shadow-sm"
+                                        >
+                                          Device Pic
+                                        </Button>
+                                      )}
+                                    </div>
+                                    <div className="flex gap-1.5 justify-end w-full">
+                                      <Button 
+                                        size="sm"
+                                        onClick={() => handleDownloadPdfBuyback(item)}
+                                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[9px] font-black uppercase tracking-wider h-8 shadow-sm border-0"
+                                      >
+                                        Download PDF
+                                      </Button>
+                                      <Button 
+                                        size="sm"
+                                        onClick={async () => {
+                                          if (confirm("Are you sure you want to delete this buyback record?")) {
+                                            const { error } = await supabase.from('expenses').delete().eq('id', item.id);
+                                            if (!error) {
+                                              setExpenses(prev => prev.filter(e => e.id !== item.id));
+                                              alert("Record deleted successfully.");
+                                            }
+                                          }
+                                        }}
+                                        className="bg-red-50 hover:bg-red-100 text-red-650 border border-red-100 dark:border-zinc-800 rounded-lg text-[9px] font-black uppercase tracking-wider px-2.5 h-8 shadow-sm"
+                                      >
+                                        Delete
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </Card>
+                    </div>
+
+                    {/* Lightbox / Aadhaar Viewer Modal */}
+                    {viewingIdPhoto && (
+                      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[999] p-4 animate-in fade-in duration-250">
+                        <div className="relative bg-zinc-900 rounded-3xl p-6 max-w-[600px] w-full max-h-[85vh] flex flex-col items-center gap-4">
+                          <button 
+                            type="button"
+                            onClick={() => setViewingIdPhoto(null)} 
+                            className="absolute -top-4 -right-4 w-10 h-10 bg-white text-zinc-990 rounded-full flex items-center justify-center font-bold text-lg shadow-xl"
+                          >
+                            ✕
+                          </button>
+                          <h4 className="text-sm font-black text-white uppercase tracking-widest self-start px-2">Uploaded Document / Device Photo</h4>
+                          <div className="w-full flex-1 min-h-[300px] bg-black rounded-2xl overflow-hidden flex items-center justify-center border border-zinc-800">
+                            <img src={viewingIdPhoto} alt="Aadhaar ID Card" className="max-w-full max-h-[50vh] object-contain" />
+                          </div>
+                          <div className="flex gap-4 w-full">
+                            <Button 
+                              onClick={() => {
+                                const link = document.createElement("a");
+                                link.href = viewingIdPhoto;
+                                link.download = "buyback_photo_proof.jpg";
+                                link.click();
+                              }}
+                              className="flex-1 h-12 bg-white text-zinc-990 hover:bg-zinc-200 rounded-xl font-black text-xs uppercase tracking-widest"
+                            >
+                              Download Image
+                            </Button>
+                            <Button 
+                              onClick={() => setViewingIdPhoto(null)} 
+                              className="flex-1 h-12 bg-zinc-800 text-white hover:bg-zinc-700 rounded-xl font-black text-xs uppercase tracking-widest border-0"
+                            >
+                              Close
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+
+                    {activeTab === "Khata" && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8 pb-10">
               <header className="relative px-2">
                 <div className="absolute -left-10 -top-10 w-40 h-40 bg-red-500/10 rounded-full blur-3xl" />
@@ -5811,7 +6732,10 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 {[
                   { id: "Settings", label: "Settings", icon: Settings, color: "text-zinc-600", bg: "bg-zinc-50" },
                   ...(businessType !== "Mobile/Electronics" ? [{ id: "Inventory", label: "Inventory", icon: Package, color: "text-orange-500", bg: "bg-orange-50" }] : []),
-                  ...(businessType === "Mobile/Electronics" ? [{ id: "FinanceTracker", label: "EMI Tracker", icon: CreditCard, color: "text-blue-600", bg: "bg-blue-50" }] : []),
+                  ...(businessType === "Mobile/Electronics" ? [
+                    { id: "FinanceTracker", label: "EMI Tracker", icon: CreditCard, color: "text-blue-600", bg: "bg-blue-50" },
+                    { id: "BuybackTracker", label: "Exchange Ledger", icon: RefreshCw, color: "text-orange-600", bg: "bg-orange-55" }
+                  ] : []),
                   { id: "Rent", label: "Rent", icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-50" },
                   { id: "Khata", label: "UDHAAR KHATA", icon: Book, color: "text-orange-500", bg: "bg-orange-50" },
                   { id: "Marketing", label: "Smart CRM", icon: Send, color: "text-indigo-500", bg: "bg-indigo-50" },
@@ -5996,7 +6920,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 <SelectTrigger className="h-16 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 shadow-inner text-base font-bold px-6">
                                   <SelectValue placeholder="Select Business Type" />
                                 </SelectTrigger>
-                                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800">
+                                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 max-h-[300px] overflow-y-auto">
                                   {Object.keys(BUSINESS_CATEGORIES).map((key) => (
                                     <SelectItem key={key} value={key} className="font-bold text-sm">
                                       {BUSINESS_CATEGORIES[key].name}
@@ -6730,12 +7654,62 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
           <span className="text-[8px] font-bold uppercase tracking-tighter">{t("Stats")}</span>
         </button>
 
-        <button onClick={() => setActiveTab("MoreMenu")} className={`flex flex-col items-center gap-1 transition-all ${['MoreMenu', 'Settings', 'Rent', 'Support', 'Khata', 'Menu', 'Inventory'].includes(activeTab) ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
-          <div className={`p-1.5 rounded-xl ${['MoreMenu', 'Settings', 'Rent', 'Support', 'Khata', 'Menu', 'Inventory'].includes(activeTab) ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><Settings className="h-5 w-5" /></div>
+        <button onClick={() => setActiveTab("MoreMenu")} className={`flex flex-col items-center gap-1 transition-all ${['MoreMenu', 'Settings', 'Rent', 'Support', 'Khata', 'Menu', 'Inventory', 'BuybackTracker'].includes(activeTab) ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
+          <div className={`p-1.5 rounded-xl ${['MoreMenu', 'Settings', 'Rent', 'Support', 'Khata', 'Menu', 'Inventory', 'BuybackTracker'].includes(activeTab) ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><Settings className="h-5 w-5" /></div>
           <span className="text-[8px] font-bold uppercase tracking-tighter">{t("More")}</span>
         </button>
       </nav>
       {/* EXIT PROTECTION DIALOG */}
+      {/* EXPENSE BREAKDOWN DIALOG */}
+      <Dialog open={showExpenseBreakdown} onOpenChange={setShowExpenseBreakdown}>
+        <DialogContent className="rounded-3xl border-0 shadow-2xl bg-white dark:bg-zinc-900 p-6 max-w-md w-[90%] mx-auto">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-black uppercase tracking-wider text-purple-650">Expense Breakdown</DialogTitle>
+            <DialogDescription className="text-xs font-bold text-zinc-450 uppercase tracking-widest">
+              Detailed list of operational costs for {selectedMonth}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1 mt-4 divide-y dark:divide-zinc-850">
+            {filteredExpenses.length === 0 ? (
+              <p className="text-center py-8 text-zinc-400 font-bold italic text-xs">No expenses recorded for this month.</p>
+            ) : (
+              filteredExpenses.map((exp) => (
+                <div key={exp.id} className="pt-3 first:pt-0 flex justify-between items-center gap-4">
+                  <div className="space-y-1">
+                    <p className="font-bold text-sm text-zinc-950 dark:text-white leading-tight uppercase">
+                      {(() => {
+                        if (exp.title.includes("Used Phone Buyback:")) {
+                          const match = exp.title.match(/Used Phone Buyback:\s*([^\(]+)/);
+                          return match ? `Buyback: ${match[1].trim()}` : "Used Phone Purchase";
+                        }
+                        return exp.title.split('[BUYBACK')[0].trim();
+                      })()}
+                    </p>
+                    <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">
+                      {format(new Date(exp.date), "dd MMM yyyy")}
+                    </p>
+                  </div>
+                  <span className="font-black text-purple-650 text-base">₹{exp.amount}</span>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex justify-between items-center">
+            <span className="text-xs font-black uppercase tracking-widest text-zinc-550">Total Costs</span>
+            <span className="text-xl font-black text-purple-650">₹{Math.round(totalExpenses)}</span>
+          </div>
+
+          <Button 
+            onClick={() => setShowExpenseBreakdown(false)} 
+            className="w-full h-12 bg-purple-650 hover:bg-purple-700 text-white rounded-xl font-black text-xs uppercase tracking-widest mt-4 border-0"
+          >
+            Close
+          </Button>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showExitDialog} onOpenChange={setShowExitDialog}>
         <DialogContent className="p-8 border-0 max-w-[320px] bg-zinc-900 text-white rounded-xl shadow-2xl">
           <div className="text-center space-y-6">
@@ -6806,38 +7780,167 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
       {/* BARCODE SCANNER DIALOG */}
       <Dialog open={showScanner} onOpenChange={(open) => { if(!open) closeScanner(); }}>
-        <DialogContent className="p-6 border-0 max-w-[360px] bg-zinc-950 text-white rounded-xl shadow-2xl">
-          <div className="space-y-4">
-            <div className="flex justify-between items-center border-b border-zinc-800 pb-2">
-              <DialogTitle className="text-sm font-black uppercase tracking-wider text-zinc-400">Barcode Scanner</DialogTitle>
-              <Button size="icon" variant="ghost" onClick={closeScanner} className="h-8 w-8 text-zinc-400 hover:text-white rounded-lg">
-                <X className="h-4 w-4" />
+        <DialogContent className="p-0 border-0 w-screen h-screen max-w-none m-0 bg-zinc-950 text-white rounded-none flex flex-col justify-between overflow-hidden">
+          {/* Full Screen Camera Viewport */}
+          <div className="relative w-full h-full flex flex-col justify-between">
+            <div id="reader" className="absolute inset-0 w-full h-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full" />
+            
+            {/* 1. Translucent Top Header bar */}
+            <div className="relative z-10 w-full bg-zinc-950/75 backdrop-blur-md px-6 py-4 flex justify-between items-center border-b border-zinc-800/50">
+              <div className="space-y-0.5">
+                <DialogTitle className="text-xs font-black uppercase tracking-widest text-orange-500">InstaMunim Barcode Scanner</DialogTitle>
+                <p className="text-[10px] font-bold text-zinc-400 uppercase">HD Scan Mode</p>
+              </div>
+              <Button size="icon" variant="ghost" onClick={closeScanner} className="h-9 w-9 text-zinc-400 hover:text-white rounded-xl bg-zinc-900/50 hover:bg-zinc-800/80 transition-all border border-zinc-800/40">
+                <X className="h-5 w-5" />
               </Button>
             </div>
-            <div className="relative overflow-hidden rounded-xl bg-zinc-900 border border-zinc-800 aspect-[4/3] flex items-center justify-center">
-              <div id="reader" className="w-full h-full [&_video]:object-contain [&_video]:rounded-xl" />
-              <div className="absolute inset-0 border-[30px] border-zinc-950/60 pointer-events-none flex items-center justify-center">
-                <div className="w-[220px] h-[100px] border-2 border-dashed border-orange-500 rounded-lg relative">
-                  <div className="absolute left-0 right-0 h-[2px] bg-red-500 shadow-md shadow-red-500 top-1/2 -translate-y-1/2 animate-bounce" />
-                </div>
+
+            {/* 2. Narrow Scanning Target Overlay (Only captures one barcode at a time) */}
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center pointer-events-none px-6">
+              <div className="w-full max-w-[320px] h-[75px] border-2 border-orange-500 rounded-2xl relative bg-orange-500/5 shadow-[0_0_20px_rgba(249,115,22,0.15)] flex items-center justify-center">
+                {/* Scanning Laser */}
+                <div className="absolute left-3 right-3 h-[2px] bg-red-500 shadow-lg shadow-red-500 top-1/2 -translate-y-1/2 animate-pulse" />
               </div>
+              
+              <div className="mt-4 bg-zinc-950/80 backdrop-blur-sm px-4 py-1.5 rounded-full border border-zinc-800/50">
+                <p className="text-white text-[9px] font-black uppercase tracking-widest text-center">
+                  Align ONLY ONE barcode in target
+                </p>
+              </div>
+            </div>
+
+            {/* 3. Translucent Bottom Control Panel */}
+            <div className="relative z-10 w-full bg-gradient-to-t from-zinc-950/95 via-zinc-950/85 to-transparent px-6 pb-8 pt-10 space-y-4">
+              {/* Scan Success Message */}
               {lastScannedMsg && (
-                <div className="absolute bottom-4 left-4 right-4 bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg text-center shadow-lg animate-fade-in flex items-center justify-center gap-1.5">
-                  <span className="h-2 w-2 bg-white rounded-full animate-ping" />
+                <div className="bg-emerald-600/90 backdrop-blur-sm text-white text-xs font-bold px-4 py-2.5 rounded-2xl text-center shadow-lg animate-bounce flex items-center justify-center gap-2 max-w-[280px] mx-auto border border-emerald-500/30">
+                  <span className="h-2.5 w-2.5 bg-white rounded-full animate-ping" />
                   {lastScannedMsg}
                 </div>
               )}
-            </div>
-            {scannerError && (
-              <p className="text-red-500 text-xs font-bold text-center leading-relaxed">{scannerError}</p>
-            )}
-            <p className="text-zinc-500 text-[10px] font-bold text-center uppercase tracking-widest">
-              Align barcode inside the rectangle to auto-scan
-            </p>
-            <div className="text-center">
-              <span className="inline-block text-[9px] font-mono text-zinc-500 bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded">
-                {scannerDebugInfo}
-              </span>
+
+              {/* Camera Zoom Control */}
+              {hasZoomCapability && (
+                <div className="max-w-[320px] mx-auto space-y-2 bg-zinc-900/80 backdrop-blur-md p-3.5 rounded-2xl border border-zinc-800/60 shadow-xl">
+                  <div className="flex justify-between items-center text-[9px] font-black text-zinc-400 uppercase tracking-widest px-1">
+                    <span>Magnify / Zoom</span>
+                    <span className="text-orange-500 font-mono font-black">{currentZoom.toFixed(1)}x</span>
+                  </div>
+                  
+                  {/* Slider */}
+                  <input 
+                    type="range" 
+                    min={zoomRange.min} 
+                    max={zoomRange.max} 
+                    step={zoomRange.step} 
+                    value={currentZoom} 
+                    onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
+                    className="w-full accent-orange-600 cursor-pointer h-1.5 bg-zinc-850 rounded-lg appearance-none"
+                  />
+
+                  {/* Preset Zoom Buttons */}
+                  <div className="flex gap-2 justify-center pt-1">
+                    {[1, 1.5, 2, 2.5, 3, 4].map(val => {
+                      if (val >= zoomRange.min && val <= zoomRange.max) {
+                        return (
+                          <button
+                            key={val}
+                            onClick={() => handleZoomChange(val)}
+                            className={`px-3 py-1 text-[9px] font-black rounded-lg transition-all border ${
+                              currentZoom === val 
+                                ? "bg-orange-600 text-white border-orange-500 shadow-sm" 
+                                : "bg-zinc-800/80 text-zinc-400 border-zinc-700/50 hover:bg-zinc-700/80 hover:text-white"
+                            }`}
+                          >
+                            {val}x
+                          </button>
+                        );
+                      }
+                      return null;
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {scannerError && (
+                <p className="text-red-500 text-xs font-bold text-center leading-relaxed bg-red-950/20 py-2 rounded-xl border border-red-900/30 max-w-[320px] mx-auto">{scannerError}</p>
+              )}
+
+              {/* Debug Info */}
+              <div className="text-center">
+                <span className="inline-block text-[8px] font-mono font-bold text-zinc-500 bg-zinc-900/60 border border-zinc-800/50 px-3 py-1 rounded-full uppercase tracking-wider">
+                  {scannerDebugInfo}
+                </span>
+              </div>
+
+              {/* Fallback Camera Photo Scan (Jugad Scan) */}
+              <div className="flex flex-col gap-2 max-w-[320px] mx-auto w-full pt-1">
+                <label className="cursor-pointer h-12 bg-zinc-900 hover:bg-zinc-800 text-white rounded-xl font-black text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 border border-zinc-800/60 transition-all active:scale-95 shadow-lg">
+                  <Camera className="h-4 w-4 text-orange-500" />
+                  Capture Photo (Jugad Scan)
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setLastScannedMsg("Scanning image...");
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const img = new Image();
+                          img.onload = async () => {
+                            const canvas = document.createElement("canvas");
+                            const ctx = canvas.getContext("2d");
+                            canvas.width = 800;
+                            canvas.height = 600;
+                            if (ctx) {
+                              ctx.drawImage(img, 0, 0, 800, 600);
+                              canvas.toBlob(async (blob) => {
+                                if (blob) {
+                                  const optimizedFile = new File([blob], file.name, { type: "image/jpeg" });
+                                  
+                                  // Native Barcode Detector check
+                                  try {
+                                    if ('BarcodeDetector' in window) {
+                                      const detector = new (window as any).BarcodeDetector({
+                                        formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'qr_code']
+                                      });
+                                      const detected = await detector.detect(img);
+                                      if (detected && detected.length > 0) {
+                                        const code = detected[0].rawValue;
+                                        handleScanSuccess(code);
+                                        return;
+                                      }
+                                    }
+                                  } catch (detectErr) {
+                                    console.warn("Native BarcodeDetector fail:", detectErr);
+                                  }
+
+                                  // Fallback to html5QrCode scanFile
+                                  try {
+                                    const html5QrCode = qrCodeRef.current || new (window as any).Html5Qrcode("reader");
+                                    const decodedText = await html5QrCode.scanFile(optimizedFile, true);
+                                    handleScanSuccess(decodedText, html5QrCode);
+                                  } catch (err) {
+                                    console.error(err);
+                                    alert("Barcode/IMEI not detected. Please capture a clear, straight, close-up photo of the barcode.");
+                                    setLastScannedMsg("");
+                                  }
+                                }
+                              }, "image/jpeg", 0.85);
+                            }
+                          };
+                          img.src = event.target?.result as string;
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                  />
+                </label>
+              </div>
             </div>
           </div>
         </DialogContent>
@@ -6855,6 +7958,28 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
             </div>
 
             <div className="space-y-4">
+              {/* Scanned Barcode Read-Only */}
+              <div className="space-y-1">
+                <Label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Scanned Barcode</Label>
+                <div className="relative flex items-center">
+                  <Input 
+                    readOnly
+                    value={scannedBarcode} 
+                    className="h-10 rounded-xl font-mono font-bold text-xs bg-zinc-50 dark:bg-zinc-850 text-zinc-650 pr-10 border-0 w-full"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(scannedBarcode);
+                      alert("Barcode copied to clipboard!");
+                    }}
+                    className="absolute right-2 h-7 w-7 text-zinc-400 hover:text-zinc-600 dark:hover:text-white rounded-lg flex items-center justify-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+
               <div className="space-y-1">
                 <Label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Product Name</Label>
                 {isApiLoading ? (
