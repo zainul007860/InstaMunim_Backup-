@@ -7,7 +7,8 @@ import {
   Plus, MoreVertical, Ban, CheckCircle2, Globe, LayoutDashboard,
   CreditCard, Smartphone, Zap, RefreshCw, Trash2, Filter,
   Send, Megaphone, Loader2, MessageSquare, Copy, ExternalLink,
-  Download, Calendar, AlertTriangle, IndianRupee, FileText, X
+  Download, Calendar, AlertTriangle, IndianRupee, FileText, X,
+  Eye, EyeOff
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { format, addDays, isAfter, isBefore, differenceInDays, startOfDay, endOfDay, subDays } from "date-fns";
@@ -24,6 +25,7 @@ export default function AdminDashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [updatingStoreId, setUpdatingStoreId] = useState<string | null>(null);
   const [customPrices, setCustomPrices] = useState<{[key: string]: string}>({});
+  const [revealedPasswords, setRevealedPasswords] = useState<{[key: string]: boolean}>({});
   
   // Sales Filters
   const [selectedMerchant, setSelectedMerchant] = useState("all");
@@ -202,6 +204,13 @@ export default function AdminDashboard() {
     } finally {
       setUpdatingStoreId(null);
     }
+  };
+
+  const togglePasswordVisibility = (storeId: string) => {
+    setRevealedPasswords(prev => ({
+      ...prev,
+      [storeId]: !prev[storeId]
+    }));
   };
 
   const openWhatsApp = (mobile: string) => {
@@ -549,10 +558,34 @@ export default function AdminDashboard() {
           <div className="data-table-container animate-fade-in">
              <div className="table-header"><h4 style={{ color: 'var(--text)' }}>MERCHANTS</h4></div>
              <table className="table-content">
-                <thead><tr><th>Store</th><th>Contact</th><th>Action</th></tr></thead>
+                <thead><tr><th>Store</th><th>Contact</th><th>Password</th><th>Action</th></tr></thead>
                 <tbody>{filteredStores.map(s => (
                   <tr key={s.id}>
-                    <td>{s.store_name}</td><td>{s.owner_mobile}</td>
+                    <td>{s.store_name}</td>
+                    <td>{s.owner_mobile}</td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontFamily: 'monospace', fontWeight: 'bold', fontSize: '13px' }}>
+                          {revealedPasswords[s.id] ? (s.password || 'N/A') : "••••••••"}
+                        </span>
+                        <button 
+                          onClick={() => togglePasswordVisibility(s.id)} 
+                          style={{ 
+                            background: 'none', 
+                            border: 'none', 
+                            color: '#71717a', 
+                            cursor: 'pointer', 
+                            padding: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            outline: 'none'
+                          }}
+                          title={revealedPasswords[s.id] ? "Hide Password" : "View Password"}
+                        >
+                          {revealedPasswords[s.id] ? <EyeOff size={15} /> : <Eye size={15} />}
+                        </button>
+                      </div>
+                    </td>
                     <td><button onClick={() => openWhatsApp(s.owner_mobile)} style={{ padding: '8px', background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', border: '1px solid #f97316', borderRadius: '10px', cursor: 'pointer' }}><MessageSquare size={16} /></button></td>
                   </tr>
                 ))}</tbody>
