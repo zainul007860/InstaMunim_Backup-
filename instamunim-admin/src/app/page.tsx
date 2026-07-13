@@ -11,7 +11,7 @@ import {
   Eye, EyeOff
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { format, addDays, isAfter, isBefore, differenceInDays, startOfDay, endOfDay, subDays } from "date-fns";
+import { format, addDays, isAfter, isBefore, differenceInDays, differenceInHours, differenceInMinutes, startOfDay, endOfDay, subDays } from "date-fns";
 
 export default function AdminDashboard() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
@@ -26,31 +26,6 @@ export default function AdminDashboard() {
   const [updatingStoreId, setUpdatingStoreId] = useState<string | null>(null);
   const [customPrices, setCustomPrices] = useState<{[key: string]: string}>({});
   const [revealedPasswords, setRevealedPasswords] = useState<{[key: string]: boolean}>({});
-  const [onlineStores, setOnlineStores] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    if (!isAdminLoggedIn) return;
-
-    const channel = supabase.channel('online-users');
-    channel
-      .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState();
-        const onlineMap: Record<string, boolean> = {};
-        Object.values(state).forEach((presences: any) => {
-          presences.forEach((p: any) => {
-            if (p.store_id) {
-              onlineMap[p.store_id] = true;
-            }
-          });
-        });
-        setOnlineStores(onlineMap);
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [isAdminLoggedIn]);
   
   // Sales Filters
   const [selectedMerchant, setSelectedMerchant] = useState("all");
@@ -583,57 +558,86 @@ export default function AdminDashboard() {
           <div className="data-table-container animate-fade-in">
              <div className="table-header"><h4 style={{ color: 'var(--text)' }}>MERCHANTS</h4></div>
              <table className="table-content">
-                <thead><tr><th>Store</th><th>Contact</th><th>Password</th><th>Status</th><th>Action</th></tr></thead>
-                <tbody>{filteredStores.map(s => (
-                  <tr key={s.id}>
-                    <td>{s.store_name}</td>
-                    <td>{s.owner_mobile}</td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontFamily: 'monospace', fontWeight: 'bold', fontSize: '13px' }}>
-                          {revealedPasswords[s.id] ? (s.password || 'N/A') : "••••••••"}
-                        </span>
-                        <button 
-                          onClick={() => togglePasswordVisibility(s.id)} 
-                          style={{ 
-                            background: 'none', 
-                            border: 'none', 
-                            color: '#71717a', 
-                            cursor: 'pointer', 
-                            padding: '4px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            outline: 'none'
-                          }}
-                          title={revealedPasswords[s.id] ? "Hide Password" : "View Password"}
-                        >
-                          {revealedPasswords[s.id] ? <EyeOff size={15} /> : <Eye size={15} />}
-                        </button>
-                      </div>
-                    </td>
-                    <td>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ 
-                          width: '8px', 
-                          height: '8px', 
-                          borderRadius: '50%', 
-                          background: onlineStores[s.id] ? '#10b981' : '#a1a1aa',
-                          display: 'inline-block'
-                        }} />
-                        <span style={{ 
-                          fontSize: '11px', 
-                          fontWeight: 'bold', 
-                          color: onlineStores[s.id] ? '#10b981' : '#71717a',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px'
-                        }}>
-                          {onlineStores[s.id] ? 'Online' : 'Offline'}
-                        </span>
-                      </div>
-                    </td>
-                    <td><button onClick={() => openWhatsApp(s.owner_mobile)} style={{ padding: '8px', background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', border: '1px solid #f97316', borderRadius: '10px', cursor: 'pointer' }}><MessageSquare size={16} /></button></td>
-                  </tr>
-                ))}</tbody>
+                <thead><tr><th>Store</th><th>Contact</th><th>Password</th><th>Status (Last Activity)</th><th>Action</th></tr></thead>
+                <tbody>{filteredStores.map(s => {
+                  // Find the merchant's most recent sale
+                  const merchantSales = allSales.filter(sale => sale.store_id === s.id);
+                  let statusText = "No Sales";
+                  let isActive = false;
+                  let color = "#a1a1aa"; // Gray
+                  
+                  if (merchantSales.length > 0) {
+                    const lastSale = merchantSales[0]; // Ordered descending by date in fetch
+                    const lastSaleDate = new Date(lastSale.sale_date);
+                    const now = new Date();
+                    
+                    const minutesElapsed = differenceInMinutes(now, lastSaleDate);
+                    const hoursElapsed = differenceInHours(now, lastSaleDate);
+                    const daysElapsed = differenceInDays(now, lastSaleDate);
+                    
+                    isActive = hoursElapsed < 24;
+                    color = isActive ? "#10b981" : "#a1a1aa"; // Green if active within 24h, else gray
+                    
+                    if (minutesElapsed < 60) {
+                      statusText = `Active ${minutesElapsed}m ago`;
+                    } else if (hoursElapsed < 24) {
+                      statusText = `Active ${hoursElapsed}h ago`;
+                    } else {
+                      statusText = `Inactive ${daysElapsed}d ago`;
+                    }
+                  }
+
+                  return (
+                    <tr key={s.id}>
+                      <td>{s.store_name}</td>
+                      <td>{s.owner_mobile}</td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontFamily: 'monospace', fontWeight: 'bold', fontSize: '13px' }}>
+                            {revealedPasswords[s.id] ? (s.password || 'N/A') : "••••••••"}
+                          </span>
+                          <button 
+                            type="button"
+                            onClick={() => togglePasswordVisibility(s.id)} 
+                            style={{ 
+                              background: 'none', 
+                              border: 'none', 
+                              color: '#71717a', 
+                              cursor: 'pointer', 
+                              padding: '4px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              outline: 'none'
+                            }}
+                            title={revealedPasswords[s.id] ? "Hide Password" : "View Password"}
+                          >
+                            {revealedPasswords[s.id] ? <EyeOff size={15} /> : <Eye size={15} />}
+                          </button>
+                        </div>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span style={{ 
+                            width: '8px', 
+                            height: '8px', 
+                            borderRadius: '50%', 
+                            background: color,
+                            display: 'inline-block'
+                          }} />
+                          <span style={{ 
+                            fontSize: '11px', 
+                            fontWeight: 'bold', 
+                            color: color,
+                            letterSpacing: '0.3px'
+                          }}>
+                            {statusText}
+                          </span>
+                        </div>
+                      </td>
+                      <td><button onClick={() => openWhatsApp(s.owner_mobile)} style={{ padding: '8px', background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', border: '1px solid #f97316', borderRadius: '10px', cursor: 'pointer' }}><MessageSquare size={16} /></button></td>
+                    </tr>
+                  );
+                })}</tbody>
              </table>
           </div>
         )}
