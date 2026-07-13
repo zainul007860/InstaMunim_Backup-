@@ -1775,6 +1775,27 @@ export default function Dashboard() {
   const [restaurantName, setRestaurantName] = useState("InstaMunim");
   const [storeLogo, setStoreLogo] = useState<string | null>(null);
   const [currentStoreId, setCurrentStoreId] = useState<string>("");
+
+  useEffect(() => {
+    if (!currentStoreId) return;
+
+    const channel = supabase.channel('online-users');
+    
+    const trackPresence = async () => {
+      channel
+        .subscribe(async (status) => {
+          if (status === 'SUBSCRIBED') {
+            await channel.track({ store_id: currentStoreId, online_at: new Date().toISOString() });
+          }
+        });
+    };
+
+    trackPresence();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [currentStoreId]);
   const [storeUpiId, setStoreUpiId] = useState("");
   const [storeUpiName, setStoreUpiName] = useState("");
   const [isScanning, setIsScanning] = useState(false);

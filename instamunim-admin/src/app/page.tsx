@@ -26,6 +26,31 @@ export default function AdminDashboard() {
   const [updatingStoreId, setUpdatingStoreId] = useState<string | null>(null);
   const [customPrices, setCustomPrices] = useState<{[key: string]: string}>({});
   const [revealedPasswords, setRevealedPasswords] = useState<{[key: string]: boolean}>({});
+  const [onlineStores, setOnlineStores] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    if (!isAdminLoggedIn) return;
+
+    const channel = supabase.channel('online-users');
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const onlineMap: Record<string, boolean> = {};
+        Object.values(state).forEach((presences: any) => {
+          presences.forEach((p: any) => {
+            if (p.store_id) {
+              onlineMap[p.store_id] = true;
+            }
+          });
+        });
+        setOnlineStores(onlineMap);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAdminLoggedIn]);
   
   // Sales Filters
   const [selectedMerchant, setSelectedMerchant] = useState("all");
@@ -558,7 +583,7 @@ export default function AdminDashboard() {
           <div className="data-table-container animate-fade-in">
              <div className="table-header"><h4 style={{ color: 'var(--text)' }}>MERCHANTS</h4></div>
              <table className="table-content">
-                <thead><tr><th>Store</th><th>Contact</th><th>Password</th><th>Action</th></tr></thead>
+                <thead><tr><th>Store</th><th>Contact</th><th>Password</th><th>Status</th><th>Action</th></tr></thead>
                 <tbody>{filteredStores.map(s => (
                   <tr key={s.id}>
                     <td>{s.store_name}</td>
@@ -584,6 +609,26 @@ export default function AdminDashboard() {
                         >
                           {revealedPasswords[s.id] ? <EyeOff size={15} /> : <Eye size={15} />}
                         </button>
+                      </div>
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ 
+                          width: '8px', 
+                          height: '8px', 
+                          borderRadius: '50%', 
+                          background: onlineStores[s.id] ? '#10b981' : '#a1a1aa',
+                          display: 'inline-block'
+                        }} />
+                        <span style={{ 
+                          fontSize: '11px', 
+                          fontWeight: 'bold', 
+                          color: onlineStores[s.id] ? '#10b981' : '#71717a',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px'
+                        }}>
+                          {onlineStores[s.id] ? 'Online' : 'Offline'}
+                        </span>
                       </div>
                     </td>
                     <td><button onClick={() => openWhatsApp(s.owner_mobile)} style={{ padding: '8px', background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', border: '1px solid #f97316', borderRadius: '10px', cursor: 'pointer' }}><MessageSquare size={16} /></button></td>
