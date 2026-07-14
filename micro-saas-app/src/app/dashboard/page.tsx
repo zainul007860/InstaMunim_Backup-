@@ -1632,27 +1632,76 @@ export default function Dashboard() {
     }
     setIsGeneratingImage(true);
     setImageGenerationError("");
-    try {
-      const cleanPrompt = `A premium professional commercial social media poster ad banner for a business named '${restaurantName}'. The banner displays: '${offerTitle}' in bold elegant font, and '${discountDetails} on ${productName}' as the deal. Vibrant orange and white accents, modern clean ${getLabels(businessType).name.toLowerCase()} store typography, clean products or services photography or vector layout, slate grey background, high resolution, engaging marketing ad design.`;
+    const runGeneration = async () => {
+      try {
+        let cleanPrompt = `A premium professional commercial social media poster ad banner for a business named '${restaurantName}'. The banner displays: '${offerTitle}' in bold elegant font, and '${discountDetails} on ${productName}' as the deal. Vibrant orange and white accents, modern clean ${getLabels(businessType).name.toLowerCase()} store typography, clean products or services photography or vector layout, slate grey background, high resolution, engaging marketing ad design.`;
+        
+        // Enhance prompt with Google Gemini if API Key is loaded
+        if (geminiApiKey) {
+          try {
+            console.log("Refining ad prompt using Gemini AI...");
+            const response = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  contents: [
+                    {
+                      parts: [
+                        {
+                          text: `You are an expert AI image prompt engineer for advertising banners.
+Write a highly descriptive, visually rich, and professional image generation prompt (for Midjourney or Stable Diffusion) to create a premium social media advertisement poster banner.
+
+Details of the offer:
+- Business Name: "${restaurantName}" (a ${getLabels(businessType).name.toLowerCase()} store)
+- Offer Title: "${offerTitle}"
+- Discount/Promo Deal: "${discountDetails} on ${productName}"
+
+Requirements for the generated prompt:
+1. Make it extremely visual, describing the background, lighting, colors, and premium commercial photography style.
+2. Ensure the text details "${restaurantName}", "${offerTitle}", and "${discountDetails} on ${productName}" are prominently featured in the design as clean, bold typography.
+3. Keep it under 150 words.
+4. Return ONLY the final raw prompt string. Do not include markdown code block syntax, quotes, preamble, or explanations.`
+                        }
+                      ]
+                    }
+                  ]
+                })
+              }
+            );
+            const geminiData = await response.json();
+            const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (rawText && rawText.trim()) {
+              cleanPrompt = rawText.trim().replace(/^`+|`+$/g, '').trim();
+            }
+          } catch (geminiErr) {
+            console.warn("Gemini prompt enhancement failed, using default:", geminiErr);
+          }
+        }
+
+        const seed = Math.floor(Math.random() * 1000000);
+        const encodedPrompt = encodeURIComponent(cleanPrompt);
+        const generatedUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}`;
       
-      const seed = Math.floor(Math.random() * 1000000);
-      const encodedPrompt = encodeURIComponent(cleanPrompt);
-      const generatedUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}`;
-      
-      const img = new Image();
-      img.src = generatedUrl;
-      img.onload = () => {
-        setAiImageUrl(generatedUrl);
+        const img = new Image();
+        img.src = generatedUrl;
+        img.onload = () => {
+          setAiImageUrl(generatedUrl);
+          setIsGeneratingImage(false);
+        };
+        img.onerror = () => {
+          setImageGenerationError("Failed to generate ad banner. Please try again.");
+          setIsGeneratingImage(false);
+        };
+      } catch (err) {
+        setImageGenerationError("An error occurred during generation.");
         setIsGeneratingImage(false);
-      };
-      img.onerror = () => {
-        setImageGenerationError("Failed to generate ad banner. Please try again.");
-        setIsGeneratingImage(false);
-      };
-    } catch (err) {
-      setImageGenerationError("An error occurred during generation.");
-      setIsGeneratingImage(false);
-    }
+      }
+    };
+    runGeneration();
   };
 
   const handleShareAIBanner = async () => {
@@ -3831,7 +3880,7 @@ Stay safe & eat healthy! 🍕
     const financeMatch = (lastOrderDetails.item || "").match(/\[FINANCE:([^:]+):(\d+(?:\.\d+)?):(\d+(?:\.\d+)?):([^:]+):(Pending|Settled)\]/);
     const financePart = financeMatch ? `&fin=true&fco=${encodeURIComponent(financeMatch[1])}&flo=${financeMatch[2]}&fdp=${financeMatch[3]}&fid=${encodeURIComponent(financeMatch[4])}` : "";
 
-    const baseUrl = (typeof window !== 'undefined' && window.location.hostname === 'localhost')
+    const baseUrl = (typeof window !== 'undefined' && window.location.port === '3000')
       ? "http://localhost:3000"
       : "https://www.instamunim.com";
     let invoiceUrl = `${baseUrl}/invoice?gst=${isGstEnabled}&gstRate=${gstRate}&n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${lastOrderDetails.price}&d=${encodeURIComponent(lastOrderDetails.date.toISOString())}&t=${lastOrderDetails.type}&id=${lastOrderDetails.id}&m=${lastOrderDetails.mobile}&cn=${encodeURIComponent(lastOrderDetails.name)}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}${extraPart}${discountPart}${financePart}`;
@@ -3882,7 +3931,7 @@ Stay safe & eat healthy! 🍕
     const financeMatch = rawItemString.match(/\[FINANCE:([^:]+):(\d+(?:\.\d+)?):(\d+(?:\.\d+)?):([^:]+):(Pending|Settled)\]/);
     const financePart = financeMatch ? `&fin=true&fco=${encodeURIComponent(financeMatch[1])}&flo=${financeMatch[2]}&fdp=${financeMatch[3]}&fid=${encodeURIComponent(financeMatch[4])}` : "";
 
-    const baseUrl = (typeof window !== 'undefined' && window.location.hostname === 'localhost')
+    const baseUrl = (typeof window !== 'undefined' && window.location.port === '3000')
       ? "http://localhost:3000"
       : "https://www.instamunim.com";
     let url = `${baseUrl}/invoice?gst=${isGstEnabled}&gstRate=${gstRate}&n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${s.price}&d=${encodeURIComponent(new Date(s.date).toISOString())}&t=${s.type}&id=${s.id}&m=${s.mobile || ""}&cn=${encodeURIComponent(s.name || "")}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}${extraPart}${discountPart}${financePart}`;
