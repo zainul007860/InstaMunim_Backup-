@@ -3271,13 +3271,27 @@ Stay safe & eat healthy! 🍕
         setBusinessType(storeBType);
         localStorage.setItem("saas_business_type", storeBType);
         
-        const cloudLogo = storeInfo.logo || storeInfo.store_logo || storeInfo.image;
-        if (cloudLogo) {
-          setStoreLogo(cloudLogo);
-          localStorage.setItem("saas_store_logo", cloudLogo);
+        const cloudLogo = storeInfo.logo || storeInfo.store_logo || storeInfo.image || "";
+        if (cloudLogo.includes('|')) {
+          const parts = cloudLogo.split('|');
+          const upiId = parts[0] || "";
+          const upiName = parts[1] || "";
+          const logo = parts[2] || "";
+          
+          setStoreUpiId(upiId);
+          setStoreUpiName(upiName);
+          setStoreLogo(logo);
+          localStorage.setItem("saas_store_upi_id", upiId);
+          localStorage.setItem("saas_store_upi_name", upiName);
+          localStorage.setItem("saas_store_logo", logo);
         } else {
-          const localLogo = localStorage.getItem("saas_store_logo");
-          if (localLogo) setStoreLogo(localLogo);
+          if (cloudLogo) {
+            setStoreLogo(cloudLogo);
+            localStorage.setItem("saas_store_logo", cloudLogo);
+          } else {
+            const localLogo = localStorage.getItem("saas_store_logo");
+            if (localLogo) setStoreLogo(localLogo);
+          }
         }
 
         setMonthlyRent(storeInfo.monthly_rent || storeInfo.rent || Number(localStorage.getItem("saas_monthly_rent")) || 0);
@@ -6963,12 +6977,15 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         localStorage.setItem("saas_store_upi_id", storeUpiId || "");
                         localStorage.setItem("saas_store_upi_name", storeUpiName || "");
                         
+                        // Serialize UPI details and Logo together into the store_logo column for DB persistence
+                        const combinedLogo = `${storeUpiId || ""}|${storeUpiName || ""}|${storeLogo || ""}`;
+                        
                         // Cloud Sync (Safe Mode via Secure RPC)
                         const { error: syncError } = await supabase
                           .rpc('update_store_settings', { 
                             input_mobile: ownerMobile,
                             input_name: restaurantName,
-                            input_logo: storeLogo,
+                            input_logo: combinedLogo,
                             input_rent: monthlyRent
                           });
 
