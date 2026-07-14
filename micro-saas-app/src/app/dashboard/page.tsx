@@ -1365,6 +1365,7 @@ export default function Dashboard() {
   const [discountDetails, setDiscountDetails] = useState("");
   const [productName, setProductName] = useState("");
   const [aiImageUrl, setAiImageUrl] = useState("");
+  const [rawAiImageUrl, setRawAiImageUrl] = useState("");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [imageGenerationError, setImageGenerationError] = useState("");
 
@@ -1690,6 +1691,7 @@ Requirements for the generated prompt:
         img.crossOrigin = "anonymous";
         img.src = generatedUrl;
         img.onload = () => {
+          setRawAiImageUrl(generatedUrl);
           if (!storeLogo) {
             setAiImageUrl(generatedUrl);
             setIsGeneratingImage(false);
@@ -1810,57 +1812,16 @@ Requirements for the generated prompt:
   };
 
   const handleSendImage = async (mobile: string, name: string) => {
-    if (!aiImageUrl) {
+    const imageUrlToShare = rawAiImageUrl || aiImageUrl;
+    if (!imageUrlToShare) {
       alert("Please generate an AI banner first!");
       return;
     }
     try {
-      if (typeof navigator !== "undefined" && navigator.clipboard) {
-        await navigator.clipboard.writeText(mobile);
-      }
-      
-      const { Capacitor } = await import('@capacitor/core');
-      if (Capacitor.isNativePlatform()) {
-        const { Share } = await import('@capacitor/share');
-        const { Filesystem, Directory } = await import('@capacitor/filesystem');
-        
-        const response = await fetch(aiImageUrl);
-        const blob = await response.blob();
-        const base64Data = await new Promise<string>((resolve) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.readAsDataURL(blob);
-        });
-
-        const fileName = `Offer_${mobile}_${Date.now()}.png`;
-        const savedFile = await Filesystem.writeFile({
-          path: fileName,
-          data: base64Data.split(',')[1],
-          directory: Directory.Cache
-        });
-
-        alert(`Mobile number ${mobile} copied to clipboard! Select WhatsApp to share.`);
-
-        await Share.share({
-          title: offerTitle,
-          text: `Special offer for you, ${name}! 🛍️`,
-          url: savedFile.uri,
-          dialogTitle: `Send Image to ${name}`
-        });
-      } else {
-        const link = document.createElement('a');
-        link.href = aiImageUrl;
-        link.download = `InstaMunim_Offer_${name}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        
-        alert(`Banner downloaded & Mobile number ${mobile} copied to clipboard!\nOpen WhatsApp, paste the number to search, and upload this banner.`);
-        window.open(`https://wa.me/91${mobile}`, "_blank");
-      }
+      const customMsg = `Special offer for you, ${name}! 🛍️\n\nShop: ${restaurantName}\nOffer: ${offerTitle}\nDeal: ${discountDetails} on ${productName}\n\nView Banner: ${imageUrlToShare}`;
+      window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(customMsg)}`, "_blank");
     } catch (err) {
       console.error("Error sending image:", err);
-      window.open(aiImageUrl, '_blank');
     }
   };
 
