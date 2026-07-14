@@ -3109,8 +3109,12 @@ Stay safe & eat healthy! 🍕
     setIsLoading(true);
     setLoginError("");
     
-    // Clear prior user caches to prevent data leakage/pollution
-    clearStoreCache();
+    // Smart cache clearing: Only wipe settings if logging into a DIFFERENT account
+    const lastMobile = localStorage.getItem("saas_owner_mobile");
+    if (lastMobile && lastMobile !== loginMobile) {
+      console.log("Different merchant logging in. Clearing device settings cache...");
+      clearStoreCache();
+    }
     
     // 1. Immediate navigator connection check
     if (typeof navigator !== "undefined" && !navigator.onLine) {
@@ -3520,8 +3524,8 @@ Stay safe & eat healthy! 🍕
   const handleLogout = async () => {
     setIsLoggedIn(false);
     localStorage.removeItem("saas_is_logged_in");
-    localStorage.removeItem("saas_owner_mobile");
-    clearStoreCache();
+    // We keep saas_owner_mobile in localStorage to remember who logged out,
+    // so we can detect if a different user logs in later.
     setActiveTab("Dashboard");
     // Clear native Preferences on logout
     try {
