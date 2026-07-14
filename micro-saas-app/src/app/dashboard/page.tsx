@@ -1687,10 +1687,71 @@ Requirements for the generated prompt:
         const generatedUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}&model=flux`;
       
         const img = new Image();
+        img.crossOrigin = "anonymous";
         img.src = generatedUrl;
         img.onload = () => {
-          setAiImageUrl(generatedUrl);
-          setIsGeneratingImage(false);
+          if (!storeLogo) {
+            setAiImageUrl(generatedUrl);
+            setIsGeneratingImage(false);
+            return;
+          }
+
+          // Merge storeLogo onto the corner of the AI banner using HTML5 Canvas
+          const logoImg = new Image();
+          logoImg.crossOrigin = "anonymous";
+          logoImg.src = storeLogo;
+          logoImg.onload = () => {
+            try {
+              const canvas = document.createElement("canvas");
+              canvas.width = 1024;
+              canvas.height = 1024;
+              const ctx = canvas.getContext("2d");
+              if (ctx) {
+                // 1. Draw the AI banner
+                ctx.drawImage(img, 0, 0, 1024, 1024);
+
+                // 2. Draw a white rounded background card for the logo in the top-right corner
+                const logoSize = 130;
+                const padding = 24;
+                const x = 1024 - logoSize - padding;
+                const y = padding;
+                const radius = 24;
+
+                ctx.fillStyle = "#ffffff";
+                ctx.beginPath();
+                ctx.moveTo(x + radius, y);
+                ctx.lineTo(x + logoSize - radius, y);
+                ctx.quadraticCurveTo(x + logoSize, y, x + logoSize, y + radius);
+                ctx.lineTo(x + logoSize, y + logoSize - radius);
+                ctx.quadraticCurveTo(x + logoSize, y + logoSize, x + logoSize - radius, y + logoSize);
+                ctx.lineTo(x + radius, y + logoSize);
+                ctx.quadraticCurveTo(x, y + logoSize, x, y + logoSize - radius);
+                ctx.lineTo(x, y + radius);
+                ctx.quadraticCurveTo(x, y, x + radius, y);
+                ctx.closePath();
+                ctx.fill();
+
+                // 3. Draw the store logo inside the card (with 10px inner margin)
+                const margin = 10;
+                const size = logoSize - (margin * 2);
+                ctx.drawImage(logoImg, x + margin, y + margin, size, size);
+
+                const mergedUrl = canvas.toDataURL("image/png");
+                setAiImageUrl(mergedUrl);
+              } else {
+                setAiImageUrl(generatedUrl);
+              }
+            } catch (err) {
+              console.error("Canvas merge failed:", err);
+              setAiImageUrl(generatedUrl);
+            }
+            setIsGeneratingImage(false);
+          };
+          logoImg.onerror = () => {
+            console.warn("Failed to load store logo for merging, fallback to raw AI image.");
+            setAiImageUrl(generatedUrl);
+            setIsGeneratingImage(false);
+          };
         };
         img.onerror = () => {
           setImageGenerationError("Failed to generate ad banner. Please try again.");
