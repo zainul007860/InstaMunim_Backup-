@@ -3272,7 +3272,55 @@ Stay safe & eat healthy! 🍕
         localStorage.setItem("saas_business_type", storeBType);
         
         const cloudLogo = storeInfo.logo || storeInfo.store_logo || storeInfo.image || "";
-        if (cloudLogo.includes('|')) {
+        if (cloudLogo.startsWith('JSON_CFG:')) {
+          try {
+            const settingsPacket = JSON.parse(cloudLogo.substring(9));
+            
+            // Hydrate React States from DB
+            if (settingsPacket.upiId !== undefined) setStoreUpiId(settingsPacket.upiId);
+            if (settingsPacket.upiName !== undefined) setStoreUpiName(settingsPacket.upiName);
+            if (settingsPacket.logo !== undefined) setStoreLogo(settingsPacket.logo);
+            if (settingsPacket.address !== undefined) setStoreAddress(settingsPacket.address);
+            if (settingsPacket.phone !== undefined) setStorePhone(settingsPacket.phone);
+            if (settingsPacket.website !== undefined) setStoreWebsite(settingsPacket.website);
+            if (settingsPacket.gstin !== undefined) setStoreGstin(settingsPacket.gstin);
+            if (settingsPacket.gstEnabled !== undefined) setIsGstEnabled(settingsPacket.gstEnabled);
+            if (settingsPacket.gstRate !== undefined) setGstRate(settingsPacket.gstRate);
+            if (settingsPacket.swiggyComm !== undefined) setSwiggyCommission(settingsPacket.swiggyComm);
+            if (settingsPacket.swiggyCommType !== undefined) setSwiggyCommType(settingsPacket.swiggyCommType);
+            if (settingsPacket.zomatoComm !== undefined) setZomatoCommission(settingsPacket.zomatoComm);
+            if (settingsPacket.zomatoCommType !== undefined) setZomatoCommType(settingsPacket.zomatoCommType);
+            if (settingsPacket.businessType !== undefined) {
+              setBusinessType(settingsPacket.businessType);
+              localStorage.setItem("saas_business_type", settingsPacket.businessType);
+            }
+            if (settingsPacket.thermalPrinter !== undefined) setIsThermalPrinterEnabled(settingsPacket.thermalPrinter);
+            if (settingsPacket.voiceEnabled !== undefined) setIsVoiceAnnouncerEnabled(settingsPacket.voiceEnabled);
+            if (settingsPacket.voiceLang !== undefined) setVoiceAnnouncerLanguage(settingsPacket.voiceLang);
+            if (settingsPacket.lang !== undefined) setLang(settingsPacket.lang);
+
+            // Hydrate LocalStorage from DB
+            localStorage.setItem("saas_store_upi_id", settingsPacket.upiId || "");
+            localStorage.setItem("saas_store_upi_name", settingsPacket.upiName || "");
+            localStorage.setItem("saas_store_logo", settingsPacket.logo || "");
+            localStorage.setItem("saas_store_address", settingsPacket.address || "");
+            localStorage.setItem("saas_store_phone", settingsPacket.phone || "");
+            localStorage.setItem("saas_store_website", settingsPacket.website || "");
+            localStorage.setItem("saas_store_gstin", settingsPacket.gstin || "");
+            localStorage.setItem("saas_gst_enabled", String(settingsPacket.gstEnabled));
+            localStorage.setItem("saas_gst_rate", String(settingsPacket.gstRate));
+            localStorage.setItem("saas_swiggy_comm", String(settingsPacket.swiggyComm));
+            localStorage.setItem("saas_swiggy_comm_type", settingsPacket.swiggyCommType || "Percentage");
+            localStorage.setItem("saas_zomato_comm", String(settingsPacket.zomatoComm));
+            localStorage.setItem("saas_zomato_comm_type", settingsPacket.zomatoCommType || "Percentage");
+            localStorage.setItem("saas_thermal_printer", String(settingsPacket.thermalPrinter));
+            localStorage.setItem("saas_voice_enabled", String(settingsPacket.voiceEnabled));
+            localStorage.setItem("saas_voice_lang", settingsPacket.voiceLang || "en");
+            localStorage.setItem("saas_ui_lang", settingsPacket.lang || "en");
+          } catch (e) {
+            console.error("Failed to parse settings JSON config packet:", e);
+          }
+        } else if (cloudLogo.includes('|')) {
           const parts = cloudLogo.split('|');
           const upiId = parts[0] || "";
           const upiName = parts[1] || "";
@@ -6977,8 +7025,28 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         localStorage.setItem("saas_store_upi_id", storeUpiId || "");
                         localStorage.setItem("saas_store_upi_name", storeUpiName || "");
                         
-                        // Serialize UPI details and Logo together into the store_logo column for DB persistence
-                        const combinedLogo = `${storeUpiId || ""}|${storeUpiName || ""}|${storeLogo || ""}`;
+                        // Serialize ALL store settings and configurations together into the store_logo column for database persistence
+                        const settingsPacket = {
+                          upiId: storeUpiId || "",
+                          upiName: storeUpiName || "",
+                          logo: storeLogo || "",
+                          address: storeAddress || "",
+                          phone: storePhone || "",
+                          website: storeWebsite || "",
+                          gstin: storeGstin || "",
+                          gstEnabled: isGstEnabled,
+                          gstRate: gstRate,
+                          swiggyComm: swiggyCommission,
+                          swiggyCommType: swiggyCommType,
+                          zomatoComm: zomatoCommission,
+                          zomatoCommType: zomatoCommType,
+                          businessType: businessType || "Restaurant/Cafe",
+                          thermalPrinter: isThermalPrinterEnabled,
+                          voiceEnabled: isVoiceAnnouncerEnabled,
+                          voiceLang: voiceAnnouncerLanguage,
+                          lang: lang
+                        };
+                        const combinedLogo = "JSON_CFG:" + JSON.stringify(settingsPacket);
                         
                         // Cloud Sync (Safe Mode via Secure RPC)
                         const { error: syncError } = await supabase
