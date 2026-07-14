@@ -11,6 +11,8 @@ function InvoiceContent() {
   const searchParams = useSearchParams();
   const [cloudLogo, setCloudLogo] = useState<string | null>(null);
   const isFree = searchParams.get("free") === "true";
+  const gstEnabled = searchParams.get("gst") === "true";
+  const gstRate = Number(searchParams.get("gstRate")) || 0;
   
   const restName = searchParams.get("n") || "InstaMunim POS";
   const items = searchParams.get("i") || "";
@@ -78,10 +80,20 @@ function InvoiceContent() {
   const finalTotal = Number(price) || 0;
   const grossTotal = finalTotal + discountAmount;
   const actualTaxable = Math.max(0, finalTotal - extraChargeAmount);
-  const gstTotal = (actualTaxable * 0.05);
-  const cgst = (gstTotal / 2).toFixed(2);
-  const sgst = (gstTotal / 2).toFixed(2);
-  const subtotal = (grossTotal - gstTotal - extraChargeAmount).toFixed(2);
+  
+  let gstTotal = 0;
+  let cgst = "0.00";
+  let sgst = "0.00";
+  let subtotal = (grossTotal - extraChargeAmount).toFixed(2);
+
+  if (gstEnabled && gstRate > 0) {
+    const gstFactor = gstRate / 100;
+    const taxableSubtotal = actualTaxable / (1 + gstFactor);
+    gstTotal = actualTaxable - taxableSubtotal;
+    cgst = (gstTotal / 2).toFixed(2);
+    sgst = (gstTotal / 2).toFixed(2);
+    subtotal = (grossTotal - gstTotal - extraChargeAmount).toFixed(2);
+  }
 
   return (
     <div className="h-screen bg-zinc-100 flex justify-center py-0 sm:py-10 px-0 sm:px-4 font-sans print:bg-white print:p-0 overflow-y-auto">
@@ -189,14 +201,18 @@ function InvoiceContent() {
               <span>Subtotal (Net)</span>
               <span>₹{subtotal}</span>
             </div>
-            <div className="flex justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-              <span>CGST (2.5%)</span>
-              <span>₹{cgst}</span>
-            </div>
-            <div className="flex justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
-              <span>SGST (2.5%)</span>
-              <span>₹{sgst}</span>
-            </div>
+            {gstEnabled && gstRate > 0 && (
+              <>
+                <div className="flex justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                  <span>CGST ({(gstRate / 2).toFixed(1)}%)</span>
+                  <span>₹{cgst}</span>
+                </div>
+                <div className="flex justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                  <span>SGST ({(gstRate / 2).toFixed(1)}%)</span>
+                  <span>₹{sgst}</span>
+                </div>
+              </>
+            )}
             
             {extraChargeAmount > 0 && (
               <div className="flex justify-between text-[10px] font-black text-orange-400 uppercase tracking-widest pt-2">
