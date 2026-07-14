@@ -1684,7 +1684,7 @@ Requirements for the generated prompt:
 
         const seed = Math.floor(Math.random() * 1000000);
         const encodedPrompt = encodeURIComponent(cleanPrompt);
-        const generatedUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}`;
+        const generatedUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}&model=flux`;
       
         const img = new Image();
         img.src = generatedUrl;
