@@ -6936,19 +6936,11 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                             </div>
 
                             <div className="space-y-3">
-                              <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Business Category</Label>
-                              <Select value={businessType} onValueChange={setBusinessType}>
-                                <SelectTrigger className="h-16 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 shadow-inner text-base font-bold px-6">
-                                  <SelectValue placeholder="Select Business Type" />
-                                </SelectTrigger>
-                                <SelectContent className="rounded-2xl border-zinc-100 dark:border-zinc-800 max-h-[300px] overflow-y-auto">
-                                  {Object.keys(BUSINESS_CATEGORIES).map((key) => (
-                                    <SelectItem key={key} value={key} className="font-bold text-sm">
-                                      {BUSINESS_CATEGORIES[key].name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Business Category (Locked)</Label>
+                              <div className="h-16 rounded-2xl bg-zinc-100 dark:bg-zinc-800/40 text-base font-extrabold px-6 flex items-center text-zinc-500 dark:text-zinc-400 select-none">
+                                {BUSINESS_CATEGORIES[businessType]?.name || businessType}
+                              </div>
+                              <p className="text-[9px] font-bold text-zinc-400 px-2 uppercase">Please contact support/admin to change your business category.</p>
                             </div>
 
                             <div className="space-y-4">
