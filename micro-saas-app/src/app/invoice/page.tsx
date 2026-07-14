@@ -44,7 +44,20 @@ function InvoiceContent() {
             .single();
           
           if (!error && data?.store_logo) {
-            setCloudLogo(data.store_logo);
+            const rawLogo = data.store_logo;
+            if (rawLogo.startsWith('JSON_CFG:')) {
+              try {
+                const settings = JSON.parse(rawLogo.substring(9));
+                setCloudLogo(settings.logo || null);
+              } catch (e) {
+                setCloudLogo(rawLogo);
+              }
+            } else if (rawLogo.includes('|')) {
+              const parts = rawLogo.split('|');
+              setCloudLogo(parts[2] || null);
+            } else {
+              setCloudLogo(rawLogo);
+            }
           }
         } catch (e) {
           console.error("Logo fetch failed", e);
