@@ -3109,6 +3109,9 @@ Stay safe & eat healthy! 🍕
     setIsLoading(true);
     setLoginError("");
     
+    // Clear prior user caches to prevent data leakage/pollution
+    clearStoreCache();
+    
     // 1. Immediate navigator connection check
     if (typeof navigator !== "undefined" && !navigator.onLine) {
       setLoginError("Connection failed. Check internet.");
@@ -3471,9 +3474,54 @@ Stay safe & eat healthy! 🍕
     }
   };
 
+  const clearStoreCache = () => {
+    setRestaurantName("");
+    setStoreLogo("");
+    setMonthlyRent(0);
+    setSwiggyCommission(0);
+    setZomatoCommission(0);
+    setStoreUpiId("");
+    setStoreUpiName("");
+    setStoreAddress("");
+    setStorePhone("");
+    setStoreWebsite("");
+    setStoreGstin("");
+    setIsGstEnabled(false);
+    setGstRate(0);
+    setSales([]);
+    setExpenses([]);
+    setMenuItems([]);
+    setBusinessType("Restaurant/Cafe");
+    
+    const keysToRemove = [
+      "saas_store_upi_id",
+      "saas_store_upi_name",
+      "saas_store_name",
+      "saas_store_address",
+      "saas_store_phone",
+      "saas_store_website",
+      "saas_store_gstin",
+      "saas_gst_enabled",
+      "saas_gst_rate",
+      "saas_monthly_rent",
+      "saas_swiggy_comm",
+      "saas_zomato_comm",
+      "saas_business_type",
+      "saas_store_logo",
+      "saas_sales",
+      "saas_expenses",
+      "saas_menu",
+      "saas_store_created_at",
+      "saas_store_expiry"
+    ];
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+  };
+
   const handleLogout = async () => {
     setIsLoggedIn(false);
     localStorage.removeItem("saas_is_logged_in");
+    localStorage.removeItem("saas_owner_mobile");
+    clearStoreCache();
     setActiveTab("Dashboard");
     // Clear native Preferences on logout
     try {
