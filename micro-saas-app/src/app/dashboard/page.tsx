@@ -9,6 +9,8 @@ import {
   TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera, Volume2, Globe, Wand2, Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import { trackEvent } from "@/lib/firebase";
 
 const getDisplayCategory = (cat: string) => {
@@ -1637,8 +1639,8 @@ export default function Dashboard() {
           const base64Data = pdfBase64.split(',')[1];
           const fileName = `Buyback_Receipt_${item.custName.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
 
-          const { Filesystem, Directory } = await import('@capacitor/filesystem');
-          const { Share } = await import('@capacitor/share');
+          // Capacitor Filesystem imported at top level
+          // Capacitor Share imported at top level
 
           const writeResult = await Filesystem.writeFile({
             path: fileName,
@@ -1719,8 +1721,8 @@ export default function Dashboard() {
       const isCapacitor = (typeof window !== 'undefined' && !!(window as any).Capacitor?.isNative);
 
       if (isCapacitor) {
-        const { Filesystem, Directory } = await import('@capacitor/filesystem');
-        const { Share } = await import('@capacitor/share');
+        // Capacitor Filesystem imported at top level
+        // Capacitor Share imported at top level
         
         const base64Data = btoa(unescape(encodeURIComponent("\ufeff" + csvContent)));
         
@@ -1897,8 +1899,8 @@ export default function Dashboard() {
           const base64Data = pdfBase64.split(',')[1];
           const fileName = `Sales_Report_${restaurantName.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
 
-          const { Filesystem, Directory } = await import('@capacitor/filesystem');
-          const { Share } = await import('@capacitor/share');
+          // Capacitor Filesystem imported at top level
+          // Capacitor Share imported at top level
 
           const writeResult = await Filesystem.writeFile({
             path: fileName,
@@ -2191,8 +2193,8 @@ Requirements for the generated image prompt:
     try {
       const { Capacitor } = await import('@capacitor/core');
       if (Capacitor.isNativePlatform()) {
-        const { Share } = await import('@capacitor/share');
-        const { Filesystem, Directory } = await import('@capacitor/filesystem');
+        // Capacitor Share imported at top level
+        // Capacitor Filesystem imported at top level
         
         const response = await fetch(aiImageUrl);
         const blob = await response.blob();
