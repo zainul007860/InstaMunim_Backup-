@@ -4727,7 +4727,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
       <div className={`min-h-screen flex flex-col items-center justify-start sm:justify-center p-4 sm:p-10 selection:bg-orange-500/30 overflow-y-auto transition-colors duration-700 ${isDarkMode ? 'bg-[#000000]' : 'bg-[#f8f9fa]'}`}>
         <div className="w-full max-w-2xl space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 my-auto">
           <Card className={`border-0 rounded-2xl p-8 overflow-hidden transition-all duration-700 ${isDarkMode ? 'bg-transparent shadow-none border-none' : 'bg-white shadow-2xl shadow-zinc-200'}`}>
-            <div className="flex flex-col items-center text-center mb-10">
+            <div className="flex flex-col items-center text-center mb-6">
               <div className="w-full flex justify-center">
                 <div className="w-full max-w-[420px] h-64 relative animate-in zoom-in duration-700 flex items-center justify-center">
                   <img 
@@ -4739,9 +4739,38 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               </div>
             </div>
 
+            {authMode === "login" && (
+              <div className="flex flex-col items-center justify-center pb-6 border-b border-dashed border-zinc-200 dark:border-zinc-800 mb-6">
+                <Button 
+                  type="button" 
+                  onClick={() => { setAuthMode("signup"); setLoginError(""); }} 
+                  className="w-full max-w-[340px] h-14 rounded-2xl font-black text-xs bg-orange-600 hover:bg-orange-500 text-white shadow-xl shadow-orange-500/10 active:scale-95 transition-all flex items-center justify-center gap-3 uppercase tracking-widest animate-pulse"
+                >
+                  <PlusCircle className="h-4 w-4" /> Create Free Account
+                </Button>
+                <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mt-2">New merchant? Start business in 5 seconds</p>
+              </div>
+            )}
+
+            {authMode === "signup" && (
+              <div className="flex flex-col items-center justify-center pb-6 border-b border-dashed border-zinc-200 dark:border-zinc-800 mb-6">
+                <Button 
+                  type="button" 
+                  onClick={() => { setAuthMode("login"); setLoginError(""); }} 
+                  className={`w-full max-w-[340px] h-14 rounded-2xl font-black text-xs active:scale-95 transition-all flex items-center justify-center gap-3 uppercase tracking-widest ${isDarkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-white' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800'}`}
+                >
+                  Already have an account? Login
+                </Button>
+              </div>
+            )}
+
             <div className="text-center mb-8">
-               <h2 className={`text-xl font-black leading-none uppercase tracking-tight ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>Owner Login</h2>
-               <p className="text-zinc-400 text-[10px] font-bold mt-2 uppercase tracking-widest">Welcome back to your POS Dashboard</p>
+               <h2 className={`text-xl font-black leading-none uppercase tracking-tight ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                 {authMode === "login" ? "Owner Login" : "Store Registration"}
+               </h2>
+               <p className="text-zinc-400 text-[10px] font-bold mt-2 uppercase tracking-widest">
+                 {authMode === "login" ? "Welcome back to your POS Dashboard" : "Register your business in 10 seconds"}
+               </p>
             </div>
 
             <form onSubmit={handleAuth} className="space-y-4">
@@ -4839,14 +4868,6 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
-
-              <button 
-                type="button" 
-                onClick={() => { setAuthMode(authMode === "login" ? "signup" : "login"); setLoginError(""); }} 
-                className="w-full text-center text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em] py-2 hover:text-zinc-900 dark:hover:text-white transition-colors"
-              >
-                {authMode === "login" ? "Don't have an account? Create one" : "Already registered? Login"}
-              </button>
             </form>
           </Card>
           
