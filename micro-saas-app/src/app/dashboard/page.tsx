@@ -1642,6 +1642,185 @@ export default function Dashboard() {
     }
   };
 
+  const handleDownloadPdfSalesReport = () => {
+    const el = document.createElement("div");
+    el.style.position = "absolute";
+    el.style.left = "-9999px";
+    el.style.top = "0";
+    el.style.width = "800px";
+    el.style.padding = "30px";
+    el.style.background = "#ffffff";
+    el.style.color = "#000000";
+    el.style.fontFamily = "system-ui, -apple-system, sans-serif";
+    el.style.zIndex = "9999";
+    el.style.opacity = "1";
+    el.style.pointerEvents = "none";
+
+    const modeTotals = filteredSales.reduce((acc, sale) => {
+      const mode = sale.type || "Cash";
+      acc[mode] = (acc[mode] || 0) + sale.price;
+      return acc;
+    }, {});
+
+    const modesHtml = Object.entries(modeTotals).map(([mode, total]) => `
+      <div style="flex: 1; min-width: 120px; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px; background: #fafaf9; text-align: center; margin: 4px;">
+        <div style="font-size: 8px; font-weight: 800; color: #71717a; text-transform: uppercase; margin-bottom: 4px;">${getPartnerName(businessType, mode)}</div>
+        <div style="font-size: 14px; font-weight: 800; color: #ea580c;">₹${Math.round(total)}</div>
+      </div>
+    `).join("");
+
+    const transactionsRowsHtml = filteredSales.map(s => `
+      <tr style="border-bottom: 1px solid #e2e8f0;">
+        <td style="padding: 8px 10px; font-size: 10px; color: #71717a; font-weight: 700;">${format(new Date(s.date), "dd MMM, hh:mm a")}</td>
+        <td style="padding: 8px 10px; font-size: 11px; color: #09090b; font-weight: 700; text-transform: uppercase;">${s.name}</td>
+        <td style="padding: 8px 10px; font-size: 11px; color: #52525b; font-weight: 600;">${s.mobile}</td>
+        <td style="padding: 8px 10px; font-size: 10px; color: #27272a; font-weight: 600;">${s.item || "General Order"}</td>
+        <td style="padding: 8px 10px; font-size: 10px; text-align: center;"><span style="background: #f4f4f5; padding: 2px 8px; border-radius: 4px; font-size: 8px; font-weight: 800; text-transform: uppercase; color: #18181b;">${getPartnerName(businessType, s.type)}</span></td>
+        <td style="padding: 8px 10px; font-size: 11px; text-align: right; font-weight: 800; color: #09090b;">₹${s.price}</td>
+      </tr>
+    `).join("");
+
+    const formattedMonthName = (() => {
+      try {
+        return format(new Date(selectedMonth + "-02"), "MMMM yyyy");
+      } catch(e) {
+        return selectedMonth;
+      }
+    })();
+
+    el.innerHTML = `
+      <div style="border: 2px solid #e2e8f0; border-radius: 20px; padding: 30px; background: #ffffff; color: #000000;">
+        <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #ea580c; padding-bottom: 15px; margin-bottom: 20px;">
+          <div>
+            ${storeLogo ? `<img src="${storeLogo}" style="max-height: 48px; object-fit: contain;" />` : `<div style="font-size: 24px; font-weight: 900; color: #ea580c; text-transform: uppercase;">${restaurantName || "InstaMunim"}</div>`}
+          </div>
+          <div style="text-align: right;">
+            <h1 style="font-size: 18px; font-weight: 800; color: #0f172a; margin: 0; text-transform: uppercase;">${restaurantName || "InstaMunim"}</h1>
+            <p style="font-size: 10px; color: #64748b; margin: 2px 0 0 0; font-weight: 600;">Monthly Business Performance Report</p>
+            <p style="font-size: 10px; color: #ea580c; margin: 2px 0 0 0; font-weight: 800; text-transform: uppercase;">Period: ${formattedMonthName}</p>
+          </div>
+        </div>
+
+        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #475569; margin-bottom: 8px; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 4px;">
+          Key Metrics
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+          <div style="flex: 1; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px; background: #fafaf9; text-align: center;">
+            <div style="font-size: 8px; font-weight: 800; color: #71717a; text-transform: uppercase; margin-bottom: 4px;">Total Orders</div>
+            <div style="font-size: 16px; font-weight: 800; color: #09090b;">${filteredSales.length}</div>
+          </div>
+          <div style="flex: 1; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px; background: #fafaf9; text-align: center;">
+            <div style="font-size: 8px; font-weight: 800; color: #71717a; text-transform: uppercase; margin-bottom: 4px;">Avg. Ticket Size</div>
+            <div style="font-size: 16px; font-weight: 800; color: #09090b;">₹${filteredSales.length > 0 ? Math.round(totalSales / filteredSales.length) : 0}</div>
+          </div>
+          <div style="flex: 1; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px; background: #fafaf9; text-align: center;">
+            <div style="font-size: 8px; font-weight: 800; color: #71717a; text-transform: uppercase; margin-bottom: 4px;">Total Revenue</div>
+            <div style="font-size: 16px; font-weight: 800; color: #ea580c;">₹${Math.round(totalSales)}</div>
+          </div>
+        </div>
+
+        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #475569; margin-bottom: 8px; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 4px;">
+          Payment Method Totals
+        </div>
+        <div style="display: flex; flex-wrap: wrap; margin-bottom: 20px;">
+          ${modesHtml || `<div style="font-size: 10px; color: #71717a; font-style: italic; width: 100%; text-align: center; padding: 10px;">No payment metrics available</div>`}
+        </div>
+
+        <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #475569; margin-bottom: 8px; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 4px;">
+          Transaction History
+        </div>
+        <table style="width: 100%; border-collapse: collapse; color: #000000; margin-top: 10px;">
+          <thead>
+            <tr style="background: #f8fafc; border-bottom: 1.5px solid #e2e8f0; text-align: left;">
+              <th style="padding: 8px 10px; font-size: 9px; font-weight: 800; color: #475569; text-transform: uppercase;">Date & Time</th>
+              <th style="padding: 8px 10px; font-size: 9px; font-weight: 800; color: #475569; text-transform: uppercase;">Customer</th>
+              <th style="padding: 8px 10px; font-size: 9px; font-weight: 800; color: #475569; text-transform: uppercase;">Mobile</th>
+              <th style="padding: 8px 10px; font-size: 9px; font-weight: 800; color: #475569; text-transform: uppercase;">Details</th>
+              <th style="padding: 8px 10px; font-size: 9px; font-weight: 800; color: #475569; text-transform: uppercase; text-align: center;">Mode</th>
+              <th style="padding: 8px 10px; font-size: 9px; font-weight: 800; color: #475569; text-transform: uppercase; text-align: right;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${transactionsRowsHtml || `<tr><td colSpan="6" style="padding: 30px; text-align: center; color: #94a3b8; font-style: italic; font-weight: bold;">No transactions registered for this period.</td></tr>`}
+          </tbody>
+        </table>
+
+        <div style="text-align: center; margin-top: 30px; font-size: 9px; font-weight: 800; color: #a1a1aa; text-transform: uppercase; border-top: 1.5px solid #e2e8f0; padding-top: 10px;">
+          POWERED BY INSTAMUNIM SMART POS
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(el);
+
+    const runPdfExport = async () => {
+      try {
+        const images = el.getElementsByTagName("img");
+        const imagePromises = Array.from(images).map(img => {
+          return new Promise((resolve) => {
+            if (img.complete) {
+              resolve(true);
+            } else {
+              img.onload = () => resolve(true);
+              img.onerror = () => resolve(false);
+            }
+          });
+        });
+        await Promise.race([
+          Promise.all(imagePromises),
+          new Promise((resolve) => setTimeout(resolve, 3000))
+        ]);
+      } catch (e) {}
+
+      const opt = {
+        margin: 10,
+        filename: `Sales_Report_${restaurantName.replace(/\s+/g, '_')}_${selectedMonth}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+
+      try {
+        const isCapacitor = !!(window as any).Capacitor;
+        if (isCapacitor) {
+          const pdfBase64 = await window.html2pdf().from(el).set(opt).outputPdf('datauristring');
+          const base64Data = pdfBase64.split(',')[1];
+          const fileName = `Sales_Report_${restaurantName.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
+
+          const writeResult = await (window as any).Capacitor.Plugins.Filesystem.writeFile({
+            path: fileName,
+            data: base64Data,
+            directory: 'CACHE'
+          });
+
+          await (window as any).Capacitor.Plugins.Share.share({
+            title: 'Sales Report',
+            url: writeResult.uri,
+            dialogTitle: 'Save or Share Sales Report'
+          });
+          document.body.removeChild(el);
+        } else {
+          window.html2pdf().from(el).set(opt).save().then(() => {
+            document.body.removeChild(el);
+          });
+        }
+      } catch (err) {
+        console.error("PDF generation failed:", err);
+        alert("PDF Generation Failed: " + err.message);
+        try { document.body.removeChild(el); } catch(e){}
+      }
+    };
+
+    if (!window.html2pdf) {
+      const script = document.createElement("script");
+      script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
+      script.onload = runPdfExport;
+      document.head.appendChild(script);
+    } else {
+      runPdfExport();
+    }
+  };
+
   const handleZoomChange = (value: number) => {
     try {
       const scanner = qrCodeRef.current;
@@ -5756,16 +5935,10 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               </header>
 
               <Button 
-                onClick={() => {
-                  try {
-                    window.print();
-                  } catch (e) {
-                    alert("Printing not supported in this view. Try opening in a browser.");
-                  }
-                }} 
+                onClick={handleDownloadPdfSalesReport} 
                 className="w-full h-14 bg-zinc-900 hover:bg-black text-white font-bold rounded-full text-sm shadow-xl flex items-center justify-center gap-3 uppercase tracking-widest active:scale-95 transition-all"
               >
-                <Printer className="h-4 w-4" /> PRINT FULL REPORT
+                <Printer className="h-4 w-4" /> DOWNLOAD SALES REPORT
               </Button>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
