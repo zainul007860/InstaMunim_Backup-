@@ -17,7 +17,7 @@ function InvoiceContent() {
   const [claimedCoupon, setClaimedCoupon] = useState<any>(null);
   const [isLoadingCoupon, setIsLoadingCoupon] = useState(true);
   const [copied, setCopied] = useState(false);
-  const [storeBusinessType, setStoreBusinessType] = useState<string | null>(null);
+  const [storeBusinessType, setStoreBusinessType] = useState<string>("");
   
   const restName = searchParams.get("n") || "InstaMunim POS";
   const items = searchParams.get("i") || "";
@@ -192,10 +192,15 @@ function InvoiceContent() {
           const logoUrl = logoFromUrl || cloudLogo;
           if (logoUrl) {
             const lImg = new Image();
-            lImg.crossOrigin = "anonymous";
+            if (logoUrl.startsWith("http")) {
+              lImg.crossOrigin = "anonymous";
+            }
             lImg.src = logoUrl;
             lImg.onload = () => drawWithLogo(lImg);
-            lImg.onerror = () => drawWithLogo(undefined);
+            lImg.onerror = (err) => {
+              console.error("Logo load failed:", err);
+              drawWithLogo(undefined);
+            };
           } else {
             drawWithLogo(undefined);
           }
@@ -345,10 +350,10 @@ function InvoiceContent() {
     }
   }, [ownerMobile]);
 
-  // Fetch scratch coupon status from Supabase
+    // Fetch scratch coupon status or auto-generate reward immediately on load
   useEffect(() => {
-    if (id) {
-      const checkCoupon = async () => {
+    if (id && ownerMobile) {
+      const checkAndGenerateCoupon = async () => {
         setIsLoadingCoupon(true);
         try {
           const { data, error } = await supabase
@@ -356,21 +361,50 @@ function InvoiceContent() {
             .select("*")
             .eq("invoice_id", id)
             .maybeSingle();
+
           if (!error && data) {
             setScratchClaimed(true);
             setClaimedCoupon(data);
+          } else {
+            // Auto-generate reward
+            let amt = 10;
+            if (storeBusinessType === "Mobile/Electronics") {
+              amt = Math.floor(Math.random() * 21) * 10 + 100;
+            } else {
+              amt = Math.random() < 0.7 ? 10 : 5;
+            }
+
+            const couponCode = "IM-" + Math.floor(1000 + Math.random() * 9000) + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
+            const newCoupon = {
+              code: couponCode,
+              discount_amount: amt,
+              store_mobile: ownerMobile || "",
+              customer_mobile: mobile || "",
+              invoice_id: id || "1001",
+              status: "unused"
+            };
+
+            const { error: insError } = await supabase
+              .from("coupons")
+              .insert([newCoupon]);
+
+            if (!insError) {
+              setScratchClaimed(true);
+              setClaimedCoupon(newCoupon);
+            }
           }
-        } catch (e) {
-          console.error("Coupon fetch failed", e);
+        } catch (e: any) {
+          console.error("Reward generation failed:", e);
         } finally {
           setIsLoadingCoupon(false);
         }
       };
-      checkCoupon();
+      
+      checkAndGenerateCoupon();
     } else {
       setIsLoadingCoupon(false);
     }
-  }, [id]);
+  }, [id, ownerMobile, storeBusinessType, mobile]);
 
   const canScratch = id && mobile && ownerMobile;
 

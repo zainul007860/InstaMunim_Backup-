@@ -1631,19 +1631,22 @@ export default function Dashboard() {
       };
 
       try {
-        const isCapacitor = !!((window as any).Capacitor && (window as any).Capacitor.Plugins && (window as any).Capacitor.Plugins.Filesystem);
+        const isCapacitor = (typeof window !== 'undefined' && !!(window as any).Capacitor?.isNative);
         if (isCapacitor) {
           const pdfBase64 = await (window as any).html2pdf().from(el).set(opt).outputPdf('datauristring');
           const base64Data = pdfBase64.split(',')[1];
           const fileName = `Buyback_Receipt_${item.custName.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
 
-          const writeResult = await (window as any).Capacitor.Plugins.Filesystem.writeFile({
+          const { Filesystem, Directory } = await import('@capacitor/filesystem');
+          const { Share } = await import('@capacitor/share');
+
+          const writeResult = await Filesystem.writeFile({
             path: fileName,
             data: base64Data,
-            directory: 'CACHE'
+            directory: Directory.Cache
           });
 
-          await (window as any).Capacitor.Plugins.Share.share({
+          await Share.share({
             title: 'Buyback Receipt',
             url: writeResult.uri,
             dialogTitle: 'Save or Share Buyback Receipt'
@@ -1708,7 +1711,7 @@ export default function Dashboard() {
       const fileName = `Sales_Report_${restaurantName.replace(/\s+/g, '_')}_${selectedMonth}.csv`;
       const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
 
-      const isCapacitor = !!((window as any).Capacitor && (window as any).Capacitor.Plugins && (window as any).Capacitor.Plugins.Filesystem);
+      const isCapacitor = (typeof window !== 'undefined' && !!(window as any).Capacitor?.isNative);
 
       if (isCapacitor) {
         const { Filesystem, Directory } = await import('@capacitor/filesystem');
@@ -1719,7 +1722,7 @@ export default function Dashboard() {
         const writeResult = await Filesystem.writeFile({
           path: fileName,
           data: base64Data,
-          directory: Directory.Documents
+          directory: Directory.Cache
         });
         
         await Share.share({
@@ -1883,19 +1886,22 @@ export default function Dashboard() {
       };
 
       try {
-        const isCapacitor = !!((window as any).Capacitor && (window as any).Capacitor.Plugins && (window as any).Capacitor.Plugins.Filesystem);
+        const isCapacitor = (typeof window !== 'undefined' && !!(window as any).Capacitor?.isNative);
         if (isCapacitor) {
           const pdfBase64 = await (window as any).html2pdf().from(el).set(opt).outputPdf('datauristring');
           const base64Data = pdfBase64.split(',')[1];
           const fileName = `Sales_Report_${restaurantName.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
 
-          const writeResult = await (window as any).Capacitor.Plugins.Filesystem.writeFile({
+          const { Filesystem, Directory } = await import('@capacitor/filesystem');
+          const { Share } = await import('@capacitor/share');
+
+          const writeResult = await Filesystem.writeFile({
             path: fileName,
             data: base64Data,
-            directory: 'CACHE'
+            directory: Directory.Cache
           });
 
-          await (window as any).Capacitor.Plugins.Share.share({
+          await Share.share({
             title: 'Sales Report',
             url: writeResult.uri,
             dialogTitle: 'Save or Share Sales Report'
@@ -5130,7 +5136,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
       <div className={`min-h-screen flex flex-col items-center justify-start sm:justify-center p-4 sm:p-10 selection:bg-orange-500/30 overflow-y-auto transition-colors duration-700 ${isDarkMode ? 'bg-[#000000]' : 'bg-[#f8f9fa]'}`}>
         <div className="w-full max-w-2xl space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 my-auto">
           <Card className={`border-0 rounded-2xl p-8 overflow-hidden transition-all duration-700 ${isDarkMode ? 'bg-transparent shadow-none border-none' : 'bg-white shadow-2xl shadow-zinc-200'}`}>
-            <div className="flex flex-col items-center text-center mb-6">
+            <div className="flex flex-col items-center text-center mb-6 pt-10">
               <div className="w-full flex justify-center">
                 <div className="w-full max-w-[420px] h-64 relative animate-in zoom-in duration-700 flex items-center justify-center">
                   <img 
