@@ -1444,7 +1444,7 @@ export default function Dashboard() {
       const photoBackStr = buybackIdPhotoBack ? buybackIdPhotoBack : "N/A";
       const photoDeviceStr = buybackDevicePhoto ? buybackDevicePhoto : "N/A";
       const photoStr = `${photoFrontStr}|${photoBackStr}|${photoDeviceStr}`;
-      const buybackMeta = `[BUYBACK:${buybackBrandModel}:${buybackImei || "N/A"}:${buybackAadhaar || "N/A"}:${buybackCustName}:${buybackCustMobile || "N/A"}:${photoStr}]`;
+      const buybackMeta = `[BUYBACK:${buybackBrandModel}:${buybackImei || "N/A"}:${buybackAadhaar || "N/A"}:${buybackCustName}:${buybackCustMobile || "N/A"}:${photoStr}:UNSOLD]`;
       const expenseTitle = `Used Phone Buyback: ${buybackBrandModel} (IMEI: ${buybackImei || "N/A"}) ${buybackMeta}`;
 
       const { data: newExp, error } = await supabase
@@ -1455,7 +1455,36 @@ export default function Dashboard() {
 
       if (error) throw error;
 
-      setExpenses([{ id: newExp.id, title: newExp.title, amount: newExp.amount, date: new Date(newExp.expense_date) }, ...expenses]);
+      // Automatically onboard this phone to menu_items as a product in Exchange category
+      try {
+        const cleanCategory = "Exchange";
+        const finalCategory = `${cleanCategory}|IMEIs:${buybackImei || "N/A"}`;
+        const productName = `[USED] ${buybackBrandModel}`;
+
+        const { data: newProd, error: prodErr } = await supabase
+          .from('menu_items')
+          .insert([{
+            store_id: storeId,
+            name: productName,
+            price: Number(buybackPrice),
+            category: finalCategory
+          }])
+          .select()
+          .single();
+
+        if (!prodErr && newProd) {
+          setMenuItems(prev => [...prev, {
+            id: newProd.id,
+            name: newProd.name,
+            price: newProd.price,
+            category: newProd.category
+          }]);
+        }
+      } catch (prodEx) {
+        console.error("Failed to auto-onboard exchange product:", prodEx);
+      }
+
+      setExpenses([{ id: newExp.id, title: newExp.title, amount: newExp.amount, date: new Date(newExp.expense_date || newExp.created_at) }, ...expenses]);
 
       setBuybackCustName("");
       setBuybackCustMobile("");
@@ -1478,9 +1507,9 @@ export default function Dashboard() {
 
   const handleDownloadPdfBuyback = (item: any) => {
     const el = document.createElement("div");
-    // Place offscreen to the left, but keep position absolute and zIndex positive so html2canvas renders it with complete colors and layout
+    // Place absolute but behind page content so browser runs layout pass and html2canvas works
     el.style.position = "absolute";
-    el.style.left = "-9999px";
+    el.style.left = "0";
     el.style.top = "0";
     el.style.width = "800px";
     el.style.padding = "25px";
@@ -1645,14 +1674,14 @@ export default function Dashboard() {
   const handleDownloadPdfSalesReport = () => {
     const el = document.createElement("div");
     el.style.position = "absolute";
-    el.style.left = "-9999px";
+    el.style.left = "0";
     el.style.top = "0";
     el.style.width = "800px";
     el.style.padding = "30px";
     el.style.background = "#ffffff";
     el.style.color = "#000000";
     el.style.fontFamily = "system-ui, -apple-system, sans-serif";
-    el.style.zIndex = "9999";
+    el.style.zIndex = "-999";
     el.style.opacity = "1";
     el.style.pointerEvents = "none";
 
@@ -2117,7 +2146,7 @@ Requirements for the generated image prompt:
     }
   };
 
-  const handleSendImage = async (mobile: string, name: string) => {
+  const handleSendImage = (mobile: string, name: string) => {
     if (!aiImageUrl) {
       alert("Please generate an AI banner first!");
       return;
@@ -4161,11 +4190,31 @@ Stay safe & eat healthy! 🍕
                 .from('menu_items')
                 .update({ category: updatedCategory })
                 .eq('id', matchedItem.id)
-                .then(({ error }) => {
+                .then(async ({ error }) => {
                   if (!error) {
                     setMenuItems(prev => prev.map(m => 
                       m.id === matchedItem.id ? { ...m, category: updatedCategory } : m
                     ));
+
+                    // If it's an Exchange product, update the corresponding UNSOLD buyback expense to SOLD
+                    if (cleanCategory === "Exchange") {
+                      const targetExpense = expenses.find(e => {
+                        const title = e.title || "";
+                        return title.includes("[BUYBACK:") && title.includes(`:${cartItem.imei}:`) && title.endsWith(":UNSOLD]");
+                      });
+
+                      if (targetExpense) {
+                        const updatedTitle = targetExpense.title.replace(":UNSOLD]", `:SOLD:${cartItem.price}`);
+                        await supabase
+                          .from('expenses')
+                          .update({ title: updatedTitle })
+                          .eq('id', targetExpense.id);
+
+                        setExpenses(prev => prev.map(e => 
+                          e.id === targetExpense.id ? { ...e, title: updatedTitle } : e
+                        ));
+                      }
+                    }
                   }
                 });
             }
@@ -4594,13 +4643,29 @@ Stay safe & eat healthy! 🍕
   const filteredExpenses = useMemo(() => expenses.filter(e => format(new Date(e.date), "yyyy-MM") === selectedMonth), [expenses, selectedMonth]);
   
   const totalSales = useMemo(() => filteredSales.reduce((sum, s) => sum + s.price, 0), [filteredSales]);
-  const totalExpenses = useMemo(() => filteredExpenses.reduce((sum, e) => sum + e.amount, 0), [filteredExpenses]);
+  const totalExpenses = useMemo(() => {
+    return filteredExpenses.reduce((sum, e) => {
+      const title = e.title || "";
+      const isSoldBuyback = title.includes("[BUYBACK:") && title.includes(":SOLD");
+      if (isSoldBuyback) return sum; // Exclude sold buybacks from active operating expenses
+      return sum + e.amount;
+    }, 0);
+  }, [filteredExpenses]);
+
+  const soldBuybackCost = useMemo(() => {
+    return filteredExpenses.reduce((sum, e) => {
+      const title = e.title || "";
+      const isSoldBuyback = title.includes("[BUYBACK:") && title.includes(":SOLD");
+      if (isSoldBuyback) return sum + e.amount;
+      return sum;
+    }, 0);
+  }, [filteredExpenses]);
   
   const totalCommissions = useMemo(() => filteredSales.reduce((sum, s) => sum + (s.commission || 0), 0), [filteredSales]);
 
   const totalUdhaar = useMemo(() => filteredSales.filter(s => s.type === "Udhaar" && s.status !== "Paid").reduce((sum, s) => sum + s.price, 0), [filteredSales]);
 
-  const netProfit = useMemo(() => totalSales - totalExpenses - totalCommissions, [totalSales, totalExpenses, totalCommissions]);
+  const netProfit = useMemo(() => totalSales - totalExpenses - soldBuybackCost - totalCommissions, [totalSales, totalExpenses, soldBuybackCost, totalCommissions]);
 
   const uniqueCustomers = useMemo(() => Array.from(new Set(sales.filter(s => s.mobile !== "N/A").map(s => s.mobile))), [sales]);
 
@@ -6452,22 +6517,29 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
               {(() => {
                 const buybackExpenses = expenses.map(e => {
-                  const m = (e.title || "").match(/\[BUYBACK:([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^\]]+)\]/);
-                  if (!m) return null;
-                  const photos = m[6].split("|");
+                  const title = e.title || "";
+                  if (!title.includes("[BUYBACK:")) return null;
+                  const metaPart = title.substring(title.indexOf("[BUYBACK:") + 9, title.lastIndexOf("]"));
+                  const parts = metaPart.split(":");
+                  const photos = (parts[5] || "").split("|");
+                  const status = parts[6] || "UNSOLD";
+                  const isSold = status === "SOLD" || status.startsWith("SOLD");
+                  const salePrice = isSold ? Number(parts[7] || 0) : 0;
                   return {
                     id: e.id,
                     title: e.title,
                     amount: e.amount,
                     date: e.date,
-                    brandModel: m[1],
-                    imei: m[2],
-                    aadhaar: m[3],
-                    custName: m[4],
-                    custMobile: m[5],
+                    brandModel: parts[0] || "Unknown",
+                    imei: parts[1] || "N/A",
+                    aadhaar: parts[2] || "N/A",
+                    custName: parts[3] || "N/A",
+                    custMobile: parts[4] || "N/A",
                     photo: photos[0] || "N/A",
                     photoBack: photos[1] || "N/A",
-                    photoDevice: photos[2] || "N/A"
+                    photoDevice: photos[2] || "N/A",
+                    status: isSold ? "SOLD" : "UNSOLD",
+                    salePrice: salePrice
                   };
                 }).filter(Boolean) as any[];
 
@@ -6675,7 +6747,17 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                   <div className="flex items-center gap-2">
                                     <span className="text-[9px] font-black tracking-widest text-zinc-400 uppercase">{format(new Date(item.date), "dd MMM yyyy")}</span>
                                   </div>
-                                  <h5 className="font-black text-zinc-900 dark:text-white uppercase leading-none">{item.brandModel}</h5>
+                                  <div className="flex items-center gap-2">
+                                    <h5 className="font-black text-zinc-900 dark:text-white uppercase leading-none">{item.brandModel}</h5>
+                                    {item.status === "SOLD" ? (
+                                      <span className="px-1.5 py-0.5 bg-zinc-150 text-zinc-650 dark:bg-zinc-800 dark:text-zinc-400 rounded-md text-[8px] font-black uppercase tracking-wider">Sold (₹{item.salePrice})</span>
+                                    ) : (
+                                      <span className="px-1.5 py-0.5 bg-emerald-50 text-emerald-600 dark:bg-emerald-950/20 dark:text-emerald-400 rounded-md text-[8px] font-black uppercase tracking-wider">In Stock</span>
+                                    )}
+                                    {item.status === "SOLD" && (
+                                      <span className="text-[9px] font-extrabold text-emerald-600">Profit: +₹{item.salePrice - item.amount}</span>
+                                    )}
+                                  </div>
                                   <p className="text-[10px] font-bold text-zinc-500">
                                     IMEI: <span className="text-zinc-800 dark:text-zinc-200 font-extrabold">{item.imei}</span>
                                   </p>

@@ -354,19 +354,21 @@ function InvoiceContent() {
             .single();
           
           if (!error && data) {
-            const m = (data.title || "").match(/\[BUYBACK:([^:]+):([^:]+):([^:]+):([^:]+):([^:]+):([^\]]+)\]/);
-            if (m) {
-              const photos = m[6].split("|");
+            const title = data.title || "";
+            if (title.includes("[BUYBACK:")) {
+              const metaPart = title.substring(title.indexOf("[BUYBACK:") + 9, title.lastIndexOf("]"));
+              const parts = metaPart.split(":");
+              const photos = (parts[5] || "").split("|");
               setDeclarationItem({
                 id: data.id,
                 title: data.title,
                 amount: data.amount,
                 date: data.expense_date || data.created_at,
-                brandModel: m[1],
-                imei: m[2],
-                aadhaar: m[3],
-                custName: m[4],
-                custMobile: m[5],
+                brandModel: parts[0] || "Unknown",
+                imei: parts[1] || "N/A",
+                aadhaar: parts[2] || "N/A",
+                custName: parts[3] || "N/A",
+                custMobile: parts[4] || "N/A",
                 photo: photos[0],
                 photoBack: photos[1] || "N/A"
               });
