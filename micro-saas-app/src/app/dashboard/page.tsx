@@ -1676,12 +1676,17 @@ export default function Dashboard() {
     window.open(`/invoice?decId=${item.id}&o=${ownerMobile}&n=${encodeURIComponent(restaurantName)}&a=${encodeURIComponent(storeAddress || "")}&ph=${encodeURIComponent(storePhone || "")}&g=${encodeURIComponent(storeGst)}`, '_blank');
   };
 
-  const handleExportSalesToExcel = () => {
+  const handleExportSalesToExcel = async () => {
     try {
       const headers = ["Date & Time", "Invoice ID", "Customer Name", "Customer Mobile", "Items / Details", "Payment Mode", "Total Amount (INR)"];
       
       const rows = filteredSales.map(s => {
-        const dateTime = format(new Date(s.date), "yyyy-MM-dd HH:mm");
+        let dateTime = "N/A";
+        try {
+          if (s.date) dateTime = format(new Date(s.date), "yyyy-MM-dd HH:mm");
+        } catch (e: any) {
+          dateTime = String(s.date || "N/A");
+        }
         const invoiceId = s.id || "N/A";
         const custName = s.name || "Guest Customer";
         const custMobile = s.mobile || "N/A";
@@ -1700,16 +1705,40 @@ export default function Dashboard() {
         ];
       });
 
+      const fileName = `Sales_Report_${restaurantName.replace(/\s+/g, '_')}_${selectedMonth}.csv`;
       const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
-      const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `Sales_Report_${restaurantName.replace(/\\s+/g, '_')}_${selectedMonth}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+
+      const isCapacitor = !!((window as any).Capacitor && (window as any).Capacitor.Plugins && (window as any).Capacitor.Plugins.Filesystem);
+
+      if (isCapacitor) {
+        const { Filesystem, Directory } = await import('@capacitor/filesystem');
+        const { Share } = await import('@capacitor/share');
+        
+        const base64Data = btoa(unescape(encodeURIComponent("\ufeff" + csvContent)));
+        
+        const writeResult = await Filesystem.writeFile({
+          path: fileName,
+          data: base64Data,
+          directory: Directory.Documents
+        });
+        
+        await Share.share({
+          title: 'Export Sales Report',
+          text: `Sales Report for ${restaurantName} (${selectedMonth})`,
+          url: writeResult.uri,
+          dialogTitle: 'Share or Save Sales Excel Report'
+        });
+      } else {
+        const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", fileName);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     } catch (err: any) {
       alert("Excel Export Failed: " + err.message);
     }
