@@ -3,130 +3,9 @@
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { Suspense, useEffect, useState, useRef } from "react";
-import { Printer, ShoppingBag, CheckCircle2, QrCode, Camera, Globe, Phone, MapPin, ReceiptText, Download, Gift, Copy, Check, Smartphone } from "lucide-react";
+import { Printer, ShoppingBag, CheckCircle2, QrCode, Camera, Globe, Phone, MapPin, ReceiptText, Download, Gift, Copy, Check, Smartphone, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
-
-// Scratch Card Component for Invoice
-function ScratchCard({ 
-  invoiceId, 
-  ownerMobile, 
-  customerMobile, 
-  storeName, 
-  businessType,
-  onWon 
-}: { 
-  invoiceId: string; 
-  ownerMobile: string; 
-  customerMobile: string; 
-  storeName: string;
-  businessType: string | null;
-  onWon: (coupon: any) => void;
-}) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isCompleted, setIsCompleted] = useState(false);
-  const [amount, setAmount] = useState(10); // Default reward
-
-  useEffect(() => {
-    if (businessType === "Mobile/Electronics") {
-      // Multiple of 10 between 100 and 300 (inclusive)
-      const roll = Math.floor(Math.random() * 21) * 10 + 100;
-      setAmount(roll);
-    } else {
-      // 70% chance of ₹10, 30% chance of ₹5
-      const roll = Math.random() < 0.7 ? 10 : 5;
-      setAmount(roll);
-    }
-  }, [businessType]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const resizeCanvas = () => {
-      const rect = canvas.parentElement?.getBoundingClientRect();
-      canvas.width = rect?.width || 340;
-      canvas.height = rect?.height || 185;
-
-      // Draw gradient holographic background
-      const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-      grad.addColorStop(0, "#4b5563"); // slate-600
-      grad.addColorStop(0.5, "#9ca3af"); // slate-400
-      grad.addColorStop(1, "#1f2937"); // slate-800
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      // Draw background noise/sparkles
-      ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
-      for (let i = 0; i < 25; i++) {
-        ctx.beginPath();
-        ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 4 + 1, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      // Add instruction text
-      ctx.font = "900 12px sans-serif";
-      ctx.fillStyle = "#ffffff";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("TAP / CLICK TO REVEAL REWARD! ✨", canvas.width / 2, canvas.height / 2);
-    };
-
-    resizeCanvas();
-  }, [isCompleted]);
-
-  const revealCard = (e: any) => {
-    if (isCompleted) return;
-    setIsCompleted(true);
-    
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    
-    try {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    } catch (err) {}
-
-    // Generate dynamic coupon code
-    const couponCode = "IM-" + Math.floor(1000 + Math.random() * 9000) + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
-
-    const newCoupon = {
-      code: couponCode,
-      discount_amount: amount,
-      store_mobile: ownerMobile || "",
-      customer_mobile: customerMobile || "",
-      invoice_id: invoiceId || "1001",
-      status: "unused"
-    };
-
-    // Trigger instant UI reveal
-    onWon(newCoupon);
-
-    supabase
-      .from("coupons")
-      .insert([newCoupon])
-      .then(({ error }) => {
-        if (error) {
-          console.error("Supabase coupon insert failed:", error);
-        }
-      });
-  };
-
-  return (
-    <div className="absolute inset-0 z-20">
-      <canvas 
-        ref={canvasRef} 
-        onMouseDown={revealCard}
-        onTouchStart={revealCard}
-        className="w-full h-full rounded-3xl cursor-pointer" 
-      />
-    </div>
-  );
-}
-
 
 function InvoiceContent() {
   const searchParams = useSearchParams();
@@ -427,14 +306,17 @@ function InvoiceContent() {
 
   // Fetch Logo from Cloud
   useEffect(() => {
-    if (ownerMobile) {
+    if (ownerMobile || restName) {
       const fetchLogo = async () => {
         try {
-          const { data, error } = await supabase
-            .from('stores')
-            .select('store_logo, business_type')
-            .eq('owner_mobile', ownerMobile)
-            .single();
+          let query = supabase.from('stores').select('store_logo, business_type');
+          // If ownerMobile is a valid 10-digit number, query by mobile. Otherwise query by store name.
+          if (ownerMobile && /^\d{10}$/.test(ownerMobile)) {
+            query = query.eq('owner_mobile', ownerMobile);
+          } else {
+            query = query.eq('store_name', restName);
+          }
+          const { data, error } = await query.single();
           
           if (!error && data) {
             let bType = data.business_type || "";
@@ -931,73 +813,68 @@ function InvoiceContent() {
             </div>
           )}
 
-          {/* Scratch Card Section */}
-          {canScratch && !isLoadingCoupon && (
-            <div className="w-full bg-gradient-to-br from-zinc-900 to-black text-white rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden min-h-[200px] flex flex-col justify-center items-center text-center print-hide border border-white/5">
-              <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:20px_20px]" />
-              
-              {!scratchClaimed ? (
-                <div className="space-y-4 w-full h-full min-h-[160px] flex flex-col justify-center items-center relative z-10">
-                  <div className="w-12 h-12 bg-orange-500/10 rounded-2xl flex items-center justify-center animate-pulse">
-                    <Gift className="h-6 w-6 text-orange-500" />
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="text-md font-black uppercase tracking-tight">Scratch & Win Reward! 🎁</h4>
-                    <p className="text-[9px] text-zinc-400 font-bold max-w-[280px] leading-relaxed">
-                      Scratch the card below to win a discount coupon valid on your next visit at {restName}!
-                    </p>
-                  </div>
-                  {/* Canvas Overlay Scratch Card */}
-                  <ScratchCard 
-                    invoiceId={id} 
-                    ownerMobile={ownerMobile} 
-                    customerMobile={mobile} 
-                    storeName={restName}
-                    businessType={storeBusinessType}
-                    onWon={(coupon) => {
-                      setScratchClaimed(true);
-                      setClaimedCoupon(coupon);
-                    }}
-                  />
+          {/* Direct Sparkly Reward Section */}
+          {canScratch && !isLoadingCoupon && scratchClaimed && claimedCoupon && (
+            <div className="w-full bg-gradient-to-br from-zinc-950 via-zinc-900 to-zinc-950 text-white rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden min-h-[220px] flex flex-col justify-center items-center text-center print-hide border border-orange-500/20">
+              {/* Glowing background radial spots */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-orange-500/10 rounded-full blur-[60px] pointer-events-none" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-yellow-500/10 rounded-full blur-[40px] pointer-events-none animate-pulse" />
+
+              {/* Sparkle Icons */}
+              <div className="absolute top-6 left-8 text-yellow-400 animate-bounce delay-100">
+                <Sparkles className="w-5 h-5 text-yellow-400 fill-current opacity-80" />
+              </div>
+              <div className="absolute bottom-6 right-8 text-yellow-400 animate-bounce delay-500">
+                <Sparkles className="w-4 h-4 text-yellow-400 fill-current opacity-60" />
+              </div>
+              <div className="absolute top-8 right-12 text-orange-400 animate-pulse">
+                <Sparkles className="w-3.5 h-3.5 text-orange-400 fill-current opacity-75" />
+              </div>
+              <div className="absolute bottom-8 left-12 text-orange-400 animate-pulse delay-300">
+                <Sparkles className="w-3 h-3 text-orange-400 fill-current opacity-50" />
+              </div>
+
+              <div className="space-y-4 relative z-10 animate-in zoom-in-95 duration-700 w-full">
+                {/* Glowing Gift Box Badge */}
+                <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-orange-500/20 relative group">
+                  <div className="absolute inset-0 bg-white/20 rounded-2xl scale-110 blur-md opacity-75 animate-pulse" />
+                  <Gift className="h-7 w-7 text-white animate-bounce relative z-10" />
                 </div>
-              ) : (
-                <div className="space-y-4 relative z-10 animate-in zoom-in-95 duration-500 w-full">
-                  <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto">
-                    <Gift className="h-6 w-6 text-[#00c875]" />
-                  </div>
-                  <div className="space-y-1">
-                    <h4 className="text-md font-black uppercase tracking-tight text-white">CONGRATULATIONS! 🎉</h4>
-                    <p className="text-[9px] text-zinc-400 font-bold">
-                      You won <span className="text-[#00c875] font-black text-sm">₹{claimedCoupon?.discount_amount} Off</span> on your next bill at {restName}!
-                    </p>
-                  </div>
-                  
-                  {/* Coupon Code Copy Box */}
-                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between gap-4 max-w-[280px] mx-auto w-full">
-                    <div className="text-left">
-                      <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest block">Coupon Code</span>
-                      <span className="font-mono text-sm font-black tracking-wider text-orange-500">{claimedCoupon?.code}</span>
-                    </div>
-                    <Button 
-                      size="sm" 
-                      onClick={() => {
-                        if (claimedCoupon?.code) {
-                          navigator.clipboard.writeText(claimedCoupon.code);
-                          setCopied(true);
-                          setTimeout(() => setCopied(false), 2000);
-                        }
-                      }}
-                      className="bg-orange-500 hover:bg-orange-600 h-9 px-3 rounded-xl flex items-center justify-center border-0 text-white"
-                    >
-                      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  
-                  <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-wider">
-                    *Show this code at the billing counter to redeem.
+                
+                <div className="space-y-1">
+                  <h4 className="text-lg font-black tracking-tight text-white flex items-center justify-center gap-1">
+                    CONGRATULATIONS! 🎉
+                  </h4>
+                  <p className="text-[10px] text-zinc-400 font-bold max-w-[280px] mx-auto leading-normal">
+                    You won <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-400 to-yellow-300 font-black text-base animate-pulse">₹{claimedCoupon.discount_amount} Off</span> on your next visit at {restName}!
                   </p>
                 </div>
-              )}
+                
+                {/* Coupon Code Copy Box */}
+                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between gap-4 max-w-[280px] mx-auto w-full backdrop-blur-md shadow-inner relative group hover:border-orange-500/30 transition-colors">
+                  <div className="text-left">
+                    <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest block">Coupon Code</span>
+                    <span className="font-mono text-sm font-black tracking-wider text-orange-400">{claimedCoupon.code}</span>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    onClick={() => {
+                      if (claimedCoupon.code) {
+                        navigator.clipboard.writeText(claimedCoupon.code);
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 2000);
+                      }
+                    }}
+                    className="bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 h-9 px-3 rounded-xl flex items-center justify-center border-0 text-white shadow-md shadow-orange-500/10 active:scale-95 transition-all"
+                  >
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                  </Button>
+                </div>
+                
+                <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-wider">
+                  *Show this code at the billing counter to redeem.
+                </p>
+              </div>
             </div>
           )}
 
