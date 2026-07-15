@@ -752,6 +752,7 @@ export default function Dashboard() {
 
   const [mounted, setMounted] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
+  const [salesSearchQuery, setSalesSearchQuery] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
 
@@ -4320,6 +4321,18 @@ Stay safe & eat healthy! 🍕
   };
 
   const filteredSales = useMemo(() => sales.filter(s => format(new Date(s.date), "yyyy-MM") === selectedMonth), [sales, selectedMonth]);
+  const searchedSales = useMemo(() => {
+    if (!salesSearchQuery.trim()) return filteredSales;
+    const query = salesSearchQuery.toLowerCase().trim();
+    return filteredSales.filter(s => {
+      const name = (s.name || "").toLowerCase();
+      const mobile = (s.mobile || "").toLowerCase();
+      const items = (s.item || "").toLowerCase();
+      const type = (s.type || "").toLowerCase();
+      const price = String(s.price || "");
+      return name.includes(query) || mobile.includes(query) || items.includes(query) || type.includes(query) || price.includes(query);
+    });
+  }, [filteredSales, salesSearchQuery]);
   const filteredExpenses = useMemo(() => expenses.filter(e => format(new Date(e.date), "yyyy-MM") === selectedMonth), [expenses, selectedMonth]);
   
   const totalSales = useMemo(() => filteredSales.reduce((sum, s) => sum + s.price, 0), [filteredSales]);
@@ -5700,7 +5713,17 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
               {/* FULL TRANSACTION HISTORY - SCROLLABLE TABLE */}
               <div className="space-y-3">
-                <h3 className="text-2xl font-bold tracking-tighter px-2">Transaction History</h3>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-2">
+                  <h3 className="text-2xl font-bold tracking-tighter">Transaction History</h3>
+                  <div className="relative w-full sm:max-w-xs">
+                    <Input 
+                      placeholder="Search name, mobile, item, amount..."
+                      value={salesSearchQuery}
+                      onChange={e => setSalesSearchQuery(e.target.value)}
+                      className={`h-10 rounded-xl border-0 font-bold px-4 focus-visible:ring-2 focus-visible:ring-orange-500 text-xs transition-all ${isDarkMode ? 'bg-zinc-800 text-white' : 'bg-zinc-100 text-zinc-900'}`}
+                    />
+                  </div>
+                </div>
                 <Card className="rounded-2xl border-0 shadow-sm bg-white dark:bg-zinc-900 overflow-hidden">
                   <div className="overflow-x-auto scrollbar-hide">
                     <table className="min-w-max text-left border-collapse">
@@ -5716,10 +5739,10 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         </tr>
                       </thead>
                       <tbody className="divide-y dark:divide-zinc-800">
-                        {filteredSales.length === 0 ? (
-                          <tr><td colSpan={7} className="p-10 text-center text-zinc-300 font-bold italic">No transactions yet</td></tr>
+                        {searchedSales.length === 0 ? (
+                          <tr><td colSpan={7} className="p-10 text-center text-zinc-300 font-bold italic">No transactions found</td></tr>
                         ) : (
-                          filteredSales.map(s => (
+                          searchedSales.map(s => (
                             <tr key={s.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
                               <td className="py-2 px-4 font-bold text-[10px] text-zinc-400 whitespace-nowrap">{format(new Date(s.date), "dd MMM, hh:mm aa")}</td>
                               <td className="py-2 px-4 font-bold text-sm text-zinc-900 dark:text-white uppercase whitespace-nowrap">{s.name}</td>
