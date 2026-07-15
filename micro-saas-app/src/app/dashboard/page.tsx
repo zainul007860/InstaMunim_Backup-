@@ -1675,8 +1675,13 @@ export default function Dashboard() {
   };
 
   const handlePrintBuyback = (item: any) => {
-    const storeGst = storeGstin || "";
-    window.open(`/invoice?decId=${item.id}&o=${ownerMobile}&n=${encodeURIComponent(restaurantName)}&a=${encodeURIComponent(storeAddress || "")}&ph=${encodeURIComponent(storePhone || "")}&g=${encodeURIComponent(storeGst)}`, '_blank');
+    const isCapacitor = (typeof window !== 'undefined' && !!(window as any).Capacitor?.isNative);
+    if (isCapacitor) {
+      handleDownloadPdfBuyback(item);
+    } else {
+      const storeGst = storeGstin || "";
+      window.open(`/invoice?decId=${item.id}&o=${ownerMobile}&n=${encodeURIComponent(restaurantName)}&a=${encodeURIComponent(storeAddress || "")}&ph=${encodeURIComponent(storePhone || "")}&g=${encodeURIComponent(storeGst)}`, '_blank');
+    }
   };
 
   const handleExportSalesToExcel = async () => {
