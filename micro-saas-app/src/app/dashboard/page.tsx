@@ -9,6 +9,7 @@ import {
   TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera, Volume2, Globe, Wand2, Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { trackEvent } from "@/lib/firebase";
 
 const getDisplayCategory = (cat: string) => {
   if (!cat) return "General";
@@ -3217,6 +3218,7 @@ Stay safe & eat healthy! 🍕
           const storeData = data[0];
           // Success Login
           setIsLoggedIn(true);
+          trackEvent("app_login", { owner_mobile: loginMobile, store_name: storeData.store_name });
           setOwnerMobile(loginMobile);
           setRestaurantName(storeData.store_name);
           setMonthlyRent(storeData.monthly_rent || 0);
@@ -3324,6 +3326,7 @@ Stay safe & eat healthy! 🍕
           }
  
           setIsLoggedIn(true);
+          trackEvent("store_registration", { store_name: signupStoreName, owner_mobile: loginMobile, business_type: signupBusinessType });
           setOwnerMobile(loginMobile);
           setRestaurantName(signupStoreName);
           setBusinessType(signupBusinessType);
@@ -3916,6 +3919,7 @@ Stay safe & eat healthy! 🍕
         }
       }
 
+      trackEvent("add_sale", { store_id: storeId, amount: cartTotal, payment_type: newType });
       // Save new products to menu_items in background
       try {
         const newProducts = cart.filter(c => c.isNewProduct);
