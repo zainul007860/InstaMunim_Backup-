@@ -1478,19 +1478,21 @@ export default function Dashboard() {
 
   const handleDownloadPdfBuyback = (item: any) => {
     const el = document.createElement("div");
-    el.style.position = "fixed";
+    // Place offscreen to the left, but keep position absolute and zIndex positive so html2canvas renders it with complete colors and layout
+    el.style.position = "absolute";
+    el.style.left = "-9999px";
     el.style.top = "0";
-    el.style.left = "0";
-    el.style.width = "700px";
+    el.style.width = "800px";
     el.style.padding = "25px";
     el.style.background = "#ffffff";
-    el.style.color = "#0f172a";
+    el.style.color = "#000000";
     el.style.fontFamily = "system-ui, -apple-system, sans-serif";
-    el.style.zIndex = "-9999";
+    el.style.zIndex = "9999";
+    el.style.opacity = "1";
     el.style.pointerEvents = "none";
     
     el.innerHTML = `
-      <div style="border: 2px solid #e2e8f0; border-radius: 20px; padding: 30px; background: #fff;">
+      <div style="border: 2px solid #e2e8f0; border-radius: 20px; padding: 30px; background: #ffffff; color: #000000;">
         <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #ea580c; padding-bottom: 15px; margin-bottom: 20px;">
           <div>
             ${storeLogo ? `<img src="${storeLogo}" style="max-height: 48px; object-fit: contain;" />` : `<div style="font-size: 24px; font-weight: 900; color: #ea580c; text-transform: uppercase;">${restaurantName || "InstaMunim"}</div>`}
@@ -1509,23 +1511,23 @@ export default function Dashboard() {
         <div style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #475569; margin: 15px 0 8px 0; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 4px;">
           Transaction Information
         </div>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; color: #000000;">
           <tr>
             <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; background-color: #f8fafc; font-weight: 700; color: #475569; width: 25%;">Customer Name</td>
-            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #0f172a; font-weight: 600;">${item.custName}</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #000000; font-weight: 600;">${item.custName}</td>
             <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; background-color: #f8fafc; font-weight: 700; color: #475569; width: 25%;">Brand & Model</td>
-            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #0f172a; font-weight: 600;">${item.brandModel}</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #000000; font-weight: 600;">${item.brandModel}</td>
           </tr>
           <tr>
             <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; background-color: #f8fafc; font-weight: 700; color: #475569;">Customer Mobile</td>
-            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #0f172a; font-weight: 600;">+91 ${item.custMobile}</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #000000; font-weight: 600;">+91 ${item.custMobile}</td>
             <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; background-color: #f8fafc; font-weight: 700; color: #475569;">IMEI Number</td>
-            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #0f172a; font-weight: 600;">${item.imei}</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #000000; font-weight: 600;">${item.imei}</td>
           </tr>
           <tr>
             <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; background-color: #f8fafc; font-weight: 700; color: #475569;">Aadhaar / ID Card</td>
-            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #0f172a; font-weight: 600;">${item.aadhaar}</td>
-            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #0f172a; font-weight: 600;">${format(new Date(item.date), "dd MMM yyyy")}</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #000000; font-weight: 600;">${item.aadhaar}</td>
+            <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; color: #000000; font-weight: 600;">${format(new Date(item.date), "dd MMM yyyy")}</td>
           </tr>
           <tr>
             <td style="padding: 10px; border: 1px solid #e2e8f0; font-size: 11px; background-color: #f8fafc; font-weight: 700; color: #475569;">Identification Status</td>
@@ -1546,15 +1548,15 @@ export default function Dashboard() {
           Verification Documents & Device Photo
         </div>
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 10px;">
-          <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; text-align: center; background: #fff;">
+          <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; text-align: center; background: #ffffff;">
             <div style="font-size: 8px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 5px;">Aadhaar Front</div>
             ${item.photo && item.photo !== "N/A" ? `<img src="${item.photo}" style="max-width: 100%; height: 110px; object-fit: contain; border-radius: 4px;" />` : `<div style="font-size: 9px; color: #94a3b8; font-weight: 700; padding: 30px 0;">Not Provided</div>`}
           </div>
-          <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; text-align: center; background: #fff;">
+          <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; text-align: center; background: #ffffff;">
             <div style="font-size: 8px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 5px;">Aadhaar Back</div>
             ${item.photoBack && item.photoBack !== "N/A" ? `<img src="${item.photoBack}" style="max-width: 100%; height: 110px; object-fit: contain; border-radius: 4px;" />` : `<div style="font-size: 9px; color: #94a3b8; font-weight: 700; padding: 30px 0;">Not Provided</div>`}
           </div>
-          <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; text-align: center; background: #fff;">
+          <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; text-align: center; background: #ffffff;">
             <div style="font-size: 8px; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 5px;">Device Photo</div>
             ${item.photoDevice && item.photoDevice !== "N/A" ? `<img src="${item.photoDevice}" style="max-width: 100%; height: 110px; object-fit: contain; border-radius: 4px;" />` : `<div style="font-size: 9px; color: #94a3b8; font-weight: 700; padding: 30px 0;">Not Provided</div>`}
           </div>
@@ -1570,10 +1572,30 @@ export default function Dashboard() {
     document.body.appendChild(el);
 
     const runPdfExport = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 600));
+      // Safely wait for all images to complete loading to prevent blank PDFs
+      try {
+        const images = el.getElementsByTagName("img");
+        const imagePromises = Array.from(images).map(img => {
+          return new Promise((resolve) => {
+            if (img.complete) {
+              resolve(true);
+            } else {
+              img.onload = () => resolve(true);
+              img.onerror = () => resolve(false);
+            }
+          });
+        });
+        await Promise.race([
+          Promise.all(imagePromises),
+          new Promise((resolve) => setTimeout(resolve, 3000))
+        ]);
+      } catch (e) {
+        console.warn("Preloading images before PDF generation encountered warning:", e);
+      }
+
       const opt = {
         margin: 10,
-        filename: `Buyback_Receipt_${item.custName.replace(/\s+/g, '_')}_${item.brandModel.replace(/\s+/g, '_')}.pdf`,
+        filename: `Buyback_Receipt_${item.custName.replace(/\s+/g, '_')}_&_${item.brandModel.replace(/\s+/g, '_')}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
