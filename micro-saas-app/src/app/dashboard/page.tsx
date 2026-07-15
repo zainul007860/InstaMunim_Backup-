@@ -2225,7 +2225,10 @@ Requirements for the generated image prompt:
       return;
     }
     try {
-      const viewerUrl = `${window.location.origin}/invoice?banner=true&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${ownerMobile}`;
+      const baseUrl = (typeof window !== 'undefined' && window.location.port === '3000')
+        ? "http://localhost:3000"
+        : "https://www.instamunim.com";
+      const viewerUrl = `${baseUrl}/invoice?banner=true&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${ownerMobile}`;
       const customMsg = `Special offer for you, ${name}! 🛍️\n\nShop: ${restaurantName}\nOffer: ${offerTitle}\nDeal: ${discountDetails} on ${productName}\n\nView Banner: ${viewerUrl}`;
       window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(customMsg)}`, "_blank");
     } catch (err: any) {
