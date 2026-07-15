@@ -75,49 +75,54 @@ function ScratchCard({
     };
 
     resizeCanvas();
+  }, [isCompleted]);
 
-    const revealCard = (e: MouseEvent | TouchEvent) => {
-      e.preventDefault();
-      if (isCompleted) return;
-      setIsCompleted(true);
+  const revealCard = (e) => {
+    if (isCompleted) return;
+    setIsCompleted(true);
+    
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    
+    try {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
+    } catch (err) {}
 
-      // Generate dynamic coupon code
-      const couponCode = "IM-" + Math.floor(1000 + Math.random() * 9000) + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
+    // Generate dynamic coupon code
+    const couponCode = "IM-" + Math.floor(1000 + Math.random() * 9000) + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
 
-      const newCoupon = {
-        code: couponCode,
-        discount_amount: amount,
-        store_mobile: ownerMobile,
-        customer_mobile: customerMobile,
-        invoice_id: invoiceId,
-        status: "unused"
-      };
-
-      supabase
-        .from("coupons")
-        .insert([newCoupon])
-        .then(({ error }) => {
-          if (!error) {
-            onWon(newCoupon);
-          } else {
-            console.error("Supabase coupon insert failed:", error);
-          }
-        });
+    const newCoupon = {
+      code: couponCode,
+      discount_amount: amount,
+      store_mobile: ownerMobile || "",
+      customer_mobile: customerMobile || "",
+      invoice_id: invoiceId || "1001",
+      status: "unused"
     };
 
-    canvas.addEventListener("mousedown", revealCard);
-    canvas.addEventListener("touchstart", revealCard, { passive: false });
+    // Trigger instant UI reveal
+    onWon(newCoupon);
 
-    return () => {
-      canvas.removeEventListener("mousedown", revealCard);
-      canvas.removeEventListener("touchstart", revealCard);
-    };
-  }, [isCompleted, amount, ownerMobile, customerMobile, invoiceId, onWon]);
+    supabase
+      .from("coupons")
+      .insert([newCoupon])
+      .then(({ error }) => {
+        if (error) {
+          console.error("Supabase coupon insert failed:", error);
+        }
+      });
+  };
 
   return (
     <div className="absolute inset-0 z-20">
-      <canvas ref={canvasRef} className="w-full h-full rounded-3xl cursor-pointer" />
+      <canvas 
+        ref={canvasRef} 
+        onMouseDown={revealCard}
+        onTouchStart={revealCard}
+        className="w-full h-full rounded-3xl cursor-pointer" 
+      />
     </div>
   );
 }

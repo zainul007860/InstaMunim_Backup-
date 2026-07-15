@@ -1602,7 +1602,7 @@ export default function Dashboard() {
       };
 
       try {
-        const isCapacitor = !!(window as any).Capacitor;
+        const isCapacitor = !!((window as any).Capacitor && (window as any).Capacitor.Plugins && (window as any).Capacitor.Plugins.Filesystem);
         if (isCapacitor) {
           const pdfBase64 = await window.html2pdf().from(el).set(opt).outputPdf('datauristring');
           const base64Data = pdfBase64.split(',')[1];
@@ -1781,7 +1781,7 @@ export default function Dashboard() {
       };
 
       try {
-        const isCapacitor = !!(window as any).Capacitor;
+        const isCapacitor = !!((window as any).Capacitor && (window as any).Capacitor.Plugins && (window as any).Capacitor.Plugins.Filesystem);
         if (isCapacitor) {
           const pdfBase64 = await window.html2pdf().from(el).set(opt).outputPdf('datauristring');
           const base64Data = pdfBase64.split(',')[1];
