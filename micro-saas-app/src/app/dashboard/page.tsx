@@ -1671,6 +1671,50 @@ export default function Dashboard() {
     }
   };
 
+  const handlePrintBuyback = (item) => {
+    const storeGst = storeGstNo || "";
+    window.open(`/invoice?decId=${item.id}&o=${ownerMobile}&n=${encodeURIComponent(restaurantName)}&a=${encodeURIComponent(storeAddress || "")}&ph=${encodeURIComponent(storePhone || "")}&g=${encodeURIComponent(storeGst)}`, '_blank');
+  };
+
+  const handleExportSalesToExcel = () => {
+    try {
+      const headers = ["Date & Time", "Invoice ID", "Customer Name", "Customer Mobile", "Items / Details", "Payment Mode", "Total Amount (INR)"];
+      
+      const rows = filteredSales.map(s => {
+        const dateTime = format(new Date(s.date), "yyyy-MM-dd HH:mm");
+        const invoiceId = s.id || "N/A";
+        const custName = s.name || "Guest Customer";
+        const custMobile = s.mobile || "N/A";
+        const items = (s.item || "General Sale").replace(/"/g, '""');
+        const payMode = getPartnerName(businessType, s.type);
+        const amount = s.price;
+        
+        return [
+          `"${dateTime}"`,
+          `"${invoiceId}"`,
+          `"${custName}"`,
+          `"${custMobile}"`,
+          `"${items}"`,
+          `"${payMode}"`,
+          amount
+        ];
+      });
+
+      const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+      const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Sales_Report_${restaurantName.replace(/\\s+/g, '_')}_${selectedMonth}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      alert("Excel Export Failed: " + err.message);
+    }
+  };
+
   const handleDownloadPdfSalesReport = () => {
     const el = document.createElement("div");
     el.style.position = "absolute";
@@ -5999,12 +6043,26 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 <p className="text-sm font-bold text-zinc-400 mt-2 leading-relaxed">Comprehensive view of your store's performance.</p>
               </header>
 
-              <Button 
-                onClick={handleDownloadPdfSalesReport} 
-                className="w-full h-14 bg-zinc-900 hover:bg-black text-white font-bold rounded-full text-sm shadow-xl flex items-center justify-center gap-3 uppercase tracking-widest active:scale-95 transition-all"
-              >
-                <Printer className="h-4 w-4" /> DOWNLOAD SALES REPORT
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
+                <Button 
+                  onClick={handleExportSalesToExcel} 
+                  className="flex-1 h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl text-xs shadow-md flex items-center justify-center gap-2 uppercase tracking-wider active:scale-95 transition-all border-0 cursor-pointer"
+                >
+                  <FileText className="h-4 w-4" /> Export Sales to Excel
+                </Button>
+                <Button 
+                  onClick={() => {
+                    try {
+                      window.print();
+                    } catch (e) {
+                      alert("Printing not supported in this view.");
+                    }
+                  }} 
+                  className="flex-1 h-14 bg-zinc-900 hover:bg-black text-white font-black rounded-2xl text-xs shadow-md flex items-center justify-center gap-2 uppercase tracking-wider active:scale-95 transition-all border-0 cursor-pointer"
+                >
+                  <Printer className="h-4 w-4" /> Print Sales Report
+                </Button>
+              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <Card className="p-5 rounded-2xl border-0 shadow-sm bg-white dark:bg-zinc-900 flex flex-col justify-center relative overflow-hidden">
@@ -6807,10 +6865,10 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                     <div className="flex gap-1.5 justify-end w-full">
                                       <Button 
                                         size="sm"
-                                        onClick={() => handleDownloadPdfBuyback(item)}
-                                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[9px] font-black uppercase tracking-wider h-8 shadow-sm border-0"
+                                        onClick={() => handlePrintBuyback(item)}
+                                        className="flex-1 bg-[#4f46e5] hover:bg-[#4338ca] text-white rounded-lg text-[9px] font-black uppercase tracking-wider h-8 shadow-sm border-0"
                                       >
-                                        Download PDF
+                                        Print Receipt
                                       </Button>
                                       <Button 
                                         size="sm"
