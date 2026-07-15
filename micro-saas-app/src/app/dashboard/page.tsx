@@ -107,7 +107,7 @@ const ImeiInput = ({
           videoRef.current.srcObject = stream;
           try {
             await videoRef.current.play();
-          } catch (err) {
+          } catch (err: any) {
             console.error("Video play error:", err);
           }
           startScanLoop();
@@ -124,7 +124,7 @@ const ImeiInput = ({
         });
       }, 100);
 
-    } catch (err) {
+    } catch (err: any) {
       console.error('Camera access error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Camera access denied';
       setScanError(errorMessage);
@@ -217,7 +217,7 @@ const ImeiInput = ({
         onScan?.({ barcode: scannedValue, format: 'QR_CODE' });
         return;
       }
-    } catch (err) {
+    } catch (err: any) {
       // Silent frame error
     }
   };
@@ -1381,7 +1381,7 @@ export default function Dashboard() {
   const [imageGenerationError, setImageGenerationError] = useState("");
 
   // Image compression helper
-  const compressAndSetIdPhoto = (file: File, side: 'front' | 'back') => {
+  const compressAndSetIdPhoto = (file: File, side: 'front' | 'back' | 'device') => {
     const reader = new FileReader();
     reader.onload = (event) => {
       const img = new Image();
@@ -1618,7 +1618,7 @@ export default function Dashboard() {
           Promise.all(imagePromises),
           new Promise((resolve) => setTimeout(resolve, 3000))
         ]);
-      } catch (e) {
+      } catch (e: any) {
         console.warn("Preloading images before PDF generation encountered warning:", e);
       }
 
@@ -1633,7 +1633,7 @@ export default function Dashboard() {
       try {
         const isCapacitor = !!((window as any).Capacitor && (window as any).Capacitor.Plugins && (window as any).Capacitor.Plugins.Filesystem);
         if (isCapacitor) {
-          const pdfBase64 = await window.html2pdf().from(el).set(opt).outputPdf('datauristring');
+          const pdfBase64 = await (window as any).html2pdf().from(el).set(opt).outputPdf('datauristring');
           const base64Data = pdfBase64.split(',')[1];
           const fileName = `Buyback_Receipt_${item.custName.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
 
@@ -1650,18 +1650,18 @@ export default function Dashboard() {
           });
           document.body.removeChild(el);
         } else {
-          window.html2pdf().from(el).set(opt).save().then(() => {
+          (window as any).html2pdf().from(el).set(opt).save().then(() => {
             document.body.removeChild(el);
           });
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("PDF generation failed:", err);
         alert("PDF Generation Failed: " + err.message);
-        try { document.body.removeChild(el); } catch(e){}
+        try { document.body.removeChild(el); } catch (e: any) {}
       }
     };
 
-    if (!window.html2pdf) {
+    if (!(window as any).html2pdf) {
       const script = document.createElement("script");
       script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
       script.onload = runPdfExport;
@@ -1671,8 +1671,8 @@ export default function Dashboard() {
     }
   };
 
-  const handlePrintBuyback = (item) => {
-    const storeGst = storeGstNo || "";
+  const handlePrintBuyback = (item: any) => {
+    const storeGst = storeGstin || "";
     window.open(`/invoice?decId=${item.id}&o=${ownerMobile}&n=${encodeURIComponent(restaurantName)}&a=${encodeURIComponent(storeAddress || "")}&ph=${encodeURIComponent(storePhone || "")}&g=${encodeURIComponent(storeGst)}`, '_blank');
   };
 
@@ -1710,7 +1710,7 @@ export default function Dashboard() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-    } catch (err) {
+    } catch (err: any) {
       alert("Excel Export Failed: " + err.message);
     }
   };
@@ -1738,7 +1738,7 @@ export default function Dashboard() {
     const modesHtml = Object.entries(modeTotals).map(([mode, total]) => `
       <div style="flex: 1; min-width: 120px; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 12px; background: #fafaf9; text-align: center; margin: 4px;">
         <div style="font-size: 8px; font-weight: 800; color: #71717a; text-transform: uppercase; margin-bottom: 4px;">${getPartnerName(businessType, mode)}</div>
-        <div style="font-size: 14px; font-weight: 800; color: #ea580c;">₹${Math.round(total)}</div>
+        <div style="font-size: 14px; font-weight: 800; color: #ea580c;">₹${Math.round(total as number)}</div>
       </div>
     `).join("");
 
@@ -1756,7 +1756,7 @@ export default function Dashboard() {
     const formattedMonthName = (() => {
       try {
         return format(new Date(selectedMonth + "-02"), "MMMM yyyy");
-      } catch(e) {
+      } catch (e: any) {
         return selectedMonth;
       }
     })();
@@ -1843,7 +1843,7 @@ export default function Dashboard() {
           Promise.all(imagePromises),
           new Promise((resolve) => setTimeout(resolve, 3000))
         ]);
-      } catch (e) {}
+      } catch (e: any) {}
 
       const opt = {
         margin: 10,
@@ -1856,7 +1856,7 @@ export default function Dashboard() {
       try {
         const isCapacitor = !!((window as any).Capacitor && (window as any).Capacitor.Plugins && (window as any).Capacitor.Plugins.Filesystem);
         if (isCapacitor) {
-          const pdfBase64 = await window.html2pdf().from(el).set(opt).outputPdf('datauristring');
+          const pdfBase64 = await (window as any).html2pdf().from(el).set(opt).outputPdf('datauristring');
           const base64Data = pdfBase64.split(',')[1];
           const fileName = `Sales_Report_${restaurantName.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
 
@@ -1873,18 +1873,18 @@ export default function Dashboard() {
           });
           document.body.removeChild(el);
         } else {
-          window.html2pdf().from(el).set(opt).save().then(() => {
+          (window as any).html2pdf().from(el).set(opt).save().then(() => {
             document.body.removeChild(el);
           });
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("PDF generation failed:", err);
         alert("PDF Generation Failed: " + err.message);
-        try { document.body.removeChild(el); } catch(e){}
+        try { document.body.removeChild(el); } catch (e: any) {}
       }
     };
 
-    if (!window.html2pdf) {
+    if (!(window as any).html2pdf) {
       const script = document.createElement("script");
       script.src = "https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js";
       script.onload = runPdfExport;
@@ -1906,7 +1906,7 @@ export default function Dashboard() {
           setCurrentZoom(value);
         }
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error("Failed to apply camera zoom constraint:", e);
     }
   };
@@ -1973,7 +1973,7 @@ Requirements for the generated image prompt:
         const encodedPrompt = encodeURIComponent(cleanPrompt);
         const generatedUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}&model=flux`;
       
-        const drawBannerOverlays = (backgroundImage, logoImage, logoLoaded) => {
+        const drawBannerOverlays = (backgroundImage: any, logoImage: any, logoLoaded: any) => {
           try {
             const canvas = document.createElement("canvas");
             canvas.width = 1024;
@@ -1982,13 +1982,13 @@ Requirements for the generated image prompt:
             if (ctx) {
               // Helper to draw text with dynamic wrapping or auto-scaling font size
               const drawTextWithFit = (
-                textStr, 
-                centerX, 
-                yPos, 
-                maxWidth, 
-                maxFontSize, 
-                isBold, 
-                color
+                textStr: string, 
+                centerX: number, 
+                yPos: number, 
+                maxWidth: number, 
+                maxFontSize: number, 
+                isBold: boolean, 
+                color: string
               ) => {
                 let fontSize = maxFontSize;
                 ctx.textAlign = "center";
@@ -2104,7 +2104,7 @@ Requirements for the generated image prompt:
             } else {
               setAiImageUrl(backgroundImage.src);
             }
-          } catch (err) {
+          } catch (err: any) {
             console.error("Canvas draw failed:", err);
             setAiImageUrl(backgroundImage.src);
           }
@@ -2138,7 +2138,7 @@ Requirements for the generated image prompt:
           setImageGenerationError("Failed to generate ad banner. Please try again.");
           setIsGeneratingImage(false);
         };
-      } catch (err) {
+      } catch (err: any) {
         setImageGenerationError("An error occurred during generation.");
         setIsGeneratingImage(false);
       }
@@ -2184,7 +2184,7 @@ Requirements for the generated image prompt:
         document.body.removeChild(link);
         alert("Banner download completed! You can now share it manually on WhatsApp.");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error sharing banner:", err);
       window.open(aiImageUrl, '_blank');
     }
@@ -2199,7 +2199,7 @@ Requirements for the generated image prompt:
       const viewerUrl = `${window.location.origin}/invoice?banner=true&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${ownerMobile}`;
       const customMsg = `Special offer for you, ${name}! 🛍️\n\nShop: ${restaurantName}\nOffer: ${offerTitle}\nDeal: ${discountDetails} on ${productName}\n\nView Banner: ${viewerUrl}`;
       window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(customMsg)}`, "_blank");
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error sending image:", err);
     }
   };
@@ -2344,7 +2344,7 @@ Requirements for the generated image prompt:
           const { Preferences } = await import('@capacitor/preferences');
           await Preferences.clear();
         }
-      } catch (e) { /* ignore on web */ }
+      } catch (e: any) { /* ignore on web */ }
 
       alert("✅ Account permanently delete ho gaya. InstaMunim use karne ke liye shukriya!");
       window.location.reload();
@@ -2441,7 +2441,7 @@ Stay safe & eat healthy! 🍕
       gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
       oscillator.start();
       oscillator.stop(audioCtx.currentTime + 0.1);
-    } catch (e) {
+    } catch (e: any) {
       console.warn("Audio context not supported", e);
     }
   };
@@ -2503,7 +2503,7 @@ Stay safe & eat healthy! 🍕
                 setHasZoomCapability(false);
               }
             }
-          } catch (e) {
+          } catch (e: any) {
             console.warn("Failed to read camera zoom capabilities:", e);
             setHasZoomCapability(false);
           }
@@ -2543,7 +2543,7 @@ Stay safe & eat healthy! 🍕
                   html5QrCode.applyVideoConstraints({
                     focusMode: "continuous"
                   } as any).catch((e: any) => console.log("autofocus not supported:", e));
-                } catch (e) {
+                } catch (e: any) {
                   console.log("Error applying focus constraints:", e);
                 }
               })
@@ -2585,7 +2585,7 @@ Stay safe & eat healthy! 🍕
         }).catch(() => {
           setShowScanner(false);
         });
-      } catch (e) {
+      } catch (e: any) {
         setShowScanner(false);
       }
     } else {
@@ -2628,7 +2628,7 @@ Stay safe & eat healthy! 🍕
       if (sc) {
         try {
           await sc.stop();
-        } catch (e) {
+        } catch (e: any) {
           console.error("Error stopping scanner:", e);
         }
       }
@@ -2641,7 +2641,7 @@ Stay safe & eat healthy! 🍕
     if (scanner) {
       try {
         await scanner.stop();
-      } catch (e) {
+      } catch (e: any) {
         console.error("Error stopping scanner:", e);
       }
     }
@@ -2711,7 +2711,7 @@ Stay safe & eat healthy! 🍕
           const fullName = brand ? `${brand} ${prodName}` : prodName;
           setNewScannedName(fullName.trim());
         }
-      } catch (err) {
+      } catch (err: any) {
         console.error("Open Food Facts fetch error:", err);
       } finally {
         setIsApiLoading(false);
@@ -2766,7 +2766,7 @@ Stay safe & eat healthy! 🍕
             setShowExitDialog(true);
           }
         });
-      } catch (e) {
+      } catch (e: any) {
         console.log("Not running in Capacitor, back button listener skipped.");
       }
     };
@@ -2793,7 +2793,7 @@ Stay safe & eat healthy! 🍕
           } else {
             setAvailableCoupons([]);
           }
-        } catch (e) {
+        } catch (e: any) {
           console.error("Failed to fetch customer coupons", e);
         }
       };
@@ -2817,7 +2817,7 @@ Stay safe & eat healthy! 🍕
         });
         console.log("Interstitial Ad prepared successfully.");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error preparing Interstitial Ad:", err);
     }
   };
@@ -2928,7 +2928,7 @@ Stay safe & eat healthy! 🍕
             if (interstitialFailedToLoadListener) interstitialFailedToLoadListener.remove();
             await admobRef.current.removeBanner();
           }
-        } catch (e) {
+        } catch (e: any) {
           console.error("Error removing AdMob banner/listeners: ", e);
         }
       };
@@ -2946,7 +2946,7 @@ Stay safe & eat healthy! 🍕
         if (isSubscribed || adProvider !== "admob") {
           try {
             await admobRef.current.hideBanner();
-          } catch (e) {}
+          } catch (e: any) {}
           setIsAdMobActive(false);
           return;
         }
@@ -2967,11 +2967,11 @@ Stay safe & eat healthy! 🍕
               isTesting: false,
             });
             setIsAdMobActive(true);
-          } catch (e) {
+          } catch (e: any) {
             // already showing, ignore
           }
         }
-      } catch (e) {
+      } catch (e: any) {
         console.log("Banner toggle error:", e);
       }
     };
@@ -3082,7 +3082,7 @@ Stay safe & eat healthy! 🍕
           handleVoiceResult(event.results[i][0].transcript, event.results[i].isFinal);
         }
       };
-      recognition.onend = () => { if (isListening) try { recognition.start(); } catch(e) {} };
+      recognition.onend = () => { if (isListening) try { recognition.start(); } catch (e: any) {} };
     }
 
     if (isListening) {
@@ -3090,12 +3090,12 @@ Stay safe & eat healthy! 🍕
         setVoiceStatus("Listening");
         (window as any).NativeSpeech.startListening();
       } else if (recognition) {
-        try { recognition.start(); } catch (e) {}
+        try { recognition.start(); } catch (e: any) {}
       }
     }
 
     return () => {
-      if (recognition) try { recognition.stop(); } catch (e) {}
+      if (recognition) try { recognition.stop(); } catch (e: any) {}
       if ((window as any).NativeSpeech) (window as any).NativeSpeech.stopListening();
     };
   }, [isListening]);
@@ -3124,7 +3124,7 @@ Stay safe & eat healthy! 🍕
         try {
           const utterance = new SpeechSynthesisUtterance("");
           window.speechSynthesis.speak(utterance);
-        } catch (e) {
+        } catch (e: any) {
           console.log("Speech unlock error:", e);
         }
       }
@@ -3248,7 +3248,7 @@ Stay safe & eat healthy! 🍕
             }
           }
         }
-      } catch (e) {
+      } catch (e: any) {
         console.log('Native preferences check failed:', e);
       }
     };
@@ -3325,14 +3325,14 @@ Stay safe & eat healthy! 🍕
           const commission = commMatch ? Number(commMatch[1]) : (s.commission || 0);
           return { ...s, date: new Date(s.date), commission };
         })); 
-      } catch (e) { console.error(e); } 
+      } catch (e: any) { console.error(e); } 
     }
     
     const savedExpenses = localStorage.getItem("saas_expenses");
-    if (savedExpenses) { try { setExpenses(JSON.parse(savedExpenses).map((e: any) => ({ ...e, date: new Date(e.date) }))); } catch (e) { console.error(e); } }
+    if (savedExpenses) { try { setExpenses(JSON.parse(savedExpenses).map((e: any) => ({ ...e, date: new Date(e.date) }))); } catch (e: any) { console.error(e); } }
 
     const savedMenu = localStorage.getItem("saas_menu");
-    if (savedMenu) { try { setMenuItems(JSON.parse(savedMenu)); } catch (e) { console.error(e); } }
+    if (savedMenu) { try { setMenuItems(JSON.parse(savedMenu)); } catch (e: any) { console.error(e); } }
 
     const savedRestName = localStorage.getItem("saas_rest_name");
     if (savedRestName) setRestaurantName(savedRestName);
@@ -3373,7 +3373,7 @@ Stay safe & eat healthy! 🍕
         }).catch(() => {
           setAdProvider("web");
         });
-      } catch (e) {
+      } catch (e: any) {
         setAdProvider("web");
       }
     }
@@ -3457,7 +3457,7 @@ Stay safe & eat healthy! 🍕
             checkInactivity();
           }
         });
-      } catch (e) {
+      } catch (e: any) {
         console.log("Capacitor App state listener skipped.");
       }
     };
@@ -3533,8 +3533,8 @@ Stay safe & eat healthy! 🍕
           });
  
         if (error) {
-          const errMsg = error.message || "";
-          if (errMsg.toLowerCase().includes("fetch") || errMsg.toLowerCase().includes("network") || error.status === 0) {
+          const errMsg = (error as any).message || "";
+          if (errMsg.toLowerCase().includes("fetch") || errMsg.toLowerCase().includes("network") || (error as any).status === 0) {
             setLoginError("Connection failed. Check internet.");
           } else {
             setLoginError("Invalid mobile number or password.");
@@ -3562,7 +3562,7 @@ Stay safe & eat healthy! 🍕
               await Preferences.set({ key: 'saas_is_logged_in', value: 'true' });
               await Preferences.set({ key: 'saas_owner_mobile', value: loginMobile });
             }
-          } catch (e) { console.log('Preferences save error:', e); }
+          } catch (e: any) { console.log('Preferences save error:', e); }
  
           if (rememberMe) {
             localStorage.setItem("saas_rem_mobile", loginMobile);
@@ -3633,8 +3633,8 @@ Stay safe & eat healthy! 🍕
         const { data, error } = insertResult;
  
         if (error) {
-          const errMsg = error.message || "";
-          if (errMsg.toLowerCase().includes("fetch") || errMsg.toLowerCase().includes("network") || error.status === 0) {
+          const errMsg = (error as any).message || "";
+          if (errMsg.toLowerCase().includes("fetch") || errMsg.toLowerCase().includes("network") || (error as any).status === 0) {
             setLoginError("Connection failed. Check internet.");
           } else {
             setLoginError("Mobile already registered or error occurred.");
@@ -3668,7 +3668,7 @@ Stay safe & eat healthy! 🍕
           await fetchStoreData(data.id);
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       setLoginError("Connection failed. Check internet.");
     } finally {
       setIsLoading(false);
@@ -3777,7 +3777,7 @@ Stay safe & eat healthy! 🍕
             localStorage.setItem("saas_voice_enabled", String(settingsPacket.voiceEnabled));
             localStorage.setItem("saas_voice_lang", settingsPacket.voiceLang || "en");
             localStorage.setItem("saas_ui_lang", settingsPacket.lang || "en");
-          } catch (e) {
+          } catch (e: any) {
             console.error("Failed to parse settings JSON config packet:", e);
           }
         } else if (cloudLogo.includes('|')) {
@@ -3851,7 +3851,7 @@ Stay safe & eat healthy! 🍕
       if (configData?.value) setGeminiApiKey(configData.value);
       
       setSyncStatus("synced");
-    } catch (err) {
+    } catch (err: any) {
       setSyncStatus("error");
     } finally {
       setIsSyncing(false);
@@ -3897,7 +3897,7 @@ Stay safe & eat healthy! 🍕
         await fetchStoreData(storeId);
         setLastSyncedTime(format(new Date(), "hh:mm:ss aa"));
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
     } finally {
       setIsSyncing(false);
@@ -3993,7 +3993,7 @@ Stay safe & eat healthy! 🍕
         setIsScanning(false);
       };
       reader.readAsDataURL(file);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       setScanError("Failed to scan QR code: " + (err instanceof Error ? err.message : String(err)));
       setIsScanning(false);
@@ -4058,7 +4058,7 @@ Stay safe & eat healthy! 🍕
         await Preferences.remove({ key: 'saas_is_logged_in' });
         await Preferences.remove({ key: 'saas_owner_mobile' });
       }
-    } catch (e) { console.log('Preferences clear error:', e); }
+    } catch (e: any) { console.log('Preferences clear error:', e); }
     
     if (!rememberMe) {
       setLoginMobile("");
@@ -4117,7 +4117,7 @@ Stay safe & eat healthy! 🍕
       utterance.rate = 0.95;
       utterance.pitch = 1.0;
       window.speechSynthesis.speak(utterance);
-    } catch (e) {
+    } catch (e: any) {
       console.error("Web Speech Synthesis Error:", e);
     }
   };
@@ -4431,7 +4431,7 @@ Stay safe & eat healthy! 🍕
             try {
               console.log("Triggering Interstitial Ad after sale...");
               await admobRef.current.showInterstitial();
-            } catch (e) {
+            } catch (e: any) {
               console.error("Error showing interstitial ad, falling back to Web Ads direct link:", e);
               prepareInterstitialAd();
               if (webAdDirectLink) {
@@ -4446,7 +4446,7 @@ Stay safe & eat healthy! 🍕
             try {
               console.log("Triggering Web Interstitial Direct Link Ad...");
               window.open(webAdDirectLink, "_blank");
-            } catch (e) {
+            } catch (e: any) {
               console.error("Error opening web interstitial ad:", e);
             }
           }
@@ -4919,7 +4919,7 @@ Stay safe & eat healthy! 🍕
       }
 
       setSales(sales.map(s => s.id === id ? { ...s, type: "Cash" } : s));
-    } catch (err) {
+    } catch (err: any) {
       alert("Failed to update status on cloud.");
     }
   };
@@ -4930,7 +4930,7 @@ Stay safe & eat healthy! 🍕
       const { error } = await supabase.from('menu_items').delete().eq('id', id);
       if (error) throw error;
       setMenuItems(menuItems.filter(item => item.id !== id));
-    } catch (err) {
+    } catch (err: any) {
       alert("Failed to delete item from cloud.");
     }
   };
@@ -5017,7 +5017,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
       if (arrayMatch) {
         try {
           items = JSON.parse(arrayMatch[0]);
-        } catch (e) {
+        } catch (e: any) {
           console.error("Failed to parse array JSON:", e);
         }
       } else if (objectMatch) {
@@ -5032,7 +5032,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               return { name: key, price: price };
             });
           }
-        } catch (e) {
+        } catch (e: any) {
           console.error("Failed to parse object JSON:", e);
         }
       }
@@ -5159,7 +5159,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   </div>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">Business Type</Label>
-                    <Select value={signupBusinessType} onValueChange={setSignupBusinessType}>
+                    <Select value={signupBusinessType} onValueChange={(val: any) => setSignupBusinessType(val)}>
                       <SelectTrigger className={`h-14 rounded-xl border-0 font-bold px-6 focus:ring-2 focus:ring-orange-500 transition-all text-sm ${isDarkMode ? 'bg-zinc-800 text-white' : 'bg-zinc-50'}`}>
                         <SelectValue placeholder="Select Business Type" />
                       </SelectTrigger>
@@ -6058,7 +6058,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   onClick={() => {
                     try {
                       window.print();
-                    } catch (e) {
+                    } catch (e: any) {
                       alert("Printing not supported in this view.");
                     }
                   }} 
@@ -6104,7 +6104,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                          <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest mb-1 px-1">
                            {getPartnerName(businessType, mode).toUpperCase()}
                          </p>
-                         <h4 className="text-xl font-bold tracking-tighter px-1">₹{Math.round(total)}</h4>
+                         <h4 className="text-xl font-bold tracking-tighter px-1">₹{Math.round(total as number)}</h4>
                       </Card>
                     ))}
                   </div>
@@ -8546,7 +8546,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 try {
                   const { App } = await import('@capacitor/app');
                   await App.exitApp();
-                } catch (e) {
+                } catch (e: any) {
                   window.close();
                 }
               }} className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-xs active:scale-95 transition-all">{t("Yes")}</Button>
@@ -8742,7 +8742,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                     const html5QrCode = qrCodeRef.current || new (window as any).Html5Qrcode("reader");
                                     const decodedText = await html5QrCode.scanFile(optimizedFile, true);
                                     handleScanSuccess(decodedText, html5QrCode);
-                                  } catch (err) {
+                                  } catch (err: any) {
                                     console.error(err);
                                     alert("Barcode/IMEI not detected. Please capture a clear, straight, close-up photo of the barcode.");
                                     setLastScannedMsg("");

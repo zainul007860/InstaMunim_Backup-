@@ -189,7 +189,7 @@ export default function LandingPage() {
           <div className="hidden lg:flex items-center gap-8 text-xs font-bold tracking-wider text-zinc-500 uppercase">
             <a href="#about" className="hover:text-orange-600 transition-colors">Why POS</a>
             <a href="#features" className="hover:text-orange-600 transition-colors">Core Systems</a>
-            <a href="#ai-scanner" class="hover:text-orange-600 transition-colors">AI rate Scanner</a>
+            <a href="#ai-scanner" className="hover:text-orange-600 transition-colors">AI rate Scanner</a>
             <a href="#reviews" className="hover:text-orange-600 transition-colors">Testimonials</a>
             <a href="#pricing" className="hover:text-orange-600 transition-colors">Pricing</a>
           </div>
@@ -248,7 +248,7 @@ export default function LandingPage() {
             <div className="flex items-center gap-6 pt-4 text-xs font-bold text-zinc-400">
               <span className="flex items-center gap-1.5"><Check className="text-orange-500 w-4 h-4" /> NO SETUP CHARGES</span>
               <span className="flex items-center gap-1.5"><Check className="text-orange-500 w-4 h-4" /> 30-DAY FREE PREMIUM TRIAL</span>
-              <span class="flex items-center gap-1.5"><Check className="text-orange-500 w-4 h-4" /> CANCEL ANYTIME</span>
+              <span className="flex items-center gap-1.5"><Check className="text-orange-500 w-4 h-4" /> CANCEL ANYTIME</span>
             </div>
           </div>
 
@@ -259,7 +259,7 @@ export default function LandingPage() {
               <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-orange-200 rounded-full -z-10 blur-2xl opacity-60"></div>
               
               <div className="bg-white border border-zinc-200 rounded-[2.5rem] p-4 shadow-xl">
-                <div class="bg-zinc-50 rounded-[2rem] p-5 border border-zinc-150 relative">
+                <div className="bg-zinc-50 rounded-[2rem] p-5 border border-zinc-150 relative">
                   <div className="flex justify-between items-center mb-6">
                     <div>
                       <h4 className="font-extrabold text-[9px] text-zinc-400 uppercase tracking-widest">LIVE POS SIMULATOR</h4>
@@ -450,7 +450,7 @@ export default function LandingPage() {
                 </div>
                 <div className="space-y-1 grow">
                   <h4 className={`font-extrabold text-sm md:text-base ${activeTourTab === 'analytics-settings' ? 'text-zinc-950' : 'text-zinc-800'}`}>Analytics & Admin Settings</h4>
-                  <p class="text-zinc-500 text-xs font-semibold leading-relaxed">Deep business metrics dashboard. Thermal printer settings, staff role permissions configure options.</p>
+                  <p className="text-zinc-500 text-xs font-semibold leading-relaxed">Deep business metrics dashboard. Thermal printer settings, staff role permissions configure options.</p>
                   
                   {activeTourTab === 'analytics-settings' && (
                     <div className="tour-subtabs mt-2.5 flex flex-wrap gap-1.5" onClick={e => e.stopPropagation()}>
@@ -525,13 +525,13 @@ export default function LandingPage() {
             </div>
             
             <div className="bg-zinc-50/50 p-8 rounded-3xl border border-zinc-200/50 hover:shadow-md transition-shadow">
-              <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center mb-6"><RefreshCw className="w-6 h-6" /></div>
+              <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center mb-6"><RefreshCw className="w-6 h-6" /></div>
               <h4 className="font-bold text-lg text-zinc-950 mb-2">Automatic Cloud Backup</h4>
               <p className="text-xs font-medium text-zinc-500 leading-relaxed">Your data is safe even if your phone is broken or stolen! Log in on any new Android device to recover your database.</p>
             </div>
 
             <div className="bg-zinc-50/50 p-8 rounded-3xl border border-zinc-200/50 hover:shadow-md transition-shadow">
-              <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center mb-6"><Heart className="w-6 h-6" /></div>
+              <div className="w-12 h-12 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center mb-6"><Heart className="w-6 h-6" /></div>
               <h4 className="font-bold text-lg text-zinc-950 mb-2">Zero Commission POS</h4>
               <p className="text-xs font-medium text-zinc-500 leading-relaxed">InstaMunim is a digital software subscription. We do not take any transaction volume percentage cut from your sales.</p>
             </div>
@@ -551,42 +551,42 @@ export default function LandingPage() {
             {/* Feature 1 */}
             <div className="bg-white border border-zinc-200 p-6 rounded-2xl hover:border-orange-500 hover:shadow-md transition-all duration-300">
               <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center mb-5"><Zap className="w-5 h-5" /></div>
-              <h4 class="text-base font-bold text-zinc-950 mb-2">3-Second Fast Invoices</h4>
+              <h4 className="text-base font-bold text-zinc-950 mb-2">3-Second Fast Invoices</h4>
               <p className="text-zinc-500 text-xs font-semibold leading-relaxed">Speed up your billing counter. Add items to cart via click or search, then print or share invoices.</p>
             </div>
 
             {/* Feature 2 */}
             <div className="bg-white border border-zinc-200 p-6 rounded-2xl hover:border-orange-500 hover:shadow-md transition-all duration-300">
               <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center mb-5"><BarChart3 className="w-5 h-5" /></div>
-              <h4 class="text-base font-bold text-zinc-950 mb-2">Profit & Cost Monitoring</h4>
+              <h4 className="text-base font-bold text-zinc-950 mb-2">Profit & Cost Monitoring</h4>
               <p className="text-zinc-500 text-xs font-semibold leading-relaxed">Inventory costs, gross margins, and expenses are automatically deducted to calculate daily net profits.</p>
             </div>
 
             {/* Feature 3 */}
             <div className="bg-white border border-zinc-200 p-6 rounded-2xl hover:border-orange-500 hover:shadow-md transition-all duration-300">
               <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center mb-5"><Camera className="w-5 h-5" /></div>
-              <h4 class="text-base font-bold text-zinc-950 mb-2">AI Menu Scanner</h4>
+              <h4 className="text-base font-bold text-zinc-950 mb-2">AI Menu Scanner</h4>
               <p className="text-zinc-500 text-xs font-semibold leading-relaxed">Gemini AI model automatically parses printed rate cards. Save time spent manually typing menu items and prices.</p>
             </div>
 
             {/* Feature 4 */}
             <div className="bg-white border border-zinc-200 p-6 rounded-2xl hover:border-orange-500 hover:shadow-md transition-all duration-300">
               <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center mb-5"><CreditCard className="w-5 h-5" /></div>
-              <h4 class="text-base font-bold text-zinc-950 mb-2">Rent & Commissions Tracker</h4>
+              <h4 className="text-base font-bold text-zinc-950 mb-2">Rent & Commissions Tracker</h4>
               <p className="text-zinc-500 text-xs font-semibold leading-relaxed">Manage rent cycles, security deposits, and broker details securely inside our cloud-synced system.</p>
             </div>
 
             {/* Feature 5 */}
             <div className="bg-white border border-zinc-200 p-6 rounded-2xl hover:border-orange-500 hover:shadow-md transition-all duration-300">
               <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center mb-5"><Lock className="w-5 h-5" /></div>
-              <h4 class="text-base font-bold text-zinc-950 mb-2">Staff Access Permissions</h4>
+              <h4 className="text-base font-bold text-zinc-950 mb-2">Staff Access Permissions</h4>
               <p className="text-zinc-500 text-xs font-semibold leading-relaxed">Lock staff log permissions to keep billing and security details completely secure.</p>
             </div>
 
             {/* Feature 6 */}
             <div className="bg-white border border-zinc-200 p-6 rounded-2xl hover:border-orange-500 hover:shadow-md transition-all duration-300">
               <div className="w-10 h-10 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center mb-5"><RefreshCw className="w-5 h-5" /></div>
-              <h4 class="text-base font-bold text-zinc-950 mb-2">1-Click Full Cloud Sync</h4>
+              <h4 className="text-base font-bold text-zinc-950 mb-2">1-Click Full Cloud Sync</h4>
               <p className="text-zinc-500 text-xs font-semibold leading-relaxed">Your database creates automatic updates. Supabase backup servers dynamically store all your shop data.</p>
             </div>
           </div>
@@ -642,7 +642,7 @@ export default function LandingPage() {
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <span className="font-extrabold text-zinc-300 text-sm block mb-1">3. Instant Save</span>
-                <span class="text-[11px] text-zinc-500 font-semibold leading-normal">Verify the list and click save to update your menu instantly</span>
+                <span className="text-[11px] text-zinc-500 font-semibold leading-normal">Verify the list and click save to update your menu instantly</span>
               </div>
             </div>
           </div>
@@ -681,7 +681,7 @@ export default function LandingPage() {
                   </div>
                   <div className="flex justify-between">
                     <span>Dal Makhani</span> 
-                    <span class="text-orange-500 font-extrabold">₹180.00</span>
+                    <span className="text-orange-500 font-extrabold">₹180.00</span>
                   </div>
                 </div>
                 
@@ -745,7 +745,7 @@ export default function LandingPage() {
                 <div>
                   <p className="font-extrabold text-xs text-zinc-950 flex items-center gap-1.5">
                     Zaid Khan 
-                    <span class="inline-flex items-center bg-green-50 text-green-700 text-[8px] font-black px-1.5 py-0.5 rounded-full border border-green-200 shrink-0">
+                    <span className="inline-flex items-center bg-green-50 text-green-700 text-[8px] font-black px-1.5 py-0.5 rounded-full border border-green-200 shrink-0">
                       <Check className="w-2.5 h-2.5 mr-0.5 text-green-600" /> VERIFIED
                     </span>
                   </p>
@@ -769,7 +769,7 @@ export default function LandingPage() {
                 <div>
                   <p className="font-extrabold text-xs text-zinc-950 flex items-center gap-1.5">
                     Preeti Singh 
-                    <span class="inline-flex items-center bg-green-50 text-green-700 text-[8px] font-black px-1.5 py-0.5 rounded-full border border-green-200 shrink-0">
+                    <span className="inline-flex items-center bg-green-50 text-green-700 text-[8px] font-black px-1.5 py-0.5 rounded-full border border-green-200 shrink-0">
                       <Check className="w-2.5 h-2.5 mr-0.5 text-green-600" /> VERIFIED
                     </span>
                   </p>

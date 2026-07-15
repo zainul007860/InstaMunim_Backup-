@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { Suspense, useEffect, useState, useRef } from "react";
-import { Printer, ShoppingBag, CheckCircle2, QrCode, Camera, Globe, Phone, MapPin, ReceiptText, Download, Gift, Copy, Check } from "lucide-react";
+import { Printer, ShoppingBag, CheckCircle2, QrCode, Camera, Globe, Phone, MapPin, ReceiptText, Download, Gift, Copy, Check, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 
@@ -77,7 +77,7 @@ function ScratchCard({
     resizeCanvas();
   }, [isCompleted]);
 
-  const revealCard = (e) => {
+  const revealCard = (e: any) => {
     if (isCompleted) return;
     setIsCompleted(true);
     
@@ -184,14 +184,14 @@ function InvoiceContent() {
         const bgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}&model=flux`;
 
         const drawTextWithFit = (
-          ctx,
-          textStr, 
-          centerX, 
-          yPos, 
-          maxWidth, 
-          maxFontSize, 
-          isBold, 
-          color
+          ctx: any,
+          textStr: string, 
+          centerX: number, 
+          yPos: number, 
+          maxWidth: number, 
+          maxFontSize: number, 
+          isBold: boolean, 
+          color: string
         ) => {
           let fontSize = maxFontSize;
           ctx.textAlign = "center";
@@ -272,7 +272,7 @@ function InvoiceContent() {
           } while (ctx.measureText(restName.toUpperCase()).width > 750 && storeNameFontSize > 24);
           ctx.fillText(restName.toUpperCase(), 48, 54);
 
-          const drawWithLogo = (logoImg) => {
+          const drawWithLogo = (logoImg: any) => {
             if (logoImg) {
               const logoSize = 130;
               const x = 1024 - logoSize - 48;
@@ -356,7 +356,7 @@ function InvoiceContent() {
           if (!error && data) {
             const title = data.title || "";
             if (title.includes("[BUYBACK###") || title.includes("[BUYBACK:")) {
-              const parseBuybackMeta = (t) => {
+              const parseBuybackMeta = (t: any) => {
                 if (t.includes("[BUYBACK###")) {
                   const metaPart = t.substring(t.indexOf("[BUYBACK###") + 11, t.lastIndexOf("]"));
                   const parts = metaPart.split("###");
