@@ -355,22 +355,53 @@ function InvoiceContent() {
           
           if (!error && data) {
             const title = data.title || "";
-            if (title.includes("[BUYBACK:")) {
-              const metaPart = title.substring(title.indexOf("[BUYBACK:") + 9, title.lastIndexOf("]"));
-              const parts = metaPart.split(":");
-              const photos = (parts[5] || "").split("|");
+            if (title.includes("[BUYBACK###") || title.includes("[BUYBACK:")) {
+              const parseBuybackMeta = (t) => {
+                if (t.includes("[BUYBACK###")) {
+                  const metaPart = t.substring(t.indexOf("[BUYBACK###") + 11, t.lastIndexOf("]"));
+                  const parts = metaPart.split("###");
+                  const photos = (parts[5] || "").split("|");
+                  return {
+                    brandModel: parts[0] || "Unknown",
+                    imei: parts[1] || "N/A",
+                    aadhaar: parts[2] || "N/A",
+                    custName: parts[3] || "N/A",
+                    custMobile: parts[4] || "N/A",
+                    photo: photos[0] || "N/A",
+                    photoBack: photos[1] || "N/A",
+                    photoDevice: photos[2] || "N/A"
+                  };
+                } else {
+                  const metaPart = t.substring(t.indexOf("[BUYBACK:") + 9, t.lastIndexOf("]"));
+                  const parts = metaPart.split(":");
+                  const photos = (parts[5] || "").split("|");
+                  return {
+                    brandModel: parts[0] || "Unknown",
+                    imei: parts[1] || "N/A",
+                    aadhaar: parts[2] || "N/A",
+                    custName: parts[3] || "N/A",
+                    custMobile: parts[4] || "N/A",
+                    photo: photos[0] || "N/A",
+                    photoBack: photos[1] || "N/A",
+                    photoDevice: photos[2] || "N/A"
+                  };
+                }
+              };
+              
+              const info = parseBuybackMeta(title);
               setDeclarationItem({
                 id: data.id,
                 title: data.title,
                 amount: data.amount,
                 date: data.expense_date || data.created_at,
-                brandModel: parts[0] || "Unknown",
-                imei: parts[1] || "N/A",
-                aadhaar: parts[2] || "N/A",
-                custName: parts[3] || "N/A",
-                custMobile: parts[4] || "N/A",
-                photo: photos[0],
-                photoBack: photos[1] || "N/A"
+                brandModel: info.brandModel,
+                imei: info.imei,
+                aadhaar: info.aadhaar,
+                custName: info.custName,
+                custMobile: info.custMobile,
+                photo: info.photo,
+                photoBack: info.photoBack,
+                photoDevice: info.photoDevice
               });
             }
           }
@@ -642,17 +673,19 @@ function InvoiceContent() {
           </div>
         </div>
 
-        {/* Aadhaar Photo Attachment */}
-        {((declarationItem.photo && declarationItem.photo !== "N/A") || (declarationItem.photoBack && declarationItem.photoBack !== "N/A")) && (
+        {/* Verification Documents & Photos Attachment */}
+        {((declarationItem.photo && declarationItem.photo !== "N/A") || 
+          (declarationItem.photoBack && declarationItem.photoBack !== "N/A") || 
+          (declarationItem.photoDevice && declarationItem.photoDevice !== "N/A")) && (
           <div className="my-6 space-y-3">
-            <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Attached ID Card Proof</h4>
-            <div className="grid grid-cols-2 gap-4">
+            <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Verification Documents & Device Photo</h4>
+            <div className="grid grid-cols-3 gap-4">
               {/* Front Side */}
               <div className="space-y-1">
-                <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider text-center">Aadhaar Front Side</p>
-                <div className="w-full h-44 border border-zinc-200 rounded-xl overflow-hidden flex items-center justify-center bg-zinc-50">
+                <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider text-center">ID Front Side</p>
+                <div className="w-full h-36 border border-zinc-200 rounded-xl overflow-hidden flex items-center justify-center bg-zinc-50">
                   {declarationItem.photo && declarationItem.photo !== "N/A" ? (
-                    <img src={declarationItem.photo} alt="ID Card Front" className="max-h-full max-w-full object-contain" />
+                    <img src={declarationItem.photo} alt="ID Front" className="max-h-full max-w-full object-contain" />
                   ) : (
                     <span className="text-[8px] font-bold text-zinc-400 uppercase">Not Captured</span>
                   )}
@@ -661,10 +694,22 @@ function InvoiceContent() {
 
               {/* Back Side */}
               <div className="space-y-1">
-                <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider text-center">Aadhaar Back Side</p>
-                <div className="w-full h-44 border border-zinc-200 rounded-xl overflow-hidden flex items-center justify-center bg-zinc-50">
+                <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider text-center">ID Back Side</p>
+                <div className="w-full h-36 border border-zinc-200 rounded-xl overflow-hidden flex items-center justify-center bg-zinc-50">
                   {declarationItem.photoBack && declarationItem.photoBack !== "N/A" ? (
-                    <img src={declarationItem.photoBack} alt="ID Card Back" className="max-h-full max-w-full object-contain" />
+                    <img src={declarationItem.photoBack} alt="ID Back" className="max-h-full max-w-full object-contain" />
+                  ) : (
+                    <span className="text-[8px] font-bold text-zinc-400 uppercase">Not Captured</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Device Photo */}
+              <div className="space-y-1">
+                <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider text-center">Device Photo</p>
+                <div className="w-full h-36 border border-zinc-200 rounded-xl overflow-hidden flex items-center justify-center bg-zinc-50">
+                  {declarationItem.photoDevice && declarationItem.photoDevice !== "N/A" ? (
+                    <img src={declarationItem.photoDevice} alt="Device Pic" className="max-h-full max-w-full object-contain" />
                   ) : (
                     <span className="text-[8px] font-bold text-zinc-400 uppercase">Not Captured</span>
                   )}

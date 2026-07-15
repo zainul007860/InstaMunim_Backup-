@@ -1444,7 +1444,7 @@ export default function Dashboard() {
       const photoBackStr = buybackIdPhotoBack ? buybackIdPhotoBack : "N/A";
       const photoDeviceStr = buybackDevicePhoto ? buybackDevicePhoto : "N/A";
       const photoStr = `${photoFrontStr}|${photoBackStr}|${photoDeviceStr}`;
-      const buybackMeta = `[BUYBACK:${buybackBrandModel}:${buybackImei || "N/A"}:${buybackAadhaar || "N/A"}:${buybackCustName}:${buybackCustMobile || "N/A"}:${photoStr}:UNSOLD]`;
+      const buybackMeta = `[BUYBACK###${buybackBrandModel}###${buybackImei || "N/A"}###${buybackAadhaar || "N/A"}###${buybackCustName}###${buybackCustMobile || "N/A"}###${photoStr}###UNSOLD]`;
       const expenseTitle = `Used Phone Buyback: ${buybackBrandModel} (IMEI: ${buybackImei || "N/A"}) ${buybackMeta}`;
 
       const { data: newExp, error } = await supabase
@@ -2196,7 +2196,7 @@ Requirements for the generated image prompt:
       return;
     }
     try {
-      const viewerUrl = `${window.location.origin}/invoice?banner=true&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&logo=${encodeURIComponent(storeLogo || "")}&oM=${ownerMobile}`;
+      const viewerUrl = `${window.location.origin}/invoice?banner=true&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${ownerMobile}`;
       const customMsg = `Special offer for you, ${name}! 🛍️\n\nShop: ${restaurantName}\nOffer: ${offerTitle}\nDeal: ${discountDetails} on ${productName}\n\nView Banner: ${viewerUrl}`;
       window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(customMsg)}`, "_blank");
     } catch (err) {
@@ -4244,11 +4244,15 @@ Stay safe & eat healthy! 🍕
                     if (cleanCategory === "Exchange") {
                       const targetExpense = expenses.find(e => {
                         const title = e.title || "";
-                        return title.includes("[BUYBACK:") && title.includes(`:${cartItem.imei}:`) && title.endsWith(":UNSOLD]");
+                        return title.includes(cartItem.imei) && (title.endsWith("###UNSOLD]") || title.endsWith(":UNSOLD]"));
                       });
 
                       if (targetExpense) {
-                        const updatedTitle = targetExpense.title.replace(":UNSOLD]", `:SOLD:${cartItem.price}`);
+                        const isNewFormat = targetExpense.title.includes("###UNSOLD]");
+                        const updatedTitle = isNewFormat 
+                          ? targetExpense.title.replace("###UNSOLD]", `###SOLD###${cartItem.price}`)
+                          : targetExpense.title.replace(":UNSOLD]", `:SOLD:${cartItem.price}`);
+                        
                         await supabase
                           .from('expenses')
                           .update({ title: updatedTitle })
@@ -6043,12 +6047,12 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 <p className="text-sm font-bold text-zinc-400 mt-2 leading-relaxed">Comprehensive view of your store's performance.</p>
               </header>
 
-              <div className="flex flex-col sm:flex-row gap-3 w-full">
+              <div className="flex flex-col sm:flex-row gap-4 w-full px-2">
                 <Button 
                   onClick={handleExportSalesToExcel} 
-                  className="flex-1 h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl text-xs shadow-md flex items-center justify-center gap-2 uppercase tracking-wider active:scale-95 transition-all border-0 cursor-pointer"
+                  className="flex-1 h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-full text-xs shadow-xl flex items-center justify-center gap-2 uppercase tracking-widest active:scale-95 transition-all border-0 cursor-pointer"
                 >
-                  <FileText className="h-4 w-4" /> Export Sales to Excel
+                  <FileText className="h-4 w-4" /> EXPORT TO EXCEL
                 </Button>
                 <Button 
                   onClick={() => {
@@ -6058,9 +6062,9 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       alert("Printing not supported in this view.");
                     }
                   }} 
-                  className="flex-1 h-14 bg-zinc-900 hover:bg-black text-white font-black rounded-2xl text-xs shadow-md flex items-center justify-center gap-2 uppercase tracking-wider active:scale-95 transition-all border-0 cursor-pointer"
+                  className="flex-1 h-14 bg-zinc-900 hover:bg-black text-white font-black rounded-full text-xs shadow-xl flex items-center justify-center gap-2 uppercase tracking-widest active:scale-95 transition-all border-0 cursor-pointer"
                 >
-                  <Printer className="h-4 w-4" /> Print Sales Report
+                  <Printer className="h-4 w-4" /> PRINT REPORT
                 </Button>
               </div>
 
@@ -6576,29 +6580,55 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               {(() => {
                 const buybackExpenses = expenses.map(e => {
                   const title = e.title || "";
-                  if (!title.includes("[BUYBACK:")) return null;
-                  const metaPart = title.substring(title.indexOf("[BUYBACK:") + 9, title.lastIndexOf("]"));
-                  const parts = metaPart.split(":");
-                  const photos = (parts[5] || "").split("|");
-                  const status = parts[6] || "UNSOLD";
-                  const isSold = status === "SOLD" || status.startsWith("SOLD");
-                  const salePrice = isSold ? Number(parts[7] || 0) : 0;
-                  return {
-                    id: e.id,
-                    title: e.title,
-                    amount: e.amount,
-                    date: e.date,
-                    brandModel: parts[0] || "Unknown",
-                    imei: parts[1] || "N/A",
-                    aadhaar: parts[2] || "N/A",
-                    custName: parts[3] || "N/A",
-                    custMobile: parts[4] || "N/A",
-                    photo: photos[0] || "N/A",
-                    photoBack: photos[1] || "N/A",
-                    photoDevice: photos[2] || "N/A",
-                    status: isSold ? "SOLD" : "UNSOLD",
-                    salePrice: salePrice
-                  };
+                  if (!title.includes("[BUYBACK###") && !title.includes("[BUYBACK:")) return null;
+                  
+                  if (title.includes("[BUYBACK###")) {
+                    const metaPart = title.substring(title.indexOf("[BUYBACK###") + 11, title.lastIndexOf("]"));
+                    const parts = metaPart.split("###");
+                    const photos = (parts[5] || "").split("|");
+                    const status = parts[6] || "UNSOLD";
+                    const isSold = status === "SOLD" || status.startsWith("SOLD");
+                    const salePrice = isSold ? Number(parts[7] || 0) : 0;
+                    return {
+                      id: e.id,
+                      title: e.title,
+                      amount: e.amount,
+                      date: e.date,
+                      brandModel: parts[0] || "Unknown",
+                      imei: parts[1] || "N/A",
+                      aadhaar: parts[2] || "N/A",
+                      custName: parts[3] || "N/A",
+                      custMobile: parts[4] || "N/A",
+                      photo: photos[0] || "N/A",
+                      photoBack: photos[1] || "N/A",
+                      photoDevice: photos[2] || "N/A",
+                      status: isSold ? "SOLD" : "UNSOLD",
+                      salePrice: salePrice
+                    };
+                  } else {
+                    const metaPart = title.substring(title.indexOf("[BUYBACK:") + 9, title.lastIndexOf("]"));
+                    const parts = metaPart.split(":");
+                    const photos = (parts[5] || "").split("|");
+                    const status = parts[6] || "UNSOLD";
+                    const isSold = status === "SOLD" || status.startsWith("SOLD");
+                    const salePrice = isSold ? Number(parts[7] || 0) : 0;
+                    return {
+                      id: e.id,
+                      title: e.title,
+                      amount: e.amount,
+                      date: e.date,
+                      brandModel: parts[0] || "Unknown",
+                      imei: parts[1] || "N/A",
+                      aadhaar: parts[2] || "N/A",
+                      custName: parts[3] || "N/A",
+                      custMobile: parts[4] || "N/A",
+                      photo: photos[0] || "N/A",
+                      photoBack: photos[1] || "N/A",
+                      photoDevice: photos[2] || "N/A",
+                      status: isSold ? "SOLD" : "UNSOLD",
+                      salePrice: salePrice
+                    };
+                  }
                 }).filter(Boolean) as any[];
 
                 const totalBuybackAmount = buybackExpenses.reduce((sum, item) => sum + item.amount, 0);
