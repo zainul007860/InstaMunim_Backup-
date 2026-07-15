@@ -152,7 +152,7 @@ function InvoiceContent() {
   const storePh = searchParams.get("ph") || "+91 9999 888 777";
   const storeWeb = searchParams.get("w") || "www.khankitchen.com";
   const storeGs = searchParams.get("g") || "07AABCU1234F1Z5";
-  const ownerMobile = searchParams.get("o") || "";
+  const ownerMobile = searchParams.get("banner") === "true" ? (searchParams.get("oM") || "") : (searchParams.get("o") || "");
   
   const extraChargeName = searchParams.get("ecn") || "";
   const extraChargeAmount = Number(searchParams.get("eca")) || 0;
