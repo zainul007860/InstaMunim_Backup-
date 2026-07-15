@@ -1677,12 +1677,15 @@ export default function Dashboard() {
   };
 
   const handlePrintBuyback = (item: any) => {
+    const storeGst = storeGstin || "";
+    const baseUrl = "https://www.instamunim.com";
+    const url = `${baseUrl}/invoice?decId=${item.id}&o=${ownerMobile}&n=${encodeURIComponent(restaurantName)}&a=${encodeURIComponent(storeAddress || "")}&ph=${encodeURIComponent(storePhone || "")}&g=${encodeURIComponent(storeGst)}`;
+    
     const isCapacitor = (typeof window !== 'undefined' && !!(window as any).Capacitor?.isNative);
     if (isCapacitor) {
-      handleDownloadPdfBuyback(item);
+      window.open(url, '_system');
     } else {
-      const storeGst = storeGstin || "";
-      window.open(`/invoice?decId=${item.id}&o=${ownerMobile}&n=${encodeURIComponent(restaurantName)}&a=${encodeURIComponent(storeAddress || "")}&ph=${encodeURIComponent(storePhone || "")}&g=${encodeURIComponent(storeGst)}`, '_blank');
+      window.open(url, '_blank');
     }
   };
 
