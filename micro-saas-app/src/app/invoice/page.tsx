@@ -161,6 +161,178 @@ function InvoiceContent() {
 
   const logoFromUrl = searchParams.get("logo") || "";
 
+  const isBannerView = searchParams.get("banner") === "true";
+  const bannerOffer = searchParams.get("o") || "";
+  const bannerDetails = searchParams.get("d") || "";
+  const bannerProd = searchParams.get("p") || "";
+
+  const [adBannerUrl, setAdBannerUrl] = useState("");
+  const [isLoadingAd, setIsLoadingAd] = useState(true);
+
+  useEffect(() => {
+    if (!isBannerView) return;
+    const runAdGen = async () => {
+      try {
+        const bannerPrompt = `Professional commercial studio photography social media ad poster banner. A realistic close-up shot of '${bannerProd}' in premium packaging, set on a modern studio surface with clean lighting. Cinematic lighting, sharp focus, 8k resolution, high-end commercial setup. Plain background with no text, letters, or words.`;
+        const encodedPrompt = encodeURIComponent(bannerPrompt);
+        const seed = Math.abs(restName.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)) % 1000000;
+        const bgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}&model=flux`;
+
+        const drawTextWithFit = (
+          ctx,
+          textStr, 
+          centerX, 
+          yPos, 
+          maxWidth, 
+          maxFontSize, 
+          isBold, 
+          color
+        ) => {
+          let fontSize = maxFontSize;
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillStyle = color;
+          
+          do {
+            ctx.font = `${isBold ? '900' : 'bold'} ${fontSize}px sans-serif`;
+            fontSize -= 2;
+          } while (ctx.measureText(textStr).width > maxWidth && fontSize > 20);
+          
+          if (ctx.measureText(textStr).width > maxWidth) {
+            fontSize = maxFontSize - 6;
+            if (fontSize < 20) fontSize = 20;
+            ctx.font = `${isBold ? '900' : 'bold'} ${fontSize}px sans-serif`;
+            const words = textStr.split(" ");
+            let line = "";
+            const lines = [];
+            
+            for (let n = 0; n < words.length; n++) {
+              const testLine = line + words[n] + " ";
+              const metrics = ctx.measureText(testLine);
+              if (metrics.width > maxWidth && n > 0) {
+                lines.push(line.trim());
+                line = words[n] + " ";
+              } else {
+                line = testLine;
+              }
+            }
+            lines.push(line.trim());
+            
+            const lineHeight = fontSize + 10;
+            const startY = yPos - ((lines.length - 1) * lineHeight) / 2;
+            
+            lines.forEach((lineText, idx) => {
+              ctx.fillText(lineText, centerX, startY + idx * lineHeight);
+            });
+          } else {
+            ctx.fillText(textStr, centerX, yPos);
+          }
+        };
+
+        const canvas = document.createElement("canvas");
+        canvas.width = 1024;
+        canvas.height = 1024;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          setAdBannerUrl(bgUrl);
+          setIsLoadingAd(false);
+          return;
+        }
+
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = bgUrl;
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0, 1024, 1024);
+
+          const topGrad = ctx.createLinearGradient(0, 0, 0, 260);
+          topGrad.addColorStop(0, "rgba(0, 0, 0, 0.75)");
+          topGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+          ctx.fillStyle = topGrad;
+          ctx.fillRect(0, 0, 1024, 260);
+
+          const bottomGrad = ctx.createLinearGradient(0, 720, 0, 1024);
+          bottomGrad.addColorStop(0, "rgba(0, 0, 0, 0)");
+          bottomGrad.addColorStop(1, "rgba(0, 0, 0, 0.85)");
+          ctx.fillStyle = bottomGrad;
+          ctx.fillRect(0, 720, 1024, 304);
+
+          ctx.fillStyle = "#ffffff";
+          ctx.textAlign = "left";
+          ctx.textBaseline = "top";
+          let storeNameFontSize = 44;
+          do {
+            ctx.font = `bold ${storeNameFontSize}px sans-serif`;
+            storeNameFontSize -= 2;
+          } while (ctx.measureText(restName.toUpperCase()).width > 750 && storeNameFontSize > 24);
+          ctx.fillText(restName.toUpperCase(), 48, 54);
+
+          const drawWithLogo = (logoImg) => {
+            if (logoImg) {
+              const logoSize = 130;
+              const x = 1024 - logoSize - 48;
+              const y = 48;
+              const radius = 24;
+
+              ctx.fillStyle = "#ffffff";
+              ctx.beginPath();
+              ctx.moveTo(x + radius, y);
+              ctx.lineTo(x + logoSize - radius, y);
+              ctx.quadraticCurveTo(x + logoSize, y, x + logoSize, y + radius);
+              ctx.lineTo(x + logoSize, y + logoSize - radius);
+              ctx.quadraticCurveTo(x + logoSize, y + logoSize, x + logoSize - radius, y + logoSize);
+              ctx.lineTo(x + radius, y + logoSize);
+              ctx.quadraticCurveTo(x, y + logoSize, x, y + logoSize - radius);
+              ctx.lineTo(x, y + radius);
+              ctx.quadraticCurveTo(x, y, x + radius, y);
+              ctx.closePath();
+              ctx.fill();
+
+              const margin = 10;
+              const size = logoSize - (margin * 2);
+              ctx.drawImage(logoImg, x + margin, y + margin, size, size);
+            }
+
+            drawTextWithFit(ctx, bannerOffer.toUpperCase(), 512, 805, 928, 76, true, "#FF6B00");
+            drawTextWithFit(ctx, `${bannerDetails} ON ${bannerProd}`.toUpperCase(), 512, 895, 928, 38, false, "#ffffff");
+
+            ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+            ctx.font = "bold 20px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("POWERED BY INSTAMUNIM", 512, 970);
+
+            setAdBannerUrl(canvas.toDataURL("image/png"));
+            setIsLoadingAd(false);
+          };
+
+          const logoUrl = logoFromUrl || cloudLogo;
+          if (logoUrl) {
+            const lImg = new Image();
+            lImg.crossOrigin = "anonymous";
+            lImg.src = logoUrl;
+            lImg.onload = () => drawWithLogo(lImg);
+            lImg.onerror = () => drawWithLogo(undefined);
+          } else {
+            drawWithLogo(undefined);
+          }
+        };
+        img.onerror = () => {
+          setAdBannerUrl(bgUrl);
+          setIsLoadingAd(false);
+        };
+      } catch (e) {
+        setIsLoadingAd(false);
+      }
+    };
+    
+    if (ownerMobile && !cloudLogo) {
+      const timer = setTimeout(runAdGen, 1000);
+      return () => clearTimeout(timer);
+    } else {
+      runAdGen();
+    }
+  }, [isBannerView, restName, bannerOffer, bannerDetails, bannerProd, logoFromUrl, cloudLogo, ownerMobile]);
+
   const decId = searchParams.get("decId");
   const [declarationItem, setDeclarationItem] = useState<any>(null);
   const [loadingDeclaration, setLoadingDeclaration] = useState(true);
@@ -316,6 +488,48 @@ function InvoiceContent() {
     cgst = (gstTotal / 2).toFixed(2);
     sgst = (gstTotal / 2).toFixed(2);
     subtotal = (grossTotal - gstTotal - extraChargeAmount).toFixed(2);
+  }
+
+  if (isBannerView) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950 p-4 font-sans text-white">
+        <div className="w-full max-w-lg space-y-6 text-center animate-in fade-in duration-500">
+          <header className="space-y-1">
+            <h1 className="text-2xl font-black uppercase tracking-tight text-orange-500">{restName}</h1>
+            <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest">Special Customer Promotion Offer</p>
+          </header>
+
+          <div className="relative aspect-square w-full rounded-[2rem] overflow-hidden shadow-2xl border border-zinc-800 bg-zinc-900 flex items-center justify-center">
+            {isLoadingAd ? (
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+                <p className="text-[10px] font-black tracking-widest text-zinc-400 uppercase">Generating Ad Banner...</p>
+              </div>
+            ) : (
+              <img src={adBannerUrl} alt="Ad Banner" className="w-full h-full object-contain" />
+            )}
+          </div>
+
+          {!isLoadingAd && (
+            <div className="flex flex-col sm:flex-row gap-3 w-full">
+              <Button
+                onClick={() => {
+                  const link = document.createElement("a");
+                  link.href = adBannerUrl;
+                  link.download = `InstaMunim_Offer_${restName.replace(/\s+/g, '_')}.png`;
+                  document.body.appendChild(link);
+                  link.click();
+                  document.body.removeChild(link);
+                }}
+                className="w-full h-14 bg-orange-600 hover:bg-orange-500 text-white font-black rounded-2xl text-xs tracking-widest uppercase shadow-lg shadow-orange-600/10 active:scale-95 transition-all border-0 cursor-pointer"
+              >
+                Save To Gallery
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   }
 
   if (decId) {

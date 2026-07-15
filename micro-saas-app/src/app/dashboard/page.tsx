@@ -1706,6 +1706,60 @@ Requirements for the generated image prompt:
             canvas.height = 1024;
             const ctx = canvas.getContext("2d");
             if (ctx) {
+              // Helper to draw text with dynamic wrapping or auto-scaling font size
+              const drawTextWithFit = (
+                textStr, 
+                centerX, 
+                yPos, 
+                maxWidth, 
+                maxFontSize, 
+                isBold, 
+                color
+              ) => {
+                let fontSize = maxFontSize;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillStyle = color;
+                
+                // Reduce font size until it fits, down to a minimum of 20px
+                do {
+                  ctx.font = `${isBold ? '900' : 'bold'} ${fontSize}px sans-serif`;
+                  fontSize -= 2;
+                } while (ctx.measureText(textStr).width > maxWidth && fontSize > 20);
+                
+                // If it still exceeds, wrap it into two lines
+                if (ctx.measureText(textStr).width > maxWidth) {
+                  fontSize = maxFontSize - 6;
+                  if (fontSize < 20) fontSize = 20;
+                  ctx.font = `${isBold ? '900' : 'bold'} ${fontSize}px sans-serif`;
+                  const words = textStr.split(" ");
+                  let line = "";
+                  const lines = [];
+                  
+                  for (let n = 0; n < words.length; n++) {
+                    const testLine = line + words[n] + " ";
+                    const metrics = ctx.measureText(testLine);
+                    if (metrics.width > maxWidth && n > 0) {
+                      lines.push(line.trim());
+                      line = words[n] + " ";
+                    } else {
+                      line = testLine;
+                    }
+                  }
+                  lines.push(line.trim());
+                  
+                  // Adjust y position to center the block of lines
+                  const lineHeight = fontSize + 10;
+                  const startY = yPos - ((lines.length - 1) * lineHeight) / 2;
+                  
+                  lines.forEach((lineText, idx) => {
+                    ctx.fillText(lineText, centerX, startY + idx * lineHeight);
+                  });
+                } else {
+                  ctx.fillText(textStr, centerX, yPos);
+                }
+              };
+
               // 1. Draw the AI background image
               ctx.drawImage(backgroundImage, 0, 0, 1024, 1024);
 
@@ -1722,11 +1776,15 @@ Requirements for the generated image prompt:
               ctx.fillStyle = bottomGrad;
               ctx.fillRect(0, 720, 1024, 304);
 
-              // 3. Draw Store Name at top-left
+              // 3. Draw Store Name at top-left (with auto-scaling to prevent overlapping the logo)
               ctx.fillStyle = "#ffffff";
-              ctx.font = "bold 44px sans-serif";
               ctx.textAlign = "left";
               ctx.textBaseline = "top";
+              let storeNameFontSize = 44;
+              do {
+                ctx.font = `bold ${storeNameFontSize}px sans-serif`;
+                storeNameFontSize -= 2;
+              } while (ctx.measureText(restaurantName.toUpperCase()).width > 750 && storeNameFontSize > 24);
               ctx.fillText(restaurantName.toUpperCase(), 48, 54);
 
               // 4. Draw Logo Card at top-right if loaded
@@ -1756,20 +1814,15 @@ Requirements for the generated image prompt:
               }
 
               // 5. Draw Marketing Offer Title (e.g. "SUNDAY OFFER") in the lower part
-              ctx.textAlign = "center";
-              ctx.textBaseline = "middle";
-              ctx.fillStyle = "#FF6B00"; // Vibrant accent orange
-              ctx.font = "900 76px sans-serif";
-              ctx.fillText(offerTitle.toUpperCase(), 512, 820);
+              drawTextWithFit(offerTitle.toUpperCase(), 512, 805, 928, 76, true, "#FF6B00");
 
               // 6. Draw Discount Promo Details (e.g. "10% DISCOUNT ON ALL PRODUCTS")
-              ctx.fillStyle = "#ffffff";
-              ctx.font = "bold 38px sans-serif";
-              ctx.fillText(`${discountDetails} ON ${productName}`.toUpperCase(), 512, 905);
+              drawTextWithFit(`${discountDetails} ON ${productName}`.toUpperCase(), 512, 895, 928, 38, false, "#ffffff");
 
               // 7. Draw brand footer watermark
               ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
               ctx.font = "bold 20px sans-serif";
+              ctx.textAlign = "center";
               ctx.fillText("POWERED BY INSTAMUNIM", 512, 970);
 
               const mergedUrl = canvas.toDataURL("image/png");
@@ -1864,13 +1917,13 @@ Requirements for the generated image prompt:
   };
 
   const handleSendImage = async (mobile: string, name: string) => {
-    const imageUrlToShare = rawAiImageUrl || aiImageUrl;
-    if (!imageUrlToShare) {
+    if (!aiImageUrl) {
       alert("Please generate an AI banner first!");
       return;
     }
     try {
-      const customMsg = `Special offer for you, ${name}! 🛍️\n\nShop: ${restaurantName}\nOffer: ${offerTitle}\nDeal: ${discountDetails} on ${productName}\n\nView Banner: ${imageUrlToShare}`;
+      const viewerUrl = `${window.location.origin}/invoice?banner=true&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&logo=${encodeURIComponent(storeLogo || "")}&oM=${ownerMobile}`;
+      const customMsg = `Special offer for you, ${name}! 🛍️\n\nShop: ${restaurantName}\nOffer: ${offerTitle}\nDeal: ${discountDetails} on ${productName}\n\nView Banner: ${viewerUrl}`;
       window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(customMsg)}`, "_blank");
     } catch (err) {
       console.error("Error sending image:", err);
