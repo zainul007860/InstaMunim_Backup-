@@ -13,24 +13,31 @@ function ScratchCard({
   ownerMobile, 
   customerMobile, 
   storeName, 
+  businessType,
   onWon 
 }: { 
   invoiceId: string; 
   ownerMobile: string; 
   customerMobile: string; 
   storeName: string;
+  businessType: string | null;
   onWon: (coupon: any) => void;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isScratching, setIsScratching] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [amount, setAmount] = useState(10); // Default reward
 
   useEffect(() => {
-    // 70% chance of ₹10, 30% chance of ₹5
-    const roll = Math.random() < 0.7 ? 10 : 5;
-    setAmount(roll);
-  }, []);
+    if (businessType === "Mobile/Electronics") {
+      // Multiple of 10 between 100 and 300 (inclusive)
+      const roll = Math.floor(Math.random() * 21) * 10 + 100;
+      setAmount(roll);
+    } else {
+      // 70% chance of ₹10, 30% chance of ₹5
+      const roll = Math.random() < 0.7 ? 10 : 5;
+      setAmount(roll);
+    }
+  }, [businessType]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -64,103 +71,53 @@ function ScratchCard({
       ctx.fillStyle = "#ffffff";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText("SCRATCH HERE TO WIN REWARD! ✨", canvas.width / 2, canvas.height / 2);
+      ctx.fillText("TAP / CLICK TO REVEAL REWARD! ✨", canvas.width / 2, canvas.height / 2);
     };
 
     resizeCanvas();
 
-    const checkScratchedPercentage = () => {
-      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const pixels = imgData.data;
-      let transparentCount = 0;
-      for (let i = 3; i < pixels.length; i += 4) {
-        if (pixels[i] === 0) transparentCount++;
-      }
-      const percentage = (transparentCount / (pixels.length / 4)) * 100;
-      
-      // If 45% or more is cleared, count it as completed
-      if (percentage > 45 && !isCompleted) {
-        setIsCompleted(true);
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // Generate dynamic coupon code
-        const couponCode = "IM-" + Math.floor(1000 + Math.random() * 9000) + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
-
-        const newCoupon = {
-          code: couponCode,
-          discount_amount: amount,
-          store_mobile: ownerMobile,
-          customer_mobile: customerMobile,
-          invoice_id: invoiceId,
-          status: "unused"
-        };
-
-        supabase
-          .from("coupons")
-          .insert([newCoupon])
-          .then(({ error }) => {
-            if (!error) {
-              onWon(newCoupon);
-            } else {
-              console.error("Supabase coupon insert failed:", error);
-            }
-          });
-      }
-    };
-
-    const getMouseCoords = (e: MouseEvent | TouchEvent) => {
-      const rect = canvas.getBoundingClientRect();
-      const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
-      const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
-      return {
-        x: clientX - rect.left,
-        y: clientY - rect.top
-      };
-    };
-
-    const scratch = (e: MouseEvent | TouchEvent) => {
-      if (!isScratching || isCompleted) return;
+    const revealCard = (e: MouseEvent | TouchEvent) => {
       e.preventDefault();
-      const coords = getMouseCoords(e);
-      ctx.globalCompositeOperation = "destination-out";
-      ctx.beginPath();
-      ctx.arc(coords.x, coords.y, 16, 0, Math.PI * 2);
-      ctx.fill();
-      checkScratchedPercentage();
+      if (isCompleted) return;
+      setIsCompleted(true);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Generate dynamic coupon code
+      const couponCode = "IM-" + Math.floor(1000 + Math.random() * 9000) + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
+
+      const newCoupon = {
+        code: couponCode,
+        discount_amount: amount,
+        store_mobile: ownerMobile,
+        customer_mobile: customerMobile,
+        invoice_id: invoiceId,
+        status: "unused"
+      };
+
+      supabase
+        .from("coupons")
+        .insert([newCoupon])
+        .then(({ error }) => {
+          if (!error) {
+            onWon(newCoupon);
+          } else {
+            console.error("Supabase coupon insert failed:", error);
+          }
+        });
     };
 
-    const startScratching = (e: MouseEvent | TouchEvent) => {
-      setIsScratching(true);
-      scratch(e);
-    };
-
-    const stopScratching = () => {
-      setIsScratching(false);
-    };
-
-    canvas.addEventListener("mousedown", startScratching);
-    canvas.addEventListener("mousemove", scratch);
-    canvas.addEventListener("mouseup", stopScratching);
-    canvas.addEventListener("mouseleave", stopScratching);
-
-    canvas.addEventListener("touchstart", startScratching, { passive: false });
-    canvas.addEventListener("touchmove", scratch, { passive: false });
-    canvas.addEventListener("touchend", stopScratching);
+    canvas.addEventListener("mousedown", revealCard);
+    canvas.addEventListener("touchstart", revealCard, { passive: false });
 
     return () => {
-      canvas.removeEventListener("mousedown", startScratching);
-      canvas.removeEventListener("mousemove", scratch);
-      canvas.removeEventListener("mouseup", stopScratching);
-      canvas.removeEventListener("mouseleave", stopScratching);
-      canvas.removeEventListener("touchstart", startScratching);
-      canvas.removeEventListener("touchmove", scratch);
-      canvas.removeEventListener("touchend", stopScratching);
+      canvas.removeEventListener("mousedown", revealCard);
+      canvas.removeEventListener("touchstart", revealCard);
     };
-  }, [isScratching, isCompleted, amount]);
+  }, [isCompleted, amount, ownerMobile, customerMobile, invoiceId, onWon]);
 
   return (
     <div className="absolute inset-0 z-20">
-      <canvas ref={canvasRef} className="w-full h-full rounded-3xl" />
+      <canvas ref={canvasRef} className="w-full h-full rounded-3xl cursor-pointer" />
     </div>
   );
 }
@@ -176,6 +133,7 @@ function InvoiceContent() {
   const [claimedCoupon, setClaimedCoupon] = useState<any>(null);
   const [isLoadingCoupon, setIsLoadingCoupon] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [storeBusinessType, setStoreBusinessType] = useState<string | null>(null);
   
   const restName = searchParams.get("n") || "InstaMunim POS";
   const items = searchParams.get("i") || "";
@@ -264,16 +222,18 @@ function InvoiceContent() {
         try {
           const { data, error } = await supabase
             .from('stores')
-            .select('store_logo')
+            .select('store_logo, business_type')
             .eq('owner_mobile', ownerMobile)
             .single();
           
-          if (!error && data?.store_logo) {
-            const rawLogo = data.store_logo;
+          if (!error && data) {
+            let bType = data.business_type || "";
+            const rawLogo = data.store_logo || "";
             if (rawLogo.startsWith('JSON_CFG:')) {
               try {
                 const settings = JSON.parse(rawLogo.substring(9));
                 setCloudLogo(settings.logo || null);
+                if (!bType) bType = settings.businessType || "";
               } catch (e) {
                 setCloudLogo(rawLogo);
               }
@@ -283,9 +243,10 @@ function InvoiceContent() {
             } else {
               setCloudLogo(rawLogo);
             }
+            setStoreBusinessType(bType);
           }
         } catch (e) {
-          console.error("Logo fetch failed", e);
+          console.error("Logo and business type fetch failed", e);
         }
       };
       fetchLogo();
@@ -699,6 +660,7 @@ function InvoiceContent() {
                     ownerMobile={ownerMobile} 
                     customerMobile={mobile} 
                     storeName={restName}
+                    businessType={storeBusinessType}
                     onWon={(coupon) => {
                       setScratchClaimed(true);
                       setClaimedCoupon(coupon);
