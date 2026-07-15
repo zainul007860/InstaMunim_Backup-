@@ -757,8 +757,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const hasCachedMobile = localStorage.getItem("saas_owner_mobile");
-      if (!hasCachedMobile) {
+      const hasRegistered = localStorage.getItem("saas_has_registered") === "true";
+      if (!hasRegistered) {
         setAuthMode("signup");
       }
     }
@@ -1644,7 +1644,7 @@ export default function Dashboard() {
     setImageGenerationError("");
     const runGeneration = async () => {
       try {
-        let cleanPrompt = `Professional commercial studio photography social media ad poster banner for '${restaurantName}'. A realistic close-up shot of '${productName}' in premium packaging, set on a modern studio surface with clean lighting. Modern graphic design overlay displaying '${offerTitle}' in bold white font and '${discountDetails} on ${productName}' in crisp letters. Cinematic lighting, sharp focus, 8k resolution, advertisement layout.`;
+        let cleanPrompt = `Professional commercial studio photography social media ad poster banner. A realistic close-up shot of '${productName}' in premium packaging, set on a modern studio surface with clean lighting. Cinematic lighting, sharp focus, 8k resolution, high-end commercial setup. Plain background with no text, letters, or words.`;
         
         // Enhance prompt with Google Gemini if API Key is loaded
         if (geminiApiKey) {
@@ -1673,7 +1673,7 @@ Details of the offer:
 Requirements for the generated image prompt:
 1. It must describe a realistic, high-quality, professional commercial photograph of the product (${productName}). DO NOT make it abstract or text-only.
 2. Describe actual physical items being advertised: high-end commercial close-up shot, depth of field, studio lighting, soft shadows, and clean realistic details.
-3. Clearly specify that the banner has clean, bold, graphic overlay texts displaying the shop name "${restaurantName}", "${offerTitle}", and the promo deal "${discountDetails} on ${productName}".
+3. CRITICAL: Specify that the image MUST NOT contain any text, letters, numbers, labels, or logos. It must be a clean, textless background featuring only the product. Any ad titles or logos will be overlaid later by code.
 4. The background style should be a modern matching studio color palette.
 5. Keep the description under 140 words. Return ONLY the raw prompt string. Do not use markdown blocks, quotes, or preambles.`
                         }
@@ -1697,36 +1697,41 @@ Requirements for the generated image prompt:
         const encodedPrompt = encodeURIComponent(cleanPrompt);
         const generatedUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}&model=flux`;
       
-        const img = new Image();
-        img.crossOrigin = "anonymous";
-        img.src = generatedUrl;
-        img.onload = () => {
-          setRawAiImageUrl(generatedUrl);
-          if (!storeLogo) {
-            setAiImageUrl(generatedUrl);
-            setIsGeneratingImage(false);
-            return;
-          }
+        const drawBannerOverlays = (backgroundImage, logoImage, logoLoaded) => {
+          try {
+            const canvas = document.createElement("canvas");
+            canvas.width = 1024;
+            canvas.height = 1024;
+            const ctx = canvas.getContext("2d");
+            if (ctx) {
+              // 1. Draw the AI background image
+              ctx.drawImage(backgroundImage, 0, 0, 1024, 1024);
 
-          // Merge storeLogo onto the corner of the AI banner using HTML5 Canvas
-          const logoImg = new Image();
-          logoImg.crossOrigin = "anonymous";
-          logoImg.src = storeLogo;
-          logoImg.onload = () => {
-            try {
-              const canvas = document.createElement("canvas");
-              canvas.width = 1024;
-              canvas.height = 1024;
-              const ctx = canvas.getContext("2d");
-              if (ctx) {
-                // 1. Draw the AI banner
-                ctx.drawImage(img, 0, 0, 1024, 1024);
+              // 2. Draw subtle dark gradient overlays at the top and bottom for high text contrast
+              const topGrad = ctx.createLinearGradient(0, 0, 0, 260);
+              topGrad.addColorStop(0, "rgba(0, 0, 0, 0.75)");
+              topGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+              ctx.fillStyle = topGrad;
+              ctx.fillRect(0, 0, 1024, 260);
 
-                // 2. Draw a white rounded background card for the logo in the top-right corner
+              const bottomGrad = ctx.createLinearGradient(0, 720, 0, 1024);
+              bottomGrad.addColorStop(0, "rgba(0, 0, 0, 0)");
+              bottomGrad.addColorStop(1, "rgba(0, 0, 0, 0.85)");
+              ctx.fillStyle = bottomGrad;
+              ctx.fillRect(0, 720, 1024, 304);
+
+              // 3. Draw Store Name at top-left
+              ctx.fillStyle = "#ffffff";
+              ctx.font = "bold 44px sans-serif";
+              ctx.textAlign = "left";
+              ctx.textBaseline = "top";
+              ctx.fillText(restaurantName.toUpperCase(), 48, 54);
+
+              // 4. Draw Logo Card at top-right if loaded
+              if (logoLoaded && logoImage) {
                 const logoSize = 130;
-                const padding = 24;
-                const x = 1024 - logoSize - padding;
-                const y = padding;
+                const x = 1024 - logoSize - 48;
+                const y = 48;
                 const radius = 24;
 
                 ctx.fillStyle = "#ffffff";
@@ -1743,27 +1748,62 @@ Requirements for the generated image prompt:
                 ctx.closePath();
                 ctx.fill();
 
-                // 3. Draw the store logo inside the card (with 10px inner margin)
                 const margin = 10;
                 const size = logoSize - (margin * 2);
-                ctx.drawImage(logoImg, x + margin, y + margin, size, size);
-
-                const mergedUrl = canvas.toDataURL("image/png");
-                setAiImageUrl(mergedUrl);
-              } else {
-                setAiImageUrl(generatedUrl);
+                ctx.drawImage(logoImage, x + margin, y + margin, size, size);
               }
-            } catch (err) {
-              console.error("Canvas merge failed:", err);
-              setAiImageUrl(generatedUrl);
+
+              // 5. Draw Marketing Offer Title (e.g. "SUNDAY OFFER") in the lower part
+              ctx.textAlign = "center";
+              ctx.textBaseline = "middle";
+              ctx.fillStyle = "#FF6B00"; // Vibrant accent orange
+              ctx.font = "900 76px sans-serif";
+              ctx.fillText(offerTitle.toUpperCase(), 512, 820);
+
+              // 6. Draw Discount Promo Details (e.g. "10% DISCOUNT ON ALL PRODUCTS")
+              ctx.fillStyle = "#ffffff";
+              ctx.font = "bold 38px sans-serif";
+              ctx.fillText(`${discountDetails} ON ${productName}`.toUpperCase(), 512, 905);
+
+              // 7. Draw brand footer watermark
+              ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+              ctx.font = "bold 20px sans-serif";
+              ctx.fillText("POWERED BY INSTAMUNIM", 512, 970);
+
+              const mergedUrl = canvas.toDataURL("image/png");
+              setAiImageUrl(mergedUrl);
+            } else {
+              setAiImageUrl(backgroundImage.src);
             }
+          } catch (err) {
+            console.error("Canvas draw failed:", err);
+            setAiImageUrl(backgroundImage.src);
+          }
+        };
+
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = generatedUrl;
+        img.onload = () => {
+          setRawAiImageUrl(generatedUrl);
+          
+          if (storeLogo) {
+            const logoImg = new Image();
+            logoImg.crossOrigin = "anonymous";
+            logoImg.src = storeLogo;
+            logoImg.onload = () => {
+              drawBannerOverlays(img, logoImg, true);
+              setIsGeneratingImage(false);
+            };
+            logoImg.onerror = () => {
+              console.warn("Failed to load store logo for merging, fallback to raw AI image + text overlays.");
+              drawBannerOverlays(img, null, false);
+              setIsGeneratingImage(false);
+            };
+          } else {
+            drawBannerOverlays(img, null, false);
             setIsGeneratingImage(false);
-          };
-          logoImg.onerror = () => {
-            console.warn("Failed to load store logo for merging, fallback to raw AI image.");
-            setAiImageUrl(generatedUrl);
-            setIsGeneratingImage(false);
-          };
+          }
         };
         img.onerror = () => {
           setImageGenerationError("Failed to generate ad banner. Please try again.");
@@ -3675,6 +3715,7 @@ Stay safe & eat healthy! 🍕
   const handleLogout = async () => {
     setIsLoggedIn(false);
     localStorage.removeItem("saas_is_logged_in");
+    setAuthMode("login");
     // We keep saas_owner_mobile in localStorage to remember who logged out,
     // so we can detect if a different user logs in later.
     setActiveTab("Dashboard");
