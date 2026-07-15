@@ -5675,6 +5675,29 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 </Card>
               </div>
 
+              {filteredSales.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Payment Mode Totals</h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    {Object.entries(
+                      filteredSales.reduce((acc, sale) => {
+                        const mode = sale.type || "Cash";
+                        acc[mode] = (acc[mode] || 0) + sale.price;
+                        return acc;
+                      }, {})
+                    ).map(([mode, total]) => (
+                      <Card key={mode} className="p-4 rounded-xl border-0 shadow-sm bg-white dark:bg-zinc-900 flex flex-col justify-center relative overflow-hidden">
+                         <div className="absolute left-0 top-0 w-1 h-full bg-orange-500" />
+                         <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest mb-1 px-1">
+                           {getPartnerName(businessType, mode).toUpperCase()}
+                         </p>
+                         <h4 className="text-xl font-bold tracking-tighter px-1">₹{Math.round(total)}</h4>
+                      </Card>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* FULL TRANSACTION HISTORY - SCROLLABLE TABLE */}
               <div className="space-y-3">
                 <h3 className="text-2xl font-bold tracking-tighter px-2">Transaction History</h3>
