@@ -314,7 +314,7 @@ function InvoiceContent() {
     if (ownerMobile || restName) {
       const fetchLogo = async () => {
         try {
-          let query = supabase.from('stores').select('store_logo, business_type');
+          let query = supabase.from('stores').select('store_logo');
           // If ownerMobile is a valid 10-digit number, query by mobile. Otherwise query by store name.
           if (ownerMobile && /^\d{10}$/.test(ownerMobile)) {
             query = query.eq('owner_mobile', ownerMobile);
@@ -421,7 +421,7 @@ function InvoiceContent() {
           // Fetch store by owner mobile to get store_id
           const { data: storeData, error: storeError } = await supabase
             .from('stores')
-            .select('id, store_name, business_type')
+            .select('id, store_name, store_logo')
             .eq('owner_mobile', exportOwnerMobile)
             .single();
 
@@ -430,7 +430,14 @@ function InvoiceContent() {
           }
 
           const storeId = storeData.id;
-          const bType = storeData.business_type || "";
+          let bType = "";
+          const rawLogo = storeData.store_logo || "";
+          if (rawLogo.startsWith('JSON_CFG:')) {
+            try {
+              const settings = JSON.parse(rawLogo.substring(9));
+              bType = settings.businessType || "";
+            } catch (e) {}
+          }
 
           // Fetch sales for this store
           const { data: salesData, error: salesError } = await supabase
