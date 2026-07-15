@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { Suspense, useEffect, useState, useRef } from "react";
-import { Printer, ShoppingBag, CheckCircle2, QrCode, Camera, Globe, Phone, MapPin, ReceiptText, Download, Gift, Copy, Check, Smartphone, Sparkles } from "lucide-react";
+import { Printer, ShoppingBag, CheckCircle2, QrCode, Camera, Globe, Phone, MapPin, ReceiptText, Download, Gift, Copy, Check, Smartphone, Sparkles, Loader2, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
 
@@ -319,7 +319,7 @@ function InvoiceContent() {
           if (ownerMobile && /^\d{10}$/.test(ownerMobile)) {
             query = query.eq('owner_mobile', ownerMobile);
           } else {
-            query = query.eq('store_name', restName);
+            query = query.ilike('store_name', restName);
           }
           const { data, error } = await query.single();
           
@@ -405,6 +405,118 @@ function InvoiceContent() {
       setIsLoadingCoupon(false);
     }
   }, [id, ownerMobile, storeBusinessType, mobile]);
+
+  const isExportExcel = searchParams.get("exportExcel") === "true";
+  const exportOwnerMobile = searchParams.get("o") || "";
+  const exportMonth = searchParams.get("m") || "";
+  const exportShopName = searchParams.get("n") || "InstaMunim";
+
+  const [exportStatus, setExportStatus] = useState("fetching"); // fetching, downloaded, error
+  const [exportErrorMsg, setExportErrorMsg] = useState("");
+
+  useEffect(() => {
+    if (isExportExcel && exportOwnerMobile) {
+      const runExport = async () => {
+        try {
+          // Fetch store by owner mobile to get store_id
+          const { data: storeData, error: storeError } = await supabase
+            .from('stores')
+            .select('id, store_name, business_type')
+            .eq('owner_mobile', exportOwnerMobile)
+            .single();
+
+          if (storeError || !storeData) {
+            throw new Error(storeError?.message || "Store not found for this mobile number.");
+          }
+
+          const storeId = storeData.id;
+          const bType = storeData.business_type || "";
+
+          // Fetch sales for this store
+          const { data: salesData, error: salesError } = await supabase
+            .from('sales')
+            .select('*')
+            .eq('store_id', storeId)
+            .order('sale_date', { ascending: false });
+
+          if (salesError) {
+            throw new Error(salesError.message);
+          }
+
+          // Filter sales by month
+          const filteredSales = (salesData || []).filter((s: any) => {
+            if (!s.sale_date) return false;
+            try {
+              const dateStr = s.sale_date.substring(0, 7); // "yyyy-MM"
+              return dateStr === exportMonth;
+            } catch (e) {
+              return false;
+            }
+          });
+
+          // Construct CSV
+          const headers = ["Date & Time", "Invoice ID", "Customer Name", "Customer Mobile", "Items / Details", "Payment Mode", "Total Amount (INR)"];
+          const getPartnerName = (bizType: string, type: string) => {
+            if (type === "Cash") return "CASH";
+            if (type === "Online") return "ONLINE (UPI/QR)";
+            return type || "CASH";
+          };
+
+          const rows = filteredSales.map((s: any) => {
+            let dateTime = "N/A";
+            try {
+              if (s.sale_date) {
+                const d = new Date(s.sale_date);
+                const yyyy = d.getFullYear();
+                const mm = String(d.getMonth() + 1).padStart(2, '0');
+                const dd = String(d.getDate()).padStart(2, '0');
+                const hh = String(d.getHours()).padStart(2, '0');
+                const min = String(d.getMinutes()).padStart(2, '0');
+                dateTime = `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+              }
+            } catch (e) {
+              dateTime = String(s.sale_date || "N/A");
+            }
+            const invoiceId = s.id || "N/A";
+            const custName = s.name || "Guest Customer";
+            const custMobile = s.mobile || "N/A";
+            const items = (s.item || "General Sale").replace(/"/g, '""');
+            const payMode = getPartnerName(bType, s.type);
+            const amount = s.price || 0;
+
+            return [
+              dateTime,
+              invoiceId,
+              custName,
+              custMobile,
+              `"${items}"`,
+              payMode,
+              amount.toString()
+            ];
+          });
+
+          const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+          const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
+          const url = URL.createObjectURL(blob);
+          
+          const link = document.createElement("a");
+          link.href = url;
+          const fileName = `Sales_Report_${exportShopName.replace(/\s+/g, '_')}_${exportMonth}.csv`;
+          link.setAttribute("download", fileName);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          setExportStatus("downloaded");
+        } catch (err: any) {
+          console.error("Excel Export Error:", err);
+          setExportStatus("error");
+          setExportErrorMsg(err.message || "Unknown error occurred.");
+        }
+      };
+      runExport();
+    }
+  }, [isExportExcel, exportOwnerMobile, exportMonth]);
 
   const canScratch = id && mobile && ownerMobile;
 
@@ -672,6 +784,43 @@ function InvoiceContent() {
             </div>
 
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isExportExcel) {
+    return (
+      <div className="h-screen bg-zinc-950 flex flex-col items-center justify-center text-white px-4 font-sans">
+        <div className="max-w-[400px] w-full bg-zinc-900 border border-zinc-800 rounded-[2rem] p-8 text-center space-y-6 shadow-2xl">
+          {exportStatus === "fetching" ? (
+            <>
+              <Loader2 className="w-12 h-12 text-orange-500 animate-spin mx-auto" />
+              <div className="space-y-2">
+                <h2 className="text-lg font-black uppercase tracking-wider text-orange-500 animate-pulse">Exporting Excel</h2>
+                <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest">{exportShopName}</p>
+                <p className="text-zinc-500 text-xs font-semibold">Generating report for {exportMonth}...</p>
+              </div>
+            </>
+          ) : exportStatus === "downloaded" ? (
+            <>
+              <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto animate-bounce" />
+              <div className="space-y-2">
+                <h2 className="text-lg font-black uppercase tracking-wider text-green-500">Download Complete!</h2>
+                <p className="text-zinc-400 text-xs font-bold">{exportShopName}</p>
+                <p className="text-zinc-500 text-xs font-semibold">Your sales report CSV file has been successfully downloaded.</p>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest pt-2">You can safely close this window now.</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <ShieldAlert className="w-12 h-12 text-red-500 mx-auto" />
+              <div className="space-y-2">
+                <h2 className="text-lg font-black uppercase tracking-wider text-red-500">Export Failed</h2>
+                <p className="text-zinc-400 text-xs font-semibold">{exportErrorMsg || "Something went wrong."}</p>
+              </div>
+            </>
+          )}
         </div>
       </div>
     );

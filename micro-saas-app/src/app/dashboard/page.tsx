@@ -1690,70 +1690,14 @@ export default function Dashboard() {
   };
 
   const handleExportSalesToExcel = async () => {
-    try {
-      const headers = ["Date & Time", "Invoice ID", "Customer Name", "Customer Mobile", "Items / Details", "Payment Mode", "Total Amount (INR)"];
-      
-      const rows = filteredSales.map(s => {
-        let dateTime = "N/A";
-        try {
-          if (s.date) dateTime = format(new Date(s.date), "yyyy-MM-dd HH:mm");
-        } catch (e: any) {
-          dateTime = String(s.date || "N/A");
-        }
-        const invoiceId = s.id || "N/A";
-        const custName = s.name || "Guest Customer";
-        const custMobile = s.mobile || "N/A";
-        const items = (s.item || "General Sale").replace(/"/g, '""');
-        const payMode = getPartnerName(businessType, s.type);
-        const amount = s.price;
-        
-        return [
-          `"${dateTime}"`,
-          `"${invoiceId}"`,
-          `"${custName}"`,
-          `"${custMobile}"`,
-          `"${items}"`,
-          `"${payMode}"`,
-          amount
-        ];
-      });
-
-      const fileName = `Sales_Report_${restaurantName.replace(/\s+/g, '_')}_${selectedMonth}.csv`;
-      const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
-
-      const isCapacitor = (typeof window !== 'undefined' && !!(window as any).Capacitor?.isNative);
-
-      if (isCapacitor) {
-        // Capacitor Filesystem imported at top level
-        // Capacitor Share imported at top level
-        
-        const base64Data = btoa(unescape(encodeURIComponent("\ufeff" + csvContent)));
-        
-        const writeResult = await Filesystem.writeFile({
-          path: fileName,
-          data: base64Data,
-          directory: Directory.Cache
-        });
-        
-        await Share.share({
-          title: 'Export Sales Report',
-          text: `Sales Report for ${restaurantName} (${selectedMonth})`,
-          url: writeResult.uri,
-          dialogTitle: 'Share or Save Sales Excel Report'
-        });
-      } else {
-        const blob = new Blob(["\ufeff" + csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        
-        const link = document.createElement("a");
-        link.href = url;
-        link.setAttribute("download", fileName);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    } catch (err: any) {
-      alert("Excel Export Failed: " + err.message);
+    const baseUrl = "https://www.instamunim.com";
+    const url = `${baseUrl}/invoice?exportExcel=true&o=${ownerMobile}&m=${selectedMonth}&n=${encodeURIComponent(restaurantName)}`;
+    
+    const isCapacitor = typeof window !== 'undefined' && !!(window as any).Capacitor?.isNative;
+    if (isCapacitor) {
+      window.open(url, '_system');
+    } else {
+      window.open(url, '_blank');
     }
   };
 
