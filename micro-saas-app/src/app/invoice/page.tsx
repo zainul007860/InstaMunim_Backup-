@@ -586,148 +586,175 @@ function InvoiceContent() {
       );
     }
     return (
-      <div className="min-h-screen bg-white p-8 font-sans max-w-[800px] mx-auto text-zinc-900 relative">
+      <div className="h-screen bg-zinc-100 flex justify-center py-0 sm:py-10 px-0 sm:px-4 font-sans print:bg-white print:p-0 print:h-auto print:overflow-visible overflow-y-auto">
         <style dangerouslySetInnerHTML={{__html: `
           @media print {
-            body {
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
+            @page { margin: 0; }
+            html, body { height: auto !important; overflow: visible !important; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; overflow: visible !important; }
             .print-hide { display: none !important; }
           }
         `}} />
         
-        {/* Floating Print Action Button (Hidden on Print) */}
-        <div className="print-hide flex justify-end gap-3 mb-6 bg-zinc-50 p-4 rounded-2xl border border-zinc-100">
-          <Button 
-            size="sm" 
-            onClick={() => window.print()} 
-            className="bg-orange-600 hover:bg-orange-700 text-white font-black uppercase tracking-widest px-4 h-9 rounded-xl shadow-sm border-0"
-          >
-            Print Agreement
-          </Button>
-          <Button 
-            size="sm" 
-            onClick={() => window.close()} 
-            className="bg-zinc-200 hover:bg-zinc-300 text-zinc-800 font-black uppercase tracking-widest px-4 h-9 rounded-xl shadow-sm border-0"
-          >
-            Close
-          </Button>
-        </div>
-
-        {/* Store Header */}
-        <div className="text-center pb-6 border-b border-zinc-200">
-          <h1 className="text-2xl font-black uppercase tracking-tight">{restName}</h1>
-          <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">
-            {storeAddr} | Ph: {storePh}
-          </p>
-          {storeGs && (
-            <p className="text-[10px] font-black text-zinc-800 mt-1 uppercase tracking-widest">
-              GSTIN: {storeGs}
-            </p>
-          )}
-        </div>
-
-        {/* Title */}
-        <div className="text-center my-8">
-          <h2 className="text-lg font-black uppercase tracking-widest text-zinc-900 border-2 border-zinc-900 py-2 inline-block px-6">Device Buyback & Legal Declaration</h2>
-          <p className="text-[9px] font-bold text-zinc-400 mt-1 uppercase">Date: {format(new Date(declarationItem.date), "dd MMMM, yyyy - hh:mm a")}</p>
-        </div>
-
-        {/* Declaration Statement */}
-        <div className="space-y-4 text-xs font-medium leading-relaxed text-zinc-700 text-justify font-sans">
-          <p>
-            I, <strong className="text-zinc-900 uppercase">{declarationItem.custName}</strong>, residing at the address registered under the ID proof below, holding Mobile Number <strong>+91 {declarationItem.custMobile}</strong>, do hereby solemnly declare and state as under:
-          </p>
-          <p>
-            1. That I am the absolute lawful owner of the mobile device described as <strong>{declarationItem.brandModel.toUpperCase()}</strong> bearing 15-digit IMEI number <strong>{declarationItem.imei}</strong>.
-          </p>
-          <p>
-            2. That the said device is my personal property, purchased through legal means, and is free from any encumbrances, theft records, or association with any illegal activity.
-          </p>
-          <p>
-            3. That I have voluntarily sold / exchanged this device to <strong className="text-zinc-900 uppercase">{restName}</strong> for a mutually agreed consideration value of <strong>₹{declarationItem.amount}.00</strong> on this day.
-          </p>
-          <p>
-            4. In the event that the device is subsequently found to be stolen, locked, or involved in any dispute/claims, I shall be solely held responsible and liable for all legal consequences under the applicable laws of India.
-          </p>
-        </div>
-
-        {/* Details Table */}
-        <div className="my-8 border border-zinc-200 rounded-xl overflow-hidden text-xs font-sans">
-          <div className="grid grid-cols-2 bg-zinc-50 border-b border-zinc-200 p-3 font-bold text-zinc-800">
-            <span>Device Model:</span>
-            <span className="text-right text-zinc-900 uppercase">{declarationItem.brandModel}</span>
-          </div>
-          <div className="grid grid-cols-2 border-b border-zinc-200 p-3 font-bold text-zinc-800">
-            <span>Device IMEI:</span>
-            <span className="text-right text-zinc-900">{declarationItem.imei}</span>
-          </div>
-          <div className="grid grid-cols-2 bg-zinc-50 border-b border-zinc-200 p-3 font-bold text-zinc-800">
-            <span>Customer Aadhaar / ID:</span>
-            <span className="text-right text-zinc-900">{declarationItem.aadhaar}</span>
-          </div>
-          <div className="grid grid-cols-2 p-3 font-bold text-zinc-800">
-            <span>Amount Transacted:</span>
-            <span className="text-right text-orange-600 font-black">₹{declarationItem.amount}.00</span>
-          </div>
-        </div>
-
-        {/* Verification Documents & Photos Attachment */}
-        {((declarationItem.photo && declarationItem.photo !== "N/A") || 
-          (declarationItem.photoBack && declarationItem.photoBack !== "N/A") || 
-          (declarationItem.photoDevice && declarationItem.photoDevice !== "N/A")) && (
-          <div className="my-6 space-y-3">
-            <h4 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Verification Documents & Device Photo</h4>
-            <div className="grid grid-cols-3 gap-4">
-              {/* Front Side */}
-              <div className="space-y-1">
-                <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider text-center">ID Front Side</p>
-                <div className="w-full h-36 border border-zinc-200 rounded-xl overflow-hidden flex items-center justify-center bg-zinc-50">
-                  {declarationItem.photo && declarationItem.photo !== "N/A" ? (
-                    <img src={declarationItem.photo} alt="ID Front" className="max-h-full max-w-full object-contain" />
-                  ) : (
-                    <span className="text-[8px] font-bold text-zinc-400 uppercase">Not Captured</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Back Side */}
-              <div className="space-y-1">
-                <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider text-center">ID Back Side</p>
-                <div className="w-full h-36 border border-zinc-200 rounded-xl overflow-hidden flex items-center justify-center bg-zinc-50">
-                  {declarationItem.photoBack && declarationItem.photoBack !== "N/A" ? (
-                    <img src={declarationItem.photoBack} alt="ID Back" className="max-h-full max-w-full object-contain" />
-                  ) : (
-                    <span className="text-[8px] font-bold text-zinc-400 uppercase">Not Captured</span>
-                  )}
-                </div>
-              </div>
-
-              {/* Device Photo */}
-              <div className="space-y-1">
-                <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider text-center">Device Photo</p>
-                <div className="w-full h-36 border border-zinc-200 rounded-xl overflow-hidden flex items-center justify-center bg-zinc-50">
-                  {declarationItem.photoDevice && declarationItem.photoDevice !== "N/A" ? (
-                    <img src={declarationItem.photoDevice} alt="Device Pic" className="max-h-full max-w-full object-contain" />
-                  ) : (
-                    <span className="text-[8px] font-bold text-zinc-400 uppercase">Not Captured</span>
-                  )}
-                </div>
-              </div>
+        <div className="bg-white w-full max-w-[550px] shadow-2xl flex flex-col relative print:shadow-none print:max-w-full print:h-auto print:min-h-0 h-fit min-h-full text-zinc-900">
+          
+          {/* Print Bar */}
+          <div className="bg-zinc-900 text-white p-4 flex justify-between items-center print:hidden print-hide sticky top-0 z-50">
+            <div className="flex items-center gap-2">
+              <ReceiptText className="w-4 h-4 text-orange-500" />
+              <span className="font-bold text-[10px] uppercase tracking-widest">Buyback Receipt</span>
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                size="sm" 
+                onClick={() => window.print()} 
+                className="bg-white text-zinc-900 hover:bg-zinc-200 h-8 text-[10px] font-black uppercase tracking-widest px-4 border-0 rounded-md cursor-pointer"
+              >
+                <Printer className="w-3 h-3 mr-2" /> Save PDF
+              </Button>
+              <Button 
+                size="sm" 
+                onClick={() => window.close()} 
+                className="bg-zinc-800 text-white hover:bg-zinc-700 h-8 text-[10px] font-black uppercase tracking-widest px-4 border-0 rounded-md cursor-pointer"
+              >
+                Close
+              </Button>
             </div>
           </div>
-        )}
 
-        {/* Signature Blocks */}
-        <div className="grid grid-cols-2 gap-12 mt-16 pt-8 border-t border-dashed border-zinc-200 text-xs font-sans">
-          <div className="space-y-12">
-            <div className="h-12 border-b border-zinc-300 w-48" />
-            <p className="font-bold text-zinc-800">Customer Signature / Thumb</p>
-          </div>
-          <div className="space-y-12 text-right flex flex-col items-end">
-            <div className="h-12 border-b border-zinc-300 w-48" />
-            <p className="font-bold text-zinc-800">Authorized Merchant Sign</p>
+          {/* White Paper Content */}
+          <div className="p-6 sm:p-8 flex-1 flex flex-col">
+            
+            {/* Store Logo/Header */}
+            <div className="text-center pb-6 border-b border-zinc-200 flex flex-col items-center">
+              {finalLogo ? (
+                <img src={finalLogo} alt="Logo" className="w-16 h-16 object-contain rounded-2xl mb-4 bg-zinc-900 p-1" />
+              ) : (
+                <div className="w-16 h-16 bg-zinc-950 text-white rounded-2xl flex items-center justify-center font-black text-2xl uppercase mb-4">
+                  {restName.charAt(0)}
+                </div>
+              )}
+              
+              <h1 className="text-2xl font-black uppercase tracking-tight">{restName}</h1>
+              <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mt-1">
+                {storeAddr}
+              </p>
+              <p className="text-xs font-bold text-zinc-500 tracking-widest">
+                Ph: {storePh}
+              </p>
+              {storeGs && (
+                <p className="text-[10px] font-black text-zinc-800 mt-1 uppercase tracking-widest bg-zinc-100 px-3 py-1 rounded-full">
+                  GSTIN: {storeGs}
+                </p>
+              )}
+            </div>
+
+            {/* Title / Date */}
+            <div className="text-center my-6">
+              <h2 className="text-sm font-black uppercase tracking-widest text-zinc-900 border-2 border-zinc-900 py-1.5 px-4 inline-block">
+                Exchange & Legal Declaration
+              </h2>
+              <p className="text-[9px] font-bold text-zinc-400 mt-1.5 uppercase">
+                Date: {format(new Date(declarationItem.date), "dd MMMM, yyyy - hh:mm a")}
+              </p>
+            </div>
+
+            {/* Declaration Text */}
+            <div className="text-[11px] font-medium leading-relaxed text-zinc-700 text-justify space-y-3 font-sans border-b border-zinc-150 pb-6">
+              <p>
+                I, <strong className="text-zinc-900 uppercase">{declarationItem.custName}</strong>, residing at the registered address under the ID proof below, holding Mobile Number <strong>+91 {declarationItem.custMobile}</strong>, do hereby declare that:
+              </p>
+              <p>
+                1. I am the absolute lawful owner of the device described as <strong className="uppercase">{declarationItem.brandModel}</strong> bearing 15-digit IMEI number <strong>{declarationItem.imei}</strong>.
+              </p>
+              <p>
+                2. I have voluntarily sold / exchanged this device to <strong className="uppercase">{restName}</strong> for a mutually agreed consideration value of <strong>₹{declarationItem.amount}.00</strong> on this day.
+              </p>
+              <p>
+                3. If this device is subsequently found to be stolen, blocked, or involved in any dispute, I shall be solely held responsible and liable for all legal consequences under the applicable laws.
+              </p>
+            </div>
+
+            {/* Details Summary Table */}
+            <div className="my-6 border border-zinc-200 rounded-xl overflow-hidden text-[10px] font-sans">
+              <div className="grid grid-cols-2 bg-zinc-50 border-b border-zinc-200 p-2.5 font-bold text-zinc-800">
+                <span>Device Model:</span>
+                <span className="text-right text-zinc-900 uppercase">{declarationItem.brandModel}</span>
+              </div>
+              <div className="grid grid-cols-2 border-b border-zinc-200 p-2.5 font-bold text-zinc-800">
+                <span>Device IMEI:</span>
+                <span className="text-right text-zinc-900">{declarationItem.imei}</span>
+              </div>
+              <div className="grid grid-cols-2 bg-zinc-50 border-b border-zinc-200 p-2.5 font-bold text-zinc-800">
+                <span>Customer ID / Aadhaar:</span>
+                <span className="text-right text-zinc-900">{declarationItem.aadhaar}</span>
+              </div>
+              <div className="grid grid-cols-2 p-2.5 font-bold text-zinc-800">
+                <span>Transacted Amount:</span>
+                <span className="text-right text-orange-600 font-black">₹{declarationItem.amount}.00</span>
+              </div>
+            </div>
+
+            {/* Photos Section */}
+            {((declarationItem.photo && declarationItem.photo !== "N/A") || 
+              (declarationItem.photoBack && declarationItem.photoBack !== "N/A") || 
+              (declarationItem.photoDevice && declarationItem.photoDevice !== "N/A")) && (
+              <div className="my-6 space-y-2.5">
+                <h4 className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Verification Documents & Device</h4>
+                <div className="grid grid-cols-3 gap-3">
+                  
+                  {/* Front Side */}
+                  <div className="space-y-1">
+                    <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider text-center">ID Front</p>
+                    <div className="w-full h-24 border border-zinc-200 rounded-xl overflow-hidden flex items-center justify-center bg-zinc-50">
+                      {declarationItem.photo && declarationItem.photo !== "N/A" ? (
+                        <img src={declarationItem.photo} alt="ID Front" className="max-h-full max-w-full object-contain" />
+                      ) : (
+                        <span className="text-[8px] font-bold text-zinc-400 uppercase">N/A</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Back Side */}
+                  <div className="space-y-1">
+                    <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider text-center">ID Back</p>
+                    <div className="w-full h-24 border border-zinc-200 rounded-xl overflow-hidden flex items-center justify-center bg-zinc-50">
+                      {declarationItem.photoBack && declarationItem.photoBack !== "N/A" ? (
+                        <img src={declarationItem.photoBack} alt="ID Back" className="max-h-full max-w-full object-contain" />
+                      ) : (
+                        <span className="text-[8px] font-bold text-zinc-400 uppercase">N/A</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Device Photo */}
+                  <div className="space-y-1">
+                    <p className="text-[8px] font-bold text-zinc-500 uppercase tracking-wider text-center">Device Photo</p>
+                    <div className="w-full h-24 border border-zinc-200 rounded-xl overflow-hidden flex items-center justify-center bg-zinc-50">
+                      {declarationItem.photoDevice && declarationItem.photoDevice !== "N/A" ? (
+                        <img src={declarationItem.photoDevice} alt="Device Pic" className="max-h-full max-w-full object-contain" />
+                      ) : (
+                        <span className="text-[8px] font-bold text-zinc-400 uppercase">N/A</span>
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            )}
+
+            {/* Signature Blocks */}
+            <div className="grid grid-cols-2 gap-8 mt-auto pt-8 border-t border-dashed border-zinc-200 text-[10px] font-sans">
+              <div className="space-y-12">
+                <div className="h-10 border-b border-zinc-300 w-36" />
+                <p className="font-bold text-zinc-800">Customer Signature / Thumb</p>
+              </div>
+              <div className="space-y-12 text-right flex flex-col items-end">
+                <div className="h-10 border-b border-zinc-300 w-36" />
+                <p className="font-bold text-zinc-800">Authorized Merchant Sign</p>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
