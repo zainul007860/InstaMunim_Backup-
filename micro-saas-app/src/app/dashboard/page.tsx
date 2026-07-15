@@ -754,6 +754,15 @@ export default function Dashboard() {
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const hasCachedMobile = localStorage.getItem("saas_owner_mobile");
+      if (!hasCachedMobile) {
+        setAuthMode("signup");
+      }
+    }
+  }, []);
   const [loginMobile, setLoginMobile] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
@@ -1635,7 +1644,7 @@ export default function Dashboard() {
     setImageGenerationError("");
     const runGeneration = async () => {
       try {
-        let cleanPrompt = `A premium professional commercial social media poster ad banner for a business named '${restaurantName}'. The banner displays: '${offerTitle}' in bold elegant font, and '${discountDetails} on ${productName}' as the deal. Vibrant orange and white accents, modern clean ${getLabels(businessType).name.toLowerCase()} store typography, clean products or services photography or vector layout, slate grey background, high resolution, engaging marketing ad design.`;
+        let cleanPrompt = `Professional commercial studio photography social media ad poster banner for '${restaurantName}'. A realistic close-up shot of '${productName}' in premium packaging, set on a modern studio surface with clean lighting. Modern graphic design overlay displaying '${offerTitle}' in bold white font and '${discountDetails} on ${productName}' in crisp letters. Cinematic lighting, sharp focus, 8k resolution, advertisement layout.`;
         
         // Enhance prompt with Google Gemini if API Key is loaded
         if (geminiApiKey) {
@@ -1653,19 +1662,20 @@ export default function Dashboard() {
                     {
                       parts: [
                         {
-                          text: `You are an expert AI image prompt engineer for advertising banners.
-Write a highly descriptive, visually rich, and professional image generation prompt (for Midjourney or Stable Diffusion) to create a premium social media advertisement poster banner.
+                          text: `You are an expert AI image prompt engineer for commercial advertising banners.
+Write a highly descriptive, visually rich, and extremely realistic image generation prompt for Stable Diffusion / Flux to create a professional social media advertising poster.
 
 Details of the offer:
-- Business Name: "${restaurantName}" (a ${getLabels(businessType).name.toLowerCase()} store)
-- Offer Title: "${offerTitle}"
-- Discount/Promo Deal: "${discountDetails} on ${productName}"
+- Store Name: "${restaurantName}" (a ${getLabels(businessType).name.toLowerCase()} business)
+- Marketing Head: "${offerTitle}"
+- Main Deal: "${discountDetails} on ${productName}"
 
-Requirements for the generated prompt:
-1. Make it extremely visual, describing the background, lighting, colors, and premium commercial photography style.
-2. Ensure the text details "${restaurantName}", "${offerTitle}", and "${discountDetails} on ${productName}" are prominently featured in the design as clean, bold typography.
-3. Keep it under 150 words.
-4. Return ONLY the final raw prompt string. Do not include markdown code block syntax, quotes, preamble, or explanations.`
+Requirements for the generated image prompt:
+1. It must describe a realistic, high-quality, professional commercial photograph of the product (${productName}). DO NOT make it abstract or text-only.
+2. Describe actual physical items being advertised: high-end commercial close-up shot, depth of field, studio lighting, soft shadows, and clean realistic details.
+3. Clearly specify that the banner has clean, bold, graphic overlay texts displaying the shop name "${restaurantName}", "${offerTitle}", and the promo deal "${discountDetails} on ${productName}".
+4. The background style should be a modern matching studio color palette.
+5. Keep the description under 140 words. Return ONLY the raw prompt string. Do not use markdown blocks, quotes, or preambles.`
                         }
                       ]
                     }
@@ -3200,6 +3210,29 @@ Stay safe & eat healthy! 🍕
           await fetchStoreData(storeData.id);
         }
       } else {
+        // Create initial config JSON packet to store in database store_logo column
+        const defaultSettings = {
+          upiId: "",
+          upiName: "",
+          logo: "",
+          address: "",
+          phone: "",
+          website: "",
+          gstin: "",
+          gstEnabled: false,
+          gstRate: 0,
+          swiggyComm: 0,
+          swiggyCommType: "Percentage",
+          zomatoComm: 0,
+          zomatoCommType: "Percentage",
+          businessType: signupBusinessType || "Restaurant/Cafe",
+          thermalPrinter: false,
+          voiceEnabled: false,
+          voiceLang: "en",
+          lang: "en"
+        };
+        const initialLogoVal = "JSON_CFG:" + JSON.stringify(defaultSettings);
+
         // Signup
         let insertResult = await supabase
           .from('stores')
@@ -3207,7 +3240,8 @@ Stay safe & eat healthy! 🍕
             owner_mobile: loginMobile, 
             store_name: signupStoreName, 
             password: loginPassword,
-            business_type: signupBusinessType
+            business_type: signupBusinessType,
+            store_logo: initialLogoVal
           }])
           .select()
           .single();
@@ -3219,7 +3253,8 @@ Stay safe & eat healthy! 🍕
             .insert([{ 
               owner_mobile: loginMobile, 
               store_name: signupStoreName, 
-              password: loginPassword
+              password: loginPassword,
+              store_logo: initialLogoVal
             }])
             .select()
             .single();
@@ -3289,7 +3324,39 @@ Stay safe & eat healthy! 🍕
       // 0. Update Store Profile Info
       if (storeInfo) {
         setRestaurantName(storeInfo.store_name || storeInfo.name || localStorage.getItem("saas_store_name") || "");
-        const storeBType = storeInfo.business_type || localStorage.getItem("saas_business_type") || "Restaurant/Cafe";
+        
+        // Smart fallback category detection for legacy users with store_logo = null
+        let detectedBusinessType = storeInfo.business_type || localStorage.getItem("saas_business_type");
+        if (!detectedBusinessType && menuData && menuData.length > 0) {
+          const hasMobile = menuData.some(item => 
+            item.name.toLowerCase().includes("iphone") ||
+            item.name.toLowerCase().includes("vivo") ||
+            item.name.toLowerCase().includes("charger") ||
+            item.name.toLowerCase().includes("airdopes")
+          );
+          if (hasMobile) {
+            detectedBusinessType = "Mobile/Electronics";
+          } else {
+            const hasKirana = menuData.some(item =>
+              item.name.toLowerCase().includes("oil") ||
+              item.name.toLowerCase().includes("rice") ||
+              item.name.toLowerCase().includes("salt") ||
+              item.name.toLowerCase().includes("maggi")
+            );
+            if (hasKirana) {
+              detectedBusinessType = "Kirana/Grocery";
+            } else {
+              const hasSaloon = menuData.some(item =>
+                item.name.toLowerCase().includes("haircut") ||
+                item.name.toLowerCase().includes("beard") ||
+                item.name.toLowerCase().includes("massage")
+              );
+              if (hasSaloon) detectedBusinessType = "Saloon/Spa";
+            }
+          }
+        }
+        
+        const storeBType = detectedBusinessType || "Restaurant/Cafe";
         setBusinessType(storeBType);
         localStorage.setItem("saas_business_type", storeBType);
         
