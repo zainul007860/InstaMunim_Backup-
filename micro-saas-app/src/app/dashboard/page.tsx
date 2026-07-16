@@ -4055,77 +4055,42 @@ Stay safe & eat healthy! 🍕
                 ? `${cleanCategory}|IMEIs:${remainingImeis.join(",")}` 
                 : cleanCategory;
 
-              // If all of its IMEIs are sold (remainingImeis.length === 0)
-              if (remainingImeis.length === 0) {
-                supabase
-                  .from('menu_items')
-                  .delete()
-                  .eq('id', matchedItem.id)
-                  .then(async ({ error }) => {
-                    if (!error) {
-                      setMenuItems(prev => prev.filter(m => m.id !== matchedItem.id));
-                      
-                      // Update the corresponding UNSOLD buyback expense to SOLD in ledger if it was an Exchange product
-                      if (cleanCategory === "Exchange") {
-                        const targetExpense = expenses.find(e => {
-                          const title = e.title || "";
-                          return title.includes(cartItem.imei) && (title.endsWith("###UNSOLD]") || title.endsWith(":UNSOLD]"));
-                        });
+              // Always update category instead of deleting so the item remains in the list as Out of Stock
+              supabase
+                .from('menu_items')
+                .update({ category: updatedCategory })
+                .eq('id', matchedItem.id)
+                .then(async ({ error }) => {
+                  if (!error) {
+                    setMenuItems(prev => prev.map(m => 
+                      m.id === matchedItem.id ? { ...m, category: updatedCategory } : m
+                    ));
 
-                        if (targetExpense) {
-                          const isNewFormat = targetExpense.title.includes("###UNSOLD]");
-                          const updatedTitle = isNewFormat 
-                            ? targetExpense.title.replace("###UNSOLD]", `###SOLD###${cartItem.price}`)
-                            : targetExpense.title.replace(":UNSOLD]", `:SOLD:${cartItem.price}`);
-                          
-                          await supabase
-                            .from('expenses')
-                            .update({ title: updatedTitle })
-                            .eq('id', targetExpense.id);
+                    // If it was an Exchange (buyback) product, update the corresponding UNSOLD buyback expense to SOLD
+                    if (cleanCategory === "Exchange") {
+                      const targetExpense = expenses.find(e => {
+                        const title = e.title || "";
+                        return title.includes(cartItem.imei) && (title.endsWith("###UNSOLD]") || title.endsWith(":UNSOLD]"));
+                      });
 
-                          setExpenses(prev => prev.map(e => 
-                            e.id === targetExpense.id ? { ...e, title: updatedTitle } : e
-                          ));
-                        }
+                      if (targetExpense) {
+                        const isNewFormat = targetExpense.title.includes("###UNSOLD]");
+                        const updatedTitle = isNewFormat 
+                          ? targetExpense.title.replace("###UNSOLD]", `###SOLD###${cartItem.price}`)
+                          : targetExpense.title.replace(":UNSOLD]", `:SOLD:${cartItem.price}`);
+                        
+                        await supabase
+                          .from('expenses')
+                          .update({ title: updatedTitle })
+                          .eq('id', targetExpense.id);
+
+                        setExpenses(prev => prev.map(e => 
+                          e.id === targetExpense.id ? { ...e, title: updatedTitle } : e
+                        ));
                       }
                     }
-                  });
-              } else {
-                supabase
-                  .from('menu_items')
-                  .update({ category: updatedCategory })
-                  .eq('id', matchedItem.id)
-                  .then(async ({ error }) => {
-                    if (!error) {
-                      setMenuItems(prev => prev.map(m => 
-                        m.id === matchedItem.id ? { ...m, category: updatedCategory } : m
-                      ));
-
-                      if (cleanCategory === "Exchange") {
-                        const targetExpense = expenses.find(e => {
-                          const title = e.title || "";
-                          return title.includes(cartItem.imei) && (title.endsWith("###UNSOLD]") || title.endsWith(":UNSOLD]"));
-                        });
-
-                        if (targetExpense) {
-                          const isNewFormat = targetExpense.title.includes("###UNSOLD]");
-                          const updatedTitle = isNewFormat 
-                            ? targetExpense.title.replace("###UNSOLD]", `###SOLD###${cartItem.price}`)
-                            : targetExpense.title.replace(":UNSOLD]", `:SOLD:${cartItem.price}`);
-                          
-                          await supabase
-                            .from('expenses')
-                            .update({ title: updatedTitle })
-                            .eq('id', targetExpense.id);
-
-                          setExpenses(prev => prev.map(e => 
-                            e.id === targetExpense.id ? { ...e, title: updatedTitle } : e
-                          ));
-                        }
-                      }
-                    }
-                  });
-              }
+                  }
+                });
             }
           }
         }
@@ -5302,12 +5267,25 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       ) : (
                         <>
                           <div className="grid grid-cols-3 gap-1.5">
-                            {filteredMenuItems.slice(0, 15).map(item => (
-                              <button key={item.id} onClick={() => addToCart(item)} className="p-1.5 bg-white dark:bg-zinc-900 rounded-xl text-left border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all active:scale-95 group">
-                                <p className="font-bold text-[10px] text-zinc-900 dark:text-white lowercase leading-tight truncate">{item.name}</p>
-                                <p className="text-[8px] font-bold text-zinc-400 mt-0.5">₹{item.price}</p>
-                              </button>
-                            ))}
+                            {filteredMenuItems.slice(0, 15).map(item => {
+                              const qty = getImeis(item.category).length;
+                              return (
+                                <button key={item.id} onClick={() => addToCart(item)} className="p-1.5 bg-white dark:bg-zinc-900 rounded-xl text-left border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all active:scale-95 group flex flex-col justify-between min-h-[58px]">
+                                  <p className="font-bold text-[10px] text-zinc-900 dark:text-white lowercase leading-tight truncate w-full">{item.name}</p>
+                                  <div className="flex justify-between items-center w-full mt-1 gap-1">
+                                    <p className="text-[8px] font-bold text-zinc-400 shrink-0">₹{item.price}</p>
+                                    {businessType === "Mobile/Electronics" && (
+                                      <span className={`text-[6.5px] font-black px-1 py-0.5 rounded shrink-0 uppercase tracking-wider ${qty > 0 
+                                        ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400' 
+                                        : 'bg-red-50 dark:bg-red-950/20 text-red-650 dark:text-red-400'}`}
+                                      >
+                                        {qty > 0 ? `Qty: ${qty}` : 'Out'}
+                                      </span>
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })}
                           </div>
                           {filteredMenuItems.length > 15 && (
                             <p className="text-[9px] text-center text-zinc-400 font-bold mt-1 uppercase tracking-wider">
