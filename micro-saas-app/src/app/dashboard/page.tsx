@@ -5223,15 +5223,37 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           />
                         </div>
                         <button 
-                          onClick={() => {
+                          onClick={async () => {
                             if (!isSubscribed) {
                               setShowUpgradeModal(true);
                             } else {
-                              scannerTargetRef.current = "cart";
-                              setShowScanner(true);
+                              if (Capacitor.isNativePlatform()) {
+                                try {
+                                  const status = await BarcodeScanner.checkPermissions();
+                                  if (status.camera !== 'granted') {
+                                    const req = await BarcodeScanner.requestPermissions();
+                                    if (req.camera !== 'granted') {
+                                      alert("Camera permission denied.");
+                                      return;
+                                    }
+                                  }
+                                  const { barcodes } = await BarcodeScanner.scan({
+                                    formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'qr_code']
+                                  });
+                                  if (barcodes && barcodes.length > 0) {
+                                    handleScanSuccess(barcodes[0].rawValue);
+                                  }
+                                } catch (err: any) {
+                                  console.error("Native scan error:", err);
+                                  alert("Scanning failed: " + (err.message || err));
+                                }
+                              } else {
+                                scannerTargetRef.current = "cart";
+                                setShowScanner(true);
+                              }
                             }
                           }} 
-                          className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 flex items-center justify-center hover:bg-orange-600 hover:text-white transition-colors active:scale-95 shadow-sm"
+                          className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-300 flex items-center justify-center hover:bg-orange-600 hover:text-white transition-colors active:scale-95 shadow-sm"
                           title="Scan Barcode"
                         >
                           <Camera className="h-5 w-5" />
