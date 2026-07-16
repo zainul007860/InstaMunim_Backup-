@@ -525,7 +525,7 @@ function InvoiceContent() {
     }
   }, [isExportExcel, exportOwnerMobile, exportMonth]);
 
-  const canScratch = id && mobile && ownerMobile;
+  const canScratch = !!(id && ownerMobile);
 
   // Determine which logo to show
   const finalLogo = cloudLogo || (logoFromUrl.startsWith("http") ? logoFromUrl : null);
