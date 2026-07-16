@@ -11,6 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
+import { Capacitor } from '@capacitor/core';
+import { Preferences } from '@capacitor/preferences';
+import { App } from '@capacitor/app';
 import { trackEvent } from "@/lib/firebase";
 
 const getDisplayCategory = (cat: string) => {
@@ -2138,7 +2141,7 @@ Requirements for the generated image prompt:
   const handleShareAIBanner = async () => {
     if (!aiImageUrl) return;
     try {
-      const { Capacitor } = await import('@capacitor/core');
+      
       if (Capacitor.isNativePlatform()) {
         // Capacitor Share imported at top level
         // Capacitor Filesystem imported at top level
@@ -2268,10 +2271,7 @@ Requirements for the generated image prompt:
   const grandTotal = Math.max(0, cart.reduce((s,i) => s + (i.price*i.qty), 0) + (Number(extraChargeAmount) || 0) - (Number(discount) || 0));
 
   const checkSubscription = () => {
-    // Force active subscription for local testing on localhost
-    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-      return true;
-    }
+
 
     // FORCE FREE PLAN FOR TESTING
     if (ownerMobile === "8130707236") return false;
@@ -2331,9 +2331,9 @@ Requirements for the generated image prompt:
       // Success — clear everything locally and reload
       localStorage.clear();
       try {
-        const { Capacitor } = await import('@capacitor/core');
+        
         if (Capacitor.isNativePlatform()) {
-          const { Preferences } = await import('@capacitor/preferences');
+          
           await Preferences.clear();
         }
       } catch (e: any) { /* ignore on web */ }
@@ -2748,7 +2748,7 @@ Stay safe & eat healthy! 🍕
     
     const initBackListener = async () => {
       try {
-        const { App } = await import('@capacitor/app');
+        
         backListener = await App.addListener('backButton', () => {
           if (activeTab !== "Dashboard") {
             setActiveTab("Dashboard");
@@ -2800,7 +2800,7 @@ Stay safe & eat healthy! 🍕
     if (isSubscribed) return;
     try {
       const adModule = admobRef.current;
-      const { Capacitor } = await import('@capacitor/core');
+      
       if (adModule && Capacitor.isNativePlatform()) {
         console.log("Preparing Interstitial Ad...");
         await adModule.prepareInterstitial({
@@ -2835,7 +2835,7 @@ Stay safe & eat healthy! 🍕
         return;
       }
       try {
-        const { Capacitor } = await import('@capacitor/core');
+        
         if (!Capacitor.isNativePlatform()) {
           setAdmobDebugInfo("Non-native platform");
           return;
@@ -2911,7 +2911,7 @@ Stay safe & eat healthy! 🍕
     return () => {
       const cleanUp = async () => {
         try {
-          const { Capacitor } = await import('@capacitor/core');
+          
           if (Capacitor.isNativePlatform() && admobRef.current) {
             if (loadedListener) loadedListener.remove();
             if (failedListener) failedListener.remove();
@@ -2932,7 +2932,7 @@ Stay safe & eat healthy! 🍕
   useEffect(() => {
     const toggleBanner = async () => {
       try {
-        const { Capacitor } = await import('@capacitor/core');
+        
         if (!Capacitor.isNativePlatform() || !admobRef.current) return;
         
         if (isSubscribed || adProvider !== "admob") {
@@ -3181,9 +3181,9 @@ Stay safe & eat healthy! 🍕
     // Also check native Preferences (survives app restart on Android)
     const checkNativeSession = async () => {
       try {
-        const { Capacitor } = await import('@capacitor/core');
+        
         if (Capacitor.isNativePlatform()) {
-          const { Preferences } = await import('@capacitor/preferences');
+          
           const { value: nativeLoggedIn } = await Preferences.get({ key: 'saas_is_logged_in' });
           const { value: nativeMobile } = await Preferences.get({ key: 'saas_owner_mobile' });
           if (nativeLoggedIn === 'true' && nativeMobile) {
@@ -3356,15 +3356,11 @@ Stay safe & eat healthy! 🍕
     } else {
       // Auto-select: Native Android App starts with AdMob (best revenue); Web browsers start with Web Ads (Monetag)
       try {
-        import('@capacitor/core').then(({ Capacitor }) => {
-          if (Capacitor.isNativePlatform()) {
-            setAdProvider("admob");
-          } else {
-            setAdProvider("web");
-          }
-        }).catch(() => {
+        if (Capacitor.isNativePlatform()) {
+          setAdProvider("admob");
+        } else {
           setAdProvider("web");
-        });
+        }
       } catch (e: any) {
         setAdProvider("web");
       }
@@ -3441,7 +3437,7 @@ Stay safe & eat healthy! 🍕
 
     const initAppStateListener = async () => {
       try {
-        const { App } = await import('@capacitor/app');
+        
         appStateListener = await App.addListener('appStateChange', (state) => {
           if (!state.isActive) {
             localStorage.setItem("saas_inactive_timestamp", Date.now().toString());
@@ -3548,9 +3544,9 @@ Stay safe & eat healthy! 🍕
           localStorage.setItem("saas_business_type", storeBType);
           // Save to native Preferences for app restart persistence
           try {
-            const { Capacitor } = await import('@capacitor/core');
+            
             if (Capacitor.isNativePlatform()) {
-              const { Preferences } = await import('@capacitor/preferences');
+              
               await Preferences.set({ key: 'saas_is_logged_in', value: 'true' });
               await Preferences.set({ key: 'saas_owner_mobile', value: loginMobile });
             }
@@ -4044,9 +4040,9 @@ Stay safe & eat healthy! 🍕
     setActiveTab("Dashboard");
     // Clear native Preferences on logout
     try {
-      const { Capacitor } = await import('@capacitor/core');
+      
       if (Capacitor.isNativePlatform()) {
-        const { Preferences } = await import('@capacitor/preferences');
+        
         await Preferences.remove({ key: 'saas_is_logged_in' });
         await Preferences.remove({ key: 'saas_owner_mobile' });
       }
@@ -4081,7 +4077,7 @@ Stay safe & eat healthy! 🍕
 
     // 1. Check if running inside native Android / iOS app
     try {
-      const { Capacitor } = await import('@capacitor/core');
+      
       if (Capacitor.isNativePlatform()) {
         const { TextToSpeech } = await import('@capacitor-community/text-to-speech');
         await TextToSpeech.stop();
@@ -8536,7 +8532,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               <Button onClick={async () => {
                 await handleLogout();
                 try {
-                  const { App } = await import('@capacitor/app');
+                  
                   await App.exitApp();
                 } catch (e: any) {
                   window.close();
