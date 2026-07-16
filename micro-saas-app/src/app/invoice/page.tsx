@@ -485,11 +485,11 @@ function InvoiceContent() {
               dateTime = String(s.sale_date || "N/A");
             }
             const invoiceId = s.id || "N/A";
-            const custName = s.name || "Guest Customer";
+            const custName = s.customer_name || "Guest Customer";
             const custMobile = s.mobile || "N/A";
-            const items = (s.item || "General Sale").replace(/"/g, '""');
-            const payMode = getPartnerName(bType, s.type);
-            const amount = s.price || 0;
+            const items = (s.items || "General Sale").replace(/"/g, '""');
+            const payMode = getPartnerName(bType, s.payment_type);
+            const amount = s.total_price || 0;
 
             return [
               dateTime,
