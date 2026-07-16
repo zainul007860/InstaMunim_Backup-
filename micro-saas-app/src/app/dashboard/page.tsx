@@ -4218,18 +4218,17 @@ Stay safe & eat healthy! 🍕
                 ? `${cleanCategory}|IMEIs:${remainingImeis.join(",")}` 
                 : cleanCategory;
 
-              supabase
-                .from('menu_items')
-                .update({ category: updatedCategory })
-                .eq('id', matchedItem.id)
-                .then(async ({ error }) => {
-                  if (!error) {
-                    setMenuItems(prev => prev.map(m => 
-                      m.id === matchedItem.id ? { ...m, category: updatedCategory } : m
-                    ));
-
-                    // If it's an Exchange product, update the corresponding UNSOLD buyback expense to SOLD
-                    if (cleanCategory === "Exchange") {
+              // If it's an Exchange (buyback) product and all of its IMEIs are sold (remainingImeis.length === 0)
+              if (cleanCategory === "Exchange" && remainingImeis.length === 0) {
+                supabase
+                  .from('menu_items')
+                  .delete()
+                  .eq('id', matchedItem.id)
+                  .then(async ({ error }) => {
+                    if (!error) {
+                      setMenuItems(prev => prev.filter(m => m.id !== matchedItem.id));
+                      
+                      // Update the corresponding UNSOLD buyback expense to SOLD in ledger
                       const targetExpense = expenses.find(e => {
                         const title = e.title || "";
                         return title.includes(cartItem.imei) && (title.endsWith("###UNSOLD]") || title.endsWith(":UNSOLD]"));
@@ -4251,8 +4250,43 @@ Stay safe & eat healthy! 🍕
                         ));
                       }
                     }
-                  }
-                });
+                  });
+              } else {
+                supabase
+                  .from('menu_items')
+                  .update({ category: updatedCategory })
+                  .eq('id', matchedItem.id)
+                  .then(async ({ error }) => {
+                    if (!error) {
+                      setMenuItems(prev => prev.map(m => 
+                        m.id === matchedItem.id ? { ...m, category: updatedCategory } : m
+                      ));
+
+                      if (cleanCategory === "Exchange") {
+                        const targetExpense = expenses.find(e => {
+                          const title = e.title || "";
+                          return title.includes(cartItem.imei) && (title.endsWith("###UNSOLD]") || title.endsWith(":UNSOLD]"));
+                        });
+
+                        if (targetExpense) {
+                          const isNewFormat = targetExpense.title.includes("###UNSOLD]");
+                          const updatedTitle = isNewFormat 
+                            ? targetExpense.title.replace("###UNSOLD]", `###SOLD###${cartItem.price}`)
+                            : targetExpense.title.replace(":UNSOLD]", `:SOLD:${cartItem.price}`);
+                          
+                          await supabase
+                            .from('expenses')
+                            .update({ title: updatedTitle })
+                            .eq('id', targetExpense.id);
+
+                          setExpenses(prev => prev.map(e => 
+                            e.id === targetExpense.id ? { ...e, title: updatedTitle } : e
+                          ));
+                        }
+                      }
+                    }
+                  });
+              }
             }
           }
         }
