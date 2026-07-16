@@ -68,8 +68,7 @@ const ImeiInput = ({
   const handleNativeScan = async () => {
     setScanError(null);
     try {
-      const isNative = (typeof window !== 'undefined' && !!(window as any).Capacitor?.isNative);
-      if (!isNative) {
+      if (!Capacitor.isNativePlatform()) {
         alert("Native Barcode Scanner is only available inside the Android App WebView.");
         return;
       }
