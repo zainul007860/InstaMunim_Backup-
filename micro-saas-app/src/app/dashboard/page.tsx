@@ -4055,8 +4055,8 @@ Stay safe & eat healthy! 🍕
                 ? `${cleanCategory}|IMEIs:${remainingImeis.join(",")}` 
                 : cleanCategory;
 
-              // If it's an Exchange (buyback) product and all of its IMEIs are sold (remainingImeis.length === 0)
-              if (cleanCategory === "Exchange" && remainingImeis.length === 0) {
+              // If all of its IMEIs are sold (remainingImeis.length === 0)
+              if (remainingImeis.length === 0) {
                 supabase
                   .from('menu_items')
                   .delete()
@@ -4065,26 +4065,28 @@ Stay safe & eat healthy! 🍕
                     if (!error) {
                       setMenuItems(prev => prev.filter(m => m.id !== matchedItem.id));
                       
-                      // Update the corresponding UNSOLD buyback expense to SOLD in ledger
-                      const targetExpense = expenses.find(e => {
-                        const title = e.title || "";
-                        return title.includes(cartItem.imei) && (title.endsWith("###UNSOLD]") || title.endsWith(":UNSOLD]"));
-                      });
+                      // Update the corresponding UNSOLD buyback expense to SOLD in ledger if it was an Exchange product
+                      if (cleanCategory === "Exchange") {
+                        const targetExpense = expenses.find(e => {
+                          const title = e.title || "";
+                          return title.includes(cartItem.imei) && (title.endsWith("###UNSOLD]") || title.endsWith(":UNSOLD]"));
+                        });
 
-                      if (targetExpense) {
-                        const isNewFormat = targetExpense.title.includes("###UNSOLD]");
-                        const updatedTitle = isNewFormat 
-                          ? targetExpense.title.replace("###UNSOLD]", `###SOLD###${cartItem.price}`)
-                          : targetExpense.title.replace(":UNSOLD]", `:SOLD:${cartItem.price}`);
-                        
-                        await supabase
-                          .from('expenses')
-                          .update({ title: updatedTitle })
-                          .eq('id', targetExpense.id);
+                        if (targetExpense) {
+                          const isNewFormat = targetExpense.title.includes("###UNSOLD]");
+                          const updatedTitle = isNewFormat 
+                            ? targetExpense.title.replace("###UNSOLD]", `###SOLD###${cartItem.price}`)
+                            : targetExpense.title.replace(":UNSOLD]", `:SOLD:${cartItem.price}`);
+                          
+                          await supabase
+                            .from('expenses')
+                            .update({ title: updatedTitle })
+                            .eq('id', targetExpense.id);
 
-                        setExpenses(prev => prev.map(e => 
-                          e.id === targetExpense.id ? { ...e, title: updatedTitle } : e
-                        ));
+                          setExpenses(prev => prev.map(e => 
+                            e.id === targetExpense.id ? { ...e, title: updatedTitle } : e
+                          ));
+                        }
                       }
                     }
                   });
@@ -4456,13 +4458,20 @@ Stay safe & eat healthy! 🍕
   const addToCart = (item: any) => {
     setCart(prev => {
       let matchedImei = item.imei || "";
-      if (!matchedImei && businessType === "Mobile/Electronics" && itemSearch.trim()) {
-        const query = itemSearch.trim().toLowerCase();
+      if (!matchedImei && businessType === "Mobile/Electronics") {
         const imeis = getImeis(item.category);
-        const exactOrPartialMatch = imeis.find(x => x.toLowerCase().includes(query));
-        if (exactOrPartialMatch) {
-          matchedImei = exactOrPartialMatch;
-          setItemSearch("");
+        if (imeis.length > 0) {
+          if (itemSearch.trim()) {
+            const query = itemSearch.trim().toLowerCase();
+            const exactOrPartialMatch = imeis.find(x => x.toLowerCase().includes(query));
+            if (exactOrPartialMatch) {
+              matchedImei = exactOrPartialMatch;
+              setItemSearch("");
+            }
+          }
+          if (!matchedImei) {
+            matchedImei = imeis[0];
+          }
         }
       }
 
