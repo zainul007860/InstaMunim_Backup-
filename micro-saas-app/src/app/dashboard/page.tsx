@@ -62,6 +62,125 @@ const ImeiInput = ({
   const [isScanning, setIsScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
   const [scanProgress, setScanProgress] = useState(0);
+  const [isProcessingImage, setIsProcessingImage] = useState(false);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsProcessingImage(true);
+    setScanError(null);
+    setScanProgress(10);
+
+    try {
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const dataUrl = event.target?.result as string;
+        const img = new Image();
+        img.onload = async () => {
+          const canvas = canvasRef.current || document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            setScanError("Failed to initialize canvas.");
+            setIsProcessingImage(false);
+            return;
+          }
+
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          setScanProgress(40);
+
+          // 1. Try local BarcodeDetector first
+          if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
+            try {
+              const detector = new (window as any).BarcodeDetector({
+                formats: ['code_128', 'code_39', 'ean_13', 'upc_a', 'qr_code']
+              });
+              const detected = await detector.detect(canvas);
+              if (detected && detected.length > 0) {
+                const val = detected[0].rawValue;
+                setScanProgress(100);
+                if ('vibrate' in navigator) navigator.vibrate(100);
+                onChange(val);
+                setLocalVal(val);
+                onScan?.({ barcode: val });
+                setIsProcessingImage(false);
+                return;
+              }
+            } catch (err) {
+              console.warn("Local image BarcodeDetector error:", err);
+            }
+          }
+
+          // 2. Try jsQR for QR codes
+          try {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(imageData.data, canvas.width, canvas.height);
+            if (code && code.data) {
+              const scannedValue = code.data;
+              setScanProgress(100);
+              if ('vibrate' in navigator) navigator.vibrate(100);
+              onChange(scannedValue);
+              setLocalVal(scannedValue);
+              onScan?.({ barcode: scannedValue, format: 'QR_CODE' });
+              setIsProcessingImage(false);
+              return;
+            }
+          } catch (jsQRErr) {}
+
+          // 3. Fallback to free Online OCR API to extract 15-digit IMEI number
+          setScanProgress(60);
+          try {
+            const compressedUrl = canvas.toDataURL("image/jpeg", 0.6);
+            
+            const formData = new FormData();
+            formData.append("apikey", "helloworld");
+            formData.append("language", "eng");
+            formData.append("base64image", compressedUrl);
+            
+            const res = await fetch("https://api.ocr.space/parse/image", {
+              method: "POST",
+              body: formData
+            });
+
+            if (!res.ok) throw new Error("OCR server error");
+            const ocrData = await res.json();
+            
+            if (ocrData && ocrData.ParsedResults && ocrData.ParsedResults.length > 0) {
+              const text = ocrData.ParsedResults[0].ParsedText || "";
+              const imeiMatch = text.match(/\b\d{15}\b/);
+              if (imeiMatch) {
+                const imeiVal = imeiMatch[0];
+                setScanProgress(100);
+                if ('vibrate' in navigator) navigator.vibrate(100);
+                onChange(imeiVal);
+                setLocalVal(imeiVal);
+                onScan?.({ barcode: imeiVal });
+                setIsProcessingImage(false);
+                return;
+              }
+            }
+            throw new Error("No 15-digit IMEI number found in the photo.");
+          } catch (ocrErr: any) {
+            console.error("OCR extraction failed:", ocrErr);
+            setScanError(ocrErr.message || "Failed to extract IMEI number from photo.");
+          }
+          
+          setIsProcessingImage(false);
+        };
+        img.onerror = () => {
+          setScanError("Failed to load image file.");
+          setIsProcessingImage(false);
+        };
+        img.src = dataUrl;
+      };
+      reader.readAsDataURL(file);
+    } catch (err: any) {
+      setScanError("Failed to read selected file.");
+      setIsProcessingImage(false);
+    }
+  };
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -249,24 +368,41 @@ const ImeiInput = ({
           value={localVal}
           onChange={e => setLocalVal(e.target.value)}
           onBlur={() => onChange(localVal)}
-          className={`${className} pr-12`}
+          className={`${className} pr-20`}
         />
         
-        <button
-          type="button"
-          onClick={isScanning ? stopAdvancedScan : startAdvancedScan}
-          className={`absolute right-2 h-8 w-8 rounded-lg flex items-center justify-center transition-all active:scale-95 z-10 ${isScanning 
-            ? 'bg-red-500 hover:bg-red-650 text-white shadow-lg animate-pulse' 
-            : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-300 hover:bg-zinc-200'
-          }`}
-          title={isScanning ? "Stop scanning" : "Scan barcode"}
-        >
-          {isScanning ? (
-            <X className="h-4 w-4" />
-          ) : (
-            <Camera className="h-4 w-4" />
-          )}
-        </button>
+        <div className="absolute right-1.5 flex gap-1 z-10">
+          <button
+            type="button"
+            onClick={isScanning ? stopAdvancedScan : startAdvancedScan}
+            className={`h-8 w-8 rounded-lg flex items-center justify-center transition-all active:scale-95 ${isScanning 
+              ? 'bg-red-500 hover:bg-red-650 text-white shadow-lg animate-pulse' 
+              : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-300 hover:bg-zinc-200'
+            }`}
+            title={isScanning ? "Stop scanning" : "Live Camera Scanner"}
+          >
+            {isScanning ? (
+              <X className="h-4 w-4" />
+            ) : (
+              <Camera className="h-4 w-4" />
+            )}
+          </button>
+
+          <label
+            className={`h-8 w-8 rounded-lg flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-300 hover:bg-zinc-200 cursor-pointer transition-all active:scale-95 ${isProcessingImage ? 'animate-pulse bg-orange-500 text-white' : ''}`}
+            title="Upload or Capture Photo"
+          >
+            <Upload className="h-4 w-4" />
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              className="hidden"
+              onChange={handleImageUpload}
+              disabled={isProcessingImage}
+            />
+          </label>
+        </div>
       </div>
 
       <canvas ref={canvasRef} className="hidden" />
@@ -287,6 +423,16 @@ const ImeiInput = ({
             <span className="text-[9px] font-black uppercase tracking-widest text-orange-500">
               Scanning: {scanProgress}%
             </span>
+          </div>
+        </div>
+      )}
+
+      {isProcessingImage && (
+        <div className="relative mt-2 w-full h-20 bg-zinc-900 rounded-2xl border border-zinc-800 shadow-lg z-20 flex items-center justify-center gap-3 px-4">
+          <Loader2 className="w-5 h-5 text-orange-500 animate-spin" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-black uppercase tracking-wider text-zinc-200">Reading Photo...</p>
+            <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">Extracting Barcode / IMEI: {scanProgress}%</p>
           </div>
         </div>
       )}
