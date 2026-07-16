@@ -149,7 +149,7 @@ const ImeiInput = ({
             
             if (ocrData && ocrData.ParsedResults && ocrData.ParsedResults.length > 0) {
               const text = ocrData.ParsedResults[0].ParsedText || "";
-              const imeiMatch = text.match(/\b\d{15}\b/);
+              const imeiMatch = text.match(/\d{15}/);
               if (imeiMatch) {
                 const imeiVal = imeiMatch[0];
                 setScanProgress(100);
@@ -440,7 +440,13 @@ const ImeiInput = ({
       {scanError && (
         <div className="absolute top-full mt-2 left-0 right-0 flex justify-center z-30">
           <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950/80 text-red-700 dark:text-red-300 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-md border border-red-200 dark:border-red-900/50">
-            <X className="h-3.5 w-3.5" />
+            <button 
+              type="button" 
+              onClick={() => setScanError(null)} 
+              className="hover:opacity-85 active:scale-90 flex items-center justify-center p-0.5 rounded-full hover:bg-red-200 dark:hover:bg-red-900/40 transition-all"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
             <span>{scanError}</span>
           </div>
         </div>
