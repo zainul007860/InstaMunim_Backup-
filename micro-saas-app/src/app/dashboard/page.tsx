@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { Capacitor } from '@capacitor/core';
+import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Preferences } from '@capacitor/preferences';
 import { App } from '@capacitor/app';
 import { trackEvent } from "@/lib/firebase";
