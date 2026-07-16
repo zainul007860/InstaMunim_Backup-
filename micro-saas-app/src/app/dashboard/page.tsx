@@ -59,305 +59,46 @@ const ImeiInput = ({
   onCancel?: () => void;
 }) => {
   const [localVal, setLocalVal] = useState(value);
-  const [isScanning, setIsScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
-  const [scanProgress, setScanProgress] = useState(0);
-  const [isProcessingImage, setIsProcessingImage] = useState(false);
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setIsProcessingImage(true);
-    setScanError(null);
-    setScanProgress(10);
-
-    try {
-      const reader = new FileReader();
-      reader.onload = async (event) => {
-        const dataUrl = event.target?.result as string;
-        const img = new Image();
-        img.onload = async () => {
-          const canvas = canvasRef.current || document.createElement("canvas");
-          const ctx = canvas.getContext("2d");
-          if (!ctx) {
-            setScanError("Failed to initialize canvas.");
-            setIsProcessingImage(false);
-            return;
-          }
-
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-          setScanProgress(40);
-
-          // 1. Try local BarcodeDetector first
-          if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
-            try {
-              const detector = new (window as any).BarcodeDetector({
-                formats: ['code_128', 'code_39', 'ean_13', 'upc_a', 'qr_code']
-              });
-              const detected = await detector.detect(canvas);
-              if (detected && detected.length > 0) {
-                const val = detected[0].rawValue;
-                setScanProgress(100);
-                if ('vibrate' in navigator) navigator.vibrate(100);
-                onChange(val);
-                setLocalVal(val);
-                onScan?.({ barcode: val });
-                setIsProcessingImage(false);
-                return;
-              }
-            } catch (err) {
-              console.warn("Local image BarcodeDetector error:", err);
-            }
-          }
-
-          // 2. Try jsQR for QR codes
-          try {
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            const code = jsQR(imageData.data, canvas.width, canvas.height);
-            if (code && code.data) {
-              const scannedValue = code.data;
-              setScanProgress(100);
-              if ('vibrate' in navigator) navigator.vibrate(100);
-              onChange(scannedValue);
-              setLocalVal(scannedValue);
-              onScan?.({ barcode: scannedValue, format: 'QR_CODE' });
-              setIsProcessingImage(false);
-              return;
-            }
-          } catch (jsQRErr) {}
-
-          // 3. Fallback to free Online OCR API to extract 15-digit IMEI number
-          setScanProgress(60);
-          try {
-            const compressedUrl = canvas.toDataURL("image/jpeg", 0.6);
-            
-            const formData = new FormData();
-            formData.append("apikey", "helloworld");
-            formData.append("language", "eng");
-            formData.append("base64image", compressedUrl);
-            
-            const res = await fetch("https://api.ocr.space/parse/image", {
-              method: "POST",
-              body: formData
-            });
-
-            if (!res.ok) throw new Error("OCR server error");
-            const ocrData = await res.json();
-            
-            if (ocrData && ocrData.ParsedResults && ocrData.ParsedResults.length > 0) {
-              const text = ocrData.ParsedResults[0].ParsedText || "";
-              const imeiMatch = text.match(/\d{15}/);
-              if (imeiMatch) {
-                const imeiVal = imeiMatch[0];
-                setScanProgress(100);
-                if ('vibrate' in navigator) navigator.vibrate(100);
-                onChange(imeiVal);
-                setLocalVal(imeiVal);
-                onScan?.({ barcode: imeiVal });
-                setIsProcessingImage(false);
-                return;
-              }
-            }
-            throw new Error("No 15-digit IMEI number found in the photo.");
-          } catch (ocrErr: any) {
-            console.error("OCR extraction failed:", ocrErr);
-            setScanError(ocrErr.message || "Failed to extract IMEI number from photo.");
-          }
-          
-          setIsProcessingImage(false);
-        };
-        img.onerror = () => {
-          setScanError("Failed to load image file.");
-          setIsProcessingImage(false);
-        };
-        img.src = dataUrl;
-      };
-      reader.readAsDataURL(file);
-    } catch (err: any) {
-      setScanError("Failed to read selected file.");
-      setIsProcessingImage(false);
-    }
-  };
-  
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const scanIntervalRef = useRef<any>(null);
-  const lastFrameTimeRef = useRef<number>(0);
 
   useEffect(() => {
     setLocalVal(value);
   }, [value]);
 
-  useEffect(() => {
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => {
-          track.stop();
-          track.enabled = false;
-        });
-        streamRef.current = null;
-      }
-      if (scanIntervalRef.current) {
-        clearInterval(scanIntervalRef.current);
-      }
-    };
-  }, []);
-
-  const startAdvancedScan = async () => {
-    try {
-      if (isScanning) return;
-      
-      setIsScanning(true);
-      setScanError(null);
-      setScanProgress(0);
-      
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-          frameRate: { ideal: 30 }
-        }
-      });
-
-      streamRef.current = stream;
-      
-      setTimeout(async () => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          try {
-            await videoRef.current.play();
-          } catch (err: any) {
-            console.error("Video play error:", err);
-          }
-          startScanLoop();
-        }
-      }, 150);
-
-      const progressInterval = setInterval(() => {
-        setScanProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 5;
-        });
-      }, 100);
-
-    } catch (err: any) {
-      console.error('Camera access error:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Camera access denied';
-      setScanError(errorMessage);
-      setIsScanning(false);
-      if (onCancel) onCancel();
-    }
-  };
-
-  const stopAdvancedScan = () => {
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
-      scanIntervalRef.current = null;
-    }
-    
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => {
-        track.stop();
-        track.enabled = false;
-      });
-      streamRef.current = null;
-    }
-    
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.srcObject = null;
-    }
-    
-    setIsScanning(false);
-    setScanProgress(0);
+  const handleNativeScan = async () => {
     setScanError(null);
-    
-    if (onCancel) onCancel();
-  };
-
-  const processFrame = async () => {
-    if (!videoRef.current || !canvasRef.current || !streamRef.current) {
-      return;
-    }
-
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-
-    if (!ctx || video.videoWidth === 0) {
-      return;
-    }
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    
-    ctx.imageSmoothingEnabled = true;
-    ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
     try {
-      if ('BarcodeDetector' in window) {
-        const detector = new (window as any).BarcodeDetector({
-          formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'qr_code']
-        });
-        const detected = await detector.detect(video);
-        if (detected && detected.length > 0) {
-          const codeVal = detected[0].rawValue;
-          stopAdvancedScan();
-          if ('vibrate' in navigator) {
-            navigator.vibrate(100);
-          }
-          setScanProgress(100);
-          onChange(codeVal);
-          setLocalVal(codeVal);
-          onScan?.({ barcode: codeVal });
+      const isNative = (typeof window !== 'undefined' && !!(window as any).Capacitor?.isNative);
+      if (!isNative) {
+        alert("Native Barcode Scanner is only available inside the Android App WebView.");
+        return;
+      }
+
+      // Check and request camera permissions natively
+      const status = await BarcodeScanner.checkPermissions();
+      if (status.camera !== 'granted') {
+        const req = await BarcodeScanner.requestPermissions();
+        if (req.camera !== 'granted') {
+          setScanError("Camera permission denied.");
           return;
         }
       }
-    } catch (detectErr) {
-      console.warn("Real-time native BarcodeDetector warning:", detectErr);
-    }
 
-    try {
-      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      const code = jsQR(imageData.data, canvas.width, canvas.height);
-      if (code && code.data) {
-        const scannedValue = code.data;
-        stopAdvancedScan();
-        if ('vibrate' in navigator) {
-          navigator.vibrate(100);
-        }
-        setScanProgress(100);
+      // Start full-screen native scan overlay (Google ML Kit)
+      const { barcodes } = await BarcodeScanner.scan({
+        formats: ['code_128', 'code_39', 'ean_13', 'upc_a', 'qr_code']
+      });
+
+      if (barcodes && barcodes.length > 0) {
+        const scannedValue = barcodes[0].rawValue;
         onChange(scannedValue);
         setLocalVal(scannedValue);
-        onScan?.({ barcode: scannedValue, format: 'QR_CODE' });
-        return;
+        onScan?.({ barcode: scannedValue });
       }
     } catch (err: any) {
-      // Silent frame error
+      console.error("ML Kit Scan Error:", err);
+      setScanError(err.message || "Failed to scan barcode.");
     }
-  };
-
-  const startScanLoop = () => {
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
-    }
-    
-    scanIntervalRef.current = setInterval(() => {
-      const currentTime = performance.now();
-      if (currentTime - lastFrameTimeRef.current > 100) {
-        lastFrameTimeRef.current = currentTime;
-        processFrame();
-      }
-    }, 50);
   };
 
   return (
@@ -368,74 +109,18 @@ const ImeiInput = ({
           value={localVal}
           onChange={e => setLocalVal(e.target.value)}
           onBlur={() => onChange(localVal)}
-          className={`${className} pr-20`}
+          className={`${className} pr-12`}
         />
         
-        <div className="absolute right-1.5 flex gap-1 z-10">
-          <button
-            type="button"
-            onClick={isScanning ? stopAdvancedScan : startAdvancedScan}
-            className={`h-8 w-8 rounded-lg flex items-center justify-center transition-all active:scale-95 ${isScanning 
-              ? 'bg-red-500 hover:bg-red-650 text-white shadow-lg animate-pulse' 
-              : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-300 hover:bg-zinc-200'
-            }`}
-            title={isScanning ? "Stop scanning" : "Live Camera Scanner"}
-          >
-            {isScanning ? (
-              <X className="h-4 w-4" />
-            ) : (
-              <Camera className="h-4 w-4" />
-            )}
-          </button>
-
-          <label
-            className={`h-8 w-8 rounded-lg flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-300 hover:bg-zinc-200 cursor-pointer transition-all active:scale-95 ${isProcessingImage ? 'animate-pulse bg-orange-500 text-white' : ''}`}
-            title="Upload or Capture Photo"
-          >
-            <Upload className="h-4 w-4" />
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={handleImageUpload}
-              disabled={isProcessingImage}
-            />
-          </label>
-        </div>
+        <button
+          type="button"
+          onClick={handleNativeScan}
+          className="absolute right-2 h-8 w-8 rounded-lg flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-300 hover:bg-zinc-200 transition-all active:scale-95 z-10"
+          title="Scan barcode natively"
+        >
+          <Camera className="h-4 w-4" />
+        </button>
       </div>
-
-      <canvas ref={canvasRef} className="hidden" />
-
-      {isScanning && (
-        <div className="relative mt-2 w-full h-44 bg-zinc-950 rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-lg z-20 flex flex-col justify-center">
-          <video 
-            ref={videoRef} 
-            className="w-full h-full object-cover" 
-            playsInline 
-            muted 
-          />
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <div className="w-[85%] h-[2px] bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.8)] animate-pulse" />
-          </div>
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-sm px-3.5 py-1 rounded-full border border-zinc-800 flex items-center gap-2">
-            <div className="w-2 h-2 bg-orange-500 rounded-full animate-ping" />
-            <span className="text-[9px] font-black uppercase tracking-widest text-orange-500">
-              Scanning: {scanProgress}%
-            </span>
-          </div>
-        </div>
-      )}
-
-      {isProcessingImage && (
-        <div className="relative mt-2 w-full h-20 bg-zinc-900 rounded-2xl border border-zinc-800 shadow-lg z-20 flex items-center justify-center gap-3 px-4">
-          <Loader2 className="w-5 h-5 text-orange-500 animate-spin" />
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-wider text-zinc-200">Reading Photo...</p>
-            <p className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest mt-0.5">Extracting Barcode / IMEI: {scanProgress}%</p>
-          </div>
-        </div>
-      )}
 
       {scanError && (
         <div className="absolute top-full mt-2 left-0 right-0 flex justify-center z-30">
