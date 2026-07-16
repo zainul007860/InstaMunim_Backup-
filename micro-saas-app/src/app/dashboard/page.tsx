@@ -5346,13 +5346,6 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                     onChange={val => updateCartItemImei(c.name, val)} 
                                     className="h-8 flex-1 rounded-xl bg-white dark:bg-zinc-800 border-0 font-bold px-3 text-[10px]" 
                                   />
-                                  <Button 
-                                    size="sm"
-                                    onClick={() => handleScanImei(c.name)}
-                                    className="h-8 w-8 p-0 bg-orange-500 hover:bg-orange-600 rounded-lg flex items-center justify-center border-0 text-white"
-                                  >
-                                    <Camera className="h-3.5 w-3.5" />
-                                  </Button>
                                 </div>
                               )}
                             </div>
@@ -7009,15 +7002,6 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 }} 
                                 className="h-9 flex-1 rounded-xl bg-white dark:bg-zinc-900 border-0 font-bold px-3 text-[11px]" 
                               />
-                              <Button 
-                                size="sm"
-                                onClick={() => {
-                                  handleScanNewItemImei(index);
-                                }}
-                                className="h-9 w-9 p-0 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-xl text-zinc-500 flex items-center justify-center border-0"
-                              >
-                                <Camera className="h-4 w-4" />
-                              </Button>
                               <Button 
                                 size="sm"
                                 variant="ghost"
@@ -8757,15 +8741,6 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         }} 
                         className="h-9 flex-1 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-3 text-[11px]" 
                       />
-                      <Button 
-                        size="sm"
-                        onClick={() => {
-                          handleScanEditItemImei(index);
-                        }}
-                        className="h-9 w-9 p-0 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-xl text-zinc-500 flex items-center justify-center border-0"
-                      >
-                        <Camera className="h-4 w-4" />
-                      </Button>
                       <Button 
                         size="sm"
                         variant="ghost"
