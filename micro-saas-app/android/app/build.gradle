@@ -4,10 +4,10 @@ android {
     namespace = "com.zainul.instamunimpos"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.zainul.instamunimpos.test"
+        applicationId "com.zainul.instamunimpos"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 7
+        versionCode 8
         versionName "1.5"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
