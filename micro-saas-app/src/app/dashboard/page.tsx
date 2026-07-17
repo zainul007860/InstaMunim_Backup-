@@ -84,6 +84,18 @@ const ImeiInput = ({
         }
       }
 
+      // Check if Google Barcode Scanner module is available on Android
+      if (Capacitor.getPlatform() === 'android') {
+        try {
+          const { available } = await BarcodeScanner.isGoogleBarcodeScannerModuleAvailable();
+          if (!available) {
+            await BarcodeScanner.installGoogleBarcodeScannerModule();
+          }
+        } catch (moduleErr) {
+          console.warn("Google Barcode Module error:", moduleErr);
+        }
+      }
+
       // Start full-screen native scan overlay (Google ML Kit)
       const { barcodes } = await BarcodeScanner.scan({
         formats: ['aztec', 'codabar', 'code_39', 'code_93', 'code_128', 'data_matrix', 'ean_8', 'ean_13', 'itf', 'pdf417', 'qr_code', 'upc_a', 'upc_e']
@@ -5256,6 +5268,19 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                       return;
                                     }
                                   }
+
+                                  // Check if Google Barcode Scanner module is available on Android
+                                  if (Capacitor.getPlatform() === 'android') {
+                                    try {
+                                      const { available } = await BarcodeScanner.isGoogleBarcodeScannerModuleAvailable();
+                                      if (!available) {
+                                        await BarcodeScanner.installGoogleBarcodeScannerModule();
+                                      }
+                                    } catch (moduleErr) {
+                                      console.warn("Google Barcode Module error:", moduleErr);
+                                    }
+                                  }
+
                                   const { barcodes } = await BarcodeScanner.scan({
                                     formats: ['aztec', 'codabar', 'code_39', 'code_93', 'code_128', 'data_matrix', 'ean_8', 'ean_13', 'itf', 'pdf417', 'qr_code', 'upc_a', 'upc_e']
                                   });
