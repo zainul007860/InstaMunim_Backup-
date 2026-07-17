@@ -98,7 +98,7 @@ const ImeiInput = ({
 
       // Start full-screen native scan overlay (Google ML Kit)
       const { barcodes } = await BarcodeScanner.scan({
-        formats: ['aztec', 'codabar', 'code_39', 'code_93', 'code_128', 'data_matrix', 'ean_8', 'ean_13', 'itf', 'pdf417', 'qr_code', 'upc_a', 'upc_e']
+        formats: ['codabar', 'code_39', 'code_93', 'code_128', 'ean_8', 'ean_13', 'itf', 'pdf417', 'upc_a', 'upc_e']
       });
 
       if (barcodes && barcodes.length > 0) {
@@ -5282,7 +5282,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                   }
 
                                   const { barcodes } = await BarcodeScanner.scan({
-                                    formats: ['aztec', 'codabar', 'code_39', 'code_93', 'code_128', 'data_matrix', 'ean_8', 'ean_13', 'itf', 'pdf417', 'qr_code', 'upc_a', 'upc_e']
+                                    formats: ['codabar', 'code_39', 'code_93', 'code_128', 'ean_8', 'ean_13', 'itf', 'pdf417', 'upc_a', 'upc_e']
                                   });
                                   if (barcodes && barcodes.length > 0) {
                                     const imeiBarcode = barcodes.find(b => /^\d{14,16}$/.test(b.rawValue.trim()));
@@ -8622,7 +8622,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                   try {
                                     if ('BarcodeDetector' in window) {
                                       const detector = new (window as any).BarcodeDetector({
-                                        formats: ['aztec', 'codabar', 'code_39', 'code_93', 'code_128', 'data_matrix', 'ean_8', 'ean_13', 'itf', 'pdf417', 'qr_code', 'upc_a', 'upc_e']
+                                        formats: ['codabar', 'code_39', 'code_93', 'code_128', 'ean_8', 'ean_13', 'itf', 'pdf417', 'upc_a', 'upc_e']
                                       });
                                       const detected = await detector.detect(img);
                                       if (detected && detected.length > 0) {
