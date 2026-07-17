@@ -90,9 +90,18 @@ const ImeiInput = ({
       });
 
       if (barcodes && barcodes.length > 0) {
-        // Find if any scanned barcode matches IMEI pattern (only digits, 14 to 16 characters long)
-        const imeiBarcode = barcodes.find(b => /^\d{14,16}$/.test(b.rawValue.trim()));
-        const scannedValue = imeiBarcode ? imeiBarcode.rawValue.trim() : barcodes[0].rawValue.trim();
+        // Find if any barcode contains a 14-16 digit sequence, and clean it
+        let scannedValue = "";
+        const imeiBarcode = barcodes.find(b => /\d{14,16}/.test(b.rawValue));
+        if (imeiBarcode) {
+          const match = imeiBarcode.rawValue.match(/\d{14,16}/);
+          scannedValue = match ? match[0] : imeiBarcode.rawValue.trim();
+        } else {
+          // If no IMEI pattern is found, clean it if it contains 14-16 digits anyway, else fallback to raw
+          const rawVal = barcodes[0].rawValue.trim();
+          const match = rawVal.match(/\d{14,16}/);
+          scannedValue = match ? match[0] : rawVal;
+        }
         onChange(scannedValue);
         setLocalVal(scannedValue);
         onScan?.({ barcode: scannedValue });
@@ -2448,8 +2457,16 @@ Stay safe & eat healthy! 🍕
     }
   }, [showScanner]);
 
-  const handleScanSuccess = async (barcode: string, html5QrCodeInstance?: any) => {
+  const handleScanSuccess = async (rawBarcode: string, html5QrCodeInstance?: any) => {
     playBeep();
+    
+    // Clean rawBarcode: if it contains an IMEI sequence (14 to 16 digits), extract it.
+    let barcode = rawBarcode.trim();
+    const match = barcode.match(/\d{14,16}/);
+    if (match) {
+      barcode = match[0];
+    }
+    
     setScannedBarcode(barcode);
 
     if (scannerTargetRef.current === "imei") {
