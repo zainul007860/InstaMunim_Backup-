@@ -86,11 +86,13 @@ const ImeiInput = ({
 
       // Start full-screen native scan overlay (Google ML Kit)
       const { barcodes } = await BarcodeScanner.scan({
-        formats: ['code_128', 'code_39', 'ean_13', 'upc_a', 'qr_code']
+        formats: ['aztec', 'codabar', 'code_39', 'code_93', 'code_128', 'data_matrix', 'ean_8', 'ean_13', 'itf', 'pdf417', 'qr_code', 'upc_a', 'upc_e']
       });
 
       if (barcodes && barcodes.length > 0) {
-        const scannedValue = barcodes[0].rawValue;
+        // Find if any scanned barcode matches IMEI pattern (only digits, 14 to 16 characters long)
+        const imeiBarcode = barcodes.find(b => /^\d{14,16}$/.test(b.rawValue.trim()));
+        const scannedValue = imeiBarcode ? imeiBarcode.rawValue.trim() : barcodes[0].rawValue.trim();
         onChange(scannedValue);
         setLocalVal(scannedValue);
         onScan?.({ barcode: scannedValue });
@@ -5238,10 +5240,12 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                     }
                                   }
                                   const { barcodes } = await BarcodeScanner.scan({
-                                    formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'qr_code']
+                                    formats: ['aztec', 'codabar', 'code_39', 'code_93', 'code_128', 'data_matrix', 'ean_8', 'ean_13', 'itf', 'pdf417', 'qr_code', 'upc_a', 'upc_e']
                                   });
                                   if (barcodes && barcodes.length > 0) {
-                                    handleScanSuccess(barcodes[0].rawValue);
+                                    const imeiBarcode = barcodes.find(b => /^\d{14,16}$/.test(b.rawValue.trim()));
+                                    const scannedValue = imeiBarcode ? imeiBarcode.rawValue.trim() : barcodes[0].rawValue.trim();
+                                    handleScanSuccess(scannedValue);
                                   }
                                 } catch (err: any) {
                                   console.error("Native scan error:", err);
@@ -8576,7 +8580,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                   try {
                                     if ('BarcodeDetector' in window) {
                                       const detector = new (window as any).BarcodeDetector({
-                                        formats: ['code_128', 'code_39', 'ean_13', 'ean_8', 'upc_a', 'upc_e', 'qr_code']
+                                        formats: ['aztec', 'codabar', 'code_39', 'code_93', 'code_128', 'data_matrix', 'ean_8', 'ean_13', 'itf', 'pdf417', 'qr_code', 'upc_a', 'upc_e']
                                       });
                                       const detected = await detector.detect(img);
                                       if (detected && detected.length > 0) {
