@@ -769,7 +769,7 @@ export default function AdminDashboard() {
                               if (error) throw error;
                               setStores(prev => prev.map(store => store.id === s.id ? { ...store, business_type: newBType } : store));
                             } catch (err: any) {
-                              alert("Failed to update category: " + (err.message || err));
+                              alert("Failed to update business type: " + (err.message || err));
                             } finally {
                               setUpdatingStoreId(null);
                             }
@@ -785,17 +785,20 @@ export default function AdminDashboard() {
                             fontWeight: 'bold',
                             outline: 'none',
                             cursor: 'pointer',
-                            width: '140px'
+                            width: '160px'
                           }}
                         >
-                          <option value="Restaurant/Cafe">🍔 Restaurant/Cafe</option>
-                          <option value="Grocery/Supermarket">🛒 Grocery/Supermarket</option>
-                          <option value="Bakery/Sweets">🍰 Bakery/Sweets</option>
-                          <option value="Dairy/Milk Parlour">🥛 Dairy/Milk Parlour</option>
-                          <option value="Clothing/Footwear">👕 Clothing/Footwear</option>
-                          <option value="Salon/Spa">💇‍♂️ Salon/Spa</option>
-                          <option value="Electrical/Hardware">⚙️ Electrical/Hardware</option>
-                          <option value="Other Business">📦 Other Business</option>
+                          <option value="Restaurant/Cafe">Restaurant / Cafe / Food Stall</option>
+                          <option value="Kirana/Grocery">Kirana / Grocery / General Store</option>
+                          <option value="Saloon/Spa">Saloon / Spa / Beauty Parlour</option>
+                          <option value="Clothing/Retail">Clothing / Footwear / Retail Shop</option>
+                          <option value="Laundry">Laundry Business</option>
+                          <option value="Electric">Electric Shop</option>
+                          <option value="Automobile">Automobile Parts Shop</option>
+                          <option value="Gym">GYM / Fitness Center</option>
+                          <option value="Cosmetic">Cosmetic Shop</option>
+                          <option value="Stationary">Stationary & Book Shop</option>
+                          <option value="Mobile/Electronics">Mobile & Electronics Shop</option>
                         </select>
                       </td>
                       <td>
