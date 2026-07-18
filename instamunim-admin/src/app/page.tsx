@@ -27,6 +27,11 @@ export default function AdminDashboard() {
   const [customPrices, setCustomPrices] = useState<{[key: string]: string}>({});
   const [revealedPasswords, setRevealedPasswords] = useState<{[key: string]: boolean}>({});
   
+  // Reset Account states
+  const [resetStore, setResetStore] = useState<any | null>(null);
+  const [confirmStoreName, setConfirmStoreName] = useState("");
+  const [isResetting, setIsResetting] = useState(false);
+  
   // Sales Filters
   const [selectedMerchant, setSelectedMerchant] = useState("all");
   const [selectedPayment, setSelectedPayment] = useState("all");
@@ -146,6 +151,52 @@ export default function AdminDashboard() {
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
+    }
+  };
+
+  const initiateReset = (store: any) => {
+    setResetStore(store);
+    setConfirmStoreName("");
+  };
+
+  const executeReset = async () => {
+    if (!resetStore) return;
+    if (confirmStoreName !== resetStore.store_name) {
+      alert("Error: Store name does not match!");
+      return;
+    }
+    setIsResetting(true);
+    try {
+      // 1. Delete sales
+      const { error: salesErr } = await supabase
+        .from('sales')
+        .delete()
+        .eq('store_id', resetStore.id);
+      if (salesErr) throw salesErr;
+
+      // 2. Delete expenses
+      const { error: expErr } = await supabase
+        .from('expenses')
+        .delete()
+        .eq('store_id', resetStore.id);
+      if (expErr) throw expErr;
+
+      // 3. Delete exchange menu items
+      const { error: menuErr } = await supabase
+        .from('menu_items')
+        .delete()
+        .eq('store_id', resetStore.id)
+        .ilike('category', 'Exchange%');
+      if (menuErr) throw menuErr;
+
+      alert(`SUCCESS: Account data reset successfully for ${resetStore.store_name}!`);
+      setResetStore(null);
+      fetchAdminData();
+    } catch (err: any) {
+      console.error(err);
+      alert("Failed to reset account: " + (err.message || err));
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -647,7 +698,7 @@ export default function AdminDashboard() {
           <div className="data-table-container animate-fade-in">
              <div className="table-header"><h4 style={{ color: 'var(--text)' }}>MERCHANTS</h4></div>
              <table className="table-content">
-                <thead><tr><th>Store</th><th>Contact</th><th>Password</th><th>Status (Last Activity)</th><th>Action</th></tr></thead>
+                <thead><tr><th>Store</th><th>Contact</th><th>Password</th><th>Category</th><th>Status (Last Activity)</th><th>Action</th></tr></thead>
                 <tbody>{filteredStores.map(s => {
                   // Find the merchant's most recent sale
                   const merchantSales = allSales.filter(sale => sale.store_id === s.id);
@@ -705,6 +756,49 @@ export default function AdminDashboard() {
                         </div>
                       </td>
                       <td>
+                        <select
+                          value={s.business_type || "Restaurant/Cafe"}
+                          onChange={async (e) => {
+                            const newBType = e.target.value;
+                            setUpdatingStoreId(s.id);
+                            try {
+                              const { error } = await supabase
+                                .from('stores')
+                                .update({ business_type: newBType })
+                                .eq('id', s.id);
+                              if (error) throw error;
+                              setStores(prev => prev.map(store => store.id === s.id ? { ...store, business_type: newBType } : store));
+                            } catch (err: any) {
+                              alert("Failed to update category: " + (err.message || err));
+                            } finally {
+                              setUpdatingStoreId(null);
+                            }
+                          }}
+                          disabled={updatingStoreId === s.id}
+                          style={{
+                            padding: '6px 8px',
+                            background: 'var(--card-bg)',
+                            color: 'var(--text)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '8px',
+                            fontSize: '11px',
+                            fontWeight: 'bold',
+                            outline: 'none',
+                            cursor: 'pointer',
+                            width: '140px'
+                          }}
+                        >
+                          <option value="Restaurant/Cafe">🍔 Restaurant/Cafe</option>
+                          <option value="Grocery/Supermarket">🛒 Grocery/Supermarket</option>
+                          <option value="Bakery/Sweets">🍰 Bakery/Sweets</option>
+                          <option value="Dairy/Milk Parlour">🥛 Dairy/Milk Parlour</option>
+                          <option value="Clothing/Footwear">👕 Clothing/Footwear</option>
+                          <option value="Salon/Spa">💇‍♂️ Salon/Spa</option>
+                          <option value="Electrical/Hardware">⚙️ Electrical/Hardware</option>
+                          <option value="Other Business">📦 Other Business</option>
+                        </select>
+                      </td>
+                      <td>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <span style={{ 
                             width: '8px', 
@@ -723,7 +817,25 @@ export default function AdminDashboard() {
                           </span>
                         </div>
                       </td>
-                      <td><button onClick={() => openWhatsApp(s.owner_mobile)} style={{ padding: '8px', background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', border: '1px solid #f97316', borderRadius: '10px', cursor: 'pointer' }}><MessageSquare size={16} /></button></td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <button onClick={() => openWhatsApp(s.owner_mobile)} style={{ padding: '8px', background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', border: '1px solid #f97316', borderRadius: '10px', cursor: 'pointer' }} title="WhatsApp Merchant"><MessageSquare size={16} /></button>
+                          <button 
+                            onClick={() => initiateReset(s)} 
+                            style={{ 
+                              padding: '8px', 
+                              background: 'rgba(239, 68, 68, 0.1)', 
+                              color: '#ef4444', 
+                              border: '1px solid #ef4444', 
+                              borderRadius: '10px', 
+                              cursor: 'pointer'
+                            }}
+                            title="Reset Sales & Expenses Ledger"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   );
                 })}</tbody>
@@ -1033,6 +1145,66 @@ export default function AdminDashboard() {
           </div>
         )}
       </main>
+
+      {/* RESET SAFETY CONFIRMATION MODAL */}
+      {resetStore && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.8)', zIndex: 99999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '24px', backdropFilter: 'blur(4px)'
+        }}>
+          <div style={{
+            background: 'var(--card-bg)', border: '1px solid var(--border)',
+            borderRadius: '24px', padding: '30px', maxWidth: '380px', width: '100%',
+            display: 'flex', flexDirection: 'column', gap: '20px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.5)', color: 'var(--text)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontWeight: 900, color: '#ef4444', fontSize: '18px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <AlertTriangle size={20} /> RESET STORE DATA
+              </h3>
+              <button onClick={() => setResetStore(null)} style={{ background: 'none', border: 'none', color: '#a1a1aa', cursor: 'pointer' }}><X size={20} /></button>
+            </div>
+            
+            <p style={{ fontSize: '13px', color: '#71717a', fontWeight: 600, lineHeight: '1.5', margin: 0 }}>
+              Warning: This will permanently delete all **Sales**, **Expenses (Buyback exchange ledger)**, and **Unsold Exchange Stock** for <strong style={{ color: 'var(--text)' }}>{resetStore.store_name}</strong>. This action cannot be undone.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 900, color: '#a1a1aa', letterSpacing: '0.5px' }}>
+                TYPE STORE NAME TO CONFIRM:
+              </label>
+              <input 
+                type="text"
+                value={confirmStoreName}
+                onChange={(e) => setConfirmStoreName(e.target.value)}
+                placeholder={resetStore.store_name}
+                style={{
+                  width: '100%', height: '46px', background: 'rgba(0,0,0,0.2)',
+                  border: '1px solid var(--border)', borderRadius: '12px',
+                  padding: '0 16px', color: 'var(--text)', fontWeight: 'bold', fontSize: '13px',
+                  outline: 'none', boxSizing: 'border-box'
+                }}
+              />
+            </div>
+
+            <button 
+              onClick={executeReset}
+              disabled={confirmStoreName !== resetStore.store_name || isResetting}
+              style={{
+                width: '100%', height: '48px', background: confirmStoreName === resetStore.store_name ? '#ef4444' : '#ef444440',
+                color: '#ffffff', border: '0', borderRadius: '14px', fontWeight: 900, fontSize: '12px',
+                letterSpacing: '1px', textTransform: 'uppercase', cursor: confirmStoreName === resetStore.store_name ? 'pointer' : 'not-allowed',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                transition: 'all 0.3s'
+              }}
+            >
+              {isResetting ? <Loader2 size={16} className="animate-spin" /> : "RESET DATA NOW"}
+            </button>
+          </div>
+        </div>
+      )}
       
       <style jsx global>{`
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
