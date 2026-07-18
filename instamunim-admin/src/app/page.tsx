@@ -139,7 +139,24 @@ export default function AdminDashboard() {
       const { data: storesData } = await supabase.from('stores').select('*').order('created_at', { ascending: false });
       const { data: salesData } = await supabase.from('sales').select('*, stores(store_name)').order('sale_date', { ascending: false });
       
-      if (storesData) setStores(storesData);
+      if (storesData) {
+        // Since business_type column doesn't exist on 'stores' table schema,
+        // extract it dynamically from the JSON_CFG payload in 'store_logo' column
+        const mappedStores = storesData.map(s => {
+          let bType = "Restaurant/Cafe";
+          const logoVal = s.store_logo || "";
+          if (logoVal.startsWith("JSON_CFG:")) {
+            try {
+              const cfg = JSON.parse(logoVal.substring(9));
+              if (cfg.businessType) {
+                bType = cfg.businessType;
+              }
+            } catch (e) {}
+          }
+          return { ...s, business_type: bType };
+        });
+        setStores(mappedStores);
+      }
       if (salesData) {
         setAllSales(salesData);
         const total = salesData.reduce((sum, s) => sum + Number(s.total_price), 0);
@@ -762,12 +779,29 @@ export default function AdminDashboard() {
                             const newBType = e.target.value;
                             setUpdatingStoreId(s.id);
                             try {
+                              // We must update it inside the store_logo JSON payload packet to match the schema-free setup
+                              let updatedLogoVal = "";
+                              const currentLogo = s.store_logo || "";
+                              if (currentLogo.startsWith("JSON_CFG:")) {
+                                try {
+                                  const parsed = JSON.parse(currentLogo.substring(9));
+                                  parsed.businessType = newBType;
+                                  updatedLogoVal = "JSON_CFG:" + JSON.stringify(parsed);
+                                } catch (err) {
+                                  // fallback if parse fails
+                                  updatedLogoVal = "JSON_CFG:" + JSON.stringify({ businessType: newBType });
+                                }
+                              } else {
+                                // if it's an old legacy format (like a raw image or text), serialize default settings with custom businessType
+                                updatedLogoVal = "JSON_CFG:" + JSON.stringify({ businessType: newBType, logo: currentLogo });
+                              }
+
                               const { error } = await supabase
                                 .from('stores')
-                                .update({ business_type: newBType })
+                                .update({ store_logo: updatedLogoVal })
                                 .eq('id', s.id);
                               if (error) throw error;
-                              setStores(prev => prev.map(store => store.id === s.id ? { ...store, business_type: newBType } : store));
+                              setStores(prev => prev.map(store => store.id === s.id ? { ...store, store_logo: updatedLogoVal, business_type: newBType } : store));
                             } catch (err: any) {
                               alert("Failed to update business type: " + (err.message || err));
                             } finally {
