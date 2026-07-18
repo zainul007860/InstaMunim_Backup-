@@ -7,6 +7,7 @@ import {
   Users, HelpCircle, ChevronDown, MessageSquare, Star, Eye,
   Receipt, Wallet, Scan, Home, Wand2, Cpu, Smartphone
 } from "lucide-react";
+import { Capacitor } from '@capacitor/core';
 import Dashboard from "./dashboard/page";
 
 export default function LandingPage() {
@@ -73,8 +74,8 @@ export default function LandingPage() {
   const [phoneTime, setPhoneTime] = useState("01:43");
 
   useEffect(() => {
-    // Check if running inside mobile web wrapper
-    const checkApp = typeof window !== "undefined" && !!(window as any).Capacitor?.isNativePlatform;
+    // Check if running inside mobile web wrapper (native Android/iOS app)
+    const checkApp = Capacitor.isNativePlatform();
     setIsApp(checkApp);
 
     // Scroll listener

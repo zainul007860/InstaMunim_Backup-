@@ -616,6 +616,17 @@ export default function Dashboard() {
   const [webAdVignetteKey, setWebAdVignetteKey] = useState("11076598");
   const admobRef = useRef<any>(null);
 
+  // Remote Config states
+  const APP_VERSION = "1.5.1";
+  const [isMaintenanceActive, setIsMaintenanceActive] = useState(false);
+  const [maintenanceText, setMaintenanceText] = useState("System under maintenance. Please try again later.");
+  const [isUpdateRequired, setIsUpdateRequired] = useState(false);
+  const [updateStoreUrl, setUpdateStoreUrl] = useState("https://play.google.com/store/apps/details?id=com.zainul.instamunimpos");
+  const [remoteAlertEnabled, setRemoteAlertEnabled] = useState(false);
+  const [remoteAlertText, setRemoteAlertText] = useState("");
+  const [admobBannerId, setAdmobBannerId] = useState("ca-app-pub-6433517681109667/2890562844");
+  const [admobInterstitialId, setAdmobInterstitialId] = useState("ca-app-pub-6433517681109667/4211760677");
+
   const [mounted, setMounted] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
   const [salesSearchQuery, setSalesSearchQuery] = useState("");
@@ -2672,7 +2683,7 @@ Stay safe & eat healthy! 🍕
       if (adModule && Capacitor.isNativePlatform()) {
         console.log("Preparing Interstitial Ad...");
         await adModule.prepareInterstitial({
-          adId: "ca-app-pub-6433517681109667/4211760677",
+          adId: admobInterstitialId,
           isTesting: false,
         });
         console.log("Interstitial Ad prepared successfully.");
@@ -2761,7 +2772,7 @@ Stay safe & eat healthy! 🍕
         setAdmobDebugInfo("Requesting banner...");
         console.log("Showing AdMob Banner ad...");
         await AdMob.showBanner({
-          adId: "ca-app-pub-6433517681109667/2890562844",
+          adId: admobBannerId,
           adSize: BannerAdSize.ADAPTIVE_BANNER,
           position: BannerAdPosition.TOP_CENTER,
           margin: 0,
@@ -2820,7 +2831,7 @@ Stay safe & eat healthy! 🍕
           // showBanner again instead of resumeBanner (more reliable)
           try {
             await admobRef.current.showBanner({
-              adId: "ca-app-pub-6433517681109667/2890562844",
+              adId: admobBannerId,
               adSize: BannerAdSize.ADAPTIVE_BANNER,
               position: BannerAdPosition.TOP_CENTER,
               margin: 0,
@@ -2977,6 +2988,73 @@ Stay safe & eat healthy! 🍕
 
   useEffect(() => {
     setMounted(true);
+
+    const checkRemoteConfig = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('stores')
+          .select('store_logo')
+          .eq('owner_mobile', 'admin_config')
+          .single();
+
+        if (data && data.store_logo && data.store_logo.startsWith("JSON_CFG:")) {
+          const config = JSON.parse(data.store_logo.substring(9));
+          
+          // 1. Maintenance Mode
+          if (config.maintenanceMode) {
+            setIsMaintenanceActive(true);
+            setMaintenanceText(config.maintenanceMessage || "System is under maintenance.");
+          }
+
+          // 2. Force Update Version Check
+          const minVer = config.forceUpdateMinVersion || "1.5.0";
+          const parseVer = (v: string) => v.split('.').map(Number);
+          const currentParts = parseVer(APP_VERSION);
+          const minParts = parseVer(minVer);
+          let isOlder = false;
+          for (let i = 0; i < Math.max(currentParts.length, minParts.length); i++) {
+            const currentPart = currentParts[i] || 0;
+            const minPart = minParts[i] || 0;
+            if (currentPart < minPart) {
+              isOlder = true;
+              break;
+            } else if (currentPart > minPart) {
+              break;
+            }
+          }
+          if (isOlder) {
+            setIsUpdateRequired(true);
+            setUpdateStoreUrl(config.forceUpdateLink || "https://play.google.com/store/apps/details?id=com.zainul.instamunimpos");
+          }
+
+          // 3. In-App Announcements
+          if (config.inAppAlertEnabled) {
+            setRemoteAlertEnabled(true);
+            setRemoteAlertText(config.inAppAlertMessage || "");
+          }
+
+          // 4. Remote Ad Configuration Overrides
+          if (config.adsEnabled === false) {
+            setAdProvider("none");
+          } else if (config.adProvider) {
+            setAdProvider(config.adProvider);
+            if (config.adProvider === "admob") {
+              if (config.admobBannerId) setAdmobBannerId(config.admobBannerId);
+              if (config.admobInterstitialId) setAdmobInterstitialId(config.admobInterstitialId);
+            } else if (config.adProvider === "web") {
+              if (config.webAdScriptUrl) setWebAdScriptUrl(config.webAdScriptUrl);
+              if (config.webAdKey) setWebAdKey(config.webAdKey);
+              if (config.webAdDirectLink) setWebAdDirectLink(config.webAdDirectLink);
+              if (config.webAdVignetteUrl) setWebAdVignetteUrl(config.webAdVignetteUrl);
+              if (config.webAdVignetteKey) setWebAdVignetteKey(config.webAdVignetteKey);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to check remote admin config:", err);
+      }
+    };
+    checkRemoteConfig();
 
     // Unlock Speech Synthesis on first user interaction (critical for Android WebView)
     const unlockSpeech = () => {
@@ -5127,6 +5205,22 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
       )}
       <main className="flex-1 pb-24 overflow-y-auto">
         <div className="max-w-full px-2 sm:px-4 py-8">
+          
+          {remoteAlertEnabled && remoteAlertText && (
+            <div className="mx-2 mb-6 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-2xl p-4 flex items-center justify-between shadow-lg shadow-orange-500/10 border border-orange-400/20 animate-in slide-in-from-top duration-300">
+              <div className="flex items-center gap-3">
+                <Megaphone size={18} className="shrink-0 animate-bounce" />
+                <span className="text-xs font-black leading-relaxed">{remoteAlertText}</span>
+              </div>
+              <button 
+                onClick={() => setRemoteAlertEnabled(false)}
+                className="p-1 hover:bg-white/10 active:scale-90 transition-all rounded-lg border-0"
+                style={{ background: 'transparent', color: '#ffffff' }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
           
           <Dialog open={isSaleOpen} onOpenChange={setIsSaleOpen}>
             <DialogContent className="p-0 border-0 max-w-[380px] w-[90%] left-1/2 -translate-x-1/2 bottom-4 top-auto !translate-y-0 bg-white dark:bg-zinc-950 rounded-2xl h-auto max-h-[94vh] overflow-hidden flex flex-col shadow-[0_20px_70px_-10px_rgba(0,0,0,0.3)] fixed">
@@ -9018,6 +9112,74 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* SYSTEM MAINTENANCE OVERLAY */}
+      {isMaintenanceActive && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: '#09090b', color: '#ffffff', zIndex: 999999,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: '24px', textAlign: 'center'
+        }}>
+          <div style={{
+            background: 'rgba(249, 115, 22, 0.1)', border: '1px solid rgba(249, 115, 22, 0.2)',
+            borderRadius: '24px', padding: '40px 24px', maxWidth: '360px', width: '100%',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
+          }}>
+            <div style={{
+              width: '64px', height: '64px', borderRadius: '18px', background: '#f97316',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff'
+            }}>
+              <AlertTriangle size={32} />
+            </div>
+            <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#ffffff', letterSpacing: '-0.5px' }}>SYSTEM MAINTENANCE</h2>
+            <p style={{ fontSize: '13px', color: '#a1a1aa', fontWeight: 700, lineHeight: '1.6' }}>
+              {maintenanceText}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* FORCE UPDATE OVERLAY */}
+      {isUpdateRequired && !isMaintenanceActive && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(9, 9, 11, 0.95)', zIndex: 99999,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          padding: '24px', textAlign: 'center', backdropFilter: 'blur(8px)'
+        }}>
+          <div style={{
+            background: '#ffffff', borderRadius: '32px', padding: '40px 24px', maxWidth: '340px', width: '100%',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.3)', border: '1px solid #e4e4e7'
+          }}>
+            <div style={{
+              width: '64px', height: '64px', borderRadius: '18px', background: '#3b82f6',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ffffff'
+            }}>
+              <Smartphone size={32} />
+            </div>
+            <div>
+              <h2 style={{ fontSize: '20px', fontWeight: 900, color: '#09090b', letterSpacing: '-0.5px', marginBottom: '8px' }}>UPDATE REQUIRED</h2>
+              <p style={{ fontSize: '12px', color: '#71717a', fontWeight: 700, lineHeight: '1.5' }}>
+                A critical update is available. Please update the app to continue.
+              </p>
+            </div>
+            <button 
+              onClick={() => window.open(updateStoreUrl, "_blank")}
+              style={{
+                width: '100%', height: '56px', background: '#3b82f6', color: '#ffffff',
+                border: '0', borderRadius: '18px', fontWeight: 900, fontSize: '13px',
+                letterSpacing: '1px', textTransform: 'uppercase', cursor: 'pointer',
+                boxShadow: '0 10px 20px rgba(59, 130, 246, 0.2)', transition: 'all 0.3s'
+              }}
+            >
+              Update Now
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

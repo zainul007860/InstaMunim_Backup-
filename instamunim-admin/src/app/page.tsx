@@ -35,11 +35,98 @@ export default function AdminDashboard() {
   // Broadcast
   const [broadcastMessage, setBroadcastMessage] = useState("");
 
+  // Remote Config states
+  const [remoteAdsEnabled, setRemoteAdsEnabled] = useState(true);
+  const [remoteAdProvider, setRemoteAdProvider] = useState<"admob" | "web" | "none">("web");
+  const [remoteWebAdScriptUrl, setRemoteWebAdScriptUrl] = useState("");
+  const [remoteWebAdKey, setRemoteWebAdKey] = useState("");
+  const [remoteWebAdDirectLink, setRemoteWebAdDirectLink] = useState("");
+  const [remoteWebAdVignetteUrl, setRemoteWebAdVignetteUrl] = useState("");
+  const [remoteWebAdVignetteKey, setRemoteWebAdVignetteKey] = useState("");
+  const [remoteAdmobBannerId, setRemoteAdmobBannerId] = useState("");
+  const [remoteAdmobInterstitialId, setRemoteAdmobInterstitialId] = useState("");
+  const [remoteForceUpdateMinVersion, setRemoteForceUpdateMinVersion] = useState("1.5.0");
+  const [remoteForceUpdateLink, setRemoteForceUpdateLink] = useState("");
+  const [remoteMaintenanceMode, setRemoteMaintenanceMode] = useState(false);
+  const [remoteMaintenanceMessage, setRemoteMaintenanceMessage] = useState("");
+  const [remoteInAppAlertEnabled, setRemoteInAppAlertEnabled] = useState(false);
+  const [remoteInAppAlertMessage, setRemoteInAppAlertMessage] = useState("");
+  const [isSavingConfig, setIsSavingConfig] = useState(false);
+
   useEffect(() => {
     if (isAdminLoggedIn) {
       fetchAdminData();
     }
   }, [isAdminLoggedIn]);
+
+  const fetchAdminConfig = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('stores')
+        .select('store_logo')
+        .eq('owner_mobile', 'admin_config')
+        .single();
+      
+      if (data && data.store_logo && data.store_logo.startsWith("JSON_CFG:")) {
+        const config = JSON.parse(data.store_logo.substring(9));
+        setRemoteAdsEnabled(config.adsEnabled ?? true);
+        setRemoteAdProvider(config.adProvider ?? "web");
+        setRemoteWebAdScriptUrl(config.webAdScriptUrl ?? "");
+        setRemoteWebAdKey(config.webAdKey ?? "");
+        setRemoteWebAdDirectLink(config.webAdDirectLink ?? "");
+        setRemoteWebAdVignetteUrl(config.webAdVignetteUrl ?? "");
+        setRemoteWebAdVignetteKey(config.webAdVignetteKey ?? "");
+        setRemoteAdmobBannerId(config.admobBannerId ?? "");
+        setRemoteAdmobInterstitialId(config.admobInterstitialId ?? "");
+        setRemoteForceUpdateMinVersion(config.forceUpdateMinVersion ?? "1.5.0");
+        setRemoteForceUpdateLink(config.forceUpdateLink ?? "");
+        setRemoteMaintenanceMode(config.maintenanceMode ?? false);
+        setRemoteMaintenanceMessage(config.maintenanceMessage ?? "");
+        setRemoteInAppAlertEnabled(config.inAppAlertEnabled ?? false);
+        setRemoteInAppAlertMessage(config.inAppAlertMessage ?? "");
+      }
+    } catch (e) {
+      console.error("Error loading remote config:", e);
+    }
+  };
+
+  const saveAdminConfig = async () => {
+    setIsSavingConfig(true);
+    try {
+      const configObj = {
+        adsEnabled: remoteAdsEnabled,
+        adProvider: remoteAdProvider,
+        webAdScriptUrl: remoteWebAdScriptUrl,
+        webAdKey: remoteWebAdKey,
+        webAdDirectLink: remoteWebAdDirectLink,
+        webAdVignetteUrl: remoteWebAdVignetteUrl,
+        webAdVignetteKey: remoteWebAdVignetteKey,
+        admobBannerId: remoteAdmobBannerId,
+        admobInterstitialId: remoteAdmobInterstitialId,
+        forceUpdateMinVersion: remoteForceUpdateMinVersion,
+        forceUpdateLink: remoteForceUpdateLink,
+        maintenanceMode: remoteMaintenanceMode,
+        maintenanceMessage: remoteMaintenanceMessage,
+        inAppAlertEnabled: remoteInAppAlertEnabled,
+        inAppAlertMessage: remoteInAppAlertMessage
+      };
+
+      const serialized = "JSON_CFG:" + JSON.stringify(configObj);
+      
+      const { error } = await supabase
+        .from('stores')
+        .update({ store_logo: serialized })
+        .eq('owner_mobile', 'admin_config');
+      
+      if (error) throw error;
+      alert("SUCCESS: Remote Configuration updated successfully!");
+    } catch (err: any) {
+      console.error(err);
+      alert("Failed to save config: " + (err.message || err));
+    } finally {
+      setIsSavingConfig(false);
+    }
+  };
 
   const fetchAdminData = async () => {
     setIsRefreshing(true);
@@ -53,6 +140,7 @@ export default function AdminDashboard() {
         const total = salesData.reduce((sum, s) => sum + Number(s.total_price), 0);
         setTotalSalesVal(total);
       }
+      await fetchAdminConfig();
     } catch (err) {
       console.error(err);
     } finally {
@@ -286,13 +374,14 @@ export default function AdminDashboard() {
           <img src="/assets/logo-light.png" alt="InstaMunim" style={{ width: '100%', height: 'auto', maxHeight: '150px', objectFit: 'contain' }} />
         </div>
         <nav className="nav-links">
-          {["Dashboard", "Merchants", "Sales", "Broadcast", "Subscriptions"].map(tab => (
+          {["Dashboard", "Merchants", "Sales", "Broadcast", "Subscriptions", "Settings"].map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} className={`nav-item ${activeTab === tab ? "active" : ""}`}>
               {tab === "Dashboard" && <LayoutDashboard size={19} />}
               {tab === "Merchants" && <Users size={19} />}
               {tab === "Sales" && <Globe size={19} />}
               {tab === "Broadcast" && <Megaphone size={19} />}
               {tab === "Subscriptions" && <CreditCard size={19} />}
+              {tab === "Settings" && <Settings size={19} />}
               {tab}
             </button>
           ))}
@@ -648,6 +737,300 @@ export default function AdminDashboard() {
               <textarea className="broadcast-textarea" value={broadcastMessage} onChange={(e) => setBroadcastMessage(e.target.value)} placeholder="Type announcement..." />
               <button onClick={() => setActiveTab("Merchants")} className="login-btn">GO TO MERCHANTS</button>
            </div>
+        )}
+
+        {activeTab === "Settings" && (
+          <div className="animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '30px', paddingBottom: '50px' }}>
+            {/* Save Config Header Card */}
+            <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '24px', padding: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 20px rgba(24,24,27,0.02)' }}>
+              <div>
+                <h3 style={{ fontSize: '18px', fontWeight: 900, color: 'var(--text)', letterSpacing: '-0.5px', marginBottom: '4px' }}>REMOTE CONFIGURATION</h3>
+                <p style={{ color: '#71717a', fontSize: '11px', fontWeight: 500 }}>Update mobile app parameters instantly without rebuilding APK/AAB</p>
+              </div>
+              <button 
+                onClick={saveAdminConfig} 
+                disabled={isSavingConfig}
+                className="login-btn"
+                style={{ 
+                  margin: 0, 
+                  background: '#f97316', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '8px',
+                  padding: '12px 24px',
+                  fontSize: '13px'
+                }}
+              >
+                {isSavingConfig ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    SAVING...
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck size={16} />
+                    SAVE CHANGES
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '30px' }}>
+              {/* Ad Control Section */}
+              <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '24px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 4px 20px rgba(24,24,27,0.02)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
+                  <Megaphone size={20} color="#f97316" />
+                  <h4 style={{ fontSize: '14px', fontWeight: 900, color: 'var(--text)', letterSpacing: '-0.2px' }}>GLOBAL ADVERT CONTROLS</h4>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)' }}>Enable All Ads</span>
+                  <label className="switch-toggle" style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={remoteAdsEnabled} 
+                      onChange={(e) => setRemoteAdsEnabled(e.target.checked)} 
+                      style={{ opacity: 0, width: 0, height: 0 }}
+                    />
+                    <span style={{
+                      position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                      backgroundColor: remoteAdsEnabled ? '#f97316' : '#e4e4e7',
+                      transition: '.4s', borderRadius: '24px'
+                    }}>
+                      <span style={{
+                        position: 'absolute', content: '""', height: '18px', width: '18px', left: '3px', bottom: '3px',
+                        backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
+                        transform: remoteAdsEnabled ? 'translateX(20px)' : 'none'
+                      }} />
+                    </span>
+                  </label>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase' }}>Select Ad Network Provider</label>
+                  <select 
+                    value={remoteAdProvider} 
+                    onChange={(e) => setRemoteAdProvider(e.target.value as any)}
+                    className="login-input"
+                    style={{ background: '#fafaf9', border: '1px solid var(--border)', color: 'var(--text)', fontSize: '13px' }}
+                  >
+                    <option value="admob">Google AdMob (App Native)</option>
+                    <option value="web">Web Ads / Monetag (HTML Script)</option>
+                    <option value="none">Disabled / No Ads</option>
+                  </select>
+                </div>
+
+                {remoteAdProvider === "admob" && (
+                  <>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase' }}>AdMob Banner Unit ID</label>
+                      <input 
+                        type="text" 
+                        value={remoteAdmobBannerId} 
+                        onChange={(e) => setRemoteAdmobBannerId(e.target.value)} 
+                        placeholder="ca-app-pub-xxx/yyy" 
+                        className="login-input"
+                        style={{ background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase' }}>AdMob Interstitial Unit ID</label>
+                      <input 
+                        type="text" 
+                        value={remoteAdmobInterstitialId} 
+                        onChange={(e) => setRemoteAdmobInterstitialId(e.target.value)} 
+                        placeholder="ca-app-pub-xxx/zzz" 
+                        className="login-input"
+                        style={{ background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)' }}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {remoteAdProvider === "web" && (
+                  <>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase' }}>Web Ad Banner Script URL</label>
+                      <input 
+                        type="text" 
+                        value={remoteWebAdScriptUrl} 
+                        onChange={(e) => setRemoteWebAdScriptUrl(e.target.value)} 
+                        placeholder="https://nap5k.com/tag.min.js" 
+                        className="login-input"
+                        style={{ background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase' }}>Web Ad Banner Placement Key / ID</label>
+                      <input 
+                        type="text" 
+                        value={remoteWebAdKey} 
+                        onChange={(e) => setRemoteWebAdKey(e.target.value)} 
+                        placeholder="11070941" 
+                        className="login-input"
+                        style={{ background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase' }}>Web Interstitial / Direct Link URL</label>
+                      <input 
+                        type="text" 
+                        value={remoteWebAdDirectLink} 
+                        onChange={(e) => setRemoteWebAdDirectLink(e.target.value)} 
+                        placeholder="https://omg10.com/4/11071013" 
+                        className="login-input"
+                        style={{ background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase' }}>Web Vignette Video Script URL</label>
+                      <input 
+                        type="text" 
+                        value={remoteWebAdVignetteUrl} 
+                        onChange={(e) => setRemoteWebAdVignetteUrl(e.target.value)} 
+                        placeholder="https://n6wxm.com/vignette.min.js" 
+                        className="login-input"
+                        style={{ background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)' }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase' }}>Web Vignette Video Zone ID</label>
+                      <input 
+                        type="text" 
+                        value={remoteWebAdVignetteKey} 
+                        onChange={(e) => setRemoteWebAdVignetteKey(e.target.value)} 
+                        placeholder="11076598" 
+                        className="login-input"
+                        style={{ background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)' }}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                {/* System & Update Section */}
+                <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '24px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 4px 20px rgba(24,24,27,0.02)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
+                    <Settings size={20} color="#f97316" />
+                    <h4 style={{ fontSize: '14px', fontWeight: 900, color: 'var(--text)', letterSpacing: '-0.2px' }}>SYSTEM & UPDATE MANAGEMENT</h4>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)', display: 'block' }}>Maintenance Mode</span>
+                      <span style={{ fontSize: '10px', color: '#71717a' }}>Blocks all user activity inside the app</span>
+                    </div>
+                    <label className="switch-toggle" style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={remoteMaintenanceMode} 
+                        onChange={(e) => setRemoteMaintenanceMode(e.target.checked)} 
+                        style={{ opacity: 0, width: 0, height: 0 }}
+                      />
+                      <span style={{
+                        position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: remoteMaintenanceMode ? '#ef4444' : '#e4e4e7',
+                        transition: '.4s', borderRadius: '24px'
+                      }}>
+                        <span style={{
+                          position: 'absolute', content: '""', height: '18px', width: '18px', left: '3px', bottom: '3px',
+                          backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
+                          transform: remoteMaintenanceMode ? 'translateX(20px)' : 'none'
+                        }} />
+                      </span>
+                    </label>
+                  </div>
+
+                  {remoteMaintenanceMode && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase' }}>Maintenance Notice Message</label>
+                      <textarea 
+                        value={remoteMaintenanceMessage} 
+                        onChange={(e) => setRemoteMaintenanceMessage(e.target.value)} 
+                        placeholder="Write notice..."
+                        rows={3} 
+                        className="broadcast-textarea"
+                        style={{ height: '70px', padding: '12px', fontSize: '12px' }}
+                      />
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase' }}>Minimum Required Version (tVersion)</label>
+                    <input 
+                      type="text" 
+                      value={remoteForceUpdateMinVersion} 
+                      onChange={(e) => setRemoteForceUpdateMinVersion(e.target.value)} 
+                      placeholder="1.5.1" 
+                      className="login-input"
+                      style={{ background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <label style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase' }}>Play Store / Update URL</label>
+                    <input 
+                      type="text" 
+                      value={remoteForceUpdateLink} 
+                      onChange={(e) => setRemoteForceUpdateLink(e.target.value)} 
+                      placeholder="https://play.google.com/store/apps/details?id=com.zainul.instamunimpos" 
+                      className="login-input"
+                      style={{ background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)' }}
+                    />
+                  </div>
+                </div>
+
+                {/* Global In-App Banner Alerts */}
+                <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '24px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 4px 20px rgba(24,24,27,0.02)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
+                    <Users size={20} color="#f97316" />
+                    <h4 style={{ fontSize: '14px', fontWeight: 900, color: 'var(--text)', letterSpacing: '-0.2px' }}>IN-APP BROADCAST / ALERTS</h4>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)', display: 'block' }}>Display Alert Banner</span>
+                      <span style={{ fontSize: '10px', color: '#71717a' }}>Shows warning/news at top of app screen</span>
+                    </div>
+                    <label className="switch-toggle" style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={remoteInAppAlertEnabled} 
+                        onChange={(e) => setRemoteInAppAlertEnabled(e.target.checked)} 
+                        style={{ opacity: 0, width: 0, height: 0 }}
+                      />
+                      <span style={{
+                        position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: remoteInAppAlertEnabled ? '#f97316' : '#e4e4e7',
+                        transition: '.4s', borderRadius: '24px'
+                      }}>
+                        <span style={{
+                          position: 'absolute', content: '""', height: '18px', width: '18px', left: '3px', bottom: '3px',
+                          backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
+                          transform: remoteInAppAlertEnabled ? 'translateX(20px)' : 'none'
+                        }} />
+                      </span>
+                    </label>
+                  </div>
+
+                  {remoteInAppAlertEnabled && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase' }}>Alert Message Text</label>
+                      <textarea 
+                        value={remoteInAppAlertMessage} 
+                        onChange={(e) => setRemoteInAppAlertMessage(e.target.value)} 
+                        placeholder="Welcome to InstaMunim! Print billing is now faster."
+                        rows={3} 
+                        className="broadcast-textarea"
+                        style={{ height: '70px', padding: '12px', fontSize: '12px' }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </main>
       
