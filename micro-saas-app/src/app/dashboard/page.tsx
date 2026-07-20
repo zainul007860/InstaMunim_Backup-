@@ -6,7 +6,7 @@ import jsQR from "jsqr";
 import { 
   LayoutDashboard, FileText, Settings, LogOut, Search,
   PlusCircle, Loader2, Book, Trash2, Send, ShoppingCart, Package,
-  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera, Volume2, Globe, Wand2, Copy
+  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera, Volume2, Globe, Wand2, Copy, Keyboard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -2139,6 +2139,13 @@ Requirements for the generated image prompt:
   const [deleteError, setDeleteError] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // POS Keyboard Shortcuts Refs & States
+  const itemSearchInputRef = useRef<HTMLInputElement | null>(null);
+  const customerMobileInputRef = useRef<HTMLInputElement | null>(null);
+  const discountInputRef = useRef<HTMLInputElement | null>(null);
+  const handleSaleRef = useRef<() => void>(() => {});
+  const [showShortcutsModal, setShowShortcutsModal] = useState(false);
+
   const grandTotal = Math.max(0, cart.reduce((s,i) => s + (i.price*i.qty), 0) + (Number(extraChargeAmount) || 0) - (Number(discount) || 0));
 
   const checkSubscription = () => {
@@ -2266,6 +2273,153 @@ Stay safe & eat healthy! 🍕
   const recognitionRef = useRef<any>(null);
   const lastAddedRef = useRef<{name: string, time: number}>({name: "", time: 0});
   const mobileDigitsRef = useRef<string>("");
+
+  // Global Keyboard Shortcuts Event Listener (Web POS Hotkeys)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const key = e.key;
+
+      // F1 or Shift + ? -> Toggle Keyboard Shortcuts Cheat Sheet
+      if (key === "F1" || (e.shiftKey && key === "?")) {
+        e.preventDefault();
+        setShowShortcutsModal(prev => !prev);
+        return;
+      }
+
+      // Esc -> Close Modals or Reset Search/Cart
+      if (key === "Escape") {
+        if (showShortcutsModal) {
+          setShowShortcutsModal(false);
+          return;
+        }
+        if (showUpgradeModal) {
+          setShowUpgradeModal(false);
+          return;
+        }
+        if (showDeleteAccountModal) {
+          setShowDeleteAccountModal(false);
+          return;
+        }
+        if (itemSearch) {
+          setItemSearch("");
+          return;
+        }
+        return;
+      }
+
+      // Check if user is typing inside a text input field
+      const activeElement = document.activeElement;
+      const isInputFocused = activeElement && (
+        activeElement.tagName === "INPUT" ||
+        activeElement.tagName === "TEXTAREA" ||
+        activeElement.tagName === "SELECT" ||
+        (activeElement as HTMLElement).isContentEditable
+      );
+
+      // F2 or Ctrl + Enter -> Quick Cash Sale Checkout
+      if (key === "F2" || (e.ctrlKey && key === "Enter")) {
+        e.preventDefault();
+        setNewType("Cash");
+        setTimeout(() => handleSaleRef.current(), 50);
+        return;
+      }
+
+      // F3 or Alt + O -> Quick Online Sale Checkout
+      if (key === "F3" || (e.altKey && (key === "o" || key === "O"))) {
+        e.preventDefault();
+        setNewType("Online");
+        setTimeout(() => handleSaleRef.current(), 50);
+        return;
+      }
+
+      // F7 or Alt + U -> Pay via Udhaar Khata
+      if (key === "F7" || (e.altKey && (key === "u" || key === "U"))) {
+        e.preventDefault();
+        setNewType("Udhaar");
+        if (customerMobileInputRef.current) {
+          customerMobileInputRef.current.focus();
+        }
+        return;
+      }
+
+      // F4 or Alt + S -> Focus Item Search Bar
+      if (key === "F4" || (e.altKey && (key === "s" || key === "S"))) {
+        e.preventDefault();
+        if (itemSearchInputRef.current) {
+          itemSearchInputRef.current.focus();
+          itemSearchInputRef.current.select();
+        }
+        return;
+      }
+
+      // F8 -> Jump to Udhaar Khata tab
+      if (key === "F8") {
+        e.preventDefault();
+        setActiveTab("Khata");
+        return;
+      }
+
+      // F9 -> Jump to Expenses tab
+      if (key === "F9") {
+        e.preventDefault();
+        setActiveTab("Rent");
+        return;
+      }
+
+      // If user is actively typing inside an input field, do not trigger single Alt key shortcuts to prevent typing conflicts
+      if (isInputFocused && !e.altKey && !e.ctrlKey) {
+        return;
+      }
+
+      // Alt + M -> Focus Customer Mobile Input
+      if (e.altKey && (key === "m" || key === "M")) {
+        e.preventDefault();
+        if (customerMobileInputRef.current) {
+          customerMobileInputRef.current.focus();
+          customerMobileInputRef.current.select();
+        }
+        return;
+      }
+
+      // Alt + N -> Start Fresh Bill (Reset Cart & Fields)
+      if (e.altKey && (key === "n" || key === "N")) {
+        e.preventDefault();
+        setCart([]);
+        setNewName("");
+        setNewMobile("");
+        setDiscount("");
+        setItemSearch("");
+        return;
+      }
+
+      // Alt + D -> Focus Discount Input
+      if (e.altKey && (key === "d" || key === "D")) {
+        e.preventDefault();
+        if (discountInputRef.current) {
+          discountInputRef.current.focus();
+          discountInputRef.current.select();
+        }
+        return;
+      }
+
+      // Alt + G -> Toggle GST Tax
+      if (e.altKey && (key === "g" || key === "G")) {
+        e.preventDefault();
+        setIsGstEnabled(prev => !prev);
+        return;
+      }
+
+      // Alt + H -> Go to Home Billing Tab
+      if (e.altKey && (key === "h" || key === "H")) {
+        e.preventDefault();
+        setActiveTab("Dashboard");
+        return;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showShortcutsModal, showUpgradeModal, showDeleteAccountModal, itemSearch, cart]);
 
   // SMART TRANSLITERATION (Hindi Script to English Font)
   const transliterate = (text: string) => {
@@ -4394,6 +4548,10 @@ Stay safe & eat healthy! 🍕
     }
   };
 
+  useEffect(() => {
+    handleSaleRef.current = handleSale;
+  }, [handleSale]);
+
   const sendWhatsAppReceipt = () => {
     if (!lastOrderDetails || lastOrderDetails.mobile === "N/A" || !lastOrderDetails.mobile) return alert("No mobile number provided.");
     
@@ -5321,6 +5479,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         <div className="relative flex-1">
                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-300" />
                           <Input 
+                            ref={itemSearchInputRef}
                             placeholder={`Search ${getLabels(businessType).items.toLowerCase()}...`} 
                             value={itemSearch} 
                             onChange={e => {
@@ -5526,6 +5685,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest px-1">Discount (₹)</p>
                       <div className="flex gap-2">
                         <Input 
+                          ref={discountInputRef}
                           type="number" 
                           placeholder="0" 
                           value={discount} 
@@ -5586,6 +5746,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                    <div className="space-y-3">
                       <Input placeholder="Customer Name (Optional)" value={newName} onChange={e => setNewName(e.target.value)} className="h-11 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold px-4 text-sm" />
                       <Input 
+                        ref={customerMobileInputRef}
                         placeholder="Mobile Number (Optional)" 
                         value={newMobile} 
                         onChange={e => {
@@ -9180,6 +9341,134 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
           </div>
         </div>
       )}
+
+      {/* KEYBOARD SHORTCUTS CHEAT SHEET MODAL (WEB ONLY) */}
+      <Dialog open={showShortcutsModal} onOpenChange={setShowShortcutsModal}>
+        <DialogContent className="p-6 border-0 max-w-[480px] bg-zinc-950 text-white rounded-3xl shadow-2xl relative overflow-hidden border border-zinc-800">
+          <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-orange-500/10 rounded-xl flex items-center justify-center border border-orange-500/20 text-orange-500">
+                <Keyboard className="h-5 w-5" />
+              </div>
+              <div>
+                <DialogTitle className="text-lg font-black tracking-tight text-white flex items-center gap-2">
+                  POS Keyboard Shortcuts
+                </DialogTitle>
+                <DialogDescription className="text-zinc-400 font-bold text-[11px]">
+                  Bill 10x faster on Desktop Counters
+                </DialogDescription>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4 max-h-[420px] overflow-y-auto pr-1 text-xs py-2">
+            {/* Section 1: Billing & Payment */}
+            <div className="space-y-2">
+              <p className="text-[10px] font-black text-orange-400 uppercase tracking-widest px-1">⚡ Sales & Billing Shortcuts</p>
+              <div className="bg-zinc-900/80 rounded-2xl p-3 space-y-2.5 border border-zinc-800/80">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-zinc-300">Quick Pay Cash & Print</span>
+                  <div className="flex gap-1.5 font-mono text-[11px] font-black">
+                    <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-orange-400">F2</kbd>
+                    <span className="text-zinc-500">or</span>
+                    <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-orange-400">Ctrl + Enter</kbd>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-zinc-300">Quick Pay Online (UPI/QR) & Print</span>
+                  <div className="flex gap-1.5 font-mono text-[11px] font-black">
+                    <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-blue-400">F3</kbd>
+                    <span className="text-zinc-500">or</span>
+                    <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-blue-400">Alt + O</kbd>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-zinc-300">Select Udhaar Khata Mode</span>
+                  <div className="flex gap-1.5 font-mono text-[11px] font-black">
+                    <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-red-400">F7</kbd>
+                    <span className="text-zinc-500">or</span>
+                    <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-red-400">Alt + U</kbd>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-zinc-300">Start Fresh Bill (Reset Cart)</span>
+                  <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-amber-400 font-mono text-[11px] font-black">Alt + N</kbd>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 2: Search & Field Focus */}
+            <div className="space-y-2">
+              <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest px-1">🔍 Search & Focus Shortcuts</p>
+              <div className="bg-zinc-900/80 rounded-2xl p-3 space-y-2.5 border border-zinc-800/80">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-zinc-300">Focus Item Search Bar</span>
+                  <div className="flex gap-1.5 font-mono text-[11px] font-black">
+                    <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-emerald-400">F4</kbd>
+                    <span className="text-zinc-500">or</span>
+                    <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-emerald-400">Alt + S</kbd>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-zinc-300">Focus Customer Mobile Input</span>
+                  <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-emerald-400 font-mono text-[11px] font-black">Alt + M</kbd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-zinc-300">Focus Discount Input</span>
+                  <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-emerald-400 font-mono text-[11px] font-black">Alt + D</kbd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-zinc-300">Toggle GST Tax ON/OFF</span>
+                  <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-emerald-400 font-mono text-[11px] font-black">Alt + G</kbd>
+                </div>
+              </div>
+            </div>
+
+            {/* Section 3: Navigation & Control */}
+            <div className="space-y-2">
+              <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest px-1">🚀 Screen Navigation & Helpers</p>
+              <div className="bg-zinc-900/80 rounded-2xl p-3 space-y-2.5 border border-zinc-800/80">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-zinc-300">Jump to Home Billing Tab</span>
+                  <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-purple-400 font-mono text-[11px] font-black">Alt + H</kbd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-zinc-300">Jump to Udhaar Khata Page</span>
+                  <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-purple-400 font-mono text-[11px] font-black">F8</kbd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-zinc-300">Jump to Expenses / Kharcha Tab</span>
+                  <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-purple-400 font-mono text-[11px] font-black">F9</kbd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-zinc-300">Close Popups / Reset Search</span>
+                  <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-zinc-400 font-mono text-[11px] font-black">Esc</kbd>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-zinc-800 flex justify-between items-center text-[10px] font-bold text-zinc-500">
+            <span>Press Esc to close</span>
+            <button
+              onClick={() => setShowShortcutsModal(false)}
+              className="bg-zinc-800 hover:bg-zinc-700 text-white px-4 py-2 rounded-xl font-black uppercase tracking-wider transition-colors"
+            >
+              Got it!
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* DESKTOP SHORTCUTS LAUNCHER BUTTON */}
+      <button 
+        onClick={() => setShowShortcutsModal(true)}
+        className="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-2 bg-zinc-900/90 dark:bg-zinc-100/90 hover:bg-orange-600 dark:hover:bg-orange-500 text-white dark:text-zinc-900 hover:text-white px-3.5 py-2.5 rounded-2xl shadow-2xl backdrop-blur-md text-xs font-black tracking-wider transition-all duration-300 group border border-zinc-700/50 dark:border-zinc-300/50 cursor-pointer active:scale-95"
+        title="Press F1 for POS Keyboard Shortcuts"
+      >
+        <Keyboard className="h-4 w-4 text-orange-400 dark:text-orange-600 group-hover:text-white transition-colors" />
+        <span>Shortcuts <span className="bg-orange-500 text-white text-[10px] px-1.5 py-0.5 rounded-md font-mono ml-0.5">F1</span></span>
+      </button>
     </div>
   );
 }
