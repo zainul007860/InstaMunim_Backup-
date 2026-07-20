@@ -9,8 +9,9 @@ export default function PrivacyPolicy() {
       {/* Header */}
       <header className="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl text-emerald-400 tracking-tight">
-            <span>✨</span> InstaMunim
+          <Link href="/" className="flex items-center gap-3 font-bold text-xl text-emerald-400 tracking-tight">
+            <img src="/assets/instamunim-logo-main.png" alt="InstaMunim Logo" className="h-10 w-auto object-contain" />
+            <span className="font-extrabold text-emerald-400">InstaMunim</span>
           </Link>
           <Link href="/dashboard" className="text-sm font-medium text-slate-400 hover:text-emerald-400 transition-colors">
             Go to Dashboard &rarr;
