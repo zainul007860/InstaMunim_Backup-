@@ -23,84 +23,101 @@ export default function PrivacyPolicy() {
         <div className="space-y-8">
           <div className="border-b border-slate-800 pb-6">
             <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-              Privacy Policy
+              Privacy Policy & Terms of Service
             </h1>
             <p className="mt-2 text-slate-400 text-sm">
-              Last Updated: May 22, 2026
+              Last Updated: July 20, 2026 | Compliant with DPDP Act 2023 & Google Play Developer Policy
             </p>
           </div>
 
           <div className="prose prose-invert prose-emerald max-w-none space-y-6 text-slate-300 leading-relaxed">
             <p>
-              Welcome to <strong>InstaMunim</strong> ("we," "our," "us"). We are committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our POS application (the "Service") hosted online or downloaded as an Android application.
+              Welcome to <strong>InstaMunim</strong> ("we," "our," "us"). We provide an AI-powered Smart POS & Billing Solution designed for micro-retailers, restaurants, cafes, kirana stores, and small businesses (the "Service"). This Privacy Policy explains how we collect, use, safeguard, and disclose your business and personal information when you access our Web application or Android mobile application.
             </p>
 
             <h2 className="text-xl font-bold text-white mt-8 border-l-2 border-emerald-500 pl-3">
               1. Information We Collect
             </h2>
             <p>
-              We collect information that you voluntarily provide to us when you register for an account, setup your store profile, or interact with our services:
+              We collect information provided voluntarily by merchant owners during account setup and routine daily POS billing usage:
             </p>
             <ul className="list-disc list-inside pl-4 space-y-2">
-              <li><strong>Account Credentials:</strong> Mobile phone numbers and passwords used to secure and log in to your account.</li>
-              <li><strong>Business Information:</strong> Store name, store address, monthly rent, business logo, website, and GSTIN to generate invoices and bills.</li>
-              <li><strong>Transaction Data:</strong> Customer contact details (mobile numbers), names, billing items, total transaction amounts, and payment types (Cash, Online, Swiggy, Zomato, Udhaar).</li>
+              <li><strong>Account & Owner Details:</strong> Mobile phone number, business name, store logo, address, and login security credentials.</li>
+              <li><strong>Business & Tax Details:</strong> GSTIN number, custom item prices, category settings, and UPI ID for payment QR code generation.</li>
+              <li><strong>Transaction & Customer Ledger Data:</strong> Customer contact numbers, customer names, billing item lists, prices, payment types (Cash, Online, Swiggy, Zomato, Udhaar), and expense ledgers.</li>
             </ul>
 
             <h2 className="text-xl font-bold text-white mt-8 border-l-2 border-emerald-500 pl-3">
               2. Device Permissions
             </h2>
             <p>
-              Our Android application may request the following device permissions to provide core features:
+              Our Android mobile app and Web application request specific browser and device permissions strictly to operate core application features:
             </p>
             <ul className="list-disc list-inside pl-4 space-y-2">
-              <li><strong>Camera Access:</strong> Used exclusively to scan barcode labels on items to fetch details instantly during checkout. Camera frames are processed locally on your device and are never sent to external servers.</li>
-              <li><strong>Local Storage:</strong> Used to temporarily cache store settings, sales data, and UI preferences to ensure fast load times.</li>
+              <li><strong>Camera Access:</strong> Used exclusively for real-time barcode scanning of retail items and QR code parsing for instant checkout. Camera video feeds are processed locally in memory on your device and are never recorded, saved, or uploaded to external servers.</li>
+              <li><strong>Local Storage:</strong> Used to temporarily store offline cart sessions, UI preference tokens, and login states for fast application loading.</li>
             </ul>
 
             <h2 className="text-xl font-bold text-white mt-8 border-l-2 border-emerald-500 pl-3">
-              3. How We Use Your Information
+              3. Data Security & Encryption Standards
             </h2>
             <p>
-              We use the collected information for the following purposes:
+              We implement industry-standard technical and organizational security measures to prevent unauthorized access, data loss, or disclosure:
             </p>
             <ul className="list-disc list-inside pl-4 space-y-2">
-              <li>To provide, maintain, and support the core POS billing system.</li>
-              <li>To calculate monthly metrics, swiggy/zomato commissions, rent targets, and generate business insights.</li>
-              <li>To allow you to send digital receipts to customers via external apps (such as WhatsApp).</li>
-              <li>To prevent fraudulent activities and secure your login session via database verification.</li>
+              <li><strong>Encryption in Transit:</strong> All data transmissions between your app and cloud servers are encrypted using 256-bit SSL/TLS (HTTPS).</li>
+              <li><strong>Encryption at Rest:</strong> Account databases and sales ledgers hosted on cloud enterprise infrastructure (Supabase PostgreSQL) are encrypted at rest using AES-256 encryption.</li>
+              <li><strong>Row-Level Security (RLS):</strong> Strict database policy isolation ensures that each merchant's data is only accessible via their authenticated store credentials.</li>
             </ul>
 
             <h2 className="text-xl font-bold text-white mt-8 border-l-2 border-emerald-500 pl-3">
-              4. Data Sharing and Third-Party Services
+              4. Third-Party Services & Ad Networks
             </h2>
             <p>
-              We do not sell, trade, or share your personal data with third-parties. Your business transactions are secure. We utilize:
+              We do not sell, rent, or trade merchant business records or customer transaction data to third-party data brokers. We integrate with select trusted infrastructure and monetization SDKs:
             </p>
             <ul className="list-disc list-inside pl-4 space-y-2">
-              <li><strong>Supabase:</strong> A secure cloud database infrastructure to store and sync your store sales and credentials.</li>
-              <li><strong>Open Food Facts API:</strong> A public service queried to fetch product names based on barcode numbers. No user data is sent during this query.</li>
+              <li><strong>Supabase Cloud Infrastructure:</strong> Database and authentication service to securely store, back up, and sync store data across devices.</li>
+              <li><strong>Google AdMob / Advertising Partners:</strong> Free tiers of our mobile application may display non-intrusive advertisements served by Google AdMob. Ad providers may collect anonymous device advertising identifiers (GAID) and IP addresses to serve personalized or contextual ads in compliance with Google Play Policies.</li>
             </ul>
 
             <h2 className="text-xl font-bold text-white mt-8 border-l-2 border-emerald-500 pl-3">
-              5. Data Retention & Account Deletion
+              5. Data Retention & Instant Account Deletion
             </h2>
             <p>
-              We retain your business data for as long as your account is active. We believe in complete data transparency and user control:
+              You maintain 100% control over your store data. Data is retained as long as your account remains active.
             </p>
             <ul className="list-disc list-inside pl-4 space-y-2">
-              <li><strong>Account Deletion:</strong> You can delete your account and all associated data at any time directly within the application by navigating to <strong>Settings &gt; Account Security &gt; Danger Zone</strong>.</li>
-              <li><strong>Immediate Purge:</strong> When you execute the deletion command, your store profile, sales invoices, expenses, menu/inventory lists, and account credentials are permanently and immediately purged from our Supabase database. This action is irreversible.</li>
-              <li><strong>Web Deletion Requests:</strong> If you are unable to access the app and want your account deleted, you may also email us at the address below with your registered mobile number.</li>
+              <li><strong>In-App Self Account Deletion:</strong> You can permanently delete your store account and erase all transaction data at any time inside the app by going to <strong>Settings &gt; Account Security &gt; Delete Account</strong>.</li>
+              <li><strong>Immediate Hard Purge:</strong> Executing an account deletion permanently purges all store profiles, sales receipts, customer ledgers, inventory lists, and mobile credentials from our servers. This action is irreversible.</li>
+              <li><strong>Web Account Deletion Link:</strong> Users can also request account deletion on our website or by contacting support at <a href="mailto:Instamunim@gmail.com" className="text-emerald-400 underline">Instamunim@gmail.com</a>.</li>
             </ul>
 
             <h2 className="text-xl font-bold text-white mt-8 border-l-2 border-emerald-500 pl-3">
-              6. Contact Us
+              6. Limitation of Liability & Disclaimer of Warranties
             </h2>
             <p>
-              If you have any questions or feedback about this Privacy Policy, please feel free to reach out to us:
+              InstaMunim is provided on an <strong>"AS IS"</strong> and <strong>"AS AVAILABLE"</strong> basis without warranties of any kind, whether express or implied.
             </p>
-            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1">
+            <ul className="list-disc list-inside pl-4 space-y-2">
+              <li>InstaMunim shall not be held liable for indirect, incidental, special, or consequential damages resulting from data loss, network outages, device hardware failures, or user-initiated data resets.</li>
+              <li>Merchants are encouraged to regularly export monthly sales reports and customer ledgers as PDF/Excel backups for offline record retention.</li>
+            </ul>
+
+            <h2 className="text-xl font-bold text-white mt-8 border-l-2 border-emerald-500 pl-3">
+              7. Children's Privacy
+            </h2>
+            <p>
+              Our Service is intended exclusively for commercial business owners and individuals aged 18 years and older. We do not knowingly collect personal information from children under 13.
+            </p>
+
+            <h2 className="text-xl font-bold text-white mt-8 border-l-2 border-emerald-500 pl-3">
+              8. Contact Us
+            </h2>
+            <p>
+              If you have any questions, security inquiries, or data protection requests regarding this policy, please contact us:
+            </p>
+            <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1 text-sm font-medium">
               <p><strong>Support Email:</strong> Instamunim@gmail.com</p>
               <p><strong>Website:</strong> https://instamunim.com</p>
             </div>
