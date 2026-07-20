@@ -2333,6 +2333,14 @@ Stay safe & eat healthy! 🍕
         return;
       }
 
+      // F5 -> Open Custom Entry / New Entry Popup Mode
+      if (key === "F5") {
+        e.preventDefault();
+        setIsManualMode(prev => !prev);
+        setIsSaleOpen(true);
+        return;
+      }
+
       // F8 -> Focus Item Search Bar
       if (key === "F8") {
         e.preventDefault();
@@ -2360,6 +2368,49 @@ Stay safe & eat healthy! 🍕
           discountInputRef.current.focus();
           discountInputRef.current.select();
         }
+        return;
+      }
+
+      // Screen Navigation Hotkeys (Browser Safe Alt + Number & Function Keys)
+      // Alt + 1 -> Billing Dashboard / Sale
+      if ((e.altKey && key === "1") || key === "F4") {
+        e.preventDefault();
+        setActiveTab("Dashboard");
+        return;
+      }
+
+      // Alt + 2 -> Menu / Products / Inventory
+      if (e.altKey && key === "2") {
+        e.preventDefault();
+        setActiveTab("Menu");
+        return;
+      }
+
+      // Alt + 3 or F6 -> Udhaar Khata (Customer Ledgers)
+      if ((e.altKey && key === "3") || key === "F6") {
+        e.preventDefault();
+        setActiveTab("Khata");
+        return;
+      }
+
+      // Alt + 4 or F11 -> Expenses / Rent (Kharcha)
+      if ((e.altKey && key === "4") || key === "F11") {
+        e.preventDefault();
+        setActiveTab("Rent");
+        return;
+      }
+
+      // Alt + 5 or F12 -> Smart CRM / Reports / Stats
+      if ((e.altKey && key === "5") || key === "F12") {
+        e.preventDefault();
+        setActiveTab("Total Sale Report");
+        return;
+      }
+
+      // Alt + 6 -> Settings / More Menu
+      if (e.altKey && key === "6") {
+        e.preventDefault();
+        setActiveTab("Settings");
         return;
       }
 
@@ -9366,6 +9417,10 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-red-400 font-mono text-[11px] font-black">F7</kbd>
                 </div>
                 <div className="flex items-center justify-between">
+                  <span className="font-bold text-zinc-300">Custom Entry / Nayi Entry Popup</span>
+                  <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-emerald-400 font-mono text-[11px] font-black">F5</kbd>
+                </div>
+                <div className="flex items-center justify-between">
                   <span className="font-bold text-zinc-300">Start Fresh Bill (Reset Cart)</span>
                   <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-amber-400 font-mono text-[11px] font-black">Shift + N</kbd>
                 </div>
@@ -9397,9 +9452,49 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
             {/* Section 3: Navigation & Control */}
             <div className="space-y-2">
-              <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest px-1">🚀 Navigation & Controls</p>
+              <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest px-1">🚀 Screen Navigation & Controls</p>
               <div className="bg-zinc-900/80 rounded-2xl p-3 space-y-2.5 border border-zinc-800/80">
                 <div className="flex items-center justify-between">
+                  <span className="font-bold text-zinc-300">Billing Counter / Sales</span>
+                  <div className="flex gap-1.5 font-mono text-[11px] font-black">
+                    <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-purple-400">Alt + 1</kbd>
+                    <span className="text-zinc-500">or</span>
+                    <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-purple-400">F4</kbd>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-zinc-300">Menu / Inventory</span>
+                  <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-purple-400 font-mono text-[11px] font-black">Alt + 2</kbd>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-zinc-300">Udhaar Khata Ledger</span>
+                  <div className="flex gap-1.5 font-mono text-[11px] font-black">
+                    <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-purple-400">Alt + 3</kbd>
+                    <span className="text-zinc-500">or</span>
+                    <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-purple-400">F6</kbd>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-zinc-300">Expenses / Rent / Kharcha</span>
+                  <div className="flex gap-1.5 font-mono text-[11px] font-black">
+                    <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-purple-400">Alt + 4</kbd>
+                    <span className="text-zinc-500">or</span>
+                    <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-purple-400">F11</kbd>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-zinc-300">Smart CRM / Stats / Reports</span>
+                  <div className="flex gap-1.5 font-mono text-[11px] font-black">
+                    <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-purple-400">Alt + 5</kbd>
+                    <span className="text-zinc-500">or</span>
+                    <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-purple-400">F12</kbd>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-zinc-300">Settings & More Menu</span>
+                  <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-purple-400 font-mono text-[11px] font-black">Alt + 6</kbd>
+                </div>
+                <div className="flex items-center justify-between pt-1 border-t border-zinc-800/60">
                   <span className="font-bold text-zinc-300">Close Popups / Reset Search</span>
                   <kbd className="bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-lg text-zinc-400 font-mono text-[11px] font-black">Esc</kbd>
                 </div>
