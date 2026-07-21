@@ -1255,6 +1255,27 @@ export default function Dashboard() {
   const [rawAiImageUrl, setRawAiImageUrl] = useState("");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [imageGenerationError, setImageGenerationError] = useState("");
+  const [uploadedBannerUrl, setUploadedBannerUrl] = useState<string | null>(null);
+
+  const uploadBannerToStorage = async (base64Str: string) => {
+    try {
+      if (!base64Str || !base64Str.startsWith("data:")) return null;
+      const res = await fetch(base64Str);
+      const blob = await res.blob();
+      const fileName = `banners/${Date.now()}_${Math.random().toString(36).substring(7)}.png`;
+      const { data, error } = await supabase.storage.from('receipts').upload(fileName, blob, { contentType: 'image/png', upsert: true });
+      if (!error && data) {
+        const { data: pubUrl } = supabase.storage.from('receipts').getPublicUrl(fileName);
+        if (pubUrl?.publicUrl) {
+          setUploadedBannerUrl(pubUrl.publicUrl);
+          return pubUrl.publicUrl;
+        }
+      }
+    } catch (e) {
+      console.warn("Storage upload warning:", e);
+    }
+    return null;
+  };
 
   // Image compression helper
   const compressAndSetIdPhoto = (file: File, side: 'front' | 'back' | 'device') => {
@@ -1964,8 +1985,10 @@ Requirements for the generated image prompt:
 
               const mergedUrl = canvas.toDataURL("image/png");
               setAiImageUrl(mergedUrl);
+              uploadBannerToStorage(mergedUrl);
             } else {
               setAiImageUrl(backgroundImage.src);
+              if (backgroundImage.src.startsWith("data:")) uploadBannerToStorage(backgroundImage.src);
             }
           } catch (err: any) {
             console.error("Canvas draw failed:", err);
@@ -2053,16 +2076,23 @@ Requirements for the generated image prompt:
     }
   };
 
-  const handleSendImage = (mobile: string, name: string) => {
+  const handleSendImage = async (mobile: string, name: string) => {
     if (!aiImageUrl) {
       alert("Please generate an AI banner first!");
       return;
     }
     try {
+      let finalImgUrl = uploadedBannerUrl;
+      if (!finalImgUrl && aiImageUrl.startsWith("data:")) {
+        finalImgUrl = await uploadBannerToStorage(aiImageUrl);
+      }
+
       const baseUrl = (typeof window !== 'undefined' && window.location.port === '3000')
         ? "http://localhost:3000"
         : "https://www.instamunim.com";
-      const viewerUrl = `${baseUrl}/invoice?banner=true&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${ownerMobile}`;
+      
+      const imgParam = finalImgUrl ? `&img=${encodeURIComponent(finalImgUrl)}` : "";
+      const viewerUrl = `${baseUrl}/invoice?banner=true${imgParam}&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${ownerMobile}`;
       const customMsg = `Special offer for you, ${name}! 🛍️\n\nShop: ${restaurantName}\nOffer: ${offerTitle}\nDeal: ${discountDetails} on ${productName}\n\nView Banner: ${viewerUrl}`;
       window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(customMsg)}`, "_blank");
     } catch (err: any) {
@@ -5324,10 +5354,10 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
   if (!isLoggedIn) {
     return (
-      <div className={`min-h-screen flex flex-col items-center justify-start sm:justify-center p-4 sm:p-10 selection:bg-orange-500/30 overflow-y-auto transition-colors duration-700 ${isDarkMode ? 'bg-[#000000]' : 'bg-[#f8f9fa]'}`}>
-        <div className="w-full max-w-2xl space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 my-auto">
+      <div className={`min-h-screen flex flex-col items-center justify-center p-4 sm:p-10 selection:bg-orange-500/30 overflow-y-auto transition-colors duration-700 ${isDarkMode ? 'bg-[#000000]' : 'bg-[#f8f9fa]'}`}>
+        <div className="w-full max-w-2xl space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 my-auto py-8">
           <Card className={`border-0 rounded-2xl p-8 overflow-hidden transition-all duration-700 ${isDarkMode ? 'bg-transparent shadow-none border-none' : 'bg-white shadow-2xl shadow-zinc-200'}`}>
-            <div className="flex flex-col items-center text-center mb-6 pt-10">
+            <div className="flex flex-col items-center text-center mb-6 pt-14 sm:pt-16">
               <div className="w-full flex justify-center">
                 <div className="w-full max-w-[420px] h-64 relative animate-in zoom-in duration-700 flex items-center justify-center">
                   <img 
@@ -6972,7 +7002,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                               className="h-12 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold shadow-sm"
                             />
                           </div>
-                          <div className="grid grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                               <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1">Brand & Model</Label>
                               <Input 
@@ -8490,43 +8520,43 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
                         {item.id === "FeesCommissions" && (
                           <div className="pt-6 space-y-3">
-                            <div className="bg-white dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 p-5 rounded-3xl flex items-center justify-between shadow-sm">
-                              <div className="flex items-center gap-4">
-                                <div className={`w-10 h-10 rounded-full ${getPartnerConfig(businessType).swiggyColor} flex items-center justify-center font-black`}>
+                            <div className="bg-white dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 p-4 sm:p-5 rounded-3xl flex flex-wrap items-center justify-between gap-3 shadow-sm">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-2xl ${getPartnerConfig(businessType).swiggyColor} flex items-center justify-center font-black shrink-0`}>
                                   {getPartnerConfig(businessType).swiggyIcon}
                                 </div>
-                                <span className="font-black">{getPartnerName(businessType, "Swiggy")}</span>
+                                <span className="font-black text-sm">{getPartnerName(businessType, "Swiggy")}</span>
                               </div>
-                              <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-2">
                                 <select 
                                   value={swiggyCommType} 
                                   onChange={e => setSwiggyCommType(e.target.value)}
-                                  className="bg-transparent font-black text-xs border-0 focus:ring-0 text-zinc-500"
+                                  className="bg-zinc-100 dark:bg-zinc-700/80 rounded-xl px-2.5 py-1.5 font-black text-xs border-0 focus:ring-0 text-zinc-700 dark:text-zinc-200"
                                 >
-                                  <option value="percent">pe</option>
-                                  <option value="fixed">fixed</option>
+                                  <option value="percent">% (Percent)</option>
+                                  <option value="fixed">₹ (Fixed)</option>
                                 </select>
-                                <Input type="number" value={swiggyCommission} onChange={e => setSwiggyCommission(Number(e.target.value))} className="w-16 h-10 bg-transparent border-0 text-right font-black text-lg focus:ring-0" />
+                                <Input type="number" value={swiggyCommission} onChange={e => setSwiggyCommission(Number(e.target.value))} className="w-20 h-9 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-center font-black text-sm focus:ring-0" />
                               </div>
                             </div>
 
-                            <div className="bg-white dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 p-5 rounded-3xl flex items-center justify-between shadow-sm">
-                              <div className="flex items-center gap-4">
-                                <div className={`w-10 h-10 rounded-full ${getPartnerConfig(businessType).zomatoColor} flex items-center justify-center font-black`}>
+                            <div className="bg-white dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700 p-4 sm:p-5 rounded-3xl flex flex-wrap items-center justify-between gap-3 shadow-sm">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-10 h-10 rounded-2xl ${getPartnerConfig(businessType).zomatoColor} flex items-center justify-center font-black shrink-0`}>
                                   {getPartnerConfig(businessType).zomatoIcon}
                                 </div>
-                                <span className="font-black">{getPartnerName(businessType, "Zomato")}</span>
+                                <span className="font-black text-sm">{getPartnerName(businessType, "Zomato")}</span>
                               </div>
-                              <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-2">
                                 <select 
                                   value={zomatoCommType} 
                                   onChange={e => setZomatoCommType(e.target.value)}
-                                  className="bg-transparent font-black text-xs border-0 focus:ring-0 text-zinc-500"
+                                  className="bg-zinc-100 dark:bg-zinc-700/80 rounded-xl px-2.5 py-1.5 font-black text-xs border-0 focus:ring-0 text-zinc-700 dark:text-zinc-200"
                                 >
-                                  <option value="percent">pe</option>
-                                  <option value="fixed">fixed</option>
+                                  <option value="percent">% (Percent)</option>
+                                  <option value="fixed">₹ (Fixed)</option>
                                 </select>
-                                <Input type="number" value={zomatoCommission} onChange={e => setZomatoCommission(Number(e.target.value))} className="w-16 h-10 bg-transparent border-0 text-right font-black text-lg focus:ring-0" />
+                                <Input type="number" value={zomatoCommission} onChange={e => setZomatoCommission(Number(e.target.value))} className="w-20 h-9 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl text-center font-black text-sm focus:ring-0" />
                               </div>
                             </div>
                           </div>

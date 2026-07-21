@@ -49,12 +49,18 @@ function InvoiceContent() {
   const bannerOffer = searchParams.get("o") || "";
   const bannerDetails = searchParams.get("d") || "";
   const bannerProd = searchParams.get("p") || "";
+  const directImgUrl = searchParams.get("img") || "";
 
   const [adBannerUrl, setAdBannerUrl] = useState("");
   const [isLoadingAd, setIsLoadingAd] = useState(true);
 
   useEffect(() => {
     if (!isBannerView) return;
+    if (directImgUrl) {
+      setAdBannerUrl(directImgUrl);
+      setIsLoadingAd(false);
+      return;
+    }
     const runAdGen = async () => {
       try {
         const bannerPrompt = `Professional commercial studio photography social media ad poster banner. A realistic close-up shot of '${bannerProd}' in premium packaging, set on a modern studio surface with clean lighting. Cinematic lighting, sharp focus, 8k resolution, high-end commercial setup. Plain background with no text, letters, or words.`;
@@ -530,16 +536,24 @@ function InvoiceContent() {
   // Determine which logo to show
   const finalLogo = cloudLogo || (logoFromUrl.startsWith("http") ? logoFromUrl : null);
 
-  const parsedItems = items.split(',').map(i => {
-    const parts = i.trim().split(':');
-    let nameStr = parts[0] || "Item";
+  const itemDelimiter = items.includes('|') ? '|' : ',';
+  const parsedItems = items.split(itemDelimiter).map(i => {
+    const lastColonIndex = i.lastIndexOf(':');
+    let nameStr = "";
+    let priceStr = "0";
+    if (lastColonIndex !== -1) {
+      nameStr = i.substring(0, lastColonIndex).trim();
+      priceStr = i.substring(lastColonIndex + 1).trim();
+    } else {
+      nameStr = i.trim();
+    }
     let imei = "";
     const imeiMatch = nameStr.match(/\[IMEI-(.+)\]/);
     if (imeiMatch) {
       imei = imeiMatch[1];
       nameStr = nameStr.replace(/\[IMEI-.+\]/, "").trim();
     }
-    return { name: nameStr, price: parts[1] || "0", imei };
+    return { name: nameStr || "Item", price: priceStr, imei };
   }).filter(i => i.name !== "Item" || i.price !== "0");
 
   const hasGst = searchParams.get("gst") !== "false";
