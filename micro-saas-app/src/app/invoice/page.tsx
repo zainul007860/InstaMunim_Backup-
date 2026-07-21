@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = 'force-dynamic';
+
 import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { Suspense, useEffect, useState, useRef } from "react";
@@ -537,22 +539,21 @@ function InvoiceContent() {
   const finalLogo = cloudLogo || (logoFromUrl.startsWith("http") ? logoFromUrl : null);
 
   const splitSmartItems = (str: string) => {
+    if (!str) return [];
     if (str.includes('|')) return str.split('|');
     const result: string[] = [];
     let current = "";
-    let parenDepth = 0;
-    let bracketDepth = 0;
-    
+    let hasColonInCurrent = false;
+
     for (let i = 0; i < str.length; i++) {
       const char = str[i];
-      if (char === '(') parenDepth++;
-      else if (char === ')') parenDepth = Math.max(0, parenDepth - 1);
-      else if (char === '[') bracketDepth++;
-      else if (char === ']') bracketDepth = Math.max(0, bracketDepth - 1);
-      
-      if (char === ',' && parenDepth === 0 && bracketDepth === 0) {
+      if (char === ':') {
+        hasColonInCurrent = true;
+        current += char;
+      } else if (char === ',' && hasColonInCurrent) {
         result.push(current);
         current = "";
+        hasColonInCurrent = false;
       } else {
         current += char;
       }
