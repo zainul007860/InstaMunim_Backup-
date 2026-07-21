@@ -3295,6 +3295,33 @@ Stay safe & eat healthy! 🍕
             }
           }
         }
+
+        // 7. Check Current Merchant's Specific Remote Flags directly from Supabase
+        const myStoreId = localStorage.getItem("saas_store_id");
+        const myOwnerMobile = localStorage.getItem("saas_owner_mobile");
+        if (myStoreId || myOwnerMobile) {
+          const { data: myStore } = await supabase
+            .from('stores')
+            .select('store_logo')
+            .eq(myStoreId ? 'id' : 'owner_mobile', myStoreId || myOwnerMobile)
+            .single();
+
+          if (myStore && myStore.store_logo && myStore.store_logo.startsWith("JSON_CFG:")) {
+            try {
+              const cfg = JSON.parse(myStore.store_logo.substring(9));
+              if (typeof cfg.isSuspended === 'boolean') setIsAccountSuspended(cfg.isSuspended);
+              if (typeof cfg.voiceCashier === 'boolean') setFlagVoiceCashier(cfg.voiceCashier);
+              if (typeof cfg.aiScanner === 'boolean') setFlagAiScanner(cfg.aiScanner);
+              if (typeof cfg.buybackTracker === 'boolean') setFlagBuybackTracker(cfg.buybackTracker);
+              if (typeof cfg.udhaarKhata === 'boolean') setFlagUdhaarKhata(cfg.udhaarKhata);
+              if (typeof cfg.reportsCrm === 'boolean') setFlagReportsCrm(cfg.reportsCrm);
+              if (typeof cfg.inventoryMgmt === 'boolean') setFlagInventoryMgmt(cfg.inventoryMgmt);
+              if (typeof cfg.gstInvoicing === 'boolean') setFlagGstInvoicing(cfg.gstInvoicing);
+            } catch (e) {
+              console.warn("Error parsing myStore store_logo:", e);
+            }
+          }
+        }
       } catch (err) {
         console.error("Failed to check remote admin config:", err);
       }
@@ -7922,7 +7949,16 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           thermalPrinter: isThermalPrinterEnabled,
                           voiceEnabled: isVoiceAnnouncerEnabled,
                           voiceLang: voiceAnnouncerLanguage,
-                          lang: lang
+                          lang: lang,
+                          // Preserve Super Admin Flags
+                          isSuspended: isAccountSuspended,
+                          voiceCashier: flagVoiceCashier,
+                          aiScanner: flagAiScanner,
+                          buybackTracker: flagBuybackTracker,
+                          udhaarKhata: flagUdhaarKhata,
+                          reportsCrm: flagReportsCrm,
+                          inventoryMgmt: flagInventoryMgmt,
+                          gstInvoicing: flagGstInvoicing
                         };
                         const combinedLogo = "JSON_CFG:" + JSON.stringify(settingsPacket);
                         
