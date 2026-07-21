@@ -1262,16 +1262,37 @@ export default function Dashboard() {
   const uploadBannerToStorage = async (base64Str: string) => {
     try {
       if (!base64Str || !base64Str.startsWith("data:")) return null;
-      const res = await fetch(base64Str);
-      const blob = await res.blob();
-      const fileName = `banners/${Date.now()}_${Math.random().toString(36).substring(7)}.png`;
-      const { data, error } = await supabase.storage.from('receipts').upload(fileName, blob, { contentType: 'image/png', upsert: true });
-      if (!error && data) {
-        const { data: pubUrl } = supabase.storage.from('receipts').getPublicUrl(fileName);
-        if (pubUrl?.publicUrl) {
-          setUploadedBannerUrl(pubUrl.publicUrl);
-          return pubUrl.publicUrl;
+      
+      // 1. Try Supabase Storage first
+      try {
+        const res = await fetch(base64Str);
+        const blob = await res.blob();
+        const fileName = `banners/${Date.now()}_${Math.random().toString(36).substring(7)}.png`;
+        const { data, error } = await supabase.storage.from('receipts').upload(fileName, blob, { contentType: 'image/png', upsert: true });
+        if (!error && data) {
+          const { data: pubUrl } = supabase.storage.from('receipts').getPublicUrl(fileName);
+          if (pubUrl?.publicUrl) {
+            setUploadedBannerUrl(pubUrl.publicUrl);
+            return pubUrl.publicUrl;
+          }
         }
+      } catch (e) {
+        console.warn("Supabase storage upload failed, trying public CDN fallback:", e);
+      }
+
+      // 2. Public CDN upload fallback (tmpfiles.org)
+      const blob = await (await fetch(base64Str)).blob();
+      const formData = new FormData();
+      formData.append("file", blob, "banner.png");
+      const cdnRes = await fetch("https://tmpfiles.org/api/v1/upload", {
+        method: "POST",
+        body: formData
+      });
+      const cdnJson = await cdnRes.json();
+      if (cdnJson?.data?.url) {
+        const directUrl = cdnJson.data.url.replace("tmpfiles.org/", "tmpfiles.org/dl/");
+        setUploadedBannerUrl(directUrl);
+        return directUrl;
       }
     } catch (e) {
       console.warn("Storage upload warning:", e);
@@ -2096,9 +2117,10 @@ Requirements for the generated image prompt:
         : "https://www.instamunim.com";
       
       const imgParam = finalImgUrl ? `&img=${encodeURIComponent(finalImgUrl)}` : "";
+      const logoParam = (storeLogo || cloudLogo) ? `&logo=${encodeURIComponent(storeLogo || cloudLogo || "")}` : "";
       const seedParam = aiBannerSeed ? `&sd=${aiBannerSeed}` : "";
       const promptParam = aiBannerPrompt ? `&pr=${encodeURIComponent(aiBannerPrompt)}` : "";
-      const viewerUrl = `${baseUrl}/invoice?banner=true${imgParam}${seedParam}${promptParam}&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${ownerMobile}`;
+      const viewerUrl = `${baseUrl}/invoice?banner=true${imgParam}${seedParam}${promptParam}${logoParam}&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${ownerMobile}`;
       const customMsg = `Special offer for you, ${name}! 🛍️\n\nShop: ${restaurantName}\nOffer: ${offerTitle}\nDeal: ${discountDetails} on ${productName}\n\nView Banner: ${viewerUrl}`;
       window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(customMsg)}`, "_blank");
     } catch (err: any) {
