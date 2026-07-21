@@ -137,8 +137,10 @@ export default function AdminDashboard() {
         forceUpdateLink: remoteForceUpdateLink,
         maintenanceMode: remoteMaintenanceMode,
         maintenanceMessage: remoteMaintenanceMessage,
-        inAppAlertEnabled: remoteInAppAlertEnabled,
-        inAppAlertMessage: remoteInAppAlertMessage,
+        inAppAlertEnabled: remoteInAppAlertEnabled || remotePlayStoreBoosterEnabled,
+        inAppAlertMessage: remotePlayStoreBoosterEnabled 
+          ? `⭐ Enjoying InstaMunim? Tap to rate 5-Stars on Google Play Store: ${remotePlayStoreUrl}`
+          : remoteInAppAlertMessage,
         // Super Admin New Configs
         adFrequency: remoteAdFrequency,
         playStoreBoosterEnabled: remotePlayStoreBoosterEnabled,
