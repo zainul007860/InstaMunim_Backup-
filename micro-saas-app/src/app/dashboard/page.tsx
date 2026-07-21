@@ -2486,6 +2486,26 @@ Stay safe & eat healthy! 🍕
   const [targetedBroadcastData, setTargetedBroadcastData] = useState<any>(null);
   const [showFeatureLockModal, setShowFeatureLockModal] = useState<string | null>(null);
 
+  const handleTabNavigation = (tabId: string) => {
+    if ((tabId === "BuybackTracker" || tabId === "Exchange / Sell Old Device") && !flagBuybackTracker) {
+      setShowFeatureLockModal("📱 Buyback Device Tracker");
+      return;
+    }
+    if ((tabId === "Khata" || tabId === "Udhaar Khata") && !flagUdhaarKhata) {
+      setShowFeatureLockModal("📒 Udhaar Khata Ledger");
+      return;
+    }
+    if ((tabId === "Total Sale Report" || tabId === "Marketing" || tabId === "Smart CRM") && !flagReportsCrm) {
+      setShowFeatureLockModal("📊 Reports & Smart CRM");
+      return;
+    }
+    if ((tabId === "Inventory" || tabId === "Menu") && !flagInventoryMgmt) {
+      setShowFeatureLockModal("📦 Inventory Management");
+      return;
+    }
+    setActiveTab(tabId);
+  };
+
   // Smart Menu Scanner states
   const [showScanMenuModal, setShowScanMenuModal] = useState(false);
   const [scanMenuImage, setScanMenuImage] = useState<string | null>(null);
@@ -7301,6 +7321,10 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               {/* SMART MENU AI SCANNER BUTTON */}
               <button
                 onClick={() => {
+                  if (!flagAiScanner) {
+                    setShowFeatureLockModal("📷 AI Menu Scanner");
+                    return;
+                  }
                   if (!isSubscribed) {
                     setShowUpgradeModal(true);
                   } else {
@@ -7782,7 +7806,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 ].map(item => (
                   <button 
                     key={item.id} 
-                    onClick={() => setActiveTab(item.id)} 
+                    onClick={() => handleTabNavigation(item.id)} 
                     className="py-7 px-2 bg-white dark:bg-zinc-900 rounded-[2.5rem] flex flex-col items-center justify-center gap-3 shadow-sm hover:shadow-md transition-all active:scale-95 border border-zinc-100 dark:border-zinc-800"
                   >
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${item.bg} dark:bg-opacity-10 border border-zinc-100 dark:border-zinc-800 shadow-sm`}>
@@ -8685,12 +8709,12 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
       </main>
 
       <nav className={`fixed bottom-0 left-0 right-0 h-14 border-t backdrop-blur-2xl z-50 flex items-center justify-around px-4 ${isDarkMode ? 'bg-zinc-950/90 border-zinc-800' : 'bg-white/90 border-zinc-100 shadow-[0_-10px_40px_rgba(0,0,0,0.04)]'}`}>
-        <button onClick={() => setActiveTab("Dashboard")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'Dashboard' ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
+        <button onClick={() => handleTabNavigation("Dashboard")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'Dashboard' ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
           <div className={`p-1.5 rounded-xl ${activeTab === 'Dashboard' ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><LayoutDashboard className="h-5 w-5" /></div>
           <span className="text-[8px] font-bold uppercase tracking-tighter">{t("Dashboard")}</span>
         </button>
  
-        <button onClick={() => setActiveTab("Menu")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'Menu' ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
+        <button onClick={() => handleTabNavigation("Menu")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'Menu' ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
           <div className={`p-1.5 rounded-xl ${activeTab === 'Menu' ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><ShoppingCart className="h-5 w-5" /></div>
           <span className="text-[8px] font-bold uppercase tracking-tighter">{t("Menus")}</span>
         </button>
@@ -8702,12 +8726,12 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
           <span className="text-[8px] font-bold uppercase text-orange-600 mt-1 tracking-widest">{t("Sale")}</span>
         </button>
 
-        <button onClick={() => setActiveTab("Total Sale Report")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'Total Sale Report' ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
+        <button onClick={() => handleTabNavigation("Total Sale Report")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'Total Sale Report' ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
           <div className={`p-1.5 rounded-xl ${activeTab === 'Total Sale Report' ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><PieChart className="h-5 w-5" /></div>
           <span className="text-[8px] font-bold uppercase tracking-tighter">{t("Stats")}</span>
         </button>
 
-        <button onClick={() => setActiveTab("MoreMenu")} className={`flex flex-col items-center gap-1 transition-all ${['MoreMenu', 'Settings', 'Rent', 'Support', 'Khata', 'Menu', 'Inventory', 'BuybackTracker'].includes(activeTab) ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
+        <button onClick={() => handleTabNavigation("MoreMenu")} className={`flex flex-col items-center gap-1 transition-all ${['MoreMenu', 'Settings', 'Rent', 'Support', 'Khata', 'Menu', 'Inventory', 'BuybackTracker'].includes(activeTab) ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
           <div className={`p-1.5 rounded-xl ${['MoreMenu', 'Settings', 'Rent', 'Support', 'Khata', 'Menu', 'Inventory', 'BuybackTracker'].includes(activeTab) ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><Settings className="h-5 w-5" /></div>
           <span className="text-[8px] font-bold uppercase tracking-tighter">{t("More")}</span>
         </button>
