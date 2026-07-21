@@ -65,6 +65,18 @@ export default function AdminDashboard() {
     }
   }, [isAdminLoggedIn]);
 
+  // Super Admin Remote Config states
+  const [remoteAdFrequency, setRemoteAdFrequency] = useState(2);
+  const [remotePlayStoreBoosterEnabled, setRemotePlayStoreBoosterEnabled] = useState(false);
+  const [remotePlayStoreUrl, setRemotePlayStoreUrl] = useState("https://play.google.com/store/apps/details?id=com.instamunim.smartpos");
+  const [remoteTargetedBroadcastEnabled, setRemoteTargetedBroadcastEnabled] = useState(false);
+  const [remoteTargetStoreId, setRemoteTargetStoreId] = useState("ALL");
+  const [remoteBroadcastTitle, setRemoteBroadcastTitle] = useState("");
+  const [remoteBroadcastMessage, setRemoteBroadcastMessage] = useState("");
+  const [remoteBroadcastImageUrl, setRemoteBroadcastImageUrl] = useState("");
+  const [remoteBroadcastCtaText, setRemoteBroadcastCtaText] = useState("");
+  const [remoteBroadcastCtaLink, setRemoteBroadcastCtaLink] = useState("");
+
   const fetchAdminConfig = async () => {
     try {
       const { data, error } = await supabase
@@ -90,6 +102,18 @@ export default function AdminDashboard() {
         setRemoteMaintenanceMessage(config.maintenanceMessage ?? "");
         setRemoteInAppAlertEnabled(config.inAppAlertEnabled ?? false);
         setRemoteInAppAlertMessage(config.inAppAlertMessage ?? "");
+        
+        // Super Admin New Configs
+        setRemoteAdFrequency(config.adFrequency ?? 2);
+        setRemotePlayStoreBoosterEnabled(config.playStoreBoosterEnabled ?? false);
+        setRemotePlayStoreUrl(config.playStoreUrl ?? "https://play.google.com/store/apps/details?id=com.instamunim.smartpos");
+        setRemoteTargetedBroadcastEnabled(config.targetedBroadcastEnabled ?? false);
+        setRemoteTargetStoreId(config.targetStoreId ?? "ALL");
+        setRemoteBroadcastTitle(config.broadcastTitle ?? "");
+        setRemoteBroadcastMessage(config.broadcastMessage ?? "");
+        setRemoteBroadcastImageUrl(config.broadcastImageUrl ?? "");
+        setRemoteBroadcastCtaText(config.broadcastCtaText ?? "");
+        setRemoteBroadcastCtaLink(config.broadcastCtaLink ?? "");
       }
     } catch (e) {
       console.error("Error loading remote config:", e);
@@ -114,7 +138,18 @@ export default function AdminDashboard() {
         maintenanceMode: remoteMaintenanceMode,
         maintenanceMessage: remoteMaintenanceMessage,
         inAppAlertEnabled: remoteInAppAlertEnabled,
-        inAppAlertMessage: remoteInAppAlertMessage
+        inAppAlertMessage: remoteInAppAlertMessage,
+        // Super Admin New Configs
+        adFrequency: remoteAdFrequency,
+        playStoreBoosterEnabled: remotePlayStoreBoosterEnabled,
+        playStoreUrl: remotePlayStoreUrl,
+        targetedBroadcastEnabled: remoteTargetedBroadcastEnabled,
+        targetStoreId: remoteTargetStoreId,
+        broadcastTitle: remoteBroadcastTitle,
+        broadcastMessage: remoteBroadcastMessage,
+        broadcastImageUrl: remoteBroadcastImageUrl,
+        broadcastCtaText: remoteBroadcastCtaText,
+        broadcastCtaLink: remoteBroadcastCtaLink
       };
 
       const serialized = "JSON_CFG:" + JSON.stringify(configObj);
@@ -131,6 +166,43 @@ export default function AdminDashboard() {
       alert("Failed to save config: " + (err.message || err));
     } finally {
       setIsSavingConfig(false);
+    }
+  };
+
+  const exportStoreData = async (store: any) => {
+    try {
+      const { data: sales } = await supabase.from('sales').select('*').eq('store_id', store.id);
+      const { data: expenses } = await supabase.from('expenses').select('*').eq('store_id', store.id);
+      const { data: items } = await supabase.from('menu_items').select('*').eq('store_id', store.id);
+
+      const dumpObj = {
+        storeInfo: {
+          id: store.id,
+          store_name: store.store_name,
+          owner_mobile: store.owner_mobile,
+          created_at: store.created_at
+        },
+        exported_at: new Date().toISOString(),
+        total_sales_count: sales?.length || 0,
+        total_expenses_count: expenses?.length || 0,
+        total_items_count: items?.length || 0,
+        sales: sales || [],
+        expenses: expenses || [],
+        menu_items: items || []
+      };
+
+      const jsonStr = JSON.stringify(dumpObj, null, 2);
+      const blob = new Blob([jsonStr], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `InstaMunim_Backup_${store.store_name.replace(/\s+/g, '_')}_${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      alert("Failed to export store data: " + (err.message || err));
     }
   };
 
@@ -754,6 +826,16 @@ export default function AdminDashboard() {
                   let rent = s.monthly_rent || 0;
                   let businessType = s.business_type || "Restaurant/Cafe";
 
+                  // Super Admin Remote Flags for Store
+                  let isSuspended = false;
+                  let voiceCashier = true;
+                  let aiScanner = true;
+                  let buybackTracker = true;
+                  let udhaarKhata = true;
+                  let reportsCrm = true;
+                  let inventoryMgmt = true;
+                  let gstInvoicing = true;
+
                   const logoVal = s.store_logo || "";
                   if (logoVal.startsWith("JSON_CFG:")) {
                     try {
@@ -765,6 +847,16 @@ export default function AdminDashboard() {
                       if (cfg.monthlyRent) rent = cfg.monthlyRent;
                       if (cfg.businessType) businessType = cfg.businessType;
                       if (cfg.logo) logoUrl = cfg.logo;
+
+                      // Flags
+                      if (typeof cfg.isSuspended === 'boolean') isSuspended = cfg.isSuspended;
+                      if (typeof cfg.voiceCashier === 'boolean') voiceCashier = cfg.voiceCashier;
+                      if (typeof cfg.aiScanner === 'boolean') aiScanner = cfg.aiScanner;
+                      if (typeof cfg.buybackTracker === 'boolean') buybackTracker = cfg.buybackTracker;
+                      if (typeof cfg.udhaarKhata === 'boolean') udhaarKhata = cfg.udhaarKhata;
+                      if (typeof cfg.reportsCrm === 'boolean') reportsCrm = cfg.reportsCrm;
+                      if (typeof cfg.inventoryMgmt === 'boolean') inventoryMgmt = cfg.inventoryMgmt;
+                      if (typeof cfg.gstInvoicing === 'boolean') gstInvoicing = cfg.gstInvoicing;
                     } catch (e) {
                       console.warn("Parse error for store logo:", e);
                     }
@@ -782,10 +874,38 @@ export default function AdminDashboard() {
 
                   const isExpanded = expandedStoreId === s.id;
 
+                  const updateMerchantFlag = async (key: string, val: any) => {
+                    setUpdatingStoreId(s.id);
+                    try {
+                      let cfgObj: any = {};
+                      const curr = s.store_logo || "";
+                      if (curr.startsWith("JSON_CFG:")) {
+                        try { cfgObj = JSON.parse(curr.substring(9)); } catch (e) { cfgObj = {}; }
+                      } else if (curr.startsWith("http") || curr.startsWith("data:image")) {
+                        cfgObj = { logo: curr };
+                      }
+
+                      cfgObj[key] = val;
+                      const serialized = "JSON_CFG:" + JSON.stringify(cfgObj);
+
+                      const { error } = await supabase
+                        .from('stores')
+                        .update({ store_logo: serialized })
+                        .eq('id', s.id);
+
+                      if (error) throw error;
+                      setStores(prev => prev.map(item => item.id === s.id ? { ...item, store_logo: serialized } : item));
+                    } catch (err: any) {
+                      alert("Failed to update merchant setting: " + (err.message || err));
+                    } finally {
+                      setUpdatingStoreId(null);
+                    }
+                  };
+
                   return (
                     <React.Fragment key={s.id}>
                       <tr 
-                        style={{ cursor: 'pointer', background: isExpanded ? 'rgba(249, 115, 22, 0.05)' : 'transparent' }}
+                        style={{ cursor: 'pointer', background: isSuspended ? 'rgba(239, 68, 68, 0.08)' : (isExpanded ? 'rgba(249, 115, 22, 0.05)' : 'transparent') }}
                       >
                         <td onClick={() => setExpandedStoreId(isExpanded ? null : s.id)} style={{ fontWeight: 'bold' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -793,7 +913,7 @@ export default function AdminDashboard() {
                               width: '32px',
                               height: '32px',
                               borderRadius: '8px',
-                              background: '#f97316',
+                              background: isSuspended ? '#ef4444' : '#f97316',
                               color: 'white',
                               display: 'flex',
                               alignItems: 'center',
@@ -809,7 +929,9 @@ export default function AdminDashboard() {
                                 s.store_name?.charAt(0)?.toUpperCase() || "S"
                               )}
                             </div>
-                            <span>{s.store_name}</span>
+                            <span style={{ color: isSuspended ? '#ef4444' : 'inherit', textDecoration: isSuspended ? 'line-through' : 'none' }}>
+                              {s.store_name} {isSuspended ? " (SUSPENDED 🛑)" : ""}
+                            </span>
                           </div>
                         </td>
                         <td>{s.owner_mobile}</td>
@@ -903,16 +1025,16 @@ export default function AdminDashboard() {
                               width: '8px', 
                               height: '8px', 
                               borderRadius: '50%', 
-                              background: color,
+                              background: isSuspended ? '#ef4444' : color,
                               display: 'inline-block'
                             }} />
                             <span style={{ 
                               fontSize: '11px', 
                               fontWeight: 'bold', 
-                              color: color,
+                              color: isSuspended ? '#ef4444' : color,
                               letterSpacing: '0.3px'
                             }}>
-                              {statusText}
+                              {isSuspended ? "ACCOUNT FREEZED 🛑" : statusText}
                             </span>
                           </div>
                         </td>
@@ -972,14 +1094,14 @@ export default function AdminDashboard() {
                               gap: '20px',
                               boxShadow: '0 10px 30px rgba(0,0,0,0.04)'
                             }}>
-                              {/* Header section with Store Logo & Verification Badges */}
+                              {/* Header section with Store Logo & Actions */}
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                   <div style={{
                                     width: '64px',
                                     height: '64px',
                                     borderRadius: '18px',
-                                    background: '#f97316',
+                                    background: isSuspended ? '#ef4444' : '#f97316',
                                     color: 'white',
                                     display: 'flex',
                                     alignItems: 'center',
@@ -1012,55 +1134,93 @@ export default function AdminDashboard() {
                                   </div>
                                 </div>
 
-                                {/* Merchant Verification Checklist Badges */}
-                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                                  <span style={{
-                                    padding: '6px 12px',
-                                    borderRadius: '20px',
-                                    fontSize: '11px',
-                                    fontWeight: 800,
-                                    background: logoUrl ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.08)',
-                                    color: logoUrl ? '#10b981' : '#ef4444',
-                                    border: `1px solid ${logoUrl ? '#10b981' : '#fca5a5'}`
-                                  }}>
-                                    {logoUrl ? "🟢 Logo Uploaded" : "🔴 Logo Missing"}
-                                  </span>
+                                {/* Super Admin Action Control Buttons */}
+                                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                                  {/* Freeze Toggle Button */}
+                                  <button
+                                    disabled={updatingStoreId === s.id}
+                                    onClick={() => updateMerchantFlag("isSuspended", !isSuspended)}
+                                    style={{
+                                      padding: '10px 16px',
+                                      background: isSuspended ? '#10b981' : '#ef4444',
+                                      color: 'white',
+                                      borderRadius: '12px',
+                                      border: 'none',
+                                      fontWeight: 900,
+                                      cursor: 'pointer',
+                                      fontSize: '12px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '6px',
+                                      boxShadow: isSuspended ? '0 4px 12px rgba(16,185,129,0.3)' : '0 4px 12px rgba(239,68,68,0.3)'
+                                    }}
+                                  >
+                                    <ShieldCheck size={16} />
+                                    {isSuspended ? "UNFREEZE ACCOUNT" : "FREEZE / SUSPEND STORE"}
+                                  </button>
 
-                                  <span style={{
-                                    padding: '6px 12px',
-                                    borderRadius: '20px',
-                                    fontSize: '11px',
-                                    fontWeight: 800,
-                                    background: upiId !== "Not Configured" ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.08)',
-                                    color: upiId !== "Not Configured" ? '#10b981' : '#ef4444',
-                                    border: `1px solid ${upiId !== "Not Configured" ? '#10b981' : '#fca5a5'}`
-                                  }}>
-                                    {upiId !== "Not Configured" ? `🟢 UPI Active` : "🔴 UPI Not Setup"}
-                                  </span>
+                                  {/* Export Store Data JSON Button */}
+                                  <button
+                                    onClick={() => exportStoreData(s)}
+                                    style={{
+                                      padding: '10px 16px',
+                                      background: '#09090b',
+                                      color: 'white',
+                                      borderRadius: '12px',
+                                      border: 'none',
+                                      fontWeight: 800,
+                                      cursor: 'pointer',
+                                      fontSize: '12px',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '6px'
+                                    }}
+                                    title="Download 1-Click JSON Data Dump for Support Recovery"
+                                  >
+                                    💾 EXPORT STORE DATA (.JSON)
+                                  </button>
+                                </div>
+                              </div>
 
-                                  <span style={{
-                                    padding: '6px 12px',
-                                    borderRadius: '20px',
-                                    fontSize: '11px',
-                                    fontWeight: 800,
-                                    background: gstin !== "Not Added" ? 'rgba(16, 185, 129, 0.1)' : 'rgba(113, 113, 122, 0.08)',
-                                    color: gstin !== "Not Added" ? '#10b981' : '#71717a',
-                                    border: `1px solid ${gstin !== "Not Added" ? '#10b981' : '#e4e4e7'}`
-                                  }}>
-                                    {gstin !== "Not Added" ? `🟢 GSTIN Added` : "⚪ Non-GST Store"}
-                                  </span>
-
-                                  <span style={{
-                                    padding: '6px 12px',
-                                    borderRadius: '20px',
-                                    fontSize: '11px',
-                                    fontWeight: 800,
-                                    background: totalCount > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                                    color: totalCount > 0 ? '#10b981' : '#f59e0b',
-                                    border: `1px solid ${totalCount > 0 ? '#10b981' : '#fcd34d'}`
-                                  }}>
-                                    {totalCount > 0 ? `🟢 Active (${totalCount} Sales)` : "⚠️ New Store (0 Sales)"}
-                                  </span>
+                              {/* Feature Locks Toggle Matrix (7 Toggles) */}
+                              <div style={{ background: '#f8fafc', padding: '18px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
+                                <h4 style={{ fontSize: '13px', fontWeight: 900, color: '#0f172a', margin: '0 0 12px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                  🎛️ REMOTE FEATURE LOCK MATRIX (PER MERCHANT ACCESS)
+                                </h4>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                                  {[
+                                    { key: "voiceCashier", label: "🎙️ Voice Cashier Announcement", val: voiceCashier },
+                                    { key: "aiScanner", label: "📷 AI Menu Scanner", val: aiScanner },
+                                    { key: "buybackTracker", label: "📱 Buyback Device Tracker", val: buybackTracker },
+                                    { key: "udhaarKhata", label: "📒 Udhaar Khata Ledger", val: udhaarKhata },
+                                    { key: "reportsCrm", label: "📊 Reports & Smart CRM", val: reportsCrm },
+                                    { key: "inventoryMgmt", label: "📦 Inventory Management", val: inventoryMgmt },
+                                    { key: "gstInvoicing", label: "🧾 GST Tax Invoicing", val: gstInvoicing }
+                                  ].map(f => (
+                                    <div key={f.key} style={{ background: '#ffffff', padding: '10px 14px', borderRadius: '12px', border: '1px solid #cbd5e1', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                      <span style={{ fontSize: '11px', fontWeight: 800, color: '#334155' }}>{f.label}</span>
+                                      <label style={{ position: 'relative', display: 'inline-block', width: '38px', height: '20px' }}>
+                                        <input 
+                                          type="checkbox" 
+                                          checked={f.val} 
+                                          disabled={updatingStoreId === s.id}
+                                          onChange={(e) => updateMerchantFlag(f.key, e.target.checked)} 
+                                          style={{ opacity: 0, width: 0, height: 0 }}
+                                        />
+                                        <span style={{
+                                          position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                                          backgroundColor: f.val ? '#f97316' : '#cbd5e1',
+                                          transition: '.3s', borderRadius: '20px'
+                                        }}>
+                                          <span style={{
+                                            position: 'absolute', content: '""', height: '14px', width: '14px', left: '3px', bottom: '3px',
+                                            backgroundColor: 'white', transition: '.3s', borderRadius: '50%',
+                                            transform: f.val ? 'translateX(18px)' : 'none'
+                                          }} />
+                                        </span>
+                                      </label>
+                                    </div>
+                                  ))}
                                 </div>
                               </div>
 
@@ -1307,9 +1467,191 @@ export default function AdminDashboard() {
                     </div>
                   </>
                 )}
+
+                {/* Ad Frequency Rate Limiter Control */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', paddingTop: '10px', borderTop: '1px dashed var(--border)' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 800, color: '#ea580c', textTransform: 'uppercase' }}>
+                    ⚡ AD FREQUENCY RATE-LIMITER (SHOW AD AFTER X SALES)
+                  </label>
+                  <select
+                    value={remoteAdFrequency}
+                    onChange={(e) => setRemoteAdFrequency(Number(e.target.value))}
+                    className="login-input"
+                    style={{ background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)', fontWeight: 'bold' }}
+                  >
+                    <option value={1}>Show Interstitial Ad After Every 1 Sale (Aggressive)</option>
+                    <option value={2}>Show Interstitial Ad After Every 2 Sales (Standard Recommended)</option>
+                    <option value={3}>Show Interstitial Ad After Every 3 Sales</option>
+                    <option value={5}>Show Interstitial Ad After Every 5 Sales (Balanced)</option>
+                    <option value={10}>Show Interstitial Ad After Every 10 Sales (Relaxed)</option>
+                  </select>
+                </div>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                {/* TARGETED POP-UP BANNER & BROADCAST SYSTEM */}
+                <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '24px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 4px 20px rgba(24,24,27,0.02)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
+                    <Megaphone size={20} color="#ea580c" />
+                    <h4 style={{ fontSize: '14px', fontWeight: 900, color: 'var(--text)', letterSpacing: '-0.2px' }}>📢 TARGETED POP-UP BANNER & OFFER BROADCAST</h4>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)', display: 'block' }}>Enable Targeted Banner Modal</span>
+                      <span style={{ fontSize: '10px', color: '#71717a' }}>Displays interactive poster modal on app launch</span>
+                    </div>
+                    <label className="switch-toggle" style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={remoteTargetedBroadcastEnabled} 
+                        onChange={(e) => setRemoteTargetedBroadcastEnabled(e.target.checked)} 
+                        style={{ opacity: 0, width: 0, height: 0 }}
+                      />
+                      <span style={{
+                        position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: remoteTargetedBroadcastEnabled ? '#ea580c' : '#e4e4e7',
+                        transition: '.4s', borderRadius: '24px'
+                      }}>
+                        <span style={{
+                          position: 'absolute', content: '""', height: '18px', width: '18px', left: '3px', bottom: '3px',
+                          backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
+                          transform: remoteTargetedBroadcastEnabled ? 'translateX(20px)' : 'none'
+                        }} />
+                      </span>
+                    </label>
+                  </div>
+
+                  {remoteTargetedBroadcastEnabled && (
+                    <>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase' }}>Target Audience</label>
+                        <select
+                          value={remoteTargetStoreId}
+                          onChange={(e) => setRemoteTargetStoreId(e.target.value)}
+                          className="login-input"
+                          style={{ background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)', fontSize: '12px', fontWeight: 'bold' }}
+                        >
+                          <option value="ALL">🌐 All Merchants (Global Audience)</option>
+                          {stores.map(s => (
+                            <option key={s.id} value={s.id}>🎯 Store: {s.store_name} ({s.owner_mobile})</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase' }}>Banner Title</label>
+                        <input 
+                          type="text" 
+                          value={remoteBroadcastTitle} 
+                          onChange={(e) => setRemoteBroadcastTitle(e.target.value)} 
+                          placeholder="e.g. 🎉 Festival Special Offer!" 
+                          className="login-input"
+                          style={{ background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)' }}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase' }}>Banner Message Body</label>
+                        <textarea 
+                          value={remoteBroadcastMessage} 
+                          onChange={(e) => setRemoteBroadcastMessage(e.target.value)} 
+                          placeholder="Upgrade to VIP Pro for ₹499 today & unlock unlimited billing!" 
+                          rows={2} 
+                          className="broadcast-textarea"
+                          style={{ height: '60px', padding: '10px', fontSize: '12px' }}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase' }}>Image Poster URL (Optional)</label>
+                        <input 
+                          type="text" 
+                          value={remoteBroadcastImageUrl} 
+                          onChange={(e) => setRemoteBroadcastImageUrl(e.target.value)} 
+                          placeholder="https://instamunim.com/assets/offer.png" 
+                          className="login-input"
+                          style={{ background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)' }}
+                        />
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <label style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase' }}>Button Text</label>
+                          <input 
+                            type="text" 
+                            value={remoteBroadcastCtaText} 
+                            onChange={(e) => setRemoteBroadcastCtaText(e.target.value)} 
+                            placeholder="PAY NOW ₹499" 
+                            className="login-input"
+                            style={{ background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)' }}
+                          />
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <label style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase' }}>Button Link (UPI / URL)</label>
+                          <input 
+                            type="text" 
+                            value={remoteBroadcastCtaLink} 
+                            onChange={(e) => setRemoteBroadcastCtaLink(e.target.value)} 
+                            placeholder="https://instamunim.com/pay" 
+                            className="login-input"
+                            style={{ background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)' }}
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* PLAY STORE 5-STAR BOOSTER BANNER */}
+                <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '24px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 4px 20px rgba(24,24,27,0.02)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
+                    <TrendingUp size={20} color="#10b981" />
+                    <h4 style={{ fontSize: '14px', fontWeight: 900, color: 'var(--text)', letterSpacing: '-0.2px' }}>⭐ PLAY STORE 5-STAR REVIEW BOOSTER</h4>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text)', display: 'block' }}>Enable 5-Star Rating Prompt</span>
+                      <span style={{ fontSize: '10px', color: '#71717a' }}>Encourages active merchants to rate app 5-stars</span>
+                    </div>
+                    <label className="switch-toggle" style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={remotePlayStoreBoosterEnabled} 
+                        onChange={(e) => setRemotePlayStoreBoosterEnabled(e.target.checked)} 
+                        style={{ opacity: 0, width: 0, height: 0 }}
+                      />
+                      <span style={{
+                        position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                        backgroundColor: remotePlayStoreBoosterEnabled ? '#10b981' : '#e4e4e7',
+                        transition: '.4s', borderRadius: '24px'
+                      }}>
+                        <span style={{
+                          position: 'absolute', content: '""', height: '18px', width: '18px', left: '3px', bottom: '3px',
+                          backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
+                          transform: remotePlayStoreBoosterEnabled ? 'translateX(20px)' : 'none'
+                        }} />
+                      </span>
+                    </label>
+                  </div>
+
+                  {remotePlayStoreBoosterEnabled && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase' }}>Google Play Store App Link</label>
+                      <input 
+                        type="text" 
+                        value={remotePlayStoreUrl} 
+                        onChange={(e) => setRemotePlayStoreUrl(e.target.value)} 
+                        placeholder="https://play.google.com/store/apps/details?id=com.instamunim.smartpos" 
+                        className="login-input"
+                        style={{ background: '#ffffff', border: '1px solid var(--border)', color: 'var(--text)' }}
+                      />
+                    </div>
+                  )}
+                </div>
+
                 {/* System & Update Section */}
                 <div style={{ background: '#ffffff', border: '1px solid var(--border)', borderRadius: '24px', padding: '28px', display: 'flex', flexDirection: 'column', gap: '20px', boxShadow: '0 4px 20px rgba(24,24,27,0.02)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>

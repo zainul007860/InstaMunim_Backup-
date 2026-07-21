@@ -2468,6 +2468,24 @@ Stay safe & eat healthy! 🍕
   const [imeiScanned, setImeiScanned] = useState("");
   const [lastScannedMsg, setLastScannedMsg] = useState("");
 
+  // Super Admin Remote Control States
+  const [isAccountSuspended, setIsAccountSuspended] = useState(false);
+  const [flagVoiceCashier, setFlagVoiceCashier] = useState(true);
+  const [flagAiScanner, setFlagAiScanner] = useState(true);
+  const [flagBuybackTracker, setFlagBuybackTracker] = useState(true);
+  const [flagUdhaarKhata, setFlagUdhaarKhata] = useState(true);
+  const [flagReportsCrm, setFlagReportsCrm] = useState(true);
+  const [flagInventoryMgmt, setFlagInventoryMgmt] = useState(true);
+  const [flagGstInvoicing, setFlagGstInvoicing] = useState(true);
+
+  // Global & Targeted Remote Configs
+  const [remoteAdFrequency, setRemoteAdFrequency] = useState(2);
+  const [remotePlayStoreBoosterEnabled, setRemotePlayStoreBoosterEnabled] = useState(false);
+  const [remotePlayStoreUrl, setRemotePlayStoreUrl] = useState("https://play.google.com/store/apps/details?id=com.instamunim.smartpos");
+  const [showTargetedBroadcastModal, setShowTargetedBroadcastModal] = useState(false);
+  const [targetedBroadcastData, setTargetedBroadcastData] = useState<any>(null);
+  const [showFeatureLockModal, setShowFeatureLockModal] = useState<string | null>(null);
+
   // Smart Menu Scanner states
   const [showScanMenuModal, setShowScanMenuModal] = useState(false);
   const [scanMenuImage, setScanMenuImage] = useState<string | null>(null);
@@ -3217,7 +3235,9 @@ Stay safe & eat healthy! 🍕
             setRemoteAlertText(config.inAppAlertMessage || "");
           }
 
-          // 4. Remote Ad Configuration Overrides
+          // 4. Remote Ad Configuration Overrides & Frequency Rate-Limiter
+          if (config.adFrequency) setRemoteAdFrequency(config.adFrequency);
+
           if (config.adsEnabled === false) {
             setAdProvider("none");
           } else if (config.adProvider) {
@@ -3231,6 +3251,27 @@ Stay safe & eat healthy! 🍕
               if (config.webAdDirectLink) setWebAdDirectLink(config.webAdDirectLink);
               if (config.webAdVignetteUrl) setWebAdVignetteUrl(config.webAdVignetteUrl);
               if (config.webAdVignetteKey) setWebAdVignetteKey(config.webAdVignetteKey);
+            }
+          }
+
+          // 5. Play Store 5-Star Rating Booster Banner
+          if (config.playStoreBoosterEnabled) {
+            setRemotePlayStoreBoosterEnabled(true);
+            if (config.playStoreUrl) setRemotePlayStoreUrl(config.playStoreUrl);
+          }
+
+          // 6. Targeted Pop-Up Banner Announcement
+          if (config.targetedBroadcastEnabled) {
+            const myStoreId = localStorage.getItem("saas_store_id") || "";
+            if (config.targetStoreId === "ALL" || (myStoreId && config.targetStoreId === myStoreId)) {
+              setTargetedBroadcastData({
+                title: config.broadcastTitle || "🎉 Announcement",
+                message: config.broadcastMessage || "",
+                image: config.broadcastImageUrl || "",
+                ctaText: config.broadcastCtaText || "OK",
+                ctaLink: config.broadcastCtaLink || ""
+              });
+              setShowTargetedBroadcastModal(true);
             }
           }
         }
@@ -3876,6 +3917,16 @@ Stay safe & eat healthy! 🍕
             if (settingsPacket.voiceEnabled !== undefined) setIsVoiceAnnouncerEnabled(settingsPacket.voiceEnabled);
             if (settingsPacket.voiceLang !== undefined) setVoiceAnnouncerLanguage(settingsPacket.voiceLang);
             if (settingsPacket.lang !== undefined) setLang(settingsPacket.lang);
+
+            // Hydrate Super Admin Remote Flags
+            if (settingsPacket.isSuspended === true) setIsAccountSuspended(true);
+            if (typeof settingsPacket.voiceCashier === 'boolean') setFlagVoiceCashier(settingsPacket.voiceCashier);
+            if (typeof settingsPacket.aiScanner === 'boolean') setFlagAiScanner(settingsPacket.aiScanner);
+            if (typeof settingsPacket.buybackTracker === 'boolean') setFlagBuybackTracker(settingsPacket.buybackTracker);
+            if (typeof settingsPacket.udhaarKhata === 'boolean') setFlagUdhaarKhata(settingsPacket.udhaarKhata);
+            if (typeof settingsPacket.reportsCrm === 'boolean') setFlagReportsCrm(settingsPacket.reportsCrm);
+            if (typeof settingsPacket.inventoryMgmt === 'boolean') setFlagInventoryMgmt(settingsPacket.inventoryMgmt);
+            if (typeof settingsPacket.gstInvoicing === 'boolean') setFlagGstInvoicing(settingsPacket.gstInvoicing);
 
             // Hydrate LocalStorage from DB
             localStorage.setItem("saas_store_upi_id", settingsPacket.upiId || "");
@@ -4540,9 +4591,10 @@ Stay safe & eat healthy! 🍕
       setFinanceDownPayment("");
       setFinanceFileId("");
 
-      // Trigger Interstitial Ad after every 2nd sale
+      // Trigger Interstitial Ad after every [remoteAdFrequency] sales
       if (!isSubscribed) {
-        const nextCount = (Number(localStorage.getItem('ad_sale_count') || '0') + 1) % 2;
+        const freq = remoteAdFrequency || 2;
+        const nextCount = (Number(localStorage.getItem('ad_sale_count') || '0') + 1) % freq;
         localStorage.setItem('ad_sale_count', nextCount.toString());
         
         if (nextCount === 0) {
@@ -9513,6 +9565,126 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* 🛑 ACCOUNT SUSPENDED LOCKOUT OVERLAY */}
+      {isAccountSuspended && (
+        <div className="fixed inset-0 z-[99999] bg-zinc-950/95 backdrop-blur-xl flex items-center justify-center p-6 text-center animate-fade-in">
+          <div className="max-w-md w-full bg-zinc-900 border border-red-500/30 rounded-3xl p-8 shadow-2xl space-y-6 text-white">
+            <div className="w-20 h-20 bg-red-500/10 border-2 border-red-500/40 text-red-500 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
+              <ShieldAlert className="w-10 h-10 animate-pulse" />
+            </div>
+            
+            <div className="space-y-2">
+              <span className="bg-red-500/20 text-red-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-red-500/30">
+                Account Suspended
+              </span>
+              <h2 className="text-2xl font-black text-white tracking-tight">Access Locked by Admin</h2>
+              <p className="text-xs text-zinc-400 leading-relaxed font-medium">
+                Your store account has been temporarily freezed by InstaMunim Admin due to verification or security compliance.
+              </p>
+            </div>
+
+            <div className="bg-zinc-950/60 p-4 rounded-2xl border border-zinc-800 text-left text-xs text-zinc-300 space-y-1">
+              <p className="font-bold text-white">Need help resolving this?</p>
+              <p className="text-zinc-400 text-[11px]">Contact official support to unfreeze your account instantly.</p>
+            </div>
+
+            <a
+              href="https://wa.me/919876543210?text=Hi%20InstaMunim%20Admin,%20my%20store%20account%20has%20been%20suspended.%20Please%20verify%20and%20unfreeze."
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 px-6 rounded-2xl font-black text-sm shadow-lg shadow-emerald-900/30 transition-all active:scale-95"
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>Contact Admin Support</span>
+            </a>
+          </div>
+        </div>
+      )}
+
+      {/* 📢 TARGETED POP-UP BANNER ANNOUNCEMENT MODAL */}
+      {showTargetedBroadcastModal && targetedBroadcastData && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="max-w-sm w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-5 text-center relative overflow-hidden">
+            <button
+              onClick={() => setShowTargetedBroadcastModal(false)}
+              className="absolute top-4 right-4 p-2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {targetedBroadcastData.image && (
+              <div className="w-full h-44 rounded-2xl overflow-hidden bg-zinc-100 dark:bg-zinc-800 shadow-sm border border-zinc-200 dark:border-zinc-700/50">
+                <img src={targetedBroadcastData.image} alt="Announcement" className="w-full h-full object-cover" />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <h3 className="text-xl font-black text-zinc-900 dark:text-white tracking-tight">{targetedBroadcastData.title}</h3>
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium">{targetedBroadcastData.message}</p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowTargetedBroadcastModal(false)}
+                className="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 py-3 rounded-2xl font-bold text-xs transition-colors"
+              >
+                Close
+              </button>
+              {targetedBroadcastData.ctaLink && (
+                <a
+                  href={targetedBroadcastData.ctaLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 bg-orange-600 hover:bg-orange-500 text-white py-3 rounded-2xl font-black text-xs shadow-lg shadow-orange-600/30 flex items-center justify-center gap-1.5 transition-all active:scale-95"
+                >
+                  <span>{targetedBroadcastData.ctaText || "Check Now"}</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🔒 FEATURE LOCK WARNING MODAL */}
+      {showFeatureLockModal && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="max-w-sm w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-5 text-center relative">
+            <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded-2xl flex items-center justify-center mx-auto">
+              <ShieldAlert className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest bg-amber-50 dark:bg-amber-950/60 px-2.5 py-1 rounded-full border border-amber-200 dark:border-amber-900/50">
+                Module Restricted
+              </span>
+              <h3 className="text-lg font-black text-zinc-900 dark:text-white">{showFeatureLockModal} Locked</h3>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed font-medium">
+                This feature has been locked by Admin for your current store profile. Contact support to upgrade your access.
+              </p>
+            </div>
+
+            <div className="flex gap-2.5">
+              <button
+                onClick={() => setShowFeatureLockModal(null)}
+                className="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-700 dark:text-zinc-300 py-3 rounded-2xl font-bold text-xs transition-colors"
+              >
+                Go Back
+              </button>
+              <a
+                href="https://wa.me/919876543210?text=Hi%20Admin,%20please%20unlock%20my%20feature%20access."
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 bg-orange-600 hover:bg-orange-500 text-white py-3 rounded-2xl font-black text-xs shadow-lg shadow-orange-600/30 flex items-center justify-center gap-1 transition-all active:scale-95"
+              >
+                <span>Request Access</span>
+                <MessageSquare className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* DESKTOP SHORTCUTS LAUNCHER BUTTON */}
       <button 
