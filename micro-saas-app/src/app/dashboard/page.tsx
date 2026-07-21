@@ -644,6 +644,7 @@ export default function Dashboard() {
   const [loginMobile, setLoginMobile] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
+  const [acceptTerms, setAcceptTerms] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [signupStoreName, setSignupStoreName] = useState("");
   const [ownerPassword, setOwnerPassword] = useState("admin");
@@ -3787,6 +3788,12 @@ Stay safe & eat healthy! 🍕
       setIsLoading(false);
       return;
     }
+
+    if (authMode === "signup" && !acceptTerms) {
+      setLoginError("Please accept Privacy Policy & Terms of Service to register.");
+      setIsLoading(false);
+      return;
+    }
     
     try {
       if (authMode === "login") {
@@ -5516,6 +5523,22 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                    {isDarkMode ? <Sun className="h-4 w-4 text-orange-500" /> : <Moon className="h-4 w-4 text-zinc-400" />}
                 </button>
               </div>
+
+              {authMode === "signup" && (
+                <div className="flex items-center gap-2.5 px-1 py-1 mb-2">
+                  <input 
+                    type="checkbox" 
+                    id="acceptTerms" 
+                    checked={acceptTerms} 
+                    onChange={e => setAcceptTerms(e.target.checked)}
+                    required
+                    className="w-4 h-4 rounded border-zinc-300 text-orange-500 focus:ring-orange-500 cursor-pointer"
+                  />
+                  <label htmlFor="acceptTerms" className="text-xs font-bold text-zinc-500 cursor-pointer uppercase tracking-tight">
+                    I accept <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-orange-500 underline hover:text-orange-600">Privacy Policy</a> & <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-orange-500 underline hover:text-orange-600">Terms</a>
+                  </label>
+                </div>
+              )}
 
 
               {loginError && <p className="text-red-500 text-[10px] font-bold uppercase text-center">{loginError}</p>}
