@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Users, ShoppingBag, TrendingUp, Search, ShieldCheck, 
   Settings, LogOut, ChevronRight, ArrowUpRight, Clock,
@@ -28,6 +28,7 @@ export default function AdminDashboard() {
   const [revealedPasswords, setRevealedPasswords] = useState<{[key: string]: boolean}>({});
   
   // Reset Account states
+  const [expandedStoreId, setExpandedStoreId] = useState<string | null>(null);
   const [resetStore, setResetStore] = useState<any | null>(null);
   const [confirmStoreName, setConfirmStoreName] = useState("");
   const [isResetting, setIsResetting] = useState(false);
@@ -718,7 +719,7 @@ export default function AdminDashboard() {
                 <thead><tr><th>Store</th><th>Contact</th><th>Password</th><th>Category</th><th>Status (Last Activity)</th><th>Action</th></tr></thead>
                 <tbody>{filteredStores.map(s => {
                   // Find the merchant's most recent sale
-                  const merchantSales = allSales.filter(sale => sale.store_id === s.id);
+                  const merchantSales = allSales.filter(sale => sale.store_id === s.id || (sale.stores && sale.stores.store_name === s.store_name));
                   let statusText = "No Sales";
                   let isActive = false;
                   let color = "#a1a1aa"; // Gray
@@ -744,136 +745,387 @@ export default function AdminDashboard() {
                     }
                   }
 
+                  // Parse JSON_CFG store config metrics
+                  let gstin = "Not Added";
+                  let upiId = "Not Configured";
+                  let upiName = "N/A";
+                  let address = "N/A";
+                  let logoUrl: string | null = null;
+                  let rent = s.monthly_rent || 0;
+                  let businessType = s.business_type || "Restaurant/Cafe";
+
+                  const logoVal = s.store_logo || "";
+                  if (logoVal.startsWith("JSON_CFG:")) {
+                    try {
+                      const cfg = JSON.parse(logoVal.substring(9));
+                      if (cfg.gstin) gstin = cfg.gstin;
+                      if (cfg.upiId) upiId = cfg.upiId;
+                      if (cfg.upiName) upiName = cfg.upiName;
+                      if (cfg.storeAddress) address = cfg.storeAddress;
+                      if (cfg.monthlyRent) rent = cfg.monthlyRent;
+                      if (cfg.businessType) businessType = cfg.businessType;
+                      if (cfg.logo) logoUrl = cfg.logo;
+                    } catch (e) {
+                      console.warn("Parse error for store logo:", e);
+                    }
+                  } else if (logoVal.startsWith("http") || logoVal.startsWith("data:image")) {
+                    logoUrl = logoVal;
+                  }
+
+                  // Live calculated revenue stats for merchant
+                  const totalRev = merchantSales.reduce((acc, sale) => acc + (Number(sale.total_price) || 0), 0);
+                  const totalCount = merchantSales.length;
+                  const avgValue = totalCount > 0 ? Math.round(totalRev / totalCount) : 0;
+                  const cashVal = merchantSales.filter(sale => (sale.payment_type || "").toLowerCase() === "cash").reduce((acc, sale) => acc + (Number(sale.total_price) || 0), 0);
+                  const onlineVal = merchantSales.filter(sale => (sale.payment_type || "").toLowerCase() === "online").reduce((acc, sale) => acc + (Number(sale.total_price) || 0), 0);
+                  const udhaarVal = merchantSales.filter(sale => (sale.payment_type || "").toLowerCase() === "udhaar").reduce((acc, sale) => acc + (Number(sale.total_price) || 0), 0);
+
+                  const isExpanded = expandedStoreId === s.id;
+
                   return (
-                    <tr key={s.id}>
-                      <td>{s.store_name}</td>
-                      <td>{s.owner_mobile}</td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontFamily: 'monospace', fontWeight: 'bold', fontSize: '13px' }}>
-                            {revealedPasswords[s.id] ? (s.password || 'N/A') : "••••••••"}
-                          </span>
-                          <button 
-                            type="button"
-                            onClick={() => togglePasswordVisibility(s.id)} 
-                            style={{ 
-                              background: 'none', 
-                              border: 'none', 
-                              color: '#71717a', 
-                              cursor: 'pointer', 
-                              padding: '4px',
+                    <React.Fragment key={s.id}>
+                      <tr 
+                        style={{ cursor: 'pointer', background: isExpanded ? 'rgba(249, 115, 22, 0.05)' : 'transparent' }}
+                      >
+                        <td onClick={() => setExpandedStoreId(isExpanded ? null : s.id)} style={{ fontWeight: 'bold' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '8px',
+                              background: '#f97316',
+                              color: 'white',
                               display: 'flex',
                               alignItems: 'center',
-                              outline: 'none'
-                            }}
-                            title={revealedPasswords[s.id] ? "Hide Password" : "View Password"}
-                          >
-                            {revealedPasswords[s.id] ? <EyeOff size={15} /> : <Eye size={15} />}
-                          </button>
-                        </div>
-                      </td>
-                      <td>
-                        <select
-                          value={s.business_type || "Restaurant/Cafe"}
-                          onChange={async (e) => {
-                            const newBType = e.target.value;
-                            setUpdatingStoreId(s.id);
-                            try {
-                              // We must update it inside the store_logo JSON payload packet to match the schema-free setup
-                              let updatedLogoVal = "";
-                              const currentLogo = s.store_logo || "";
-                              if (currentLogo.startsWith("JSON_CFG:")) {
-                                try {
-                                  const parsed = JSON.parse(currentLogo.substring(9));
-                                  parsed.businessType = newBType;
-                                  updatedLogoVal = "JSON_CFG:" + JSON.stringify(parsed);
-                                } catch (err) {
-                                  // fallback if parse fails
-                                  updatedLogoVal = "JSON_CFG:" + JSON.stringify({ businessType: newBType });
+                              justifyContent: 'center',
+                              fontWeight: 900,
+                              fontSize: '13px',
+                              overflow: 'hidden',
+                              flexShrink: 0
+                            }}>
+                              {logoUrl ? (
+                                <img src={logoUrl} alt={s.store_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              ) : (
+                                s.store_name?.charAt(0)?.toUpperCase() || "S"
+                              )}
+                            </div>
+                            <span>{s.store_name}</span>
+                          </div>
+                        </td>
+                        <td>{s.owner_mobile}</td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontFamily: 'monospace', fontWeight: 'bold', fontSize: '13px' }}>
+                              {revealedPasswords[s.id] ? (s.password || 'N/A') : "••••••••"}
+                            </span>
+                            <button 
+                              type="button"
+                              onClick={() => togglePasswordVisibility(s.id)} 
+                              style={{ 
+                                background: 'none', 
+                                border: 'none', 
+                                color: '#71717a', 
+                                cursor: 'pointer', 
+                                padding: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                outline: 'none'
+                              }}
+                              title={revealedPasswords[s.id] ? "Hide Password" : "View Password"}
+                            >
+                              {revealedPasswords[s.id] ? <EyeOff size={15} /> : <Eye size={15} />}
+                            </button>
+                          </div>
+                        </td>
+                        <td>
+                          <select
+                            value={s.business_type || businessType || "Restaurant/Cafe"}
+                            onChange={async (e) => {
+                              const newBType = e.target.value;
+                              setUpdatingStoreId(s.id);
+                              try {
+                                let updatedLogoVal = "";
+                                const currentLogo = s.store_logo || "";
+                                if (currentLogo.startsWith("JSON_CFG:")) {
+                                  try {
+                                    const parsed = JSON.parse(currentLogo.substring(9));
+                                    parsed.businessType = newBType;
+                                    updatedLogoVal = "JSON_CFG:" + JSON.stringify(parsed);
+                                  } catch (err) {
+                                    updatedLogoVal = "JSON_CFG:" + JSON.stringify({ businessType: newBType });
+                                  }
+                                } else {
+                                  updatedLogoVal = "JSON_CFG:" + JSON.stringify({ businessType: newBType, logo: currentLogo });
                                 }
-                              } else {
-                                // if it's an old legacy format (like a raw image or text), serialize default settings with custom businessType
-                                updatedLogoVal = "JSON_CFG:" + JSON.stringify({ businessType: newBType, logo: currentLogo });
-                              }
 
-                              const { error } = await supabase
-                                .from('stores')
-                                .update({ store_logo: updatedLogoVal })
-                                .eq('id', s.id);
-                              if (error) throw error;
-                              setStores(prev => prev.map(store => store.id === s.id ? { ...store, store_logo: updatedLogoVal, business_type: newBType } : store));
-                            } catch (err: any) {
-                              alert("Failed to update business type: " + (err.message || err));
-                            } finally {
-                              setUpdatingStoreId(null);
-                            }
-                          }}
-                          disabled={updatingStoreId === s.id}
-                          style={{
-                            padding: '6px 8px',
-                            background: 'var(--card-bg)',
-                            color: 'var(--text)',
-                            border: '1px solid var(--border)',
-                            borderRadius: '8px',
-                            fontSize: '11px',
-                            fontWeight: 'bold',
-                            outline: 'none',
-                            cursor: 'pointer',
-                            width: '160px'
-                          }}
-                        >
-                          <option value="Restaurant/Cafe">Restaurant / Cafe / Food Stall</option>
-                          <option value="Kirana/Grocery">Kirana / Grocery / General Store</option>
-                          <option value="Saloon/Spa">Saloon / Spa / Beauty Parlour</option>
-                          <option value="Clothing/Retail">Clothing / Footwear / Retail Shop</option>
-                          <option value="Laundry">Laundry Business</option>
-                          <option value="Electric">Electric Shop</option>
-                          <option value="Automobile">Automobile Parts Shop</option>
-                          <option value="Gym">GYM / Fitness Center</option>
-                          <option value="Cosmetic">Cosmetic Shop</option>
-                          <option value="Stationary">Stationary & Book Shop</option>
-                          <option value="Mobile/Electronics">Mobile & Electronics Shop</option>
-                        </select>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ 
-                            width: '8px', 
-                            height: '8px', 
-                            borderRadius: '50%', 
-                            background: color,
-                            display: 'inline-block'
-                          }} />
-                          <span style={{ 
-                            fontSize: '11px', 
-                            fontWeight: 'bold', 
-                            color: color,
-                            letterSpacing: '0.3px'
-                          }}>
-                            {statusText}
-                          </span>
-                        </div>
-                      </td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <button onClick={() => openWhatsApp(s.owner_mobile)} style={{ padding: '8px', background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', border: '1px solid #f97316', borderRadius: '10px', cursor: 'pointer' }} title="WhatsApp Merchant"><MessageSquare size={16} /></button>
-                          <button 
-                            onClick={() => initiateReset(s)} 
-                            style={{ 
-                              padding: '8px', 
-                              background: 'rgba(239, 68, 68, 0.1)', 
-                              color: '#ef4444', 
-                              border: '1px solid #ef4444', 
-                              borderRadius: '10px', 
-                              cursor: 'pointer'
+                                const { error } = await supabase
+                                  .from('stores')
+                                  .update({ store_logo: updatedLogoVal })
+                                  .eq('id', s.id);
+                                if (error) throw error;
+                                setStores(prev => prev.map(store => store.id === s.id ? { ...store, store_logo: updatedLogoVal, business_type: newBType } : store));
+                              } catch (err: any) {
+                                alert("Failed to update business type: " + (err.message || err));
+                              } finally {
+                                setUpdatingStoreId(null);
+                              }
                             }}
-                            title="Reset Sales & Expenses Ledger"
+                            disabled={updatingStoreId === s.id}
+                            style={{
+                              padding: '6px 8px',
+                              background: 'var(--card-bg)',
+                              color: 'var(--text)',
+                              border: '1px solid var(--border)',
+                              borderRadius: '8px',
+                              fontSize: '11px',
+                              fontWeight: 'bold',
+                              outline: 'none',
+                              cursor: 'pointer',
+                              width: '160px'
+                            }}
                           >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                            <option value="Restaurant/Cafe">Restaurant / Cafe / Food Stall</option>
+                            <option value="Kirana/Grocery">Kirana / Grocery / General Store</option>
+                            <option value="Saloon/Spa">Saloon / Spa / Beauty Parlour</option>
+                            <option value="Clothing/Retail">Clothing / Footwear / Retail Shop</option>
+                            <option value="Laundry">Laundry Business</option>
+                            <option value="Electric">Electric Shop</option>
+                            <option value="Automobile">Automobile Parts Shop</option>
+                            <option value="Gym">GYM / Fitness Center</option>
+                            <option value="Cosmetic">Cosmetic Shop</option>
+                            <option value="Stationary">Stationary & Book Shop</option>
+                            <option value="Mobile/Electronics">Mobile & Electronics Shop</option>
+                          </select>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ 
+                              width: '8px', 
+                              height: '8px', 
+                              borderRadius: '50%', 
+                              background: color,
+                              display: 'inline-block'
+                            }} />
+                            <span style={{ 
+                              fontSize: '11px', 
+                              fontWeight: 'bold', 
+                              color: color,
+                              letterSpacing: '0.3px'
+                            }}>
+                              {statusText}
+                            </span>
+                          </div>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <button 
+                              onClick={() => setExpandedStoreId(isExpanded ? null : s.id)} 
+                              style={{ 
+                                padding: '8px 12px', 
+                                background: isExpanded ? '#f97316' : 'rgba(249, 115, 22, 0.1)', 
+                                color: isExpanded ? '#ffffff' : '#f97316', 
+                                border: '1px solid #f97316', 
+                                borderRadius: '10px', 
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                fontSize: '11px',
+                                fontWeight: 800
+                              }} 
+                              title="Inspect Full Merchant Profile & Revenue"
+                            >
+                              <Eye size={15} />
+                              <span>{isExpanded ? "HIDE" : "INSPECT"}</span>
+                            </button>
+                            <button onClick={() => openWhatsApp(s.owner_mobile)} style={{ padding: '8px', background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', border: '1px solid #f97316', borderRadius: '10px', cursor: 'pointer' }} title="WhatsApp Merchant"><MessageSquare size={16} /></button>
+                            <button 
+                              onClick={() => initiateReset(s)} 
+                              style={{ 
+                                padding: '8px', 
+                                background: 'rgba(239, 68, 68, 0.1)', 
+                                color: '#ef4444', 
+                                border: '1px solid #ef4444', 
+                                borderRadius: '10px', 
+                                cursor: 'pointer'
+                              }}
+                              title="Reset Sales & Expenses Ledger"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+
+                      {/* EXPANDED MERCHANT INSPECTION CARD */}
+                      {isExpanded && (
+                        <tr>
+                          <td colSpan={6} style={{ padding: '0 0 20px 0', background: 'var(--card-bg)', borderBottom: '2px solid var(--border)' }}>
+                            <div style={{
+                              background: '#ffffff',
+                              border: '1px solid #e4e4e7',
+                              borderRadius: '20px',
+                              margin: '12px 8px',
+                              padding: '24px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '20px',
+                              boxShadow: '0 10px 30px rgba(0,0,0,0.04)'
+                            }}>
+                              {/* Header section with Store Logo & Verification Badges */}
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                  <div style={{
+                                    width: '64px',
+                                    height: '64px',
+                                    borderRadius: '18px',
+                                    background: '#f97316',
+                                    color: 'white',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '26px',
+                                    fontWeight: 900,
+                                    overflow: 'hidden',
+                                    boxShadow: '0 6px 16px rgba(249,115,22,0.25)',
+                                    flexShrink: 0
+                                  }}>
+                                    {logoUrl ? (
+                                      <img src={logoUrl} alt={s.store_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    ) : (
+                                      s.store_name?.charAt(0)?.toUpperCase() || "S"
+                                    )}
+                                  </div>
+                                  <div>
+                                    <h3 style={{ fontSize: '20px', fontWeight: 900, color: '#09090b', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                      {s.store_name}
+                                      <span style={{ fontSize: '11px', background: '#f4f4f5', color: '#71717a', padding: '2px 8px', borderRadius: '6px', fontWeight: 700 }}>
+                                        ID: {s.id?.substring(0, 8)}
+                                      </span>
+                                    </h3>
+                                    <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: '#71717a', fontWeight: 600 }}>
+                                      📞 Owner Mobile: <strong>{s.owner_mobile}</strong> | 📅 Registered: {s.created_at ? format(new Date(s.created_at), "dd MMM yyyy, hh:mm a") : "N/A"}
+                                    </p>
+                                    <p style={{ margin: '3px 0 0 0', fontSize: '12px', color: '#ea580c', fontWeight: 800 }}>
+                                      🏷️ Category: {businessType}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Merchant Verification Checklist Badges */}
+                                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                                  <span style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '20px',
+                                    fontSize: '11px',
+                                    fontWeight: 800,
+                                    background: logoUrl ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.08)',
+                                    color: logoUrl ? '#10b981' : '#ef4444',
+                                    border: `1px solid ${logoUrl ? '#10b981' : '#fca5a5'}`
+                                  }}>
+                                    {logoUrl ? "🟢 Logo Uploaded" : "🔴 Logo Missing"}
+                                  </span>
+
+                                  <span style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '20px',
+                                    fontSize: '11px',
+                                    fontWeight: 800,
+                                    background: upiId !== "Not Configured" ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.08)',
+                                    color: upiId !== "Not Configured" ? '#10b981' : '#ef4444',
+                                    border: `1px solid ${upiId !== "Not Configured" ? '#10b981' : '#fca5a5'}`
+                                  }}>
+                                    {upiId !== "Not Configured" ? `🟢 UPI Active` : "🔴 UPI Not Setup"}
+                                  </span>
+
+                                  <span style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '20px',
+                                    fontSize: '11px',
+                                    fontWeight: 800,
+                                    background: gstin !== "Not Added" ? 'rgba(16, 185, 129, 0.1)' : 'rgba(113, 113, 122, 0.08)',
+                                    color: gstin !== "Not Added" ? '#10b981' : '#71717a',
+                                    border: `1px solid ${gstin !== "Not Added" ? '#10b981' : '#e4e4e7'}`
+                                  }}>
+                                    {gstin !== "Not Added" ? `🟢 GSTIN Added` : "⚪ Non-GST Store"}
+                                  </span>
+
+                                  <span style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '20px',
+                                    fontSize: '11px',
+                                    fontWeight: 800,
+                                    background: totalCount > 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                                    color: totalCount > 0 ? '#10b981' : '#f59e0b',
+                                    border: `1px solid ${totalCount > 0 ? '#10b981' : '#fcd34d'}`
+                                  }}>
+                                    {totalCount > 0 ? `🟢 Active (${totalCount} Sales)` : "⚠️ New Store (0 Sales)"}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Details Metrics Grid */}
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px' }}>
+                                <div style={{ background: '#fafafa', padding: '14px 16px', borderRadius: '14px', border: '1px solid #f4f4f5' }}>
+                                  <span style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Gross Sales</span>
+                                  <h4 style={{ fontSize: '20px', fontWeight: 900, color: '#ea580c', margin: '4px 0 0 0' }}>₹{totalRev.toLocaleString('en-IN')}</h4>
+                                </div>
+
+                                <div style={{ background: '#fafafa', padding: '14px 16px', borderRadius: '14px', border: '1px solid #f4f4f5' }}>
+                                  <span style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Orders / Bills</span>
+                                  <h4 style={{ fontSize: '20px', fontWeight: 900, color: '#09090b', margin: '4px 0 0 0' }}>{totalCount} Bills</h4>
+                                </div>
+
+                                <div style={{ background: '#fafafa', padding: '14px 16px', borderRadius: '14px', border: '1px solid #f4f4f5' }}>
+                                  <span style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Avg Order Value</span>
+                                  <h4 style={{ fontSize: '20px', fontWeight: 900, color: '#09090b', margin: '4px 0 0 0' }}>₹{avgValue}</h4>
+                                </div>
+
+                                <div style={{ background: '#fafafa', padding: '14px 16px', borderRadius: '14px', border: '1px solid #f4f4f5' }}>
+                                  <span style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Cash Revenue</span>
+                                  <h4 style={{ fontSize: '20px', fontWeight: 900, color: '#10b981', margin: '4px 0 0 0' }}>₹{cashVal.toLocaleString('en-IN')}</h4>
+                                </div>
+
+                                <div style={{ background: '#fafafa', padding: '14px 16px', borderRadius: '14px', border: '1px solid #f4f4f5' }}>
+                                  <span style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Online UPI Sales</span>
+                                  <h4 style={{ fontSize: '20px', fontWeight: 900, color: '#3b82f6', margin: '4px 0 0 0' }}>₹{onlineVal.toLocaleString('en-IN')}</h4>
+                                </div>
+
+                                <div style={{ background: '#fafafa', padding: '14px 16px', borderRadius: '14px', border: '1px solid #f4f4f5' }}>
+                                  <span style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Udhaar Khata Ledger</span>
+                                  <h4 style={{ fontSize: '20px', fontWeight: 900, color: '#ef4444', margin: '4px 0 0 0' }}>₹{udhaarVal.toLocaleString('en-IN')}</h4>
+                                </div>
+
+                                <div style={{ background: '#fafafa', padding: '14px 16px', borderRadius: '14px', border: '1px solid #f4f4f5' }}>
+                                  <span style={{ fontSize: '10px', fontWeight: 800, color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Monthly Rent Target</span>
+                                  <h4 style={{ fontSize: '20px', fontWeight: 900, color: '#71717a', margin: '4px 0 0 0' }}>₹{rent || 0}</h4>
+                                </div>
+                              </div>
+
+                              {/* Extended Store Information Box */}
+                              <div style={{ background: '#fafafa', padding: '16px', borderRadius: '14px', border: '1px solid #f4f4f5', fontSize: '12px', color: '#27272a' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+                                  <div>
+                                    <span style={{ color: '#71717a', fontWeight: 700 }}>Store Address:</span>
+                                    <p style={{ margin: '2px 0 0 0', fontWeight: 800 }}>{address}</p>
+                                  </div>
+
+                                  <div>
+                                    <span style={{ color: '#71717a', fontWeight: 700 }}>UPI Payment Configuration:</span>
+                                    <p style={{ margin: '2px 0 0 0', fontWeight: 800 }}>UPI ID: {upiId} ({upiName})</p>
+                                  </div>
+
+                                  <div>
+                                    <span style={{ color: '#71717a', fontWeight: 700 }}>GST Profile (GSTIN):</span>
+                                    <p style={{ margin: '2px 0 0 0', fontWeight: 800 }}>{gstin}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
                   );
                 })}</tbody>
              </table>
