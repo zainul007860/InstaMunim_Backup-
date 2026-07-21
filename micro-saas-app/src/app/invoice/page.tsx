@@ -536,8 +536,33 @@ function InvoiceContent() {
   // Determine which logo to show
   const finalLogo = cloudLogo || (logoFromUrl.startsWith("http") ? logoFromUrl : null);
 
-  const itemDelimiter = items.includes('|') ? '|' : ',';
-  const parsedItems = items.split(itemDelimiter).map(i => {
+  const splitSmartItems = (str: string) => {
+    if (str.includes('|')) return str.split('|');
+    const result: string[] = [];
+    let current = "";
+    let parenDepth = 0;
+    let bracketDepth = 0;
+    
+    for (let i = 0; i < str.length; i++) {
+      const char = str[i];
+      if (char === '(') parenDepth++;
+      else if (char === ')') parenDepth = Math.max(0, parenDepth - 1);
+      else if (char === '[') bracketDepth++;
+      else if (char === ']') bracketDepth = Math.max(0, bracketDepth - 1);
+      
+      if (char === ',' && parenDepth === 0 && bracketDepth === 0) {
+        result.push(current);
+        current = "";
+      } else {
+        current += char;
+      }
+    }
+    if (current) result.push(current);
+    return result;
+  };
+
+  const rawItemsList = splitSmartItems(items);
+  const parsedItems = rawItemsList.map(i => {
     const lastColonIndex = i.lastIndexOf(':');
     let nameStr = "";
     let priceStr = "0";
