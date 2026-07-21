@@ -65,9 +65,12 @@ function InvoiceContent() {
     }
     const runAdGen = async () => {
       try {
-        const bannerPrompt = `Professional commercial studio photography social media ad poster banner. A realistic close-up shot of '${bannerProd}' in premium packaging, set on a modern studio surface with clean lighting. Cinematic lighting, sharp focus, 8k resolution, high-end commercial setup. Plain background with no text, letters, or words.`;
+        const customSeedStr = searchParams.get("sd");
+        const customPrompt = searchParams.get("pr");
+
+        const seed = customSeedStr ? Number(customSeedStr) : (Math.abs(restName.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)) % 1000000);
+        const bannerPrompt = customPrompt ? customPrompt : `Professional commercial studio photography social media ad poster banner. A realistic close-up shot of '${bannerProd}' in premium packaging, set on a modern studio surface with clean lighting. Cinematic lighting, sharp focus, 8k resolution, high-end commercial setup. Plain background with no text, letters, or words.`;
         const encodedPrompt = encodeURIComponent(bannerPrompt);
-        const seed = Math.abs(restName.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)) % 1000000;
         const bgUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}&model=flux`;
 
         const drawTextWithFit = (

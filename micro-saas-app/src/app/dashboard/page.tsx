@@ -1253,6 +1253,8 @@ export default function Dashboard() {
   const [productName, setProductName] = useState("");
   const [aiImageUrl, setAiImageUrl] = useState("");
   const [rawAiImageUrl, setRawAiImageUrl] = useState("");
+  const [aiBannerSeed, setAiBannerSeed] = useState<number | null>(null);
+  const [aiBannerPrompt, setAiBannerPrompt] = useState<string>("");
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [imageGenerationError, setImageGenerationError] = useState("");
   const [uploadedBannerUrl, setUploadedBannerUrl] = useState<string | null>(null);
@@ -1854,6 +1856,8 @@ Requirements for the generated image prompt:
         }
 
         const seed = Math.floor(Math.random() * 1000000);
+        setAiBannerSeed(seed);
+        setAiBannerPrompt(cleanPrompt);
         const encodedPrompt = encodeURIComponent(cleanPrompt);
         const generatedUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}&model=flux`;
       
@@ -2092,7 +2096,9 @@ Requirements for the generated image prompt:
         : "https://www.instamunim.com";
       
       const imgParam = finalImgUrl ? `&img=${encodeURIComponent(finalImgUrl)}` : "";
-      const viewerUrl = `${baseUrl}/invoice?banner=true${imgParam}&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${ownerMobile}`;
+      const seedParam = aiBannerSeed ? `&sd=${aiBannerSeed}` : "";
+      const promptParam = aiBannerPrompt ? `&pr=${encodeURIComponent(aiBannerPrompt)}` : "";
+      const viewerUrl = `${baseUrl}/invoice?banner=true${imgParam}${seedParam}${promptParam}&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${ownerMobile}`;
       const customMsg = `Special offer for you, ${name}! 🛍️\n\nShop: ${restaurantName}\nOffer: ${offerTitle}\nDeal: ${discountDetails} on ${productName}\n\nView Banner: ${viewerUrl}`;
       window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(customMsg)}`, "_blank");
     } catch (err: any) {
