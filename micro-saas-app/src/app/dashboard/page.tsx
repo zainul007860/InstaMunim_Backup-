@@ -4788,16 +4788,21 @@ Stay safe & eat healthy! 🍕
       invoiceUrl += "&free=true";
     }
 
-    let displayItems = (lastOrderDetails.item || "").split("[COMM:")[0].trim();
-    if (extraMatch) {
-      displayItems = displayItems.split("[EXTRA:")[0].trim();
-    }
-    displayItems = displayItems.split("[DISCOUNT:")[0].trim();
+    let displayItems = (lastOrderDetails.item || "")
+      .split("[COMM:")[0]
+      .split("[EXTRA:")[0]
+      .split("[DISCOUNT:")[0]
+      .split("[FINANCE:")[0]
+      .trim();
+
     if (extraMatch) {
       displayItems += `\n${extraMatch[1]}: ₹${extraMatch[2]}`;
     }
     if (discountMatch) {
       displayItems += `\nDiscount: -₹${discountMatch[1]}`;
+    }
+    if (financeMatch) {
+      displayItems += `\n─────────────────────\n🏦 *FINANCE DETAILS:*\nCompany: ${financeMatch[1]}\nLoan Amount: ₹${financeMatch[2]}\nDown Payment: ₹${financeMatch[3]}\nFile ID: ${financeMatch[4]}`;
     }
 
     let msg = whatsappInvoiceTemplate
@@ -4845,17 +4850,23 @@ Stay safe & eat healthy! 🍕
     const invoiceUrl = getInvoiceUrlForSale(s);
     const extraMatch = (s.item || "").match(/\[EXTRA:(.+):(\d+)\]/);
     const discountMatch = (s.item || "").match(/\[DISCOUNT:(\d+(\.\d+)?)\]/);
+    const financeMatch = (s.item || "").match(/\[FINANCE:([^:]+):(\d+(?:\.\d+)?):(\d+(?:\.\d+)?):([^:]+):(Pending|Settled)\]/);
 
-    let displayItems = (s.item || "").split("[COMM:")[0].trim();
-    if (extraMatch) {
-      displayItems = displayItems.split("[EXTRA:")[0].trim();
-    }
-    displayItems = displayItems.split("[DISCOUNT:")[0].trim();
+    let displayItems = (s.item || "")
+      .split("[COMM:")[0]
+      .split("[EXTRA:")[0]
+      .split("[DISCOUNT:")[0]
+      .split("[FINANCE:")[0]
+      .trim();
+
     if (extraMatch) {
       displayItems += `\n${extraMatch[1]}: ₹${extraMatch[2]}`;
     }
     if (discountMatch) {
       displayItems += `\nDiscount: -₹${discountMatch[1]}`;
+    }
+    if (financeMatch) {
+      displayItems += `\n─────────────────────\n🏦 *FINANCE DETAILS:*\nCompany: ${financeMatch[1]}\nLoan Amount: ₹${financeMatch[2]}\nDown Payment: ₹${financeMatch[3]}\nFile ID: ${financeMatch[4]}`;
     }
 
     let msg = whatsappInvoiceTemplate
