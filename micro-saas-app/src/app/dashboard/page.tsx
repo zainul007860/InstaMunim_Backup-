@@ -286,11 +286,11 @@ export const BUSINESS_CATEGORIES: Record<string, {
       { name: "Masala Chai", price: 20 }
     ],
     templates: [
-      { label: "20% OFF", msg: "Hi [NAME], we miss you at [SHOP]! 🍕 Get 20% OFF on your next order today! Use code: MISSYOU20" },
-      { label: "BOGO Offer", msg: "Weekend Special at [SHOP]! 🍔 Buy 1 Get 1 FREE on all large orders! Valid only for today." },
-      { label: "New Menu", msg: "Hi [NAME], check out our NEW items at [SHOP]! 😋 From Paneer Tikka to fresh shakes, try them now!" },
-      { label: "Free Delivery", msg: "Hungry [NAME]? 🚚 Free Delivery for you from [SHOP] for the next 2 hours! Order now." },
-      { label: "Weekend", msg: "Happy Weekend [NAME]! 🎉 Relax and enjoy a delicious meal from [SHOP]. We've got special treats waiting!" }
+      { label: "20% OFF", msgEn: "Hi [NAME], we miss you at [SHOP]! 🍕 Get 20% OFF on your next order today! Use code: MISSYOU20", msgHi: "नमस्ते [NAME], [SHOP] में आपकी याद आ रही है! 🍕 आज ही ऑर्डर पर 20% की छूट पाएं! कोड: MISSYOU20", msg: "Hi [NAME], we miss you at [SHOP]! 🍕 Get 20% OFF on your next order today! Use code: MISSYOU20\n\nनमस्ते [NAME], [SHOP] में आपकी याद आ रही है! 🍕 आज ही ऑर्डर पर 20% की छूट पाएं! कोड: MISSYOU20" },
+      { label: "BOGO Offer", msgEn: "Weekend Special at [SHOP]! 🍔 Buy 1 Get 1 FREE on all large orders! Valid only for today.", msgHi: "वीकेंड स्पेशल [SHOP] पर! 🍔 1 खरीदें और 1 मुफ़्त पाएं! ऑफर सिर्फ आज के लिए मान्य है।", msg: "Weekend Special at [SHOP]! 🍔 Buy 1 Get 1 FREE on all large orders! Valid only for today.\n\nवीकेंड स्पेशल [SHOP] पर! 🍔 1 खरीदें और 1 मुफ़्त पाएं! ऑफर सिर्फ आज के लिए मान्य है।" },
+      { label: "New Menu", msgEn: "Hi [NAME], check out our NEW items at [SHOP]! 😋 Try our delicious dishes & fresh beverages today!", msgHi: "नमस्ते [NAME], [SHOP] में नए स्वादिष्‍ट डिश और ड्रिंक्स आ चुके हैं! 😋 आज ही आकर ट्राई करें!", msg: "Hi [NAME], check out our NEW items at [SHOP]! 😋 Try our delicious dishes & fresh beverages today!\n\nनमस्ते [NAME], [SHOP] में नए स्वादिष्‍ट डिश और ड्रिंक्स आ चुके हैं! 😋 आज ही आकर ट्राई करें!" },
+      { label: "Free Delivery", msgEn: "Hungry [NAME]? 🚚 Free Delivery for you from [SHOP] for the next 2 hours! Order now.", msgHi: "भूख लगी है [NAME]? 🚚 [SHOP] से अगले 2 घंटे में पाएं मुफ़्त होम डिलीवरी! अभी ऑर्डर करें।", msg: "Hungry [NAME]? 🚚 Free Delivery for you from [SHOP] for the next 2 hours! Order now.\n\nभूख लगी है [NAME]? 🚚 [SHOP] से अगले 2 घंटे में पाएं मुफ़्त होम डिलीवरी! अभी ऑर्डर करें।" },
+      { label: "Weekend", msgEn: "Happy Weekend [NAME]! 🎉 Relax and enjoy a delicious meal from [SHOP]. Special treats waiting!", msgHi: "हैप्पी वीकेंड [NAME]! 🎉 आज [SHOP] से अपने पसंदीदा खाने का आनंद लें। खास ट्रीट आपका इंतज़ार कर रही है!", msg: "Happy Weekend [NAME]! 🎉 Relax and enjoy a delicious meal from [SHOP]. Special treats waiting!\n\nहैप्पी वीकेंड [NAME]! 🎉 आज [SHOP] से अपने पसंदीदा खाने का आनंद लें। खास ट्रीट आपका इंतज़ार कर रही है!" }
     ],
     categories: ["Main Course", "Starters", "Chinese", "Beverages", "Snacks", "Breads", "Desserts/Sweets", "Others"]
   },
@@ -306,11 +306,11 @@ export const BUSINESS_CATEGORIES: Record<string, {
       { name: "Maggi 2-Min Noodles", price: 14 }
     ],
     templates: [
-      { label: "20% OFF", msg: "Hi [NAME], we miss you at [SHOP]! 🛒 Get 20% OFF on your grocery billing today! Use code: KIRANA20" },
-      { label: "Special Deal", msg: "Special Deal at [SHOP]! 🌾 Basmati Rice & Mustard Oil at discount prices! Valid till stocks last." },
-      { label: "New Stock", msg: "Hi [NAME], new fresh stock has arrived at [SHOP]! 🍎 Visit us today for all your daily needs!" },
-      { label: "Free Delivery", msg: "Need groceries [NAME]? 🚚 Free Home Delivery from [SHOP] for orders above ₹500! Order now." },
-      { label: "Weekly Deal", msg: "Happy Weekend [NAME]! 🛍️ Restock your pantry from [SHOP] with flat discounts on monthly essentials!" }
+      { label: "20% OFF", msgEn: "Hi [NAME], we miss you at [SHOP]! 🛒 Get 20% OFF on your grocery billing today! Use code: KIRANA20", msgHi: "नमस्ते [NAME], [SHOP] में आपकी याद आ रही है! 🛒 आज ही राशन बिलिंग पर 20% की छूट पाएं! कोड: KIRANA20", msg: "Hi [NAME], we miss you at [SHOP]! 🛒 Get 20% OFF on your grocery billing today! Use code: KIRANA20\n\nनमस्ते [NAME], [SHOP] में आपकी याद आ रही है! 🛒 आज ही राशन बिलिंग पर 20% की छूट पाएं! कोड: KIRANA20" },
+      { label: "Special Deal", msgEn: "Special Deal at [SHOP]! 🌾 Basmati Rice & Mustard Oil at discount prices! Valid till stocks last.", msgHi: "स्पेशल ऑफर [SHOP] पर! 🌾 बासमती चावल और सरसों तेल पर भारी छूट! स्टॉक रहने तक मान्य।", msg: "Special Deal at [SHOP]! 🌾 Basmati Rice & Mustard Oil at discount prices! Valid till stocks last.\n\nस्पेशल ऑफर [SHOP] पर! 🌾 बासमती चावल और सरसों तेल पर भारी छूट! स्टॉक रहने तक मान्य।" },
+      { label: "New Stock", msgEn: "Hi [NAME], new fresh stock has arrived at [SHOP]! 🍎 Visit us today for all your daily needs!", msgHi: "नमस्ते [NAME], [SHOP] में नया ताज़ा राशन का सामान आ चुका है! 🍎 दैनिक ज़रूरतों के लिए आज ही आएं!", msg: "Hi [NAME], new fresh stock has arrived at [SHOP]! 🍎 Visit us today for all your daily needs!\n\nनमस्ते [NAME], [SHOP] में नया ताज़ा राशन का सामान आ चुका है! 🍎 दैनिक ज़रूरतों के लिए आज ही आएं!" },
+      { label: "Free Delivery", msgEn: "Need groceries [NAME]? 🚚 Free Home Delivery from [SHOP] for orders above ₹500! Order now.", msgHi: "राशन चाहिए [NAME]? 🚚 ₹500 से ऊपर के ऑर्डर पर [SHOP] से पाएं मुफ़्त होम डिलीवरी! अभी ऑर्डर करें।", msg: "Need groceries [NAME]? 🚚 Free Home Delivery from [SHOP] for orders above ₹500! Order now.\n\nराशन चाहिए [NAME]? 🚚 ₹500 से ऊपर के ऑर्डर पर [SHOP] से पाएं मुफ़्त होम डिलीवरी! अभी ऑर्डर करें।" },
+      { label: "Weekly Deal", msgEn: "Happy Weekend [NAME]! 🛍️ Restock your pantry from [SHOP] with flat discounts on monthly essentials!", msgHi: "हैप्पी वीकेंड [NAME]! 🛍️ [SHOP] से महीने का राशन खरीदें और पाएं विशेष छूट!", msg: "Happy Weekend [NAME]! 🛍️ Restock your pantry from [SHOP] with flat discounts on monthly essentials!\n\nहैप्पी वीकेंड [NAME]! 🛍️ [SHOP] से महीने का राशन खरीदें और पाएं विशेष छूट!" }
     ],
     categories: ["Daily Essentials", "Staples & Grains", "Snacks & Drinks", "Personal Care", "Household", "Packaged Foods", "Others"]
   },
@@ -486,11 +486,11 @@ export const BUSINESS_CATEGORIES: Record<string, {
       { name: "Type-C Fast Charger", price: 499 }
     ],
     templates: [
-      { label: "20% OFF", msg: "Hi [NAME], we miss you at [SHOP]! 📱 Get 20% OFF on high-quality phone accessories today! Use code: GEAR20" },
-      { label: "Special Deal", msg: "Special Deal at [SHOP]! 🎧 Buy any smartphone and get Bluetooth Airdopes at flat 30% OFF!" },
-      { label: "New Arrival", msg: "Hi [NAME], latest smartphones and smartwatches have arrived at [SHOP]! Upgrade your tech today!" },
-      { label: "Free Delivery", msg: "Need accessories [NAME]? 🚚 Free delivery of chargers & headphones from [SHOP]! Order now." },
-      { label: "Tech Weekend", msg: "Happy Weekend [NAME]! ⚡ Time for a tech upgrade? Get special exchange rates on old phones from [SHOP] today!" }
+      { label: "20% OFF", msgEn: "Hi [NAME], we miss you at [SHOP]! 📱 Get 20% OFF on high-quality phone accessories today! Use code: GEAR20", msgHi: "नमस्ते [NAME], [SHOP] में आपकी याद आ रही है! 📱 मोबाइल एसेसरीज पर पाएं 20% की छूट! कोड: GEAR20", msg: "Hi [NAME], we miss you at [SHOP]! 📱 Get 20% OFF on high-quality phone accessories today! Use code: GEAR20\n\nनमस्ते [NAME], [SHOP] में आपकी याद आ रही है! 📱 मोबाइल एसेसरीज पर पाएं 20% की छूट! कोड: GEAR20" },
+      { label: "Special Deal", msgEn: "Special Deal at [SHOP]! 🎧 Buy any smartphone and get Bluetooth Airdopes at flat 30% OFF!", msgHi: "स्पेशल ऑफर [SHOP] पर! 🎧 कोई भी स्मार्टफोन खरीदें और बड्स/एयरडॉप्स पाएं 30% की छूट पर!", msg: "Special Deal at [SHOP]! 🎧 Buy any smartphone and get Bluetooth Airdopes at flat 30% OFF!\n\nस्पेशल ऑफर [SHOP] पर! 🎧 कोई भी स्मार्टफोन खरीदें और बड्स/एयरडॉप्स पाएं 30% की छूट पर!" },
+      { label: "New Arrival", msgEn: "Hi [NAME], latest smartphones and smartwatches have arrived at [SHOP]! Upgrade your tech today!", msgHi: "नमस्ते [NAME], [SHOP] में नए स्मार्टफोन्स और स्मार्टवॉच आ चुके हैं! आज ही अपना फोन अपग्रेड करें!", msg: "Hi [NAME], latest smartphones and smartwatches have arrived at [SHOP]! Upgrade your tech today!\n\nनमस्ते [NAME], [SHOP] में नए स्मार्टफोन्स और स्मार्टवॉच आ चुके हैं! आज ही अपना फोन अपग्रेड करें!" },
+      { label: "Free Delivery", msgEn: "Need accessories [NAME]? 🚚 Free delivery of chargers & headphones from [SHOP]! Order now.", msgHi: "चार्ज / इयरफोन चाहिए [NAME]? 🚚 [SHOP] से पाएं मुफ़्त होम डिलीवरी! अभी ऑर्डर करें।", msg: "Need accessories [NAME]? 🚚 Free delivery of chargers & headphones from [SHOP]! Order now.\n\nचार्ज / इयरफोन चाहिए [NAME]? 🚚 [SHOP] से पाएं मुफ़्त होम डिलीवरी! अभी ऑर्डर करें।" },
+      { label: "Tech Weekend", msgEn: "Happy Weekend [NAME]! ⚡ Time for a tech upgrade? Get special exchange rates on old phones from [SHOP] today!", msgHi: "हैप्पी वीकेंड [NAME]! ⚡ पुराने फोन पर पाएं बेस्ट एक्सचेंज ऑफर केवल [SHOP] पर!", msg: "Happy Weekend [NAME]! ⚡ Time for a tech upgrade? Get special exchange rates on old phones from [SHOP] today!\n\nहैप्पी वीकेंड [NAME]! ⚡ पुराने फोन पर पाएं बेस्ट एक्सचेंज ऑफर केवल [SHOP] पर!" }
     ],
     categories: ["Smartphones", "Smartwatches", "Accessories", "Chargers & Cables", "Laptops", "Others"]
   }
@@ -500,13 +500,23 @@ const getLabels = (type: string) => {
   return BUSINESS_CATEGORIES[type] || BUSINESS_CATEGORIES["Restaurant/Cafe"];
 };
 
-const getTemplates = (type: string, shopName: string) => {
+const getTemplates = (type: string, shopName: string, lang: 'both' | 'en' | 'hi' = 'both') => {
   const cat = BUSINESS_CATEGORIES[type] || BUSINESS_CATEGORIES["Restaurant/Cafe"];
   const list = cat.templates;
-  return list.map(t => ({
-    label: t.label,
-    msg: t.msg.replaceAll("[SHOP]", shopName)
-  }));
+  return list.map(t => {
+    let text = t.msg;
+    if (lang === 'en' && (t as any).msgEn) {
+      text = (t as any).msgEn;
+    } else if (lang === 'hi' && (t as any).msgHi) {
+      text = (t as any).msgHi;
+    } else if (lang === 'both' && (t as any).msgEn && (t as any).msgHi) {
+      text = `${(t as any).msgEn}\n\n${(t as any).msgHi}`;
+    }
+    return {
+      label: t.label,
+      msg: text.replaceAll("[SHOP]", shopName)
+    };
+  });
 };
 
 const getBarcode = (cat: string) => {
@@ -1242,7 +1252,8 @@ export default function Dashboard() {
   const [monthlyRent, setMonthlyRent] = useState(15000);
   const [isWhatsAppEnabled, setIsWhatsAppEnabled] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [crmMessage, setCrmMessage] = useState("Hi [NAME], we miss you at [SHOP]! 🍕 Come back today for a special offer just for you!");
+  const [crmMessage, setCrmMessage] = useState("Hi [NAME], we miss you at [SHOP]! 🍕 Come back today for a special offer just for you!\n\nनमस्ते [NAME], [SHOP] में आपकी याद आ रही है! 🍕 आज ही आएं और अपने लिए खास ऑफर पाएं!");
+  const [templateLang, setTemplateLang] = useState<'both' | 'en' | 'hi'>('both');
   
   // Business Type / Category states
   const [businessType, setBusinessType] = useState("Restaurant/Cafe");
@@ -2122,7 +2133,9 @@ Requirements for the generated image prompt:
       const seedParam = aiBannerSeed ? `&sd=${aiBannerSeed}` : "";
       const promptParam = aiBannerPrompt ? `&pr=${encodeURIComponent(aiBannerPrompt)}` : "";
       const viewerUrl = `${baseUrl}/invoice?banner=true${imgParam}${seedParam}${promptParam}${logoParam}&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${ownerMobile}`;
-      const customMsg = `Special offer for you, ${name}! 🛍️\n\nShop: ${restaurantName}\nOffer: ${offerTitle}\nDeal: ${discountDetails} on ${productName}\n\nView Banner: ${viewerUrl}`;
+      const customMsgEn = `Special offer for you, ${name}! 🛍️\nShop: ${restaurantName}\nOffer: ${offerTitle}\nDeal: ${discountDetails} on ${productName}\nView Banner: ${viewerUrl}`;
+      const customMsgHi = `आपके लिए खास ऑफर, ${name}! 🛍️\nदुकान: ${restaurantName}\nऑफर: ${offerTitle}\nडील: ${productName} पर ${discountDetails}\nबैनर देखें: ${viewerUrl}`;
+      const customMsg = `${customMsgEn}\n\n${customMsgHi}`;
       window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(customMsg)}`, "_blank");
     } catch (err: any) {
       console.error("Error sending image:", err);
@@ -6638,9 +6651,34 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 />
 
                 <div className="space-y-3">
-                  <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest pl-2">Quick Sample Texts</p>
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest pl-2">Quick Sample Templates</p>
+                    <div className="flex gap-1 bg-white/80 dark:bg-zinc-900/80 p-1 rounded-xl border border-indigo-100 dark:border-indigo-900/40">
+                      <button
+                        type="button"
+                        onClick={() => setTemplateLang("both")}
+                        className={`px-3 py-1 text-[9px] font-black rounded-lg transition-all ${templateLang === 'both' ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'}`}
+                      >
+                        🌐 English + हिंदी (Both)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTemplateLang("hi")}
+                        className={`px-3 py-1 text-[9px] font-black rounded-lg transition-all ${templateLang === 'hi' ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'}`}
+                      >
+                        🇮🇳 हिंदी (Hindi)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTemplateLang("en")}
+                        className={`px-3 py-1 text-[9px] font-black rounded-lg transition-all ${templateLang === 'en' ? 'bg-indigo-600 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'}`}
+                      >
+                        🇬🇧 English
+                      </button>
+                    </div>
+                  </div>
                   <div className="flex gap-2 flex-wrap">
-                    {getTemplates(businessType, restaurantName).map(template => (
+                    {getTemplates(businessType, restaurantName, templateLang).map(template => (
                       <button 
                         key={template.label} 
                         onClick={() => setCrmMessage(template.msg)} 
@@ -7405,7 +7443,12 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           <FileText className="h-5 w-5" />
                         </Button>
                         <Button 
-                          onClick={() => window.open(`https://wa.me/91${s.mobile}?text=${encodeURIComponent(`Hi ${s.name}, a friendly reminder for your pending Udhaar of ₹${s.price} at ${restaurantName}. Please pay soon! Thanks.`)}`, "_blank")}
+                          onClick={() => {
+                            const udharMsgEn = `Hi ${s.name}, a friendly reminder for your pending Udhaar of ₹${s.price} at ${restaurantName}. Please pay soon! Thanks.`;
+                            const udharMsgHi = `नमस्ते ${s.name}, ${restaurantName} पर आपका ₹${s.price} का बकाया/उधार पेंडिंग है। कृपया जल्द भुगतान करें! धन्यवाद।`;
+                            const udharFullMsg = `${udharMsgEn}\n\n${udharMsgHi}`;
+                            window.open(`https://wa.me/91${s.mobile}?text=${encodeURIComponent(udharFullMsg)}`, "_blank");
+                          }}
                           variant="outline" 
                           className="w-14 h-14 p-0 rounded-2xl border-zinc-100 dark:border-zinc-800 text-zinc-400 hover:text-emerald-500 hover:border-emerald-500 transition-all shadow-sm"
                         >
