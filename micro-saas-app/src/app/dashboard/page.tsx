@@ -6,7 +6,7 @@ import jsQR from "jsqr";
 import { 
   LayoutDashboard, FileText, Settings, LogOut, Search,
   PlusCircle, Loader2, Book, Trash2, Send, ShoppingCart, Package,
-  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera, Volume2, Globe, Wand2, Copy, Keyboard
+  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera, Volume2, Globe, Wand2, Copy, Keyboard, Megaphone, MessageSquare, AlertTriangle, ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -655,6 +655,8 @@ export default function Dashboard() {
   const [loginPassword, setLoginPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(true);
   const [acceptTerms, setAcceptTerms] = useState(true);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [termsModalTab, setTermsModalTab] = useState<'privacy' | 'terms'>('privacy');
   const [showPassword, setShowPassword] = useState(false);
   const [signupStoreName, setSignupStoreName] = useState("");
   const [ownerPassword, setOwnerPassword] = useState("admin");
@@ -2069,14 +2071,35 @@ Requirements for the generated image prompt:
     runGeneration();
   };
 
+  const launchWhatsApp = (mobile: string, text: string) => {
+    const cleanMobile = (mobile || '').replace(/\D/g, '').slice(-10);
+    const encodedText = encodeURIComponent(text);
+    const isNative = typeof window !== 'undefined' && !!(window as any).Capacitor?.isNative;
+
+    if (isNative) {
+      const nativeScheme = cleanMobile 
+        ? `whatsapp://send?phone=91${cleanMobile}&text=${encodedText}`
+        : `whatsapp://send?text=${encodedText}`;
+      try {
+        window.location.href = nativeScheme;
+      } catch (e) {
+        const waUrl = cleanMobile 
+          ? `https://wa.me/91${cleanMobile}?text=${encodedText}`
+          : `https://wa.me/?text=${encodedText}`;
+        window.open(waUrl, '_system');
+      }
+    } else {
+      const waUrl = cleanMobile 
+        ? `https://wa.me/91${cleanMobile}?text=${encodedText}`
+        : `https://wa.me/?text=${encodedText}`;
+      window.open(waUrl, '_blank');
+    }
+  };
+
   const handleShareAIBanner = async () => {
     if (!aiImageUrl) return;
     try {
-      
       if (Capacitor.isNativePlatform()) {
-        // Capacitor Share imported at top level
-        // Capacitor Filesystem imported at top level
-        
         const response = await fetch(aiImageUrl);
         const blob = await response.blob();
         const base64Data = await new Promise<string>((resolve) => {
@@ -2109,7 +2132,26 @@ Requirements for the generated image prompt:
       }
     } catch (err: any) {
       console.error("Error sharing banner:", err);
-      window.open(aiImageUrl, '_blank');
+      let targetImgUrl = uploadedBannerUrl;
+      if (!targetImgUrl || !targetImgUrl.startsWith("http")) {
+        if (aiImageUrl && aiImageUrl.startsWith("data:")) {
+          const uploaded = await uploadBannerToStorage(aiImageUrl);
+          if (uploaded) targetImgUrl = uploaded;
+        } else if (aiImageUrl && aiImageUrl.startsWith("http")) {
+          targetImgUrl = aiImageUrl;
+        }
+      }
+
+      if (!targetImgUrl && aiBannerSeed && aiBannerPrompt) {
+        targetImgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(aiBannerPrompt)}?width=1024&height=1024&nologo=true&seed=${aiBannerSeed}&model=flux`;
+      }
+      const baseUrl = (typeof window !== 'undefined' && window.location.port === '3000')
+        ? "http://localhost:3000"
+        : "https://www.instamunim.com";
+      const imgParam = targetImgUrl ? `&img=${encodeURIComponent(targetImgUrl)}` : "";
+      const seedParam = aiBannerSeed ? `&sd=${aiBannerSeed}` : "";
+      const viewerUrl = `${baseUrl}/invoice?banner=true${imgParam}${seedParam}&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${encodeURIComponent(ownerMobile)}`;
+      launchWhatsApp('', `Special offer at ${restaurantName}! 🛍️ Offer: ${offerTitle}\nView Banner: ${viewerUrl}`);
     }
   };
 
@@ -2118,25 +2160,41 @@ Requirements for the generated image prompt:
       alert("Please generate an AI banner first!");
       return;
     }
+    
+    const cleanMobile = (mobile || '').replace(/\D/g, '').slice(-10);
+    if (!cleanMobile || cleanMobile.length < 10) {
+      alert("Invalid customer phone number!");
+      return;
+    }
+
     try {
-      let finalImgUrl = uploadedBannerUrl;
-      if (!finalImgUrl && aiImageUrl.startsWith("data:")) {
-        finalImgUrl = await uploadBannerToStorage(aiImageUrl);
+      let targetImgUrl = uploadedBannerUrl;
+      if (!targetImgUrl || !targetImgUrl.startsWith("http")) {
+        if (aiImageUrl && aiImageUrl.startsWith("data:")) {
+          const uploaded = await uploadBannerToStorage(aiImageUrl);
+          if (uploaded) targetImgUrl = uploaded;
+        } else if (aiImageUrl && aiImageUrl.startsWith("http")) {
+          targetImgUrl = aiImageUrl;
+        }
+      }
+
+      if (!targetImgUrl && aiBannerSeed && aiBannerPrompt) {
+        targetImgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(aiBannerPrompt)}?width=1024&height=1024&nologo=true&seed=${aiBannerSeed}&model=flux`;
       }
 
       const baseUrl = (typeof window !== 'undefined' && window.location.port === '3000')
         ? "http://localhost:3000"
         : "https://www.instamunim.com";
       
-      const imgParam = finalImgUrl ? `&img=${encodeURIComponent(finalImgUrl)}` : "";
-      const logoParam = (storeLogo || cloudLogo) ? `&logo=${encodeURIComponent(storeLogo || cloudLogo || "")}` : "";
+      const imgParam = targetImgUrl ? `&img=${encodeURIComponent(targetImgUrl)}` : "";
       const seedParam = aiBannerSeed ? `&sd=${aiBannerSeed}` : "";
-      const promptParam = aiBannerPrompt ? `&pr=${encodeURIComponent(aiBannerPrompt)}` : "";
-      const viewerUrl = `${baseUrl}/invoice?banner=true${imgParam}${seedParam}${promptParam}${logoParam}&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${ownerMobile}`;
-      const customMsgEn = `Special offer for you, ${name}! 🛍️\nShop: ${restaurantName}\nOffer: ${offerTitle}\nDeal: ${discountDetails} on ${productName}\nView Banner: ${viewerUrl}`;
-      const customMsgHi = `आपके लिए खास ऑफर, ${name}! 🛍️\nदुकान: ${restaurantName}\nऑफर: ${offerTitle}\nडील: ${productName} पर ${discountDetails}\nबैनर देखें: ${viewerUrl}`;
-      const customMsg = `${customMsgEn}\n\n${customMsgHi}`;
-      window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(customMsg)}`, "_blank");
+      const viewerUrl = `${baseUrl}/invoice?banner=true${imgParam}${seedParam}&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${encodeURIComponent(ownerMobile)}`;
+
+      const customMsgEn = `Special offer for you, ${name}! 🛍️\nShop: ${restaurantName}\nOffer: ${offerTitle}\nDeal: ${discountDetails} on ${productName}`;
+      const customMsgHi = `आपके लिए खास ऑफर, ${name}! 🛍️\nदुकान: ${restaurantName}\nऑफर: ${offerTitle}\nडील: ${productName} पर ${discountDetails}`;
+      const customMsg = `${customMsgEn}\n\n${customMsgHi}\n\n🌐 View Digital Banner:\n${viewerUrl}`;
+      
+      launchWhatsApp(cleanMobile, customMsg);
     } catch (err: any) {
       console.error("Error sending image:", err);
     }
@@ -4806,17 +4864,17 @@ Stay safe & eat healthy! 🍕
     }
 
     let msg = whatsappInvoiceTemplate
-      .replace("[NAME]", lastOrderDetails.name)
-      .replace("[SHOP]", restaurantName)
-      .replace("[ITEMS]", displayItems)
-      .replace("[TOTAL]", lastOrderDetails.price.toString())
-      .replace("[LINK]", invoiceUrl);
+      .replaceAll("[NAME]", lastOrderDetails.name || "Customer")
+      .replaceAll("[SHOP]", restaurantName || "Store")
+      .replaceAll("[ITEMS]", displayItems)
+      .replaceAll("[TOTAL]", lastOrderDetails.price.toString())
+      .replaceAll("[LINK]", invoiceUrl);
       
     if (!isSubscribed) {
       msg += "\n\nGenerated by InstaMunim POS\nDownload App Free: https://instamunim.com";
     }
       
-    window.open(`https://wa.me/91${lastOrderDetails.mobile}?text=${encodeURIComponent(msg)}`, "_blank");
+    launchWhatsApp(lastOrderDetails.mobile, msg);
   };
 
   const getInvoiceUrlForSale = (s: any) => {
@@ -4870,17 +4928,17 @@ Stay safe & eat healthy! 🍕
     }
 
     let msg = whatsappInvoiceTemplate
-      .replace("[NAME]", s.name || "Customer")
-      .replace("[SHOP]", restaurantName)
-      .replace("[ITEMS]", displayItems)
-      .replace("[TOTAL]", s.price.toString())
-      .replace("[LINK]", invoiceUrl);
+      .replaceAll("[NAME]", s.name || "Customer")
+      .replaceAll("[SHOP]", restaurantName || "Store")
+      .replaceAll("[ITEMS]", displayItems)
+      .replaceAll("[TOTAL]", s.price.toString())
+      .replaceAll("[LINK]", invoiceUrl);
       
     if (!isSubscribed) {
       msg += "\n\nGenerated by InstaMunim POS\nDownload App Free: https://instamunim.com";
     }
       
-    window.open(`https://wa.me/91${s.mobile}?text=${encodeURIComponent(msg)}`, "_blank");
+    launchWhatsApp(s.mobile, msg);
   };
 
   const handleAddManualItem = () => {
@@ -5558,8 +5616,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     required
                     className="w-4 h-4 rounded border-zinc-300 text-orange-500 focus:ring-orange-500 cursor-pointer"
                   />
-                  <label htmlFor="acceptTerms" className="text-xs font-bold text-zinc-500 cursor-pointer uppercase tracking-tight">
-                    I accept <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-orange-500 underline hover:text-orange-600">Privacy Policy</a> & <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-orange-500 underline hover:text-orange-600">Terms</a>
+                  <label className="text-xs font-bold text-zinc-500 cursor-pointer uppercase tracking-tight">
+                    I accept <span onClick={(e) => { e.preventDefault(); setTermsModalTab('privacy'); setShowTermsModal(true); }} className="text-orange-500 underline hover:text-orange-600 cursor-pointer">Privacy Policy</span> & <span onClick={(e) => { e.preventDefault(); setTermsModalTab('terms'); setShowTermsModal(true); }} className="text-orange-500 underline hover:text-orange-600 cursor-pointer">Terms</span>
                   </label>
                 </div>
               )}
@@ -6827,7 +6885,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           <td className="py-6 px-8">
                             <div className="bg-zinc-50 dark:bg-zinc-800 p-4 rounded-3xl max-w-[280px] border border-zinc-100 dark:border-zinc-700">
                               <p className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 italic leading-relaxed">
-                                "{crmMessage.replace("[NAME]", cust.name).replace("[SHOP]", restaurantName).substring(0, 75)}..."
+                                "{crmMessage.replaceAll("[NAME]", cust.name || "Customer").replaceAll("[SHOP]", restaurantName || "Store").substring(0, 75)}..."
                               </p>
                             </div>
                           </td>
@@ -6835,19 +6893,16 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           <td className="py-6 px-8">
                             <div className="flex gap-2.5">
                               <Button 
-                                onClick={async () => {
-                                  let storeId = currentStoreId;
-                                  if (!storeId) {
-                                    const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
-                                    if (!store) throw new Error("Store ID not found");
-                                    storeId = store.id;
-                                    setCurrentStoreId(store.id);
+                                onClick={() => {
+                                  const cleanMobile = (cust.mobile || '').replace(/\D/g, '').slice(-10);
+                                  if (!cleanMobile || cleanMobile.length < 10) {
+                                    alert("Invalid customer phone number!");
+                                    return;
                                   }
-                                  
                                   const customMsg = crmMessage
-                                    .replace("[NAME]", cust.name)
-                                    .replace("[SHOP]", restaurantName);
-                                  window.open(`https://wa.me/91${cust.mobile}?text=${encodeURIComponent(customMsg)}`, "_blank");
+                                    .replaceAll("[NAME]", cust.name || "Customer")
+                                    .replaceAll("[SHOP]", restaurantName || "Store");
+                                  launchWhatsApp(cleanMobile, customMsg);
                                 }}
                                 className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-2xl h-12 px-5 font-black text-[10px] shadow-md shadow-indigo-500/10 flex items-center gap-2 active:scale-95 transition-all uppercase tracking-wider"
                               >
@@ -7474,6 +7529,31 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
           )}
 
           {activeTab === "Menu" && (
+            !flagInventoryMgmt ? (
+              <div className="min-h-[50vh] flex flex-col items-center justify-center p-6 text-center space-y-5 animate-fade-in my-8 bg-zinc-50 dark:bg-zinc-900/50 rounded-3xl border border-zinc-200/80 dark:border-zinc-800">
+                <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded-2xl flex items-center justify-center shadow-inner">
+                  <ShieldAlert className="w-8 h-8" />
+                </div>
+                <div className="space-y-2 max-w-sm">
+                  <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest bg-amber-50 dark:bg-amber-950/60 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-900/50">
+                    Disabled by Admin
+                  </span>
+                  <h3 className="text-xl font-black text-zinc-900 dark:text-white">Menu & Inventory is Locked</h3>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed font-medium">
+                    This menu feature is disabled from Admin Control for your store. Please contact Admin to unlock access.
+                  </p>
+                </div>
+                <a
+                  href={`https://wa.me/91${ownerMobile || '7838229178'}?text=${encodeURIComponent('Hi Admin, please enable Menu & Inventory access for my store.')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white px-6 py-3.5 rounded-2xl font-black text-xs shadow-lg shadow-orange-600/30 flex items-center gap-1.5 active:scale-95 transition-all"
+                >
+                  <span>Request Admin to Unlock</span>
+                  <MessageSquare className="w-4 h-4" />
+                </a>
+              </div>
+            ) : (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24 px-3">
               <header className="px-2 pt-4">
                 <h2 className="text-5xl font-bold tracking-tighter leading-tight text-zinc-900 dark:text-white">{getLabels(businessType).items.split(" & ")[0]}<br/>Control</h2>
@@ -7758,10 +7838,11 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         );
                       })
                     )}
-                  </div>
-                </Card>
+                    </div>
+                  </Card>
+                </div>
               </div>
-            </div>
+            )
           )}
 
           {activeTab === "Support" && (
@@ -9026,6 +9107,133 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
         </DialogContent>
       </Dialog>
 
+      {/* TERMS & PRIVACY POLICY MODAL */}
+      <Dialog open={showTermsModal} onOpenChange={setShowTermsModal}>
+        <DialogContent className="max-w-2xl w-[92%] max-h-[85vh] bg-white dark:bg-zinc-950 rounded-2xl p-0 overflow-hidden border border-zinc-200 dark:border-zinc-800 flex flex-col shadow-2xl">
+          <DialogHeader className="p-5 pb-3 border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle className="text-lg font-black tracking-tight text-zinc-900 dark:text-zinc-100 uppercase">
+                  InstaMunim Legal Terms
+                </DialogTitle>
+                <DialogDescription className="text-xs font-medium text-zinc-500 dark:text-zinc-400 mt-0.5">
+                  DPDP Act 2023 & Google Play Policy Compliant
+                </DialogDescription>
+              </div>
+            </div>
+
+            {/* Tab selector */}
+            <div className="flex gap-2 mt-4 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setTermsModalTab('privacy')}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                  termsModalTab === 'privacy'
+                    ? 'bg-orange-500 text-white shadow-sm'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                }`}
+              >
+                Privacy Policy
+              </button>
+              <button
+                type="button"
+                onClick={() => setTermsModalTab('terms')}
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
+                  termsModalTab === 'terms'
+                    ? 'bg-orange-500 text-white shadow-sm'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
+                }`}
+              >
+                Terms of Service
+              </button>
+            </div>
+          </DialogHeader>
+
+          {/* Modal Body with Scroll */}
+          <div className="p-6 overflow-y-auto custom-scrollbar flex-1 text-xs text-zinc-700 dark:text-zinc-300 leading-relaxed space-y-4">
+            {termsModalTab === 'privacy' ? (
+              <>
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 border-l-2 border-orange-500 pl-2">
+                  1. Information We Collect
+                </h3>
+                <p>
+                  We collect information provided voluntarily by merchant owners during account setup and routine daily POS billing usage:
+                </p>
+                <ul className="list-disc list-inside space-y-1 pl-2">
+                  <li><strong>Account & Owner Details:</strong> Mobile phone number, business name, store logo, address, and login credentials.</li>
+                  <li><strong>Business & Tax Details:</strong> GSTIN number, custom item prices, category settings, and UPI ID for payment QR code generation.</li>
+                  <li><strong>Transaction Ledger Data:</strong> Customer contact numbers, billing item lists, payment types, and expense ledgers.</li>
+                </ul>
+
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 border-l-2 border-orange-500 pl-2">
+                  2. Device Permissions
+                </h3>
+                <p>
+                  Our Android mobile app and Web application request specific browser and device permissions strictly to operate core features:
+                </p>
+                <ul className="list-disc list-inside space-y-1 pl-2">
+                  <li><strong>Camera Access:</strong> Used exclusively for real-time barcode scanning of retail items. Video feeds are processed locally on device and never recorded or uploaded.</li>
+                  <li><strong>Local Storage:</strong> Used to temporarily store offline sessions and UI preferences.</li>
+                </ul>
+
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 border-l-2 border-orange-500 pl-2">
+                  3. Data Security & Encryption
+                </h3>
+                <p>
+                  All data transmissions between your app and cloud servers are encrypted using 256-bit SSL/TLS (HTTPS). Account databases hosted on Supabase PostgreSQL are encrypted at rest using AES-256 with Row-Level Security (RLS).
+                </p>
+
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 border-l-2 border-orange-500 pl-2">
+                  4. Instant Account Deletion
+                </h3>
+                <p>
+                  You maintain 100% control over your store data. You can permanently delete your store account and erase all transaction data at any time inside the app by going to <strong>Settings &gt; Account Security &gt; Delete Account</strong>, or by emailing <strong>Instamunim@gmail.com</strong>.
+                </p>
+              </>
+            ) : (
+              <>
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 border-l-2 border-orange-500 pl-2">
+                  1. Service Usage & Merchant Responsibility
+                </h3>
+                <p>
+                  InstaMunim provides POS, billing, and store management tools. Merchant owners are responsible for ensuring accurate tax calculation (GST) and compliance with local retail regulations.
+                </p>
+
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 border-l-2 border-orange-500 pl-2">
+                  2. Account Credentials & Security
+                </h3>
+                <p>
+                  Merchants are responsible for maintaining the confidentiality of their mobile login numbers and PINs. Unauthorized account usage must be reported to support immediately.
+                </p>
+
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 border-l-2 border-orange-500 pl-2">
+                  3. Limitation of Liability
+                </h3>
+                <p>
+                  InstaMunim is provided on an "AS IS" and "AS AVAILABLE" basis. InstaMunim shall not be liable for indirect damages, network outages, or lost device hardware. Regular export of sales ledgers via PDF/Excel is recommended.
+                </p>
+
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 border-l-2 border-orange-500 pl-2">
+                  4. Contact & Support
+                </h3>
+                <p>
+                  For any legal inquiries, support or feedback, please contact us at <strong>Instamunim@gmail.com</strong> or visit <strong>https://instamunim.com</strong>.
+                </p>
+              </>
+            )}
+          </div>
+
+          <div className="p-4 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50 flex justify-end">
+            <Button
+              onClick={() => setShowTermsModal(false)}
+              className="bg-orange-500 hover:bg-orange-600 text-white font-bold text-xs uppercase tracking-wider px-6 h-10 rounded-xl"
+            >
+              I Understand & Accept
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* BARCODE SCANNER DIALOG */}
       <Dialog open={showScanner} onOpenChange={(open) => { if(!open) closeScanner(); }}>
         <DialogContent className="p-0 border-0 w-screen h-screen max-w-none m-0 bg-zinc-950 text-white rounded-none flex flex-col justify-between overflow-hidden">
@@ -9846,17 +10054,17 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
       {showFeatureLockModal && (
         <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
           <div className="max-w-sm w-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-2xl space-y-5 text-center relative">
-            <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded-2xl flex items-center justify-center mx-auto">
+            <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/30 text-amber-500 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
               <ShieldAlert className="w-8 h-8" />
             </div>
 
-            <div className="space-y-1.5">
-              <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest bg-amber-50 dark:bg-amber-950/60 px-2.5 py-1 rounded-full border border-amber-200 dark:border-amber-900/50">
-                Module Restricted
+            <div className="space-y-2">
+              <span className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest bg-amber-50 dark:bg-amber-950/60 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-900/50">
+                Disabled by Admin
               </span>
-              <h3 className="text-lg font-black text-zinc-900 dark:text-white">{showFeatureLockModal} Locked</h3>
+              <h3 className="text-lg font-black text-zinc-900 dark:text-white">{showFeatureLockModal} Disabled</h3>
               <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed font-medium">
-                This feature has been locked by Admin for your current store profile. Contact support to upgrade your access.
+                This menu feature is disabled from Admin Control for your store. Please request Admin to activate this module.
               </p>
             </div>
 
@@ -9865,13 +10073,13 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 onClick={() => setShowFeatureLockModal(null)}
                 className="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-700 dark:text-zinc-300 py-3 rounded-2xl font-bold text-xs transition-colors"
               >
-                Go Back
+                Close
               </button>
               <a
-                href="https://wa.me/919876543210?text=Hi%20Admin,%20please%20unlock%20my%20feature%20access."
+                href={`https://wa.me/91${ownerMobile || '7838229178'}?text=${encodeURIComponent(`Hi Admin, please enable ${showFeatureLockModal} access for my store.`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 bg-orange-600 hover:bg-orange-500 text-white py-3 rounded-2xl font-black text-xs shadow-lg shadow-orange-600/30 flex items-center justify-center gap-1 transition-all active:scale-95"
+                className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white py-3 rounded-2xl font-black text-xs shadow-lg shadow-orange-600/30 flex items-center justify-center gap-1 transition-all active:scale-95"
               >
                 <span>Request Access</span>
                 <MessageSquare className="w-3.5 h-3.5" />

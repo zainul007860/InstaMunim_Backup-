@@ -55,6 +55,7 @@ function InvoiceContent() {
 
   const [adBannerUrl, setAdBannerUrl] = useState("");
   const [isLoadingAd, setIsLoadingAd] = useState(true);
+  const [imgHasError, setImgHasError] = useState(false);
 
   useEffect(() => {
     if (!isBannerView) return;
@@ -217,8 +218,81 @@ function InvoiceContent() {
           }
         };
         img.onerror = () => {
-          setAdBannerUrl(bgUrl);
-          setIsLoadingAd(false);
+          // Canvas Fallback: Render full poster canvas if AI background image fails CORS/network
+          ctx.fillStyle = "#18181b";
+          ctx.fillRect(0, 0, 1024, 1024);
+
+          const grad = ctx.createLinearGradient(0, 0, 1024, 1024);
+          grad.addColorStop(0, "rgba(255, 107, 0, 0.25)");
+          grad.addColorStop(0.5, "rgba(24, 24, 27, 0.95)");
+          grad.addColorStop(1, "rgba(0, 0, 0, 1)");
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, 1024, 1024);
+
+          const topGrad = ctx.createLinearGradient(0, 0, 0, 260);
+          topGrad.addColorStop(0, "rgba(0, 0, 0, 0.75)");
+          topGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+          ctx.fillStyle = topGrad;
+          ctx.fillRect(0, 0, 1024, 260);
+
+          ctx.fillStyle = "#ffffff";
+          ctx.textAlign = "left";
+          ctx.textBaseline = "top";
+          let storeNameFontSize = 44;
+          do {
+            ctx.font = `bold ${storeNameFontSize}px sans-serif`;
+            storeNameFontSize -= 2;
+          } while (ctx.measureText(restName.toUpperCase()).width > 750 && storeNameFontSize > 24);
+          ctx.fillText(restName.toUpperCase(), 48, 54);
+
+          const drawWithLogoFallback = (logoImg: any) => {
+            if (logoImg) {
+              const logoSize = 130;
+              const x = 1024 - logoSize - 48;
+              const y = 48;
+              const radius = 24;
+
+              ctx.fillStyle = "#ffffff";
+              ctx.beginPath();
+              ctx.moveTo(x + radius, y);
+              ctx.lineTo(x + logoSize - radius, y);
+              ctx.quadraticCurveTo(x + logoSize, y, x + logoSize, y + radius);
+              ctx.lineTo(x + logoSize, y + logoSize - radius);
+              ctx.quadraticCurveTo(x + logoSize, y + logoSize, x + logoSize - radius, y + logoSize);
+              ctx.lineTo(x + radius, y);
+              ctx.quadraticCurveTo(x, y + logoSize, x, y + logoSize - radius);
+              ctx.lineTo(x, y + radius);
+              ctx.quadraticCurveTo(x, y, x + radius, y);
+              ctx.closePath();
+              ctx.fill();
+
+              const margin = 10;
+              const size = logoSize - (margin * 2);
+              ctx.drawImage(logoImg, x + margin, y + margin, size, size);
+            }
+
+            drawTextWithFit(bannerOffer.toUpperCase(), 512, 500, 928, 84, true, "#FF6B00");
+            drawTextWithFit(`${bannerDetails} ON ${bannerProd}`.toUpperCase(), 512, 600, 928, 42, false, "#ffffff");
+
+            ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+            ctx.font = "bold 22px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("POWERED BY INSTAMUNIM", 512, 950);
+
+            setAdBannerUrl(canvas.toDataURL("image/png"));
+            setIsLoadingAd(false);
+          };
+
+          const logoUrl = logoFromUrl || cloudLogo;
+          if (logoUrl) {
+            const lImg = new Image();
+            if (logoUrl.startsWith("http")) lImg.crossOrigin = "anonymous";
+            lImg.src = logoUrl;
+            lImg.onload = () => drawWithLogoFallback(lImg);
+            lImg.onerror = () => drawWithLogoFallback(undefined);
+          } else {
+            drawWithLogoFallback(undefined);
+          }
         };
       } catch (e) {
         setIsLoadingAd(false);
@@ -615,19 +689,53 @@ function InvoiceContent() {
             <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest">Special Customer Promotion Offer</p>
           </header>
 
-          <div className="relative aspect-square w-full rounded-[2rem] overflow-hidden shadow-2xl border border-zinc-800 bg-zinc-900 flex items-center justify-center">
+          <div className="relative aspect-square w-full rounded-[2rem] overflow-hidden shadow-2xl border border-zinc-800 bg-gradient-to-br from-zinc-900 via-zinc-950 to-orange-950/40 flex items-center justify-center">
             {isLoadingAd ? (
-              <div className="flex flex-col items-center gap-3">
+              <div className="flex flex-col items-center gap-3 p-6">
                 <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
-                <p className="text-[10px] font-black tracking-widest text-zinc-400 uppercase">Generating Ad Banner...</p>
+                <p className="text-[10px] font-black tracking-widest text-zinc-400 uppercase">Loading Digital Offer Banner...</p>
               </div>
+            ) : adBannerUrl && !imgHasError ? (
+              <img 
+                src={adBannerUrl} 
+                alt="Ad Banner" 
+                onError={() => setImgHasError(true)}
+                className="w-full h-full object-contain" 
+              />
             ) : (
-              <img src={adBannerUrl} alt="Ad Banner" className="w-full h-full object-contain" />
+              /* Fallback Digital Offer Card */
+              <div className="w-full h-full p-8 flex flex-col justify-between items-center text-center relative overflow-hidden bg-gradient-to-br from-orange-600/20 via-zinc-900 to-black">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 via-amber-400 to-orange-500" />
+                
+                {/* Store Header */}
+                <div className="space-y-2 pt-4">
+                  <div className="inline-block bg-orange-500/20 text-orange-400 border border-orange-500/30 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase">
+                    OFFICIAL PROMOTION
+                  </div>
+                  <h2 className="text-3xl font-black tracking-tight text-white uppercase">{restName}</h2>
+                </div>
+
+                {/* Offer Highlights */}
+                <div className="space-y-4 my-auto px-4 py-6 bg-zinc-900/80 backdrop-blur-md rounded-3xl border border-zinc-800/80 w-full shadow-xl">
+                  <p className="text-3xl sm:text-4xl font-black text-orange-500 uppercase tracking-tight leading-none">
+                    {bannerOffer || "SPECIAL DISCOUNT"}
+                  </p>
+                  <p className="text-base font-bold text-zinc-200 uppercase tracking-wide">
+                    {bannerDetails ? `${bannerDetails} ON ${bannerProd}` : (bannerProd || "All Items")}
+                  </p>
+                </div>
+
+                {/* Footer Watermark */}
+                <div className="pb-2 space-y-1">
+                  <p className="text-[9px] font-black tracking-widest text-zinc-500 uppercase">POWERED BY INSTAMUNIM SMART POS</p>
+                  <p className="text-[8px] font-bold text-orange-500/80 uppercase">Show this offer in store to redeem</p>
+                </div>
+              </div>
             )}
           </div>
 
-          {!isLoadingAd && (
-            <div className="flex flex-col sm:flex-row gap-3 w-full">
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            {adBannerUrl && !imgHasError && (
               <Button
                 onClick={() => {
                   const link = document.createElement("a");
@@ -641,8 +749,8 @@ function InvoiceContent() {
               >
                 Save To Gallery
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     );
