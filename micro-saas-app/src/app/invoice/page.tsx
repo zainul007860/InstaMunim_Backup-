@@ -137,7 +137,7 @@ function InvoiceContent() {
 
         const img = new Image();
         img.crossOrigin = "anonymous";
-        img.src = bgUrl.startsWith("http") ? `/api/proxy-image?url=${encodeURIComponent(bgUrl)}` : bgUrl;
+        img.src = bgUrl.startsWith("http") ? `https://api.allorigins.win/raw?url=${encodeURIComponent(bgUrl)}` : bgUrl;
         img.onload = () => {
           ctx.drawImage(img, 0, 0, 1024, 1024);
 
