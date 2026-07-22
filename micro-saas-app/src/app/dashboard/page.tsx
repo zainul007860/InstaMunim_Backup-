@@ -2148,7 +2148,7 @@ Requirements for the generated image prompt:
       const baseUrl = (typeof window !== 'undefined' && window.location.port === '3000')
         ? "http://localhost:3000"
         : "https://www.instamunim.com";
-      const imgParam = targetImgUrl ? `&img=${encodeURIComponent(targetImgUrl)}` : "";
+      const imgParam = (targetImgUrl && !targetImgUrl.includes("pollinations.ai")) ? `&img=${encodeURIComponent(targetImgUrl)}` : "";
       const seedParam = aiBannerSeed ? `&sd=${aiBannerSeed}` : "";
       const viewerUrl = `${baseUrl}/invoice?banner=true${imgParam}${seedParam}&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${encodeURIComponent(ownerMobile)}`;
       launchWhatsApp('', `Special offer at ${restaurantName}! 🛍️ Offer: ${offerTitle}\nView Banner: ${viewerUrl}`);
@@ -2186,7 +2186,7 @@ Requirements for the generated image prompt:
         ? "http://localhost:3000"
         : "https://www.instamunim.com";
       
-      const imgParam = targetImgUrl ? `&img=${encodeURIComponent(targetImgUrl)}` : "";
+      const imgParam = (targetImgUrl && !targetImgUrl.includes("pollinations.ai")) ? `&img=${encodeURIComponent(targetImgUrl)}` : "";
       const seedParam = aiBannerSeed ? `&sd=${aiBannerSeed}` : "";
       const viewerUrl = `${baseUrl}/invoice?banner=true${imgParam}${seedParam}&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${encodeURIComponent(ownerMobile)}`;
 

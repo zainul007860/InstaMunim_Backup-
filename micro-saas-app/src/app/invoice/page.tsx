@@ -137,7 +137,7 @@ function InvoiceContent() {
 
         const img = new Image();
         img.crossOrigin = "anonymous";
-        img.src = bgUrl;
+        img.src = bgUrl.startsWith("http") ? `/api/proxy-image?url=${encodeURIComponent(bgUrl)}` : bgUrl;
         img.onload = () => {
           ctx.drawImage(img, 0, 0, 1024, 1024);
 
@@ -271,8 +271,8 @@ function InvoiceContent() {
               ctx.drawImage(logoImg, x + margin, y + margin, size, size);
             }
 
-            drawTextWithFit(bannerOffer.toUpperCase(), 512, 500, 928, 84, true, "#FF6B00");
-            drawTextWithFit(`${bannerDetails} ON ${bannerProd}`.toUpperCase(), 512, 600, 928, 42, false, "#ffffff");
+            drawTextWithFit(ctx, bannerOffer.toUpperCase(), 512, 500, 928, 84, true, "#FF6B00");
+            drawTextWithFit(ctx, `${bannerDetails} ON ${bannerProd}`.toUpperCase(), 512, 600, 928, 42, false, "#ffffff");
 
             ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
             ctx.font = "bold 22px sans-serif";
