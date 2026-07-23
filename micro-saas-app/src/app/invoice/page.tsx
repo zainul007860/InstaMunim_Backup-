@@ -681,6 +681,13 @@ function InvoiceContent() {
   }
 
   if (isBannerView) {
+    // Construct the background image URL from query params if img is not passed
+    const customSeedStr = searchParams.get("sd");
+    const seed = customSeedStr ? Number(customSeedStr) : (Math.abs(restName.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0)) % 1000000);
+    const bannerPrompt = `Professional commercial studio photography social media ad poster banner. A realistic close-up shot of '${bannerProd}' in premium packaging, set on a modern studio surface with clean lighting. Cinematic lighting, sharp focus, 8k resolution, high-end commercial setup. Plain background with no text, letters, or words.`;
+    const encodedPrompt = encodeURIComponent(bannerPrompt);
+    const bgUrl = directImgUrl || `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}&model=flux`;
+
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950 p-4 font-sans text-white">
         <div className="w-full max-w-lg space-y-6 text-center animate-in fade-in duration-500">
@@ -689,67 +696,64 @@ function InvoiceContent() {
             <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest">Special Customer Promotion Offer</p>
           </header>
 
-          <div className="relative aspect-square w-full rounded-[2rem] overflow-hidden shadow-2xl border border-zinc-800 bg-gradient-to-br from-zinc-900 via-zinc-950 to-orange-950/40 flex items-center justify-center">
-            {isLoadingAd ? (
-              <div className="flex flex-col items-center gap-3 p-6">
-                <div className="w-10 h-10 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
-                <p className="text-[10px] font-black tracking-widest text-zinc-400 uppercase">Loading Digital Offer Banner...</p>
-              </div>
-            ) : adBannerUrl && !imgHasError ? (
-              <img 
-                src={adBannerUrl} 
-                alt="Ad Banner" 
-                onError={() => setImgHasError(true)}
-                className="w-full h-full object-contain" 
-              />
-            ) : (
-              /* Fallback Digital Offer Card */
-              <div className="w-full h-full p-8 flex flex-col justify-between items-center text-center relative overflow-hidden bg-gradient-to-br from-orange-600/20 via-zinc-900 to-black">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-500 via-amber-400 to-orange-500" />
-                
-                {/* Store Header */}
-                <div className="space-y-2 pt-4">
-                  <div className="inline-block bg-orange-500/20 text-orange-400 border border-orange-500/30 px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase">
-                    OFFICIAL PROMOTION
-                  </div>
-                  <h2 className="text-3xl font-black tracking-tight text-white uppercase">{restName}</h2>
-                </div>
+          {/* The Digital Offer Poster Container */}
+          <div className="relative aspect-square w-full rounded-[2rem] overflow-hidden shadow-2xl border border-zinc-800 bg-zinc-900 flex items-center justify-center">
+            {/* 1. Background Product Image (CORS-safe standard img tag) */}
+            <img 
+              src={bgUrl} 
+              alt="Promotion Offer" 
+              className="absolute inset-0 w-full h-full object-cover"
+              loading="eager"
+            />
+            
+            {/* 2. Dark Gradients to ensure text readability */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-transparent to-black/90 pointer-events-none" />
 
-                {/* Offer Highlights */}
-                <div className="space-y-4 my-auto px-4 py-6 bg-zinc-900/80 backdrop-blur-md rounded-3xl border border-zinc-800/80 w-full shadow-xl">
-                  <p className="text-3xl sm:text-4xl font-black text-orange-500 uppercase tracking-tight leading-none">
-                    {bannerOffer || "SPECIAL DISCOUNT"}
-                  </p>
-                  <p className="text-base font-bold text-zinc-200 uppercase tracking-wide">
-                    {bannerDetails ? `${bannerDetails} ON ${bannerProd}` : (bannerProd || "All Items")}
-                  </p>
+            {/* 3. Top Section: Store Name & Logo */}
+            <div className="absolute top-6 left-6 right-6 flex items-center justify-between">
+              <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight drop-shadow-lg pr-4 truncate">
+                {restName}
+              </h2>
+              {finalLogo && (
+                <div className="w-14 h-14 bg-white rounded-2xl p-1 shadow-lg flex items-center justify-center overflow-hidden border border-zinc-200/20 flex-shrink-0">
+                  <img src={finalLogo} alt="Logo" className="w-full h-full object-contain rounded-xl" />
                 </div>
+              )}
+            </div>
 
-                {/* Footer Watermark */}
-                <div className="pb-2 space-y-1">
-                  <p className="text-[9px] font-black tracking-widest text-zinc-500 uppercase">POWERED BY INSTAMUNIM SMART POS</p>
-                  <p className="text-[8px] font-bold text-orange-500/80 uppercase">Show this offer in store to redeem</p>
-                </div>
+            {/* 4. Bottom Section: Offer & Discount Details */}
+            <div className="absolute bottom-8 left-6 right-6 text-center space-y-3">
+              <div className="inline-block bg-orange-500/20 text-orange-400 border border-orange-500/30 px-3 py-0.5 rounded-full text-[10px] font-black tracking-widest uppercase">
+                OFFICIAL PROMOTION
               </div>
-            )}
+              <h3 className="text-3xl sm:text-4xl font-black text-orange-500 uppercase tracking-tight leading-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
+                {bannerOffer || "SPECIAL DISCOUNT"}
+              </h3>
+              <p className="text-sm sm:text-base font-bold text-white uppercase tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)]">
+                {bannerDetails ? `${bannerDetails} ON ${bannerProd}` : (bannerProd || "All Items")}
+              </p>
+              
+              <div className="pt-2">
+                <p className="text-[9px] font-black tracking-widest text-zinc-400/80 uppercase">POWERED BY INSTAMUNIM SMART POS</p>
+              </div>
+            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full">
-            {adBannerUrl && !imgHasError && (
-              <Button
-                onClick={() => {
-                  const link = document.createElement("a");
-                  link.href = adBannerUrl;
-                  link.download = `InstaMunim_Offer_${restName.replace(/\s+/g, '_')}.png`;
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                }}
-                className="w-full h-14 bg-orange-600 hover:bg-orange-500 text-white font-black rounded-2xl text-xs tracking-widest uppercase shadow-lg shadow-orange-600/10 active:scale-95 transition-all border-0 cursor-pointer"
-              >
-                Save To Gallery
-              </Button>
-            )}
+            <Button
+              onClick={() => {
+                const downloadUrl = adBannerUrl || bgUrl;
+                const link = document.createElement("a");
+                link.href = downloadUrl;
+                link.download = `InstaMunim_Offer_${restName.replace(/\s+/g, '_')}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+              }}
+              className="w-full h-14 bg-orange-600 hover:bg-orange-500 text-white font-black rounded-2xl text-xs tracking-widest uppercase shadow-lg shadow-orange-600/10 active:scale-95 transition-all border-0 cursor-pointer"
+            >
+              Save To Gallery
+            </Button>
           </div>
         </div>
       </div>
