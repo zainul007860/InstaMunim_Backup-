@@ -137,7 +137,7 @@ function InvoiceContent() {
 
         const img = new Image();
         img.crossOrigin = "anonymous";
-        img.src = bgUrl.startsWith("http") ? `https://api.allorigins.win/raw?url=${encodeURIComponent(bgUrl)}` : bgUrl;
+        img.src = bgUrl.startsWith("http") ? `https://images.weserv.nl/?url=${encodeURIComponent(bgUrl)}` : bgUrl;
         img.onload = () => {
           ctx.drawImage(img, 0, 0, 1024, 1024);
 
@@ -700,7 +700,7 @@ function InvoiceContent() {
           <div className="relative aspect-square w-full rounded-[2rem] overflow-hidden shadow-2xl border border-zinc-800 bg-zinc-900 flex items-center justify-center">
             {/* 1. Background Product Image (CORS-safe standard img tag) */}
             <img 
-              src={bgUrl} 
+              src={bgUrl.startsWith("http") ? `https://images.weserv.nl/?url=${encodeURIComponent(bgUrl)}` : bgUrl} 
               alt="Promotion Offer" 
               className="absolute inset-0 w-full h-full object-cover"
               loading="eager"
