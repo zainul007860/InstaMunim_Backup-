@@ -2132,30 +2132,16 @@ Requirements for the generated image prompt:
       }
     } catch (err: any) {
       console.error("Error sharing banner:", err);
-      let targetImgUrl = uploadedBannerUrl;
-      if (!targetImgUrl || !targetImgUrl.startsWith("http")) {
-        if (aiImageUrl && aiImageUrl.startsWith("data:")) {
-          const uploaded = await uploadBannerToStorage(aiImageUrl);
-          if (uploaded) targetImgUrl = uploaded;
-        } else if (aiImageUrl && aiImageUrl.startsWith("http")) {
-          targetImgUrl = aiImageUrl;
-        }
-      }
-
-      if (!targetImgUrl && aiBannerSeed && aiBannerPrompt) {
-        targetImgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(aiBannerPrompt)}?width=1024&height=1024&nologo=true&seed=${aiBannerSeed}&model=flux`;
-      }
       const baseUrl = (typeof window !== 'undefined' && window.location.port === '3000')
         ? "http://localhost:3000"
         : "https://www.instamunim.com";
-      const imgParam = (targetImgUrl && !targetImgUrl.includes("pollinations.ai")) ? `&img=${encodeURIComponent(targetImgUrl)}` : "";
       const seedParam = aiBannerSeed ? `&sd=${aiBannerSeed}` : "";
-      const viewerUrl = `${baseUrl}/invoice?banner=true${imgParam}${seedParam}&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${encodeURIComponent(ownerMobile)}`;
+      const viewerUrl = `${baseUrl}/invoice?banner=true${seedParam}&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${encodeURIComponent(ownerMobile)}`;
       launchWhatsApp('', `Special offer at ${restaurantName}! 🛍️ Offer: ${offerTitle}\nView Banner: ${viewerUrl}`);
     }
   };
 
-  const handleSendImage = async (mobile: string, name: string) => {
+  const handleSendImage = (mobile: string, name: string) => {
     if (!aiImageUrl) {
       alert("Please generate an AI banner first!");
       return;
@@ -2168,27 +2154,12 @@ Requirements for the generated image prompt:
     }
 
     try {
-      let targetImgUrl = uploadedBannerUrl;
-      if (!targetImgUrl || !targetImgUrl.startsWith("http")) {
-        if (aiImageUrl && aiImageUrl.startsWith("data:")) {
-          const uploaded = await uploadBannerToStorage(aiImageUrl);
-          if (uploaded) targetImgUrl = uploaded;
-        } else if (aiImageUrl && aiImageUrl.startsWith("http")) {
-          targetImgUrl = aiImageUrl;
-        }
-      }
-
-      if (!targetImgUrl && aiBannerSeed && aiBannerPrompt) {
-        targetImgUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(aiBannerPrompt)}?width=1024&height=1024&nologo=true&seed=${aiBannerSeed}&model=flux`;
-      }
-
       const baseUrl = (typeof window !== 'undefined' && window.location.port === '3000')
         ? "http://localhost:3000"
         : "https://www.instamunim.com";
       
-      const imgParam = (targetImgUrl && !targetImgUrl.includes("pollinations.ai")) ? `&img=${encodeURIComponent(targetImgUrl)}` : "";
       const seedParam = aiBannerSeed ? `&sd=${aiBannerSeed}` : "";
-      const viewerUrl = `${baseUrl}/invoice?banner=true${imgParam}${seedParam}&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${encodeURIComponent(ownerMobile)}`;
+      const viewerUrl = `${baseUrl}/invoice?banner=true${seedParam}&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${encodeURIComponent(ownerMobile)}`;
 
       const customMsgEn = `Special offer for you, ${name}! 🛍️\nShop: ${restaurantName}\nOffer: ${offerTitle}\nDeal: ${discountDetails} on ${productName}`;
       const customMsgHi = `आपके लिए खास ऑफर, ${name}! 🛍️\nदुकान: ${restaurantName}\nऑफर: ${offerTitle}\nडील: ${productName} पर ${discountDetails}`;
