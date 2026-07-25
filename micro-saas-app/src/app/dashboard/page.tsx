@@ -16,6 +16,7 @@ import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 import { Preferences } from '@capacitor/preferences';
 import { App } from '@capacitor/app';
 import { trackEvent } from "@/lib/firebase";
+import { EnquiriesView } from "./EnquiriesView";
 
 const getDisplayCategory = (cat: string) => {
   if (!cat) return "General";
@@ -1244,6 +1245,10 @@ export default function Dashboard() {
   const [financeDownPayment, setFinanceDownPayment] = useState("");
   const [financeFileId, setFinanceFileId] = useState("");
   const [cashReceived, setCashReceived] = useState("");
+  const [splitCash, setSplitCash] = useState("");
+  const [financeDpSplit, setFinanceDpSplit] = useState(false);
+  const [financeDpCash, setFinanceDpCash] = useState("");
+  const [enquiries, setEnquiries] = useState<any[]>([]);
   const [isSaleOpen, setIsSaleOpen] = useState(false);
   const [newExpTitle, setNewExpTitle] = useState("");
   const [newExpAmount, setNewExpAmount] = useState("");
@@ -4165,6 +4170,25 @@ Stay safe & eat healthy! 🍕
         id: m.id, name: m.name, price: m.price, category: m.category 
       })) : []);
 
+      // 4. Fetch Enquiries safely
+      try {
+        const { data: enquiriesData, error: enquiriesError } = await supabase
+          .from('enquiries')
+          .select('*')
+          .eq('store_id', storeId)
+          .order('created_at', { ascending: false });
+        if (enquiriesError) throw enquiriesError;
+        setEnquiries(enquiriesData || []);
+      } catch (enqErr: any) {
+        console.warn("Supabase enquiries fetching failed, reading from localStorage fallback:", enqErr);
+        const localEnq = localStorage.getItem(`saas_enquiries_${storeId}`);
+        if (localEnq) {
+          setEnquiries(JSON.parse(localEnq));
+        } else {
+          setEnquiries([]);
+        }
+      }
+
       // Fetch Gemini API Key from app_config
       const { data: configData } = await supabase
         .from('app_config')
@@ -4514,7 +4538,20 @@ Stay safe & eat healthy! 🍕
       // Embed Finance details
       if (newType === "Finance") {
         const loanAmt = Math.max(0, cartTotal - (Number(financeDownPayment) || 0));
-        itemsWithMetadata += `\n[FINANCE:${financeCompany}:${loanAmt}:${Number(financeDownPayment) || 0}:${financeFileId || "N/A"}:Pending]`;
+        let financeStr = `[FINANCE:${financeCompany}:${loanAmt}:${Number(financeDownPayment) || 0}:${financeFileId || "N/A"}:Pending]`;
+        if (financeDpSplit) {
+          const dpCash = Number(financeDpCash) || 0;
+          const dpUpi = Math.max(0, (Number(financeDownPayment) || 0) - dpCash);
+          financeStr += `\n[FINANCE_DP_SPLIT:Cash:${dpCash}:UPI:${dpUpi}]`;
+        }
+        itemsWithMetadata += `\n${financeStr}`;
+      }
+
+      let paymentTypeDb = newType;
+      if (newType === "Split") {
+        const cashPart = Number(splitCash) || 0;
+        const upiPart = Math.max(0, cartTotal - cashPart);
+        paymentTypeDb = `Split (Cash: ${cashPart} | UPI: ${upiPart})`;
       }
 
       const { data: newSale, error } = await supabase
@@ -4525,7 +4562,7 @@ Stay safe & eat healthy! 🍕
           mobile: newMobile || "N/A",
           items: itemsWithMetadata,
           total_price: cartTotal,
-          payment_type: newType
+          payment_type: paymentTypeDb
         }])
         .select()
         .single();
@@ -4698,7 +4735,29 @@ Stay safe & eat healthy! 🍕
             : `Received ${amt} rupees on InstaMunim via ${type}。`
         };
 
-        let textToAnnounce = announceTemplates[lang] || announceTemplates['en'];
+        let textToAnnounce = "";
+        if (type && type.startsWith("Split")) {
+          const cashMatch = type.match(/Cash:\s*([\d\.]+)/);
+          const upiMatch = type.match(/UPI:\s*([\d\.]+)/);
+          const cashVal = cashMatch ? Number(cashMatch[1]) : 0;
+          const upiVal = upiMatch ? Number(upiMatch[1]) : 0;
+          
+          const splitTemplates: Record<string, string> = {
+            hi: `इंस्टामुनिम पर ${cashVal} रुपये कैश और ${upiVal} रुपये ऑनलाइन प्राप्त हुए。`,
+            mr: `इन्स्टामुनिमवर ${cashVal} रुपये कॅश आणि ${upiVal} रुपये ऑनलाइन प्राप्त झाले。`,
+            gu: `ઇન્સ્ટામુનિમ પર ${cashVal} રૂપિયા કેશ અને ${upiVal} રૂપિયા ઓનલાઇન મળ્યા છે。`,
+            bn: `ইনস্টামুনিমে ${cashVal} টাকা ক্যাশ এবং ${upiVal} টাকা অনলাইন পাওয়া গেছে。`,
+            pa: `ਇੰਸਟਾਮੁਨਿਮ 'ਤੇ ${cashVal} ਰੁਪਏ ਕੈਸ਼ ਅਤੇ ${upiVal} ਰੁਪਏ ਆਨਲਾਈਨ ਪ੍ਰਾਪਤ ਹੋਏ。`,
+            ta: `இன்ஸ்டாமுனிமில் ${cashVal} ரூபாய் ரொக்கமாகவும் ${upiVal} ரூபாய் ஆன்லைன் மூலமும் பெறப்பட்டது。`,
+            te: `ఇన్‌స్టామునిమ్‌లో ${cashVal} రూపాయల నగదు మరియు ${upiVal} రూపాయల ఆన్‌లైన్ ద్వారా వచ్చాయి。`,
+            kn: `ಇನ್ಸ್ಟಾಮುನಿಮ್ನಲ್ಲಿ ${cashVal} ರೂಪಾಯಿ నగదు మరియు ${upiVal} ರೂಪಾಯಿ ಆನ್‌ಲೈನ್ ಮೂಲಕ ಸ್ವೀಕರಿಸಲಾಗಿದೆ挂`,
+            ml: `ഇൻസ്റ്റാമുനിമിൽ ${cashVal} രൂപ പണമായും ${upiVal} രൂപ ഓൺലൈൻ വഴിയും ലഭിച്ചു。`,
+            en: `Received ${cashVal} rupees Cash and ${upiVal} rupees Online on InstaMunim。`
+          };
+          textToAnnounce = splitTemplates[lang] || splitTemplates['en'];
+        } else {
+          textToAnnounce = announceTemplates[lang] || announceTemplates['en'];
+        }
         
         // Dynamically replace platform names in announcement speech for correct branding
         const p1 = getPartnerName(businessType, "Swiggy");
@@ -4744,6 +4803,9 @@ Stay safe & eat healthy! 🍕
       setFinanceCompany("Bajaj Finserv");
       setFinanceDownPayment("");
       setFinanceFileId("");
+      setSplitCash("");
+      setFinanceDpSplit(false);
+      setFinanceDpCash("");
 
       // Trigger Interstitial Ad after every [remoteAdFrequency] sales
       if (!isSubscribed) {
@@ -4846,6 +4908,63 @@ Stay safe & eat healthy! 🍕
     }
       
     launchWhatsApp(lastOrderDetails.mobile, msg);
+  };
+
+  const renderPaymentDetails = (s: any) => {
+    const rawItemString = s.item || "";
+    const typeStr = s.type || "Cash";
+    const isSplitPayment = typeStr.includes("Split");
+    
+    // Check finance details
+    const financeMatch = rawItemString.match(/\[FINANCE:([^:]+):(\d+(?:\.\d+)?):(\d+(?:\.\d+)?):([^:]+):(Pending|Settled)\]/);
+    // Check downpayment split
+    const dpSplitMatch = rawItemString.match(/\[FINANCE_DP_SPLIT:Cash:(\d+(?:\.\d+)?):UPI:(\d+(?:\.\d+)?)\]/);
+    
+    if (!isSplitPayment && !financeMatch) {
+      const isUdhaar = s.type === "Udhaar";
+      const isOnline = s.type === "Online";
+      const isSwiggy = s.type === "Swiggy";
+      const isZomato = s.type === "Zomato";
+      let badgeStyle = "bg-emerald-100 text-emerald-600";
+      if (isUdhaar) badgeStyle = "bg-red-100 text-red-600";
+      else if (isOnline) badgeStyle = "bg-blue-100 text-blue-600";
+      else if (isSwiggy || isZomato) badgeStyle = "bg-orange-100 text-orange-600";
+      else if (s.type !== "Cash") badgeStyle = "bg-zinc-100 text-zinc-600";
+      
+      return (
+        <Badge className={`text-[8px] font-bold px-2 py-0.5 rounded-lg border-0 ${badgeStyle}`}>
+          {getPartnerName(businessType, s.type).toUpperCase()}
+        </Badge>
+      );
+    }
+    
+    return (
+      <div className="flex flex-col items-center sm:items-start gap-1">
+        <Badge className="text-[8px] font-bold px-2 py-0.5 rounded-lg border-0 bg-blue-100 text-blue-600">
+          {getPartnerName(businessType, isSplitPayment ? "Split" : "Finance").toUpperCase()}
+        </Badge>
+        {isSplitPayment && (
+          <span className="text-[9px] font-black text-zinc-500 whitespace-nowrap bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded">
+            {typeStr.replace("Split ", "")}
+          </span>
+        )}
+        {financeMatch && (
+          <div className="flex flex-col items-start gap-0.5 text-[8px] text-zinc-500 bg-zinc-50 dark:bg-zinc-800/50 p-1.5 rounded border border-zinc-100 dark:border-zinc-800 whitespace-nowrap">
+            <span className="font-extrabold text-[9px] text-zinc-700 dark:text-zinc-300">{financeMatch[1]}</span>
+            <span>Loan: ₹{financeMatch[2]}</span>
+            <span>Down Payment: ₹{financeMatch[3]}</span>
+            {dpSplitMatch && (
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                DP Split: Cash ₹{dpSplitMatch[1]} | UPI ₹{dpSplitMatch[2]}
+              </span>
+            )}
+            <span className={`font-black uppercase tracking-wider text-[7px] px-1 rounded-sm mt-0.5 ${financeMatch[5] === 'Settled' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600 animate-pulse'}`}>
+              {financeMatch[5]}
+            </span>
+          </div>
+        )}
+      </div>
+    );
   };
 
   const getInvoiceUrlForSale = (s: any) => {
@@ -5065,45 +5184,71 @@ Stay safe & eat healthy! 🍕
   const uniqueCustomers = useMemo(() => Array.from(new Set(sales.filter(s => s.mobile !== "N/A").map(s => s.mobile))), [sales]);
 
   const crmList = useMemo(() => {
-    // Extract unique customers from sales
-    const customersMap = new Map<string, { name: string; mobile: string; lastDate: Date }>();
+    // Extract unique customers from sales & walk-in enquiries
+    const customersMap = new Map<string, { name: string; mobile: string; lastDate: Date; tag?: string; notes?: string }>();
     
+    // 1. Read Walk-in Enquiries from Local Storage
+    try {
+      const savedEnquiries = localStorage.getItem(`instamunim_enquiries_${currentStoreId || 'default'}`);
+      if (savedEnquiries) {
+        const enqList = JSON.parse(savedEnquiries);
+        enqList.forEach((e: any) => {
+          if (e.phone && e.phone.length >= 10) {
+            const cleanPhone = e.phone.replace(/\D/g, "").slice(-10);
+            customersMap.set(cleanPhone, {
+              name: e.customerName || "Walk-in Lead",
+              mobile: cleanPhone,
+              lastDate: e.createdAt ? new Date(e.createdAt) : new Date(),
+              tag: "Walk-in Lead",
+              notes: e.notes
+            });
+          }
+        });
+      }
+    } catch (err) {
+      console.warn("Failed reading enquiries for CRM list:", err);
+    }
+
+    // 2. Read customers from sales
     sales.forEach(s => {
-      if (s.mobile && s.mobile !== "N/A" && s.mobile.length === 10) {
-        const existing = customersMap.get(s.mobile);
+      if (s.mobile && s.mobile !== "N/A" && s.mobile.length >= 10) {
+        const cleanPhone = s.mobile.replace(/\D/g, "").slice(-10);
+        const existing = customersMap.get(cleanPhone);
         const sDate = s.date ? new Date(s.date) : new Date();
         if (!existing || sDate > existing.lastDate) {
-          customersMap.set(s.mobile, {
+          customersMap.set(cleanPhone, {
             name: s.name || "Customer",
-            mobile: s.mobile,
-            lastDate: sDate
+            mobile: cleanPhone,
+            lastDate: sDate,
+            tag: existing?.tag || "Customer",
+            notes: existing?.notes
           });
         }
       }
     });
 
     const derived = Array.from(customersMap.values()).map(c => {
-      // Calculate days ago
       const diffTime = Math.abs(new Date().getTime() - c.lastDate.getTime());
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       return {
         name: c.name,
         mobile: c.mobile,
-        last: `${diffDays} days ago`
+        last: `${diffDays} days ago`,
+        tag: c.tag || "Customer",
+        notes: c.notes
       };
     });
 
-    // Fallback to mock items if empty
     if (derived.length === 0) {
       return [
-        { name: "salman khan", mobile: "7838229178", last: "1 days ago" },
-        { name: "Sumaira", mobile: "8130707236", last: "2 days ago" },
-        { name: "Anish Gupta", mobile: "9910293847", last: "5 days ago" }
+        { name: "salman khan", mobile: "7838229178", last: "1 days ago", tag: "Customer", notes: undefined },
+        { name: "Sumaira", mobile: "8130707236", last: "2 days ago", tag: "Customer", notes: undefined },
+        { name: "Anish Gupta", mobile: "9910293847", last: "5 days ago", tag: "Customer", notes: undefined }
       ];
     }
 
     return derived;
-  }, [sales]);
+  }, [sales, currentStoreId]);
 
   const displayedCrmList = useMemo(() => {
     if (!isSubscribed) {
@@ -6122,6 +6267,28 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         </div>
                       )}
 
+                      {newType === "Split" && (
+                        <div className="p-4 bg-purple-50/50 dark:bg-purple-900/10 rounded-2xl border border-purple-100 dark:border-purple-900/20 space-y-3 text-left">
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest pl-1">Cash Amount</span>
+                            <Input 
+                              type="number"
+                              placeholder="₹ Cash"
+                              value={splitCash} 
+                              onChange={e => setSplitCash(e.target.value)} 
+                              className="w-32 h-9 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold text-xs text-center shadow-sm" 
+                            />
+                          </div>
+                          <div className="h-[1px] bg-purple-200/50 dark:bg-purple-900/30 w-full" />
+                          <div className="flex items-center justify-between gap-4">
+                            <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest pl-1">UPI Amount</span>
+                            <span className="text-lg font-black text-purple-600 pr-2">
+                              ₹{Math.max(0, grandTotal - (Number(splitCash) || 0))}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
                       <div className="relative w-40">
                         <select 
                           value={newType} 
@@ -6130,6 +6297,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         >
                           <option value="Cash">Cash Sale</option>
                           <option value="Online">Online/UPI</option>
+                          <option value="Split">Split (Cash + UPI)</option>
                           <option value="Udhaar">Udhaar Khata</option>
                           <option value="Swiggy">{getPartnerName(businessType, "Swiggy")}</option>
                           <option value="Zomato">{getPartnerName(businessType, "Zomato")}</option>
@@ -6343,9 +6511,21 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     <div key={s.id} className="p-4 flex justify-between items-center hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                       <div className="space-y-0.5">
                         <p className="font-bold text-[13px] leading-tight">{s.name}</p>
-                        <div className="text-[8px] font-medium text-zinc-400 flex items-center gap-1.5">
-                          {format(new Date(s.date), "hh:mm aa")} • 
-                          <span className={`px-1 rounded-sm font-bold ${s.type === 'Cash' ? 'text-emerald-600 bg-emerald-50' : s.type === 'Swiggy' || s.type === 'Zomato' ? 'text-orange-600 bg-orange-50 dark:bg-orange-950/20' : 'text-blue-600 bg-blue-50'}`}>{getPartnerName(businessType, s.type)}</span>
+                        <div className="text-[8px] font-medium text-zinc-400 flex flex-wrap items-center gap-1.5">
+                          <span>{format(new Date(s.date), "hh:mm aa")}</span>
+                          <span>•</span>
+                          {s.type && s.type.includes("Split") ? (
+                            <span className="text-blue-600 bg-blue-50 dark:bg-blue-950/20 px-1 rounded-sm font-bold uppercase">{s.type.replace("Split ", "SPLIT: ")}</span>
+                          ) : s.type === "Finance" ? (
+                            <span className="text-indigo-600 bg-indigo-50 dark:bg-indigo-950/20 px-1 rounded-sm font-bold uppercase">
+                              FINANCE: {(() => {
+                                const m = (s.item || "").match(/\[FINANCE:([^:]+):/);
+                                return m ? m[1] : "Bajaj";
+                              })()}
+                            </span>
+                          ) : (
+                            <span className={`px-1 rounded-sm font-bold ${s.type === 'Cash' ? 'text-emerald-600 bg-emerald-50' : s.type === 'Swiggy' || s.type === 'Zomato' ? 'text-orange-600 bg-orange-50 dark:bg-orange-950/20' : 'text-blue-600 bg-blue-50'}`}>{getPartnerName(businessType, s.type)}</span>
+                          )}
                         </div>
                       </div>
                       <p className="text-base font-bold tracking-tight">
@@ -6395,7 +6575,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               <header className="relative">
                 <div className="absolute -left-10 -top-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl" />
                 <h2 className="text-4xl font-black tracking-tighter">Rent Mission</h2>
-                <p className="text-zinc-500 font-bold flex items-center gap-2 mt-1"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" /> Stay ahead of your shop costs.</p>
+                <p className="text-zinc-500 font-bold flex items-center gap-2 mt-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" /> Stay ahead of your shop costs.</p>
               </header>
 
               {!isSubscribed ? (
@@ -6574,9 +6754,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                               <td className="py-2 px-4 font-bold text-sm text-zinc-500 whitespace-nowrap">{s.mobile}</td>
                               <td className="py-2 px-4 font-bold text-xs text-zinc-800 dark:text-zinc-200 whitespace-nowrap">{s.item || "General Order"}</td>
                               <td className="py-2 px-4 text-center">
-                                <Badge className={`text-[8px] font-bold px-2 py-0.5 rounded-lg border-0 ${s.type === 'Cash' ? 'bg-emerald-100 text-emerald-600' : s.type === 'Swiggy' || s.type === 'Zomato' ? 'bg-orange-100 text-orange-600' : 'bg-blue-100 text-blue-600'}`}>
-                                  {getPartnerName(businessType, s.type).toUpperCase()}
-                                </Badge>
+                                {renderPaymentDetails(s)}
                               </td>
                               <td className="py-2 px-4 text-right font-bold text-lg tracking-tighter text-zinc-900 dark:text-white whitespace-nowrap">
                                 ₹{s.price - (s.commission || 0)}
@@ -6634,7 +6812,12 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           <tr key={s.id} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
                             <td className="py-2 px-4 font-bold text-[10px] text-zinc-400 whitespace-nowrap">{format(new Date(s.date), "dd MMM, HH:mm")}</td>
                             <td className="py-2 px-4 font-bold text-sm text-zinc-900 dark:text-white uppercase whitespace-nowrap">{s.name}</td>
-                            <td className="py-2 px-4 font-bold text-xs text-zinc-500 whitespace-nowrap">{s.item || "General Order"}</td>
+                            <td className="py-2 px-4 font-bold text-xs text-zinc-500 whitespace-nowrap">
+                              <div className="flex flex-col gap-1 items-start">
+                                <span>{s.item || "General Order"}</span>
+                                <div className="mt-0.5">{renderPaymentDetails(s)}</div>
+                              </div>
+                            </td>
                             <td className="py-2 px-4 text-right font-bold text-lg tracking-tighter text-zinc-900 dark:text-white whitespace-nowrap">
                               ₹{s.price - (s.commission || 0)}
                             </td>
@@ -6850,8 +7033,20 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       {displayedCrmList.map((cust, i) => (
                         <tr key={i} className="hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                           <td className="py-6 px-8">
-                            <div className="font-black text-base text-zinc-900 dark:text-white tracking-tight">{cust.name}</div>
+                            <div className="flex items-center gap-2">
+                              <div className="font-black text-base text-zinc-900 dark:text-white tracking-tight">{cust.name}</div>
+                              {cust.tag === "Walk-in Lead" && (
+                                <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 font-black text-[9px] uppercase px-2 py-0.5 rounded-full">
+                                  🏷️ Walk-in Lead
+                                </Badge>
+                              )}
+                            </div>
                             <div className="text-[11px] font-bold text-zinc-400 tracking-tight">{cust.mobile}</div>
+                            {cust.notes && (
+                              <p className="text-[10px] font-medium text-indigo-600 dark:text-indigo-400 mt-1 max-w-[200px] truncate">
+                                📝 {cust.notes}
+                              </p>
+                            )}
                           </td>
                           <td className="py-6 px-8">
                             <div className="bg-zinc-50 dark:bg-zinc-800 p-4 rounded-3xl max-w-[280px] border border-zinc-100 dark:border-zinc-700">
@@ -7997,6 +8192,19 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
             </div>
           )}
 
+          {activeTab === "Enquiries" && (
+            <div className="pb-28">
+              <EnquiriesView
+                storeId={currentStoreId}
+                businessType={businessType}
+                customers={[]}
+                setCustomers={() => {}}
+                supabase={supabase}
+                onClose={() => setActiveTab("MoreMenu")}
+              />
+            </div>
+          )}
+
           {activeTab === "MoreMenu" && (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-28 px-1">
               <header className="px-2">
@@ -8017,6 +8225,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   { id: "Marketing", label: "Smart CRM", icon: Send, color: "text-indigo-500", bg: "bg-indigo-50" },
                   { id: "Legal", label: "Privacy & Policy", icon: ShieldCheck, color: "text-red-500", bg: "bg-red-50" },
                   { id: "Support", label: "Support", icon: Smartphone, color: "text-emerald-500", bg: "bg-emerald-50" },
+                  { id: "Enquiries", label: "Enquiries", icon: MessageCircle, color: "text-pink-500", bg: "bg-pink-50" },
                 ].map(item => (
                   <button 
                     key={item.id} 

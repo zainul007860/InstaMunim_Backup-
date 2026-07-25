@@ -1,0 +1,1382 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { format } from "date-fns";
+import { 
+  LayoutDashboard, FileText, Settings, LogOut, Search,
+  PlusCircle, Loader2, Book, Trash2, Send, ShoppingCart, 
+  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Filter, Share2, Printer
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/lib/supabase";
+
+export default function Dashboard() {
+  const [mounted, setMounted] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const [loginMobile, setLoginMobile] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [signupStoreName, setSignupStoreName] = useState("");
+  const [ownerPassword, setOwnerPassword] = useState("admin");
+  const [loginError, setLoginError] = useState("");
+  const [ownerMobile, setOwnerMobile] = useState("");
+  const [activeTab, setActiveTab] = useState("Dashboard");
+  const [lang, setLang] = useState<'hi'|'en'>('en');
+
+  const t = (key: string) => {
+    const map: Record<string, string> = {
+      "Dashboard": "डैशबोर्ड",
+      "Cart": "कार्ट",
+      "Customers": "ग्राहक",
+      "Settings": "सेटिंग्स",
+      "Marketing": "मार्केटिंग",
+      "Gross Sales": "कुल बिक्री",
+      "Aggregator Com.": "कमीशन",
+      "Daily Expenses": "खर्चे",
+      "Net Profit": "शुद्ध मुनाफा",
+      "Add Expense": "खर्चा जोड़ें",
+      "Select Items": "आइटम चुनें",
+      "Order Summary": "ऑर्डर समरी",
+      "Grand Total": "कुल बिल",
+      "Cash Received": "नकद मिला",
+      "Change Due": "वापस देना है",
+      "Complete Order": "ऑर्डर पूरा करें",
+      "Cash": "नकद",
+      "Online": "ऑनलाइन",
+      "Udhaar": "उधार",
+      "Mark as Paid": "पैसे मिल गए",
+      "Send WhatsApp Receipt": "WhatsApp बिल",
+      "Total Pending": "कुल उधार",
+      "Smart CRM": "स्मार्ट CRM"
+    };
+    return lang === 'hi' && map[key] ? map[key] : key;
+  };
+
+  const [settingsActiveSection, setSettingsActiveSection] = useState("Identity");
+  const [dataLoaded, setDataLoaded] = useState(false);
+  const [sales, setSales] = useState<any[]>([]);
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const [menuItems, setMenuItems] = useState([
+    { id: 1, name: "Chicken Egg Roll", price: 120, category: "Rolls" },
+    { id: 2, name: "Special Veg Pizza", price: 299, category: "Pizza" },
+    { id: 3, name: "White Sauce Pasta", price: 180, category: "Pasta" },
+    { id: 4, name: "Steamed Momos", price: 90, category: "Momos" },
+  ]);
+
+  const [newItemName, setNewItemName] = useState("");
+  const [newItemPrice, setNewItemPrice] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newMobile, setNewMobile] = useState("");
+  const [newType, setNewType] = useState("Cash");
+  const [cashReceived, setCashReceived] = useState("");
+  const [isSaleOpen, setIsSaleOpen] = useState(false);
+  const [newExpTitle, setNewExpTitle] = useState("");
+  const [newExpAmount, setNewExpAmount] = useState("");
+  const [swiggyCommission, setSwiggyCommission] = useState(25);
+  const [zomatoCommission, setZomatoCommission] = useState(25);
+  const [swiggyCommType, setSwiggyCommType] = useState("percent");
+  const [zomatoCommType, setZomatoCommType] = useState("percent");
+  const [monthlyRent, setMonthlyRent] = useState(15000);
+  const [isWhatsAppEnabled, setIsWhatsAppEnabled] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [crmMessage, setCrmMessage] = useState("Hi [NAME], we miss you at [SHOP]! 🍕 Come back today for a special offer just for you!");
+  const [cart, setCart] = useState<{name: string, price: number, qty: number}[]>([]);
+  const [restaurantName, setRestaurantName] = useState("InstaMunim");
+  const [storeLogo, setStoreLogo] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState<"synced" | "pending" | "error">("synced");
+  const [whatsappInvoiceTemplate, setWhatsappInvoiceTemplate] = useState(`✨ *ORDER CONFIRMED* ✨
+
+Hi [NAME],
+Thank you for ordering from *[SHOP]*!
+
+*Order Details:*
+📦 [ITEMS]
+💰 *Total: ₹[TOTAL]*
+
+Hope you enjoyed your meal! 🍕`);
+
+  const [itemSearch, setItemSearch] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  // VOICE CASHIER LOGIC
+  useEffect(() => {
+    if (typeof window !== 'undefined' && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
+      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = lang === 'hi' ? 'hi-IN' : 'en-US';
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+        console.log("Voice Transcript:", transcript);
+
+        // 1. Extract Items from Menu
+        menuItems.forEach(item => {
+          if (transcript.includes(item.name.toLowerCase())) {
+            // Check for quantity (simple logic: ek/do/teen or 1/2/3)
+            let qty = 1;
+            if (transcript.includes("do") || transcript.includes("2")) qty = 2;
+            if (transcript.includes("teen") || transcript.includes("3")) qty = 3;
+            if (transcript.includes("chaar") || transcript.includes("4")) qty = 4;
+            
+            // Add to cart multiple times if needed
+            for(let i=0; i<qty; i++) addToCart(item);
+          }
+        });
+
+        // 2. Extract Name
+        const nameMatch = transcript.match(/(?:naam|name is|name)\s+([a-zA-Z\s]+)/i);
+        if (nameMatch && nameMatch[1]) {
+          setNewName(nameMatch[1].trim());
+        }
+
+        // 3. Extract Number
+        const numberMatch = transcript.match(/(?:number|mobile|phone|digit)\s*([0-9\s]+)/i);
+        if (numberMatch && numberMatch[1]) {
+          const cleanNum = numberMatch[1].replace(/\s/g, '');
+          if (cleanNum.length === 10) setNewMobile(cleanNum);
+        }
+      };
+
+      recognitionRef.current.onend = () => {
+        if (isListening) recognitionRef.current.start();
+      };
+    }
+  }, [isListening, menuItems, lang]);
+
+  const toggleVoiceBilling = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      recognitionRef.current?.start();
+      setIsListening(true);
+      setIsSaleOpen(true); // Open sale dialog to show items being added
+    }
+  };
+
+  const [showExitDialog, setShowExitDialog] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    
+    // Exit Protection Logic
+    const handleBackButton = (e: PopStateEvent) => {
+      if (isLoggedIn) {
+        if (activeTab !== "Dashboard") {
+          e.preventDefault();
+          setActiveTab("Dashboard");
+          window.history.pushState(null, "", window.location.pathname);
+        } else {
+          setShowExitDialog(true);
+          window.history.pushState(null, "", window.location.pathname);
+        }
+      }
+    };
+
+    window.history.pushState(null, "", window.location.pathname);
+    window.addEventListener("popstate", handleBackButton);
+
+    const savedIsLoggedIn = localStorage.getItem("saas_is_logged_in");
+    const savedOwnerMobile = localStorage.getItem("saas_owner_mobile");
+    if (savedIsLoggedIn === "true") {
+      setIsLoggedIn(true);
+      if (savedOwnerMobile) setOwnerMobile(savedOwnerMobile);
+    }
+    
+    const savedSales = localStorage.getItem("saas_sales");
+    if (savedSales) { try { setSales(JSON.parse(savedSales).map((s: any) => ({ ...s, date: new Date(s.date) }))); } catch (e) { console.error(e); } }
+    
+    const savedExpenses = localStorage.getItem("saas_expenses");
+    if (savedExpenses) { try { setExpenses(JSON.parse(savedExpenses).map((e: any) => ({ ...e, date: new Date(e.date) }))); } catch (e) { console.error(e); } }
+
+    const savedMenu = localStorage.getItem("saas_menu");
+    if (savedMenu) { try { setMenuItems(JSON.parse(savedMenu)); } catch (e) { console.error(e); } }
+
+    const savedRestName = localStorage.getItem("saas_rest_name");
+    if (savedRestName) setRestaurantName(savedRestName);
+
+    const savedRent = localStorage.getItem("saas_rent");
+    if (savedRent) setMonthlyRent(Number(savedRent));
+
+    const savedDarkMode = localStorage.getItem("saas_dark_mode");
+    if (savedDarkMode) setIsDarkMode(savedDarkMode === "true");
+
+    setDataLoaded(true);
+
+    return () => window.removeEventListener("popstate", handleBackButton);
+  }, [isLoggedIn, activeTab]);
+
+  useEffect(() => {
+    if (dataLoaded && mounted) {
+      localStorage.setItem("saas_sales", JSON.stringify(sales));
+      localStorage.setItem("saas_expenses", JSON.stringify(expenses));
+      localStorage.setItem("saas_menu", JSON.stringify(menuItems));
+      localStorage.setItem("saas_rest_name", restaurantName);
+      localStorage.setItem("saas_rent", monthlyRent.toString());
+      localStorage.setItem("saas_dark_mode", isDarkMode.toString());
+    }
+  }, [sales, expenses, menuItems, restaurantName, monthlyRent, isDarkMode, dataLoaded, mounted]);
+
+  const handleAuth = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (authMode === "login") {
+      if (loginMobile.length === 10 && loginPassword === ownerPassword) {
+        setIsLoggedIn(true);
+        setOwnerMobile(loginMobile);
+        localStorage.setItem("saas_is_logged_in", "true");
+        localStorage.setItem("saas_owner_mobile", loginMobile);
+      } else {
+        setLoginError("Invalid mobile or password.");
+      }
+    } else {
+      setIsLoggedIn(true);
+      setRestaurantName(signupStoreName);
+      setOwnerMobile(loginMobile);
+      localStorage.setItem("saas_is_logged_in", "true");
+      localStorage.setItem("saas_owner_mobile", loginMobile);
+      localStorage.setItem("saas_rest_name", signupStoreName);
+    }
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    localStorage.removeItem("saas_is_logged_in");
+    setActiveTab("Dashboard");
+  };
+
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [lastOrderDetails, setLastOrderDetails] = useState<any>(null);
+
+  const handleSale = () => {
+    if (cart.length === 0) return alert("Cart is empty.");
+    const saleId = Date.now();
+    const cartDescription = cart.map(c => `${c.qty} x ${c.name} (₹${c.price * c.qty})`).join("\n");
+    const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const sale = { id: saleId, name: newName || "Guest", item: cartDescription, mobile: newMobile || "N/A", price: cartTotal, type: newType, date: new Date() };
+    
+    setSales([sale, ...sales]);
+    setLastOrderDetails(sale);
+    setIsSaleOpen(false);
+    setShowSuccessDialog(true); // Show manual's success screen
+    
+    setCart([]); 
+    setNewName(""); 
+    setNewMobile("");
+    setCashReceived("");
+  };
+
+  const sendWhatsAppReceipt = () => {
+    if (!lastOrderDetails || lastOrderDetails.mobile === "N/A") return alert("No mobile number provided.");
+    
+    const itemsFormatted = cart.map(c => `• ${c.qty} ${c.name} - ₹${c.price * c.qty}`).join("\n");
+    const msg = whatsappInvoiceTemplate
+      .replace("[NAME]", lastOrderDetails.name)
+      .replace("[SHOP]", restaurantName)
+      .replace("[ITEMS]", lastOrderDetails.item)
+      .replace("[TOTAL]", lastOrderDetails.price.toString());
+      
+    window.open(`https://wa.me/91${lastOrderDetails.mobile}?text=${encodeURIComponent(msg)}`, "_blank");
+  };
+
+  const addToCart = (item: any) => {
+    setCart(prev => {
+      const existing = prev.find(c => c.name === item.name);
+      if (existing) return prev.map(c => c.name === item.name ? {...c, qty: c.qty + 1} : c);
+      return [...prev, { ...item, qty: 1 }];
+    });
+  };
+
+  const removeFromCart = (name: string) => {
+    setCart(prev => {
+      const item = prev.find(c => c.name === name);
+      if (item && item.qty > 1) return prev.map(c => c.name === name ? {...c, qty: c.qty - 1} : c);
+      return prev.filter(c => c.name !== name);
+    });
+  };
+
+  const filteredSales = sales.filter(s => format(new Date(s.date), "yyyy-MM") === selectedMonth);
+  const filteredExpenses = expenses.filter(e => format(new Date(e.date), "yyyy-MM") === selectedMonth);
+  
+  const totalSales = filteredSales.reduce((sum, s) => sum + s.price, 0);
+  const totalExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+  
+  const totalCommissions = filteredSales.reduce((sum, s) => {
+    if (s.type === "Swiggy") return sum + (s.price * (swiggyCommission / 100));
+    if (s.type === "Zomato") return sum + (s.price * (zomatoCommission / 100));
+    return sum;
+  }, 0);
+
+  const totalUdhaar = filteredSales.filter(s => s.type === "Udhaar" && s.status !== "Paid").reduce((sum, s) => sum + s.price, 0);
+
+  const netProfit = totalSales - totalExpenses - totalCommissions;
+
+  const uniqueCustomers = Array.from(new Set(sales.filter(s => s.mobile !== "N/A").map(s => s.mobile)));
+
+  const getRentTargetData = () => {
+    const dailyBase = Math.round(monthlyRent / 30);
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const daysPassed = today.getDate();
+    
+    const monthSalesToDate = sales
+      .filter(s => new Date(s.date) >= startOfMonth && new Date(s.date) < today)
+      .reduce((sum, s) => sum + s.price, 0);
+    
+    const targetToDate = dailyBase * daysPassed;
+    const carryOver = targetToDate - monthSalesToDate;
+    const todaysTarget = dailyBase + (carryOver > 0 ? carryOver : 0);
+    
+    const todayActual = sales
+      .filter(s => format(new Date(s.date), "yyyy-MM-dd") === format(today, "yyyy-MM-dd"))
+      .reduce((sum, s) => sum + s.price, 0);
+
+    return { dailyBase, carryOver, todaysTarget, todayActual, remaining: Math.max(0, todaysTarget - todayActual) };
+  };
+
+  const handleAddMenuItem = () => {
+    if (!newItemName || !newItemPrice) return;
+    setMenuItems([...menuItems, { id: Date.now(), name: newItemName, price: Number(newItemPrice), category: "Uncategorized" }]);
+    setNewItemName(""); setNewItemPrice("");
+  };
+
+  const handleAddExpense = () => {
+    if (!newExpTitle || !newExpAmount) return;
+    setExpenses([{ id: Date.now(), title: newExpTitle, amount: Number(newExpAmount), date: new Date() }, ...expenses]);
+    setNewExpTitle(""); setNewExpAmount("");
+  };
+
+  const markAsPaid = (id: number) => {
+    setSales(sales.map(s => s.id === id ? { ...s, type: "Cash" } : s));
+  };
+
+  if (!mounted) return null;
+
+  if (!isLoggedIn) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-start sm:justify-center bg-[#f8f9fa] p-6 pt-12 sm:pt-0 selection:bg-orange-500/30 overflow-y-auto">
+        <div className="w-full max-w-[340px] space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 my-auto">
+          <Card className="border-0 shadow-2xl shadow-zinc-200 rounded-[2.5rem] p-6 bg-white overflow-hidden">
+            <div className="flex flex-col items-center text-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-[1.5rem] flex items-center justify-center shadow-2xl shadow-orange-500/40 mb-3">
+                <ShieldCheck className="h-8 w-8 text-white" />
+              </div>
+              <h1 className="text-4xl font-bold tracking-tight text-zinc-900 leading-none">InstaMunim</h1>
+              <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-[0.3em] mt-2">- BEYOND BILLING -</p>
+            </div>
+
+            <div className="text-center mb-6">
+               <h2 className="text-xl font-bold text-zinc-400">Owner Login</h2>
+               <p className="text-zinc-400 text-[10px] font-medium mt-1">Welcome back to your POS Dashboard.</p>
+            </div>
+
+            <form onSubmit={handleAuth} className="space-y-4">
+              {authMode === "signup" && (
+                <div className="space-y-2">
+                  <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">Store Name</Label>
+                  <Input 
+                    placeholder="e.g. Khan Kitchen" 
+                    value={signupStoreName} 
+                    onChange={e => setSignupStoreName(e.target.value)} 
+                    required 
+                    className="h-14 rounded-2xl bg-zinc-50 border-0 font-bold px-6 focus-visible:ring-2 focus-visible:ring-orange-500 transition-all text-sm" 
+                  />
+                </div>
+              )}
+              
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">Owner Mobile</Label>
+                <div className="relative group">
+                  <div className="absolute left-6 top-1/2 -translate-y-1/2 p-1 border-r border-zinc-200">
+                    <Smartphone className="h-3.5 w-3.5 text-zinc-400" />
+                  </div>
+                  <Input 
+                    placeholder="99XXXXXXXX" 
+                    value={loginMobile} 
+                    onChange={e => setLoginMobile(e.target.value)} 
+                    required 
+                    className="h-14 rounded-2xl bg-zinc-50 border-0 font-bold pl-16 focus-visible:ring-2 focus-visible:ring-orange-500 text-base transition-all" 
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">Secret Password</Label>
+                <div className="relative group">
+                  <div className="absolute left-6 top-1/2 -translate-y-1/2 p-1 border-r border-zinc-200">
+                    <Lock className="h-3.5 w-3.5 text-zinc-400" />
+                  </div>
+                  <Input 
+                    type={showPassword ? "text" : "password"} 
+                    placeholder="••••••••" 
+                    value={loginPassword} 
+                    onChange={e => setLoginPassword(e.target.value)} 
+                    required 
+                    className="h-14 rounded-2xl bg-zinc-50 border-0 font-bold pl-16 pr-14 focus-visible:ring-2 focus-visible:ring-orange-500 text-base tracking-widest transition-all" 
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => setShowPassword(!showPassword)} 
+                    className="absolute right-6 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-orange-500 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+              </div>
+
+              {loginError && <p className="text-red-500 text-[10px] font-bold uppercase text-center">{loginError}</p>}
+
+              <Button type="submit" className="w-full h-14 bg-zinc-900 hover:bg-black text-white rounded-2xl font-bold text-xs active:scale-95 transition-all shadow-xl shadow-zinc-900/20 flex items-center justify-center gap-3 uppercase tracking-widest">
+                {authMode === "login" ? "Access Dashboard" : "Start Business"}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+
+              <button 
+                type="button" 
+                onClick={() => { setAuthMode(authMode === "login" ? "signup" : "login"); setLoginError(""); }} 
+                className="w-full text-center text-[9px] font-bold text-zinc-400 uppercase tracking-[0.2em] py-2 hover:text-zinc-900 transition-colors"
+              >
+                {authMode === "login" ? "Don't have an account? Create one" : "Already registered? Login"}
+              </button>
+            </form>
+          </Card>
+          
+          <p className="text-center text-[8px] font-bold text-zinc-300 uppercase tracking-widest">
+            Secured by InstaMunim Cloud Gateway
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`min-h-screen flex flex-col font-sans selection:bg-orange-500/30 ${isDarkMode ? 'dark bg-zinc-950 text-white' : 'bg-[#fafafa] text-zinc-900'}`}>
+      <main className="flex-1 pb-24 overflow-y-auto">
+        <div className="max-w-md mx-auto px-6 py-8">
+          
+          <Dialog open={isSaleOpen} onOpenChange={setIsSaleOpen}>
+            <DialogContent className="p-0 border-0 max-w-md bg-white dark:bg-zinc-900 rounded-t-[2.5rem] fixed bottom-0 top-auto translate-y-0 h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader className="p-6 border-b shrink-0 flex flex-row items-center justify-between">
+              <DialogTitle className="text-2xl font-black">Quick Checkout</DialogTitle>
+              <button 
+                onClick={toggleVoiceBilling} 
+                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-zinc-100 text-zinc-400'}`}
+              >
+                <Mic className="h-5 w-5" />
+              </button>
+            </DialogHeader>
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+                <div className="space-y-4">
+                  <div className="relative">
+                    <Search className="absolute left-4 top-4 h-5 w-5 text-zinc-400" />
+                    <Input placeholder="Search items..." value={itemSearch} onChange={e => setItemSearch(e.target.value)} className="h-14 pl-12 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold" />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {menuItems.filter(i => i.name.toLowerCase().includes(itemSearch.toLowerCase())).map(item => (
+                      <button key={item.id} onClick={() => addToCart(item)} className="p-4 bg-zinc-50 dark:bg-zinc-800 rounded-2xl text-left hover:bg-orange-50 dark:hover:bg-orange-950/20 transition-all active:scale-95 border border-transparent hover:border-orange-200">
+                        <p className="font-black text-xs text-zinc-900 dark:text-white">{item.name}</p>
+                        <p className="text-[10px] font-black text-orange-600 mt-1">₹{item.price}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-4">
+                   <h4 className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Order Summary</h4>
+                   <div className="space-y-4 bg-zinc-50 dark:bg-zinc-800/50 p-6 rounded-[2rem]">
+                      {cart.length === 0 && <p className="text-center py-4 text-xs font-bold text-zinc-400 italic">Cart is empty</p>}
+                      {cart.map(c => (
+                        <div key={c.name} className="flex justify-between items-center group">
+                          <div className="flex flex-col">
+                            <span className="font-black text-sm">{c.name}</span>
+                            <span className="text-[10px] font-bold text-zinc-400">₹{c.price} per unit</span>
+                          </div>
+                          <div className="flex items-center gap-3 bg-white dark:bg-zinc-900 p-1 rounded-xl shadow-sm">
+                            <button onClick={() => removeFromCart(c.name)} className="w-8 h-8 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 className="h-4 w-4" /></button>
+                            <span className="font-black text-sm px-2">{c.qty}</span>
+                            <button onClick={() => addToCart({ name: c.name, price: c.price })} className="w-8 h-8 flex items-center justify-center text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"><PlusCircle className="h-4 w-4" /></button>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="pt-4 border-t border-zinc-200 dark:border-zinc-700 mt-4 flex justify-between items-center">
+                        <span className="text-sm font-black">Total Bill</span>
+                        <span className="text-2xl font-black text-orange-600">₹{cart.reduce((s,i) => s + (i.price*i.qty), 0)}</span>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Customer Name</Label>
+                      <Input placeholder="Optional" value={newName} onChange={e => setNewName(e.target.value)} className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Mobile Number</Label>
+                      <Input placeholder="99XXXXXXXX" value={newMobile} onChange={e => setNewMobile(e.target.value)} className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Order Source / Payment</Label>
+                    <div className="flex gap-2 flex-wrap">
+                      {["Cash", "Online", "Udhaar", "Swiggy", "Zomato"].map(type => (
+                        <button key={type} onClick={() => setNewType(type)} className={`flex-1 min-w-[70px] h-12 rounded-xl font-black text-[10px] transition-all ${newType === type ? 'bg-zinc-900 text-white scale-[1.02] shadow-lg shadow-black/10' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:bg-zinc-200'}`}>
+                          {type.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {newType === "Cash" && (
+                    <div className="p-6 bg-orange-50 dark:bg-orange-950/20 rounded-[2.5rem] space-y-4 animate-in zoom-in-95 duration-300">
+                      <div className="flex justify-between items-center">
+                        <Label className="text-[10px] font-black text-orange-600 uppercase tracking-widest">Cash Given by Customer</Label>
+                        <Badge className="bg-orange-500 text-white border-0 font-black">₹</Badge>
+                      </div>
+                      <Input 
+                        type="number" 
+                        placeholder="e.g. 500" 
+                        value={cashReceived} 
+                        onChange={e => setCashReceived(e.target.value)} 
+                        className="h-16 rounded-2xl bg-white dark:bg-zinc-900 border-0 font-black text-3xl text-orange-600 text-center shadow-inner" 
+                      />
+                      {Number(cashReceived) > 0 && (
+                        <div className="text-center pt-2">
+                          <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em]">Return Balance</p>
+                          <h3 className="text-5xl font-black text-orange-600 tracking-tighter mt-1 animate-in slide-in-from-top-2">
+                            ₹{Math.max(0, Number(cashReceived) - cart.reduce((s,i) => s + (i.price*i.qty), 0))}
+                          </h3>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {activeTab === "Dashboard" && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24 px-2">
+              {/* COMPACT HEADER */}
+              <header className="flex justify-between items-center py-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm">
+                    <img src="https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?q=80&w=100&auto=format&fit=crop" alt="Profile" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-sm tracking-tight">{restaurantName}</span>
+                      <div className="bg-emerald-500/10 text-emerald-500 text-[7px] font-bold px-1.5 h-3.5 rounded-full flex items-center gap-1 uppercase tracking-tighter"><div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" /> Live</div>
+                    </div>
+                    <div className="text-[8px] font-medium text-zinc-400 flex items-center gap-1 mt-0.5"><Cloud className="h-2 w-2" /> Synced 11:44:11 PM</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => setLang(lang === 'en' ? 'hi' : 'en')} className="h-7 px-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-full font-bold text-[8px] flex items-center justify-center shadow-sm active:scale-90 transition-all">A/अ</button>
+                  <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                    <SelectTrigger className="h-7 rounded-full bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 shadow-sm font-bold text-[8px] px-3 gap-1.5">
+                      <SelectValue placeholder="Month" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-2xl border-0 shadow-2xl font-bold">
+                      {["01","02","03","04","05","06","07","08","09","10","11","12"].map(m => (
+                        <SelectItem key={m} value={`2026-${m}`} className="rounded-xl">May</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </header>
+
+              {/* ACTION ROW COMPACT */}
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" onClick={() => setIsSyncing(true)} className="h-10 rounded-xl bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 font-bold text-[9px] uppercase tracking-widest gap-1.5 shadow-sm active:scale-95 transition-all">
+                  <RefreshCw className={`h-3 w-3 text-zinc-400 ${isSyncing ? 'animate-spin' : ''}`} /> Cloud Sync
+                </Button>
+                <Button variant="outline" className="h-10 rounded-xl bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 font-bold text-[9px] uppercase tracking-widest gap-1.5 shadow-sm active:scale-95 transition-all">
+                  <RefreshCw className="h-3 w-3 text-indigo-500 animate-spin-slow" /> AI Insights
+                </Button>
+              </div>
+
+              {/* COMPACT METRICS GRID */}
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="bg-gradient-to-br from-orange-500 to-red-600 text-white p-4 rounded-2xl border-0 shadow-lg shadow-orange-600/10 h-32 flex flex-col justify-between">
+                  <p className="text-[8px] font-bold uppercase opacity-70 tracking-widest">Net Profit</p>
+                  <div>
+                    <h3 className="text-3xl font-bold tracking-tighter leading-none">₹{Math.round(netProfit)}</h3>
+                    <p className="text-[7px] font-medium uppercase opacity-60 mt-1 tracking-tighter leading-none">After Expenses</p>
+                  </div>
+                </Card>
+
+                <Card className="bg-white dark:bg-zinc-900 p-4 rounded-2xl border-0 shadow-sm border-b-[4px] border-blue-500 h-32 flex flex-col justify-between">
+                  <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">Gross Sales</p>
+                  <div>
+                    <h3 className="text-3xl font-bold tracking-tighter leading-none">₹{totalSales}</h3>
+                    <p className="text-[7px] font-medium text-zinc-400 uppercase mt-1 tracking-tighter leading-none">Gross Income</p>
+                  </div>
+                </Card>
+
+                <Card className="bg-[#fff1f1] dark:bg-red-950/20 p-4 rounded-2xl border-0 h-32 flex flex-col justify-between">
+                  <p className="text-[8px] font-black text-red-600 uppercase tracking-widest">Pending Udhaar</p>
+                  <div>
+                    <h3 className="text-3xl font-black text-red-600 tracking-tighter leading-none">₹{totalUdhaar}</h3>
+                    <p className="text-[7px] font-black text-red-400 uppercase mt-1 flex items-center gap-1 leading-none"><Users className="h-2 w-2" /> From Khata</p>
+                  </div>
+                </Card>
+
+                <Card className="bg-white dark:bg-zinc-900 p-4 rounded-2xl border-0 shadow-sm border-b-[4px] border-purple-500 h-32 flex flex-col justify-between">
+                  <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Most Popular</p>
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center text-[9px] font-black leading-none"><span className="truncate w-20 text-zinc-600 dark:text-zinc-400">Chicken Egg...</span> <span className="bg-zinc-100 dark:bg-zinc-800 text-[7px] px-1 rounded-sm">2 sold</span></div>
+                    <div className="flex justify-between items-center text-[9px] font-medium leading-none"><span className="truncate w-20 text-zinc-600 dark:text-zinc-400">Chicken Egg...</span> <span className="bg-zinc-100 dark:bg-zinc-800 text-[7px] px-1 rounded-sm">2 sold</span></div>
+                    <div className="flex justify-between items-center text-[9px] font-medium leading-none"><span className="truncate w-20 text-zinc-600 dark:text-zinc-400">Steamed Mo...</span> <span className="bg-zinc-100 dark:bg-zinc-800 text-[7px] px-1 rounded-sm">2 sold</span></div>
+                  </div>
+                </Card>
+              </div>
+
+              {/* RECENT SALES SUPER COMPACT */}
+              <div className="space-y-3 pt-1">
+                <div className="flex justify-between items-center px-1">
+                  <h3 className="text-lg font-bold tracking-tight">Recent Sales</h3>
+                  <button onClick={() => setActiveTab("Total Sale Report")} className="text-[9px] font-bold text-orange-500 uppercase tracking-widest">View All</button>
+                </div>
+                <Card className="rounded-2xl border-0 bg-white dark:bg-zinc-900 shadow-sm divide-y dark:divide-zinc-800 overflow-hidden">
+                  {filteredSales.slice(0, 3).map(s => (
+                    <div key={s.id} className="p-4 flex justify-between items-center hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
+                      <div className="space-y-0.5">
+                        <p className="font-bold text-[13px] leading-tight">{s.name}</p>
+                        <div className="text-[8px] font-medium text-zinc-400 flex items-center gap-1.5">
+                          {format(new Date(s.date), "hh:mm aa")} • 
+                          <span className={`px-1 rounded-sm font-bold ${s.type === 'Cash' ? 'text-emerald-600 bg-emerald-50' : 'text-blue-600 bg-blue-50'}`}>{s.type}</span>
+                        </div>
+                      </div>
+                      <p className="text-base font-bold tracking-tight">₹{s.price}</p>
+                    </div>
+                  ))}
+                  {filteredSales.length === 0 && (
+                    <div className="py-10 text-center text-zinc-300 font-medium italic text-xs">No recent sales</div>
+                  )}
+                </Card>
+              </div>
+
+              {/* QUICK EXPENSE CARD */}
+              <Card className="rounded-2xl border-0 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-150">
+                <div className="bg-[#fff1f1] dark:bg-red-950/20 py-4 px-6">
+                  <h3 className="text-red-600 font-bold text-sm uppercase tracking-widest">Quick Expense</h3>
+                </div>
+                <div className="p-6 space-y-4">
+                  <div className="space-y-2">
+                    <Input 
+                      placeholder="What did you buy?" 
+                      value={newExpTitle}
+                      onChange={e => setNewExpTitle(e.target.value)}
+                      className="h-14 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 font-medium px-6 focus-visible:ring-red-500"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Input 
+                      type="number"
+                      placeholder="Amount (₹)" 
+                      value={newExpAmount}
+                      onChange={e => setNewExpAmount(e.target.value)}
+                      className="h-14 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 font-medium px-6 focus-visible:ring-red-500"
+                    />
+                  </div>
+                  <Button onClick={handleAddExpense} className="w-full h-14 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs shadow-lg shadow-red-600/20 active:scale-95 transition-all uppercase tracking-widest">
+                    SAVE EXPENSE
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === "Rent" && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8 pb-10">
+              <header className="relative">
+                <div className="absolute -left-10 -top-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl" />
+                <h2 className="text-4xl font-black tracking-tighter">Rent Mission</h2>
+                <p className="text-zinc-500 font-bold flex items-center gap-2 mt-1"><div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" /> Stay ahead of your shop costs.</p>
+              </header>
+
+              <Card className="bg-blue-600 text-white p-10 rounded-[3rem] border-0 relative overflow-hidden shadow-2xl shadow-blue-600/30">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl" />
+                <Badge className="bg-white text-blue-600 border-0 font-black px-4 py-1.5 mb-6 rounded-full shadow-lg">MISSION TARGET</Badge>
+                <h3 className="text-7xl font-black tracking-tighter mb-2">₹{getRentTargetData().todaysTarget}</h3>
+                <p className="text-lg font-bold opacity-80 uppercase tracking-[0.2em]">Remaining Today</p>
+                
+                <div className="mt-12 space-y-4">
+                  <div className="flex justify-between items-end text-xs font-black uppercase tracking-widest">
+                    <span>Performance</span>
+                    <span className="text-xl">{Math.min(100, Math.round((getRentTargetData().todayActual / getRentTargetData().todaysTarget) * 100 || 0))}%</span>
+                  </div>
+                  <div className="w-full h-4 bg-white/20 rounded-full overflow-hidden p-1">
+                    <div className="h-full bg-white rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(255,255,255,0.5)]" style={{ width: `${Math.min(100, (getRentTargetData().todayActual / getRentTargetData().todaysTarget) * 100 || 0)}%` }} />
+                  </div>
+                </div>
+              </Card>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Card className="p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900 border-0 shadow-sm relative overflow-hidden">
+                  <div className="absolute left-0 top-0 w-1.5 h-full bg-zinc-200 dark:bg-zinc-800" />
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Fixed Cost</p>
+                  <h4 className="text-3xl font-black">₹{getRentTargetData().dailyBase}</h4>
+                  <p className="text-[9px] font-bold text-zinc-400 mt-2 italic">Base daily rent</p>
+                </Card>
+                <Card className="p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900 border-0 shadow-sm relative overflow-hidden">
+                  <div className={`absolute left-0 top-0 w-1.5 h-full ${getRentTargetData().carryOver > 0 ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">History Impact</p>
+                  <h4 className={`text-3xl font-black ${getRentTargetData().carryOver > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                    {getRentTargetData().carryOver > 0 ? `+₹${getRentTargetData().carryOver}` : `-₹${Math.abs(getRentTargetData().carryOver)}`}
+                  </h4>
+                  <p className="text-[9px] font-bold text-zinc-400 mt-2 italic">Carry-over data</p>
+                </Card>
+              </div>
+
+              <div className="p-6 bg-zinc-900 text-white rounded-[2.5rem] flex items-center justify-between">
+                 <div className="flex items-center gap-4">
+                   <div className="p-3 bg-blue-500 rounded-2xl"><PieChart className="h-6 w-6" /></div>
+                   <div><h5 className="font-black">Finance Check</h5><p className="text-[10px] font-bold opacity-60">Status: {getRentTargetData().remaining === 0 ? "Profit Zone 🚀" : "Cost Recovery 💪"}</p></div>
+                 </div>
+                 <div className="text-right"><p className="text-[8px] font-black opacity-40 uppercase">Est. Monthly Profit</p><p className="text-xl font-black">₹{netProfit}</p></div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "Marketing" && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8 pb-10">
+              <header className="relative px-2">
+                <div className="absolute -left-10 -top-10 w-40 h-40 bg-indigo-500/10 rounded-full blur-3xl" />
+                <h2 className="text-4xl font-black tracking-tighter text-indigo-600">Smart CRM</h2>
+                <p className="text-zinc-500 font-bold italic mt-1">One-click customer retention tool.</p>
+              </header>
+
+              <Card className="p-8 bg-indigo-50 dark:bg-indigo-950/30 rounded-[3rem] border border-indigo-100 dark:border-indigo-900 space-y-6 relative overflow-hidden shadow-sm">
+                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+                <div className="flex justify-between items-center">
+                  <Label className="text-[10px] font-black uppercase text-indigo-600 tracking-widest px-2">Campaign Message</Label>
+                  <Badge className="bg-indigo-500 text-white border-0 font-black text-[8px] px-3 py-1 rounded-full">ACTIVE OFFER</Badge>
+                </div>
+                <textarea 
+                  value={crmMessage} 
+                  onChange={e => setCrmMessage(e.target.value)} 
+                  className="w-full h-44 bg-white/50 dark:bg-zinc-900/50 rounded-3xl border-0 focus:ring-2 focus:ring-indigo-500 text-sm font-bold resize-none p-6 custom-scrollbar leading-relaxed shadow-inner" 
+                />
+                <div className="flex gap-2 flex-wrap pt-2">
+                  {[
+                    { label: "20% OFF", msg: `Hi! We miss you at ${restaurantName}! 🍕 Get 20% OFF on your next visit. Use code: MISSYOU20` },
+                    { label: "BOGO Offer", msg: `Weekend Special at ${restaurantName}! 🥤 Buy 1 Get 1 FREE on all Burgers! Today only.` },
+                    { label: "New Menu", msg: `Hi! We've added 5 new items to our menu at ${restaurantName}. 😋 Come try them today!` }
+                  ].map(template => (
+                    <Badge 
+                      key={template.label} 
+                      onClick={() => setCrmMessage(template.msg)} 
+                      className="cursor-pointer bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900 hover:bg-indigo-500 hover:text-white transition-all px-4 py-2 font-black text-[9px] rounded-xl shadow-sm"
+                    >
+                      {template.label}
+                    </Badge>
+                  ))}
+                </div>
+              </Card>
+
+              <div className="space-y-4">
+                <div className="flex justify-between items-end px-4">
+                  <p className="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Customer List ({uniqueCustomers.length})</p>
+                  <p className="text-[9px] font-bold text-indigo-500">RETAIN 30% MORE</p>
+                </div>
+                
+                {uniqueCustomers.length === 0 ? (
+                  <div className="py-24 text-center space-y-4 bg-white dark:bg-zinc-900 rounded-[3rem] border-dashed border-2 border-zinc-100 dark:border-zinc-800">
+                    <div className="w-20 h-20 bg-zinc-50 dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto text-zinc-300">
+                      <Users className="h-10 w-10" />
+                    </div>
+                    <p className="text-sm font-black text-zinc-300 uppercase tracking-widest">No customer data yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {uniqueCustomers.map(mobile => {
+                      const name = sales.find(s => s.mobile === mobile)?.name || "Guest";
+                      return (
+                        <Card key={mobile} className="p-6 bg-white dark:bg-zinc-900 rounded-[2.5rem] flex justify-between items-center shadow-sm border border-zinc-100 dark:border-zinc-800 group hover:border-indigo-200 transition-all">
+                          <div className="flex items-center gap-5">
+                            <div className="w-14 h-14 bg-zinc-50 dark:bg-zinc-800 rounded-2xl flex items-center justify-center font-black text-lg group-hover:bg-indigo-500 group-hover:text-white transition-all">{name.charAt(0)}</div>
+                            <div>
+                              <p className="font-black text-lg leading-none">{name}</p>
+                              <p className="text-[10px] font-bold text-zinc-400 mt-1 tracking-wider">{mobile}</p>
+                            </div>
+                          </div>
+                          <Button 
+                            onClick={() => window.open(`https://wa.me/91${mobile}?text=${encodeURIComponent(crmMessage.replace("[NAME]", name))}`, "_blank")} 
+                            className="bg-indigo-600 hover:bg-indigo-500 text-white h-14 px-6 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-600/20 active:scale-95 transition-all flex items-center gap-2"
+                          >
+                            <Send className="h-4 w-4" /> SEND OFFER
+                          </Button>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "Total Sale Report" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-28 px-4">
+              <div>
+                <h2 className="text-5xl font-bold tracking-tighter leading-tight">Business Analytics</h2>
+                <p className="text-zinc-500 font-medium mt-2">Comprehensive view of your store's performance.</p>
+              </div>
+
+              <Button onClick={() => window.print()} className="w-full h-16 bg-zinc-900 hover:bg-black text-white font-bold rounded-3xl text-sm shadow-xl flex items-center justify-center gap-3 uppercase tracking-widest active:scale-95 transition-all">
+                <Printer className="h-5 w-5" /> PRINT FULL REPORT
+              </Button>
+
+              <div className="space-y-4">
+                <Card className="p-8 rounded-2xl border-0 shadow-sm bg-white dark:bg-zinc-900 flex flex-col justify-center min-h-[160px]">
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">Orders This Month</p>
+                  <h3 className="text-6xl font-bold tracking-tighter">{filteredSales.length}</h3>
+                </Card>
+
+                <Card className="p-8 rounded-2xl border-0 shadow-sm bg-white dark:bg-zinc-900 flex flex-col justify-center min-h-[160px]">
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">Avg. Ticket Size</p>
+                  <h3 className="text-6xl font-bold tracking-tighter">₹{filteredSales.length > 0 ? Math.round(totalSales / filteredSales.length) : 0}</h3>
+                </Card>
+
+                <Card className="p-8 rounded-2xl border-0 shadow-sm bg-white dark:bg-zinc-900 flex flex-col justify-center min-h-[160px]">
+                  <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">Monthly Revenue</p>
+                  <h3 className="text-6xl font-bold tracking-tighter">₹{Math.round(totalSales)}</h3>
+                </Card>
+              </div>
+
+              <Card className="rounded-[3rem] border-0 shadow-sm bg-white dark:bg-zinc-900 overflow-hidden">
+                <div className="p-8">
+                  <h3 className="text-3xl font-bold tracking-tight mb-8">Full Transaction History</h3>
+                  
+                  <div className="space-y-6">
+                    <div className="flex justify-between px-2">
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Date & Time</span>
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Customer</span>
+                      <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Mobile</span>
+                    </div>
+
+                    <div className="divide-y dark:divide-zinc-800">
+                      {filteredSales.length === 0 ? (
+                        <div className="py-20 text-center text-zinc-300 font-medium italic text-sm">No transactions yet</div>
+                      ) : (
+                        filteredSales.map(s => (
+                          <div key={s.id} className="py-6 flex justify-between items-center group">
+                            <p className="font-medium text-sm text-zinc-500">{format(new Date(s.date), "dd MMM, hh:mm aa")}</p>
+                            <p className="font-bold text-sm uppercase">{s.name}</p>
+                            <p className="font-medium text-sm text-zinc-400">{s.mobile}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              <div>
+                <h2 className="text-4xl font-black tracking-tighter">Financial Analytics</h2>
+                <p className="text-zinc-500 font-bold mt-1">Full transaction history and reporting.</p>
+              </div>
+
+              <Card className="rounded-[3rem] border-0 shadow-sm bg-white dark:bg-zinc-900 p-8">
+                 <div className="flex justify-between items-center mb-8">
+                    <h3 className="text-2xl font-black tracking-tight">Total Transactions</h3>
+                    <Badge className="bg-black text-white px-4 py-2 rounded-full font-black text-[10px]">{filteredSales.length} Sales</Badge>
+                 </div>
+                 <div className="py-12 text-center">
+                    <div className="w-16 h-16 bg-zinc-50 dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <TrendingUp className="h-8 w-8 text-zinc-300" />
+                    </div>
+                    <p className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Reporting Engine Ready</p>
+                 </div>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === "Khata" && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8 pb-10">
+              <header className="relative px-2">
+                <div className="absolute -left-10 -top-10 w-40 h-40 bg-red-500/10 rounded-full blur-3xl" />
+                <h2 className="text-4xl font-black tracking-tighter text-red-500">Udhaar Khata</h2>
+                <p className="text-zinc-500 font-bold italic mt-1">Manage your shop's credit ledger.</p>
+              </header>
+
+              <div className="grid grid-cols-2 gap-4">
+                <Card className="p-6 bg-white dark:bg-zinc-900 border-0 shadow-sm rounded-[2.5rem] flex flex-col justify-center">
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Total Pending</p>
+                  <h4 className="text-3xl font-black text-red-600 tracking-tighter">₹{sales.filter(s => s.type === "Udhaar").reduce((sum, s) => sum + s.price, 0)}</h4>
+                </Card>
+                <Card className="p-6 bg-white dark:bg-zinc-900 border-0 shadow-sm rounded-[2.5rem] flex flex-col justify-center">
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1">Customers</p>
+                  <h4 className="text-3xl font-black tracking-tighter">{new Set(sales.filter(s => s.type === "Udhaar").map(s => s.mobile)).size} <span className="text-xs text-zinc-400">Accs</span></h4>
+                </Card>
+              </div>
+
+              <div className="space-y-4">
+                {sales.filter(s => s.type === "Udhaar").length === 0 ? (
+                  <div className="py-24 text-center space-y-4 animate-in fade-in duration-1000">
+                    <div className="w-24 h-24 bg-emerald-50 dark:bg-emerald-900/10 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-inner border border-emerald-100 dark:border-emerald-900/20">
+                      <CheckCircle2 className="h-12 w-12 text-emerald-500" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xl font-black text-zinc-800 dark:text-zinc-100 tracking-tight">Sab Paisa Recovered!</p>
+                      <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">No pending dues found 💰</p>
+                    </div>
+                  </div>
+                ) : (
+                  sales.filter(s => s.type === "Udhaar").map(s => (
+                    <Card key={s.id} className="p-6 bg-white dark:bg-zinc-900 rounded-[2.5rem] border-0 shadow-sm group relative overflow-hidden">
+                      <div className="absolute left-0 top-0 w-1.5 h-full bg-red-500" />
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-red-50 dark:bg-red-900/20 text-red-600 rounded-2xl flex items-center justify-center font-black text-sm">
+                            {s.name.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="font-black text-lg leading-none">{s.name}</p>
+                            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1">{format(new Date(s.date), "dd MMM, yyyy")}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-black text-red-600">₹{s.price}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-6 pt-6 border-t border-zinc-100 dark:border-zinc-800 flex gap-3">
+                        <Button 
+                          onClick={() => markAsPaid(s.id)} 
+                          className="flex-1 h-14 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-2xl text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                        >
+                          <CheckCircle2 className="h-4 w-4" /> MARK AS PAID
+                        </Button>
+                        <Button 
+                          onClick={() => window.open(`https://wa.me/91${s.mobile}?text=${encodeURIComponent(`Hi ${s.name}, a friendly reminder for your pending Udhaar of ₹${s.price} at ${restaurantName}. Please pay soon! Thanks.`)}`, "_blank")}
+                          variant="outline" 
+                          className="w-14 h-14 p-0 rounded-2xl border-zinc-100 dark:border-zinc-800 text-zinc-400 hover:text-emerald-500 hover:border-emerald-500 transition-all shadow-sm"
+                        >
+                          <MessageCircle className="h-6 w-6" />
+                        </Button>
+                      </div>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "Menu" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20 px-4">
+              <header className="flex justify-between items-center px-2">
+                <div>
+                  <h2 className="text-4xl font-black tracking-tight">Inventory</h2>
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mt-1">Manage Stock & Pricing</p>
+                </div>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button className="h-14 w-14 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/20 active:scale-95 transition-all">
+                      <PlusCircle className="h-7 w-7" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="rounded-[2.5rem] p-8 border-0 shadow-2xl bg-white dark:bg-zinc-900">
+                    <DialogHeader>
+                      <DialogTitle className="text-2xl font-black">Add Menu Item</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-6 mt-4">
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Dish Name</Label>
+                        <Input placeholder="e.g. Paneer Tikka" value={newItemName} onChange={e => setNewItemName(e.target.value)} className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Price (₹)</Label>
+                        <Input type="number" placeholder="0" value={newItemPrice} onChange={e => setNewItemPrice(e.target.value)} className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold" />
+                      </div>
+                      <Button onClick={handleAddMenuItem} className="w-full h-16 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-3xl text-lg shadow-xl shadow-orange-500/20">SAVE ITEM</Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </header>
+
+              <Card className="rounded-[2.5rem] border-0 shadow-sm overflow-hidden bg-white dark:bg-zinc-900">
+                <div className="p-6 border-b dark:border-zinc-800 flex items-center gap-4">
+                  <Search className="h-5 w-5 text-zinc-400" />
+                  <Input 
+                    placeholder="Search your menu..." 
+                    className="border-0 bg-transparent font-bold text-lg p-0 h-auto focus-visible:ring-0"
+                    value={itemSearch}
+                    onChange={e => setItemSearch(e.target.value)}
+                  />
+                </div>
+                <div className="divide-y dark:divide-zinc-800">
+                  {menuItems.filter(item => item.name.toLowerCase().includes(itemSearch.toLowerCase())).map(item => (
+                    <div key={item.id} className="p-6 flex justify-between items-center group hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-orange-50 dark:bg-orange-900/20 rounded-2xl flex items-center justify-center font-black text-orange-600">{item.name.charAt(0)}</div>
+                        <div>
+                          <p className="font-black text-lg leading-none">{item.name}</p>
+                          <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1.5">{item.category}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-6">
+                        <p className="font-black text-xl tracking-tight">₹{item.price}</p>
+                        <button onClick={() => setMenuItems(menuItems.filter(mi => mi.id !== item.id))} className="text-zinc-300 hover:text-red-500 transition-colors p-2">
+                          <Trash2 className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </div>
+          )}
+
+          {activeTab === "Legal" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
+              <header className="px-2">
+                <h2 className="text-4xl font-black tracking-tighter">Legal & Privacy</h2>
+                <p className="text-zinc-500 font-bold italic mt-1">Our commitment to your data security.</p>
+              </header>
+
+              <div className="space-y-6">
+                <Card className="p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900 border-0 shadow-sm space-y-4">
+                  <div className="flex items-center gap-3 text-emerald-500 mb-2">
+                    <ShieldCheck className="h-6 w-6" />
+                    <h3 className="font-black text-lg">Privacy Policy</h3>
+                  </div>
+                  <p className="text-xs font-bold text-zinc-500 leading-relaxed">
+                    At InstaMunim, we value your privacy. Your sales data and customer information are encrypted and stored securely. We do not share your business data with any third-party aggregators.
+                  </p>
+                  <p className="text-xs font-bold text-zinc-500 leading-relaxed">
+                    All voice data processed via the Smart Cashier is handled locally or via secure cloud APIs and is never recorded or stored for marketing purposes.
+                  </p>
+                </Card>
+
+                <Card className="p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900 border-0 shadow-sm space-y-4">
+                  <div className="flex items-center gap-3 text-blue-500 mb-2">
+                    <FileText className="h-6 w-6" />
+                    <h3 className="font-black text-lg">Terms of Service</h3>
+                  </div>
+                  <ul className="space-y-3">
+                    {[
+                      "InstaMunim is a tool for billing and business management.",
+                      "Users are responsible for accurate tax calculations and compliance.",
+                      "The software is provided 'as-is' with focus on high availability.",
+                      "Cloud sync requires a stable internet connection."
+                    ].map((item, idx) => (
+                      <li key={idx} className="flex gap-3 text-[10px] font-bold text-zinc-400 leading-snug">
+                        <div className="w-1.5 h-1.5 rounded-full bg-zinc-300 mt-1 flex-shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+
+                <div className="text-center pt-4">
+                  <p className="text-[10px] font-black text-zinc-300 uppercase tracking-widest">Version 2.0.4 - Enterprise Edition</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "MoreMenu" && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-28 px-4">
+              <div>
+                <h2 className="text-4xl font-bold tracking-tight">Business Hub</h2>
+                <p className="text-zinc-500 font-medium mt-1">Manage every aspect of your shop.</p>
+              </div>
+
+              <Card className="rounded-2xl border-0 bg-white dark:bg-zinc-900 shadow-sm divide-y dark:divide-zinc-800 overflow-hidden">
+                {[
+                  { id: "Settings", label: "Store Profile", sub: "Setup name, logo and rent", icon: Settings, color: "text-orange-500", bg: "bg-orange-50" },
+                  { id: "Rent", label: "Performance Mission", sub: "Daily targets and growth", icon: TrendingUp, color: "text-blue-500", bg: "bg-blue-50" },
+                  { id: "Marketing", label: "Smart CRM", sub: "Send offers on WhatsApp", icon: Send, color: "text-indigo-500", bg: "bg-indigo-50" },
+                  { id: "Khata", label: "Udhaar Ledger", sub: "Manage customer credit", icon: Book, color: "text-red-500", bg: "bg-red-50" },
+                  { id: "Legal", label: "Privacy & Terms", sub: "Legal documentation", icon: ShieldCheck, color: "text-emerald-500", bg: "bg-emerald-50" },
+                  { id: "Support", label: "Expert Support", sub: "Chat with platform founder", icon: Smartphone, color: "text-emerald-500", bg: "bg-emerald-50" },
+                ].map(item => (
+                  <button 
+                    key={item.id} 
+                    onClick={() => setActiveTab(item.id)} 
+                    className="w-full p-5 flex items-center justify-between hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${item.bg} dark:bg-opacity-10 group-hover:scale-110 transition-transform`}>
+                        <item.icon className={`h-6 w-6 ${item.color}`} />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-bold text-sm leading-tight">{item.label}</p>
+                        <p className="text-[10px] font-medium text-zinc-400 mt-1 uppercase tracking-wider">{item.sub}</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-zinc-300 group-hover:translate-x-1 transition-all" />
+                  </button>
+                ))}
+              </Card>
+
+              <div className="pt-2">
+                <Button 
+                  onClick={handleLogout} 
+                  variant="outline" 
+                  className="w-full h-16 bg-red-500/5 hover:bg-red-500 hover:text-white text-red-500 border border-red-500/20 rounded-2xl flex items-center justify-center gap-3 font-bold uppercase tracking-widest text-xs transition-all active:scale-95 shadow-sm"
+                >
+                  <LogOut className="h-5 w-5" /> LOGOUT FROM DEVICE
+                </Button>
+                <p className="text-center text-[10px] font-medium text-zinc-400 mt-6 uppercase tracking-[0.2em]">Version 2.0.4 Enterprise</p>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "Settings" && (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 pb-24">
+              <header className="px-4">
+                <h2 className="text-4xl font-black tracking-tighter">Shop Settings</h2>
+                <p className="text-zinc-500 font-bold italic mt-1">Advanced business control center.</p>
+              </header>
+
+              <div className="space-y-4 px-2">
+                {/* 1. STORE PROFILE */}
+                <Card className="p-6 rounded-[2.5rem] bg-white dark:bg-zinc-900 border-0 shadow-sm space-y-6">
+                  <div className="flex items-center gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-4">
+                    <div className="p-2 bg-orange-50 dark:bg-orange-900/20 rounded-xl text-orange-500"><Smartphone className="h-5 w-5" /></div>
+                    <h4 className="font-black text-sm uppercase tracking-widest">Store Profile</h4>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Shop Name</Label>
+                      <Input value={restaurantName} onChange={e => setRestaurantName(e.target.value)} className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 shadow-inner font-black text-lg px-6" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Shop Logo / Image</Label>
+                      <div className="h-32 rounded-2xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 flex flex-col items-center justify-center gap-2 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all cursor-pointer">
+                        <Download className="h-6 w-6 text-zinc-300" />
+                        <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Upload Image</span>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Monthly Rent (₹)</Label>
+                      <Input type="number" placeholder="Example: 15000" value={monthlyRent} onChange={e => setMonthlyRent(Number(e.target.value))} className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 shadow-inner font-black text-lg px-6" />
+                    </div>
+                  </div>
+                </Card>
+
+                {/* 2. ACCOUNT & SECURITY */}
+                <Card className="p-6 rounded-[2.5rem] bg-white dark:bg-zinc-900 border-0 shadow-sm space-y-6">
+                  <div className="flex items-center gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-4">
+                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-500"><Lock className="h-5 w-5" /></div>
+                    <h4 className="font-black text-sm uppercase tracking-widest">Account & Security</h4>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Update Password</Label>
+                      <div className="relative">
+                        <Input type={showPassword ? "text" : "password"} value={ownerPassword} onChange={e => setOwnerPassword(e.target.value)} className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 shadow-inner font-black text-lg px-6 pr-14" />
+                        <button onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 transition-colors">
+                          {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* 3. SYSTEM CLOUD */}
+                <Card className="p-6 rounded-[2.5rem] bg-white dark:bg-zinc-900 border-0 shadow-sm space-y-6">
+                  <div className="flex items-center gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-4">
+                    <div className="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl text-indigo-500"><Cloud className="h-5 w-5" /></div>
+                    <h4 className="font-black text-sm uppercase tracking-widest">System Cloud</h4>
+                  </div>
+                  <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl space-y-4">
+                    <div className="flex justify-between items-center">
+                      <div><p className="font-black text-xs">Cloud Backup Status</p><p className="text-[9px] font-bold text-indigo-500 uppercase tracking-widest">Everything is safe</p></div>
+                      <Badge className="bg-indigo-500 text-white border-0 font-black text-[8px] px-2 py-0.5 rounded-full">ACTIVE</Badge>
+                    </div>
+                    <Button onClick={() => { setIsSyncing(true); setTimeout(() => setIsSyncing(false), 1500); }} className="w-full h-14 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black text-xs shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-3">
+                      <RefreshCw className={`h-4 w-4 ${isSyncing ? 'animate-spin' : ''}`} /> SYNC NOW
+                    </Button>
+                  </div>
+                </Card>
+
+                {/* 4. WHATSAPP BOT */}
+                <Card className="p-6 rounded-[2.5rem] bg-white dark:bg-zinc-900 border-0 shadow-sm space-y-6">
+                  <div className="flex justify-between items-center border-b border-zinc-100 dark:border-zinc-800 pb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl text-emerald-500"><MessageCircle className="h-5 w-5" /></div>
+                      <h4 className="font-black text-sm uppercase tracking-widest">WhatsApp Bot</h4>
+                    </div>
+                    <button onClick={() => setIsWhatsAppEnabled(!isWhatsAppEnabled)} className={`w-14 h-7 rounded-full transition-all relative ${isWhatsAppEnabled ? 'bg-emerald-500' : 'bg-zinc-200'}`}>
+                      <div className={`absolute top-0.5 w-6 h-6 rounded-full bg-white transition-all shadow-md ${isWhatsAppEnabled ? 'left-7.5' : 'left-0.5'}`} />
+                    </button>
+                  </div>
+                  <div className={`space-y-4 transition-all ${isWhatsAppEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+                    <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Invoice Structure</Label>
+                    <textarea 
+                      value={whatsappInvoiceTemplate} 
+                      onChange={e => setWhatsappInvoiceTemplate(e.target.value)} 
+                      className="w-full h-40 bg-zinc-50 dark:bg-zinc-800 rounded-2xl border-0 p-5 text-xs font-bold leading-relaxed resize-none shadow-inner"
+                    />
+                    <p className="text-[8px] font-bold text-zinc-400 italic">● Use tags: [NAME], [SHOP], [ITEMS], [TOTAL]</p>
+                  </div>
+                </Card>
+
+                {/* 5. FEE & COMMISSION */}
+                <Card className="p-6 rounded-[2.5rem] bg-white dark:bg-zinc-900 border-0 shadow-sm space-y-6">
+                  <div className="flex items-center gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-4">
+                    <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-xl text-red-500"><TrendingUp className="h-5 w-5" /></div>
+                    <h4 className="font-black text-sm uppercase tracking-widest">Fee & Commission</h4>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-3 gap-3 items-end">
+                      <div className="col-span-1 space-y-2"><Label className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Partner</Label><div className="h-12 bg-zinc-50 dark:bg-zinc-800 rounded-xl flex items-center px-4 text-[10px] font-black">SWIGGY</div></div>
+                      <div className="col-span-1 space-y-2"><Label className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Unit</Label><div className="h-12 bg-zinc-50 dark:bg-zinc-800 rounded-xl flex items-center px-4 text-[10px] font-black">%</div></div>
+                      <div className="col-span-1 space-y-2"><Label className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Value</Label><Input type="number" value={swiggyCommission} onChange={e => setSwiggyCommission(Number(e.target.value))} className="h-12 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 shadow-inner font-black text-center" /></div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3 items-end">
+                      <div className="col-span-1 space-y-2"><Label className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Partner</Label><div className="h-12 bg-zinc-50 dark:bg-zinc-800 rounded-xl flex items-center px-4 text-[10px] font-black">ZOMATO</div></div>
+                      <div className="col-span-1 space-y-2"><Label className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Unit</Label><div className="h-12 bg-zinc-50 dark:bg-zinc-800 rounded-xl flex items-center px-4 text-[10px] font-black">%</div></div>
+                      <div className="col-span-1 space-y-2"><Label className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Value</Label><Input type="number" value={zomatoCommission} onChange={e => setZomatoCommission(Number(e.target.value))} className="h-12 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 shadow-inner font-black text-center" /></div>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* 6. FAQ & DATA SECURITY */}
+                <Card className="p-6 rounded-[2.5rem] bg-white dark:bg-zinc-900 border-0 shadow-sm space-y-4">
+                  <div className="flex items-center gap-3 border-b border-zinc-100 dark:border-zinc-800 pb-4">
+                    <div className="p-2 bg-zinc-50 dark:bg-zinc-800 rounded-xl text-zinc-400"><ShieldCheck className="h-5 w-5" /></div>
+                    <h4 className="font-black text-sm uppercase tracking-widest">FAQ & Data Security</h4>
+                  </div>
+                  <div className="space-y-3">
+                    <details className="group"><summary className="list-none flex justify-between items-center cursor-pointer"><span className="text-[10px] font-black uppercase tracking-widest">Is my data safe?</span><ChevronRight className="h-4 w-4 group-open:rotate-90 transition-all" /></summary><p className="text-[10px] font-bold text-zinc-400 mt-2 leading-relaxed">Bhai, aapka saara data industry-standard encryption se safe hai. Supabase cloud par hum har 6 ghante mein backup lete hain.</p></details>
+                    <details className="group"><summary className="list-none flex justify-between items-center cursor-pointer"><span className="text-[10px] font-black uppercase tracking-widest">Can I use offline?</span><ChevronRight className="h-4 w-4 group-open:rotate-90 transition-all" /></summary><p className="text-[10px] font-bold text-zinc-400 mt-2 leading-relaxed">App locally data save karti hai, aur internet aane par Cloud Sync button se DB update kar deti hai.</p></details>
+                  </div>
+                </Card>
+
+                {/* 7. LOGOUT */}
+                <div className="pt-4">
+                  <Button 
+                    onClick={handleLogout} 
+                    variant="outline" 
+                    className="w-full h-20 bg-red-500/5 hover:bg-red-500 hover:text-white text-red-500 border border-red-500/20 rounded-[2.5rem] font-black text-lg shadow-xl shadow-red-500/5 flex items-center justify-center gap-3 transition-all active:scale-95"
+                  >
+                    <LogOut className="h-6 w-6" /> LOGOUT FROM DEVICE
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "Support" && (
+            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <header className="text-center py-6">
+                <div className="w-24 h-24 bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/10"><Smartphone className="h-12 w-12" /></div>
+                <h2 className="text-5xl font-black tracking-tight">Support</h2>
+                <p className="text-zinc-400 font-bold mt-2 uppercase tracking-widest text-xs">Help is 1-click away</p>
+              </header>
+              <Card className="p-12 text-center rounded-[4rem] space-y-8 bg-white dark:bg-zinc-900 border-0 shadow-2xl relative overflow-hidden">
+                 <div className="absolute top-0 left-0 w-32 h-32 bg-emerald-500/5 rounded-full -ml-16 -mt-16 blur-2xl" />
+                 <div className="w-24 h-24 bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-700 rounded-full flex items-center justify-center mx-auto overflow-hidden border-4 border-white dark:border-zinc-800 shadow-xl"><Users className="h-12 w-12 text-zinc-400" /></div>
+                 <div><h3 className="font-black text-3xl">Zainul Khan</h3><p className="text-[10px] font-black uppercase text-emerald-500 tracking-[0.3em] mt-2">Platform Founder</p></div>
+                 <p className="text-sm font-bold text-zinc-500 leading-relaxed italic">"Bhai, koi bhi help chahiye ho, seedha WhatsApp kijiye. Main aapke business ko scale karne mein help karunga."</p>
+                 <Button onClick={() => window.open("https://wa.me/917838229178", "_blank")} className="w-full h-20 bg-emerald-500 hover:bg-emerald-600 text-white rounded-[2rem] font-black text-xl shadow-2xl shadow-emerald-500/40 active:scale-95 transition-all flex items-center justify-center gap-4">
+                   <Send className="h-6 w-6" /> WHATSAPP ME
+                 </Button>
+              </Card>
+            </div>
+          )}
+
+        </div>
+      </main>
+
+      <nav className={`fixed bottom-0 left-0 right-0 h-16 border-t backdrop-blur-2xl z-50 flex items-center justify-around px-4 ${isDarkMode ? 'bg-zinc-950/90 border-zinc-800' : 'bg-white/90 border-zinc-100 shadow-[0_-10px_40px_rgba(0,0,0,0.04)]'}`}>
+        <button onClick={() => setActiveTab("Dashboard")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'Dashboard' ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
+          <div className={`p-1.5 rounded-xl ${activeTab === 'Dashboard' ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><LayoutDashboard className="h-5 w-5" /></div>
+          <span className="text-[8px] font-bold uppercase tracking-tighter">Home</span>
+        </button>
+ 
+        <button onClick={() => setActiveTab("Menu")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'Menu' ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
+          <div className={`p-1.5 rounded-xl ${activeTab === 'Menu' ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><ShoppingCart className="h-5 w-5" /></div>
+          <span className="text-[8px] font-bold uppercase tracking-tighter">Menus</span>
+        </button>
+ 
+        <button onClick={() => setIsSaleOpen(true)} className="flex flex-col items-center -mt-8 group">
+          <div className="w-16 h-16 bg-orange-600 rounded-full flex items-center justify-center shadow-xl shadow-orange-600/30 border-4 border-[#fafafa] dark:border-zinc-950 group-active:scale-90 transition-all">
+            <PlusCircle className="h-8 w-8 text-white" />
+          </div>
+          <span className="text-[8px] font-bold uppercase text-orange-600 mt-1 tracking-widest">Sale</span>
+        </button>
+
+        <button onClick={() => setActiveTab("Total Sale Report")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'Total Sale Report' ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
+          <div className={`p-1.5 rounded-xl ${activeTab === 'Total Sale Report' ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><PieChart className="h-5 w-5" /></div>
+          <span className="text-[8px] font-bold uppercase tracking-tighter">Stats</span>
+        </button>
+
+        <button onClick={() => setActiveTab("MoreMenu")} className={`flex flex-col items-center gap-1 transition-all ${['MoreMenu', 'Settings', 'Rent', 'Support', 'Khata', 'Menu'].includes(activeTab) ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
+          <div className={`p-1.5 rounded-xl ${['MoreMenu', 'Settings', 'Rent', 'Support', 'Khata', 'Menu'].includes(activeTab) ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><Settings className="h-5 w-5" /></div>
+          <span className="text-[8px] font-bold uppercase tracking-tighter">More</span>
+        </button>
+      </nav>
+      {/* EXIT PROTECTION DIALOG */}
+      <Dialog open={showExitDialog} onOpenChange={setShowExitDialog}>
+        <DialogContent className="p-8 border-0 max-w-[320px] bg-zinc-900 text-white rounded-[2.5rem] shadow-2xl">
+          <div className="text-center space-y-6">
+            <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <LogOut className="h-8 w-8 text-white" />
+            </div>
+            <div className="space-y-2">
+              <DialogTitle className="text-xl font-black text-center">Are you sure you want to exit?</DialogTitle>
+              <DialogDescription className="text-zinc-400 text-xs font-bold leading-relaxed text-center">
+                Your current session will end. Do you want to leave InstaMunim?
+              </DialogDescription>
+            </div>
+            <div className="flex gap-3 pt-4">
+              <Button onClick={() => window.close()} className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-xs active:scale-95 transition-all">Yes</Button>
+              <Button onClick={() => setShowExitDialog(false)} variant="outline" className="flex-1 h-12 bg-transparent border-zinc-700 text-white hover:bg-white/5 font-black rounded-xl text-xs active:scale-95 transition-all">No</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      {/* ORDER SUCCESS DIALOG */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="p-10 border-0 max-w-[340px] bg-white dark:bg-zinc-900 rounded-[3rem] shadow-2xl">
+          <div className="text-center space-y-8 animate-in zoom-in-95 duration-500">
+            <div className="w-24 h-24 bg-emerald-50 dark:bg-emerald-900/20 rounded-full flex items-center justify-center mx-auto mb-2 shadow-inner">
+              <CheckCircle2 className="h-14 w-14 text-emerald-500" />
+            </div>
+            <div className="space-y-2">
+              <DialogTitle className="text-3xl font-black tracking-tight text-center">Success!</DialogTitle>
+              <DialogDescription className="text-zinc-500 font-bold italic text-center">
+                Order has been completed and saved to cloud.
+              </DialogDescription>
+            </div>
+
+            <div className="space-y-4 pt-4">
+              <Button 
+                onClick={sendWhatsAppReceipt} 
+                className="w-full h-16 bg-orange-600 hover:bg-orange-500 text-white rounded-[2rem] font-black text-lg shadow-xl shadow-orange-600/20 active:scale-95 transition-all flex items-center justify-center gap-3"
+              >
+                <MessageCircle className="h-6 w-6" /> SEND RECEIPT
+              </Button>
+              <Button 
+                onClick={() => setShowSuccessDialog(false)} 
+                variant="ghost" 
+                className="w-full h-12 text-zinc-400 font-black uppercase tracking-[0.2em] text-[10px] hover:text-zinc-600"
+              >
+                Done
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

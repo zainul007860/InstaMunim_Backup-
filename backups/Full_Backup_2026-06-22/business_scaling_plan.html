@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InstaMunim Go-To-Market & Scaling Plan (v1.0)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #09090b;
+      --card-bg: #18181b;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --primary: #f97316;
+      --primary-hover: #ea580c;
+      --emerald: #10b981;
+      --blue: #3b82f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 2rem;
+      padding: 3rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .container::before {
+      content: '';
+      position: absolute;
+      top: -100px;
+      left: -100px;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(249, 115, 22, 0.1) 0%, rgba(249, 115, 22, 0) 70%);
+      pointer-events: none;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      position: relative;
+    }
+
+    .logo-badge {
+      display: inline-block;
+      background: rgba(249, 115, 22, 0.1);
+      color: var(--primary);
+      padding: 0.5rem 1.5rem;
+      border-radius: 9999px;
+      font-weight: 800;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 1rem;
+      border: 1px solid rgba(249, 115, 22, 0.2);
+    }
+
+    h1 {
+      font-size: 2.75rem;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 0.75rem;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--primary);
+      margin-top: 2.5rem;
+      margin-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.5rem;
+    }
+
+    h3 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-top: 1.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    p {
+      margin-bottom: 1rem;
+      color: #d4d4d8;
+    }
+
+    .alert {
+      background: rgba(59, 130, 246, 0.08);
+      border-left: 4px solid var(--blue);
+      padding: 1.25rem;
+      border-radius: 0.75rem;
+      margin: 1.5rem 0;
+    }
+
+    .alert-title {
+      font-weight: 800;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      color: var(--blue);
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+    }
+
+    .alert p {
+      margin-bottom: 0;
+      font-size: 0.95rem;
+      color: #e4e4e7;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    th, td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    td {
+      color: #e4e4e7;
+    }
+
+    tr:hover td {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .btn-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    .print-btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.85rem 2rem;
+      font-size: 0.9rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      border-radius: 1rem;
+      cursor: pointer;
+      box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.3);
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .print-btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 20px -3px rgba(249, 115, 22, 0.4);
+    }
+
+    .print-btn:active {
+      transform: translateY(0);
+    }
+
+    .timeline {
+      margin-top: 1.5rem;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-left: 2rem;
+      border-left: 2px solid var(--border);
+      margin-bottom: 2rem;
+    }
+
+    .timeline-item::after {
+      content: '';
+      position: absolute;
+      top: 6px;
+      left: -6px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 2px solid var(--card-bg);
+    }
+
+    .timeline-item-title {
+      font-weight: 800;
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+
+    .timeline-item-detail {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .timeline-item-detail ul {
+      margin-top: 0.5rem;
+      margin-left: 1.25rem;
+    }
+
+    .timeline-item-detail li {
+      margin-bottom: 0.25rem;
+    }
+
+    @media print {
+      body {
+        background-color: white;
+        color: black;
+        padding: 0;
+      }
+
+      .container {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        background: transparent;
+      }
+
+      .print-btn {
+        display: none;
+      }
+
+      .btn-container {
+        display: none;
+      }
+
+      h1 {
+        font-size: 2.25rem;
+        color: black;
+      }
+
+      h2 {
+        color: #ca8a04;
+        border-bottom: 1px solid #e4e4e7;
+      }
+
+      p, td, li {
+        color: #27272a;
+      }
+
+      .alert {
+        background: #f0fdf4;
+        border-left: 4px solid #16a34a;
+        color: #14532d;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="btn-container">
+    <button class="print-btn" onclick="window.print()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 6 2 18 2 18 9"></polyline>
+        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+        <rect x="6" y="14" width="12" height="8"></rect>
+      </svg>
+      Print to PDF
+    </button>
+  </div>
+
+  <div class="container">
+    <header>
+      <div class="logo-badge">InstaMunim Scaling</div>
+      <h1>Go-To-Market & Scaling Plan</h1>
+      <p>Version 1.0 (Operational Roadmap)</p>
+    </header>
+
+    <p>Bhai, aapka plan <strong>bilkul possible hai aur business bootstrapping (self-funding) ke liye ekdum solid strategy hai</strong>. Is model ka sabse bada plus-point ye hai ki <strong>Offline Agent channel se immediate, positive cashflow start ho jayega</strong>, jo ki online digital ads ke expenses ko cover (subsidize) karega.</p>
+
+    <h2>1. Financial Feasibility & Unit Economics</h2>
+    <p>Aapke bootstrapping budget ka split niche diye table ke according optimized rahega:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>Details / Calculation</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Plan Price</strong></td>
+          <td>₹199 / month</td>
+          <td>Affordable price point for local small shops.</td>
+        </tr>
+        <tr>
+          <td><strong>Agent Commission (50%)</strong></td>
+          <td>₹100 / conversion</td>
+          <td>High incentive for the agent to convert shops quickly.</td>
+        </tr>
+        <tr>
+          <td><strong>Marketing Re-investment</strong></td>
+          <td>₹50 / user (₹1,000 per 20 users)</td>
+          <td>Transferred directly to Facebook/Instagram ad spend.</td>
+        </tr>
+        <tr>
+          <td><strong>Operations & Tech Buffer</strong></td>
+          <td>₹49 / user (₹980 per 20 users)</td>
+          <td>Covers Supabase database, hosting, WhatsApp API costs.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="alert">
+      <div class="alert-title">🚨 Risk & Mitigation (Online Ads vs. Offline CAC)</div>
+      <p><strong>Online Ads CAC Challenge:</strong> Shuruat me digital ads se per-user paid conversion cost (CAC) ₹250-₹400 tak aa sakti hai. Iska matlab hai online ads directly self-sustaining nahi honge.<br>
+      <strong>Mitigation:</strong> Offline Agent Channel se jo surplus cash (₹99 per user) generate hoga, use hum Online Ads testing me re-invest karenge jab tak humara Play Store conversion rate aur organic ranking improve nahi ho jati.</p>
+    </div>
+
+    <h2>2. Technical Feature Requirements</h2>
+    <p>Operations ko seamlessly track aur maintain karne ke liye hume app me 2 important features add karne honge:</p>
+
+    <h3>Feature A: Agent Referral Tracking (Onboarding Track)</h3>
+    <p>Hume track karna hoga ki kis agent ne kis shop ko onboarding karwaya hai taaki commission split transparency rahe:</p>
+    <ul>
+      <li><strong>Signup Screen Update:</strong> Signup page par ek optional <code>Referral / Agent Code</code> field.</li>
+      <li><strong>Database Change:</strong> <code>stores</code> table me <code>agent_code</code> (text) column save karenge.</li>
+    </ul>
+
+    <h3>Feature B: In-App Payments & Renewal Alerts</h3>
+    <ul>
+      <li><strong>Dynamic UPI Page:</strong> Merchants ko renew karne ke liye in-app UPI deep-linking QR screens (jaise GPay, PhonePe, Paytm automatically open ho).</li>
+      <li><strong>Admin Panel Update:</strong> Expiry date aur activation filter.</li>
+    </ul>
+
+    <h2>3. Week-by-Week Action Plan & Targets (1-Month Sprint)</h2>
+    <p>Hum is plan ko 4 Weeks (28 Days) ke phase me break kar rahe hain:</p>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-item-title">Phase 1: Setup & Launch Preparation (Days 1 - 7)</div>
+        <div class="timeline-item-detail">
+          <ul>
+            <li><strong>Technical:</strong> App me referral tracking system add karna. Play Store par approved build (v1.4) ke production release ko finalize karna.</li>
+            <li><strong>Marketing:</strong> Facebook Ad Manager account configure karna aur target creatives design karna.</li>
+            <li><strong>Target:</strong> 0 Paid Users. Systems 100% ready status me.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-item-title">Phase 2: Field Testing & First 20 Conversions (Days 8 - 17)</div>
+        <div class="timeline-item-detail">
+          <ul>
+            <li><strong>Operations:</strong> Offline agent ko launch code, demo accounts, aur marketing pamphlets handover karna. Daily logins check karna.</li>
+            <li><strong>Offline Agent:</strong> Target: 20 Paid Signups (Daily target: 2 stores convert karna).</li>
+            <li><strong>Financials:</strong> Revenue: ₹3,980 | Payout to Agent: ₹2,000 | Allocation to Ads: ₹1,000 | Net Tech Profit: ₹980.</li>
+            <li><strong>Target:</strong> 20 Active Paid Shops.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-item-title">Phase 3: Social Media Ads Launch & Optimization (Days 18 - 24)</div>
+        <div class="timeline-item-detail">
+          <ul>
+            <li><strong>Marketing:</strong> ₹1,000 budget ke sath targeted Facebook/Instagram Lead Generation campaign run karna. Leads close karne ke liye WhatsApp automation set karna.</li>
+            <li><strong>Offline Agent:</strong> Next batch target: 20 Paid Signups.</li>
+            <li><strong>Target:</strong> 40 Cumulative Active Paid Shops (Online + Offline).</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-item-title">Phase 4: Retention & Support Loop (Days 25 - 30)</div>
+        <div class="timeline-item-detail">
+          <ul>
+            <li><strong>Operations:</strong> 30-day billing alerts monitor karna. Database usage optimize karna.</li>
+            <li><strong>Target:</strong> 55+ Cumulative Paid Shops.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <h2>4. Long Term Scale (Month 2 onwards)</h2>
+    <p>Jab humara user base 100+ stores touch karega:</p>
+    <ul>
+      <li><strong>Monthly Revenue:</strong> ₹19,900.</li>
+      <li>Offline/Online split ratio 40/60 transition ho jayega (yaani digital ads organically download feed badhayenge).</li>
+      <li>Hum micro-retail features (barcode scanner support) aur multi-device dashboard logs par priority focus karenge.</li>
+    </ul>
+  </div>
+
+</body>
+</html>

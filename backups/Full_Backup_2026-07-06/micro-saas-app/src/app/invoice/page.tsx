@@ -1,0 +1,618 @@
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import { format } from "date-fns";
+import { Suspense, useEffect, useState, useRef } from "react";
+import { Printer, ShoppingBag, CheckCircle2, QrCode, Camera, Globe, Phone, MapPin, ReceiptText, Download, Gift, Copy, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/lib/supabase";
+
+// Scratch Card Component for Invoice
+function ScratchCard({ 
+  invoiceId, 
+  ownerMobile, 
+  customerMobile, 
+  storeName, 
+  onWon 
+}: { 
+  invoiceId: string; 
+  ownerMobile: string; 
+  customerMobile: string; 
+  storeName: string;
+  onWon: (coupon: any) => void;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isScratching, setIsScratching] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [amount, setAmount] = useState(10); // Default reward
+
+  useEffect(() => {
+    // 70% chance of ₹10, 30% chance of ₹5
+    const roll = Math.random() < 0.7 ? 10 : 5;
+    setAmount(roll);
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const resizeCanvas = () => {
+      const rect = canvas.parentElement?.getBoundingClientRect();
+      canvas.width = rect?.width || 340;
+      canvas.height = rect?.height || 185;
+
+      // Draw gradient holographic background
+      const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      grad.addColorStop(0, "#4b5563"); // slate-600
+      grad.addColorStop(0.5, "#9ca3af"); // slate-400
+      grad.addColorStop(1, "#1f2937"); // slate-800
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw background noise/sparkles
+      ctx.fillStyle = "rgba(255, 255, 255, 0.25)";
+      for (let i = 0; i < 25; i++) {
+        ctx.beginPath();
+        ctx.arc(Math.random() * canvas.width, Math.random() * canvas.height, Math.random() * 4 + 1, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Add instruction text
+      ctx.font = "900 12px sans-serif";
+      ctx.fillStyle = "#ffffff";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("SCRATCH HERE TO WIN REWARD! ✨", canvas.width / 2, canvas.height / 2);
+    };
+
+    resizeCanvas();
+
+    const checkScratchedPercentage = () => {
+      const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const pixels = imgData.data;
+      let transparentCount = 0;
+      for (let i = 3; i < pixels.length; i += 4) {
+        if (pixels[i] === 0) transparentCount++;
+      }
+      const percentage = (transparentCount / (pixels.length / 4)) * 100;
+      
+      // If 45% or more is cleared, count it as completed
+      if (percentage > 45 && !isCompleted) {
+        setIsCompleted(true);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Generate dynamic coupon code
+        const couponCode = "IM-" + Math.floor(1000 + Math.random() * 9000) + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
+
+        const newCoupon = {
+          code: couponCode,
+          discount_amount: amount,
+          store_mobile: ownerMobile,
+          customer_mobile: customerMobile,
+          invoice_id: invoiceId,
+          status: "unused"
+        };
+
+        supabase
+          .from("coupons")
+          .insert([newCoupon])
+          .then(({ error }) => {
+            if (!error) {
+              onWon(newCoupon);
+            } else {
+              console.error("Supabase coupon insert failed:", error);
+            }
+          });
+      }
+    };
+
+    const getMouseCoords = (e: MouseEvent | TouchEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+      const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    };
+
+    const scratch = (e: MouseEvent | TouchEvent) => {
+      if (!isScratching || isCompleted) return;
+      e.preventDefault();
+      const coords = getMouseCoords(e);
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.beginPath();
+      ctx.arc(coords.x, coords.y, 16, 0, Math.PI * 2);
+      ctx.fill();
+      checkScratchedPercentage();
+    };
+
+    const startScratching = (e: MouseEvent | TouchEvent) => {
+      setIsScratching(true);
+      scratch(e);
+    };
+
+    const stopScratching = () => {
+      setIsScratching(false);
+    };
+
+    canvas.addEventListener("mousedown", startScratching);
+    canvas.addEventListener("mousemove", scratch);
+    canvas.addEventListener("mouseup", stopScratching);
+    canvas.addEventListener("mouseleave", stopScratching);
+
+    canvas.addEventListener("touchstart", startScratching, { passive: false });
+    canvas.addEventListener("touchmove", scratch, { passive: false });
+    canvas.addEventListener("touchend", stopScratching);
+
+    return () => {
+      canvas.removeEventListener("mousedown", startScratching);
+      canvas.removeEventListener("mousemove", scratch);
+      canvas.removeEventListener("mouseup", stopScratching);
+      canvas.removeEventListener("mouseleave", stopScratching);
+      canvas.removeEventListener("touchstart", startScratching);
+      canvas.removeEventListener("touchmove", scratch);
+      canvas.removeEventListener("touchend", stopScratching);
+    };
+  }, [isScratching, isCompleted, amount]);
+
+  return (
+    <div className="absolute inset-0 z-20">
+      <canvas ref={canvasRef} className="w-full h-full rounded-3xl" />
+    </div>
+  );
+}
+
+
+function InvoiceContent() {
+  const searchParams = useSearchParams();
+  const [cloudLogo, setCloudLogo] = useState<string | null>(null);
+  const isFree = searchParams.get("free") === "true";
+
+  // Scratch card coupon states
+  const [scratchClaimed, setScratchClaimed] = useState(false);
+  const [claimedCoupon, setClaimedCoupon] = useState<any>(null);
+  const [isLoadingCoupon, setIsLoadingCoupon] = useState(true);
+  const [copied, setCopied] = useState(false);
+  
+  const restName = searchParams.get("n") || "InstaMunim POS";
+  const items = searchParams.get("i") || "";
+  const price = searchParams.get("p") || "0";
+  const date = searchParams.get("d") || new Date().toISOString();
+  const type = searchParams.get("t") || "Cash";
+  const id = searchParams.get("id") || "1001";
+  const mobile = searchParams.get("m") || "";
+  const custName = searchParams.get("cn") || "Guest Customer";
+  const storeAddr = searchParams.get("a") || "Premium Plaza, New Delhi";
+  const storePh = searchParams.get("ph") || "+91 9999 888 777";
+  const storeWeb = searchParams.get("w") || "www.khankitchen.com";
+  const storeGs = searchParams.get("g") || "07AABCU1234F1Z5";
+  const ownerMobile = searchParams.get("o") || "";
+  
+  const extraChargeName = searchParams.get("ecn") || "";
+  const extraChargeAmount = Number(searchParams.get("eca")) || 0;
+  const discountAmount = Number(searchParams.get("disc")) || 0;
+
+  const fin = searchParams.get("fin") === "true";
+  const fco = searchParams.get("fco") || "";
+  const flo = searchParams.get("flo") || "0";
+  const fdp = searchParams.get("fdp") || "0";
+  const fid = searchParams.get("fid") || "";
+
+  const logoFromUrl = searchParams.get("logo") || "";
+
+  // Fetch Logo from Cloud
+  useEffect(() => {
+    if (ownerMobile) {
+      const fetchLogo = async () => {
+        try {
+          const { data, error } = await supabase
+            .from('stores')
+            .select('store_logo')
+            .eq('owner_mobile', ownerMobile)
+            .single();
+          
+          if (!error && data?.store_logo) {
+            setCloudLogo(data.store_logo);
+          }
+        } catch (e) {
+          console.error("Logo fetch failed", e);
+        }
+      };
+      fetchLogo();
+    }
+  }, [ownerMobile]);
+
+  // Fetch scratch coupon status from Supabase
+  useEffect(() => {
+    if (id) {
+      const checkCoupon = async () => {
+        setIsLoadingCoupon(true);
+        try {
+          const { data, error } = await supabase
+            .from("coupons")
+            .select("*")
+            .eq("invoice_id", id)
+            .maybeSingle();
+          if (!error && data) {
+            setScratchClaimed(true);
+            setClaimedCoupon(data);
+          }
+        } catch (e) {
+          console.error("Coupon fetch failed", e);
+        } finally {
+          setIsLoadingCoupon(false);
+        }
+      };
+      checkCoupon();
+    } else {
+      setIsLoadingCoupon(false);
+    }
+  }, [id]);
+
+  const canScratch = id && mobile && ownerMobile;
+
+  // Determine which logo to show
+  const finalLogo = cloudLogo || (logoFromUrl.startsWith("http") ? logoFromUrl : null);
+
+  const parsedItems = items.split(',').map(i => {
+    const parts = i.trim().split(':');
+    let nameStr = parts[0] || "Item";
+    let imei = "";
+    const imeiMatch = nameStr.match(/\[IMEI-(.+)\]/);
+    if (imeiMatch) {
+      imei = imeiMatch[1];
+      nameStr = nameStr.replace(/\[IMEI-.+\]/, "").trim();
+    }
+    return { name: nameStr, price: parts[1] || "0", imei };
+  }).filter(i => i.name !== "Item" || i.price !== "0");
+
+  const hasGst = searchParams.get("gst") !== "false";
+  const gstRate = Number(searchParams.get("gstRate")) || 5;
+
+  const finalTotal = Number(price) || 0;
+  const grossTotal = finalTotal + discountAmount;
+  const actualTaxable = Math.max(0, finalTotal - extraChargeAmount);
+  const gstTotal = hasGst ? (actualTaxable * (gstRate / 100)) : 0;
+  const cgst = (gstTotal / 2).toFixed(2);
+  const sgst = (gstTotal / 2).toFixed(2);
+  const subtotal = (grossTotal - gstTotal - extraChargeAmount).toFixed(2);
+
+  return (
+    <div className="h-screen bg-zinc-100 flex justify-center py-0 sm:py-10 px-0 sm:px-4 font-sans print:bg-white print:p-0 print:h-auto print:overflow-visible overflow-y-auto">
+      <style dangerouslySetInnerHTML={{__html: `
+        @media print {
+          @page { margin: 0; }
+          html, body { height: auto !important; overflow: visible !important; }
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; overflow: visible !important; }
+          .print-hide { display: none !important; }
+        }
+        .dotted-border {
+          background-image: linear-gradient(to right, #e4e4e7 33%, rgba(255,255,255,0) 0%);
+          background-position: bottom;
+          background-size: 10px 1px;
+          background-repeat: repeat-x;
+        }
+      `}} />
+      
+      <div className="bg-white w-full max-w-[550px] shadow-2xl flex flex-col relative print:shadow-none print:max-w-full print:h-auto print:min-h-0 h-fit min-h-full">
+        
+        {/* Print Bar */}
+        <div className="bg-zinc-900 text-white p-4 flex justify-between items-center print:hidden print-hide sticky top-0 z-50">
+          <div className="flex items-center gap-2">
+            <ReceiptText className="w-4 h-4 text-orange-500" />
+            <span className="font-bold text-[10px] uppercase tracking-widest">Digital Tax Invoice</span>
+          </div>
+          <Button size="sm" onClick={() => window.print()} className="bg-white text-zinc-900 hover:bg-zinc-200 h-8 text-[10px] font-black uppercase tracking-widest px-4">
+            <Printer className="w-3 h-3 mr-2" /> Save PDF
+          </Button>
+        </div>
+
+        <div className="p-8 sm:p-14 print:p-6 flex-1 flex flex-col space-y-10 print:space-y-4">
+          
+          {/* Brand Header */}
+          <div className="text-center space-y-4 print:space-y-1">
+             <div className="w-20 h-20 bg-zinc-900 rounded-3xl flex items-center justify-center mx-auto shadow-2xl shadow-zinc-200 border-4 border-zinc-50 overflow-hidden text-white font-black text-4xl">
+               {finalLogo ? (
+                 <img src={finalLogo} alt="Store Logo" className="w-full h-full object-cover" />
+               ) : (
+                 <span className="text-4xl font-black text-white">{restName.charAt(0)}</span>
+               )}
+             </div>
+             <div>
+               <h1 className="text-3xl font-black text-zinc-900 tracking-tighter uppercase leading-none">{restName}</h1>
+               <div className="flex items-center justify-center gap-2 text-[9px] font-bold text-zinc-400 mt-3 uppercase tracking-widest">
+                  <MapPin className="w-2.5 h-2.5" /> {storeAddr}
+               </div>
+               <div className="flex items-center justify-center gap-4 text-[9px] font-bold text-zinc-400 mt-1 uppercase tracking-widest">
+                  <span className="flex items-center gap-1"><Phone className="w-2.5 h-2.5" /> {storePh}</span>
+                  <span className="flex items-center gap-1"><Globe className="w-2.5 h-2.5" /> {storeWeb}</span>
+               </div>
+               {hasGst && storeGs && (
+                 <p className="text-[10px] font-black text-zinc-900 mt-4 print:mt-1 px-4 py-1.5 print:py-0.5 bg-zinc-100 rounded-full inline-block uppercase tracking-[0.2em]">GSTIN: {storeGs}</p>
+               )}
+             </div>
+          </div>
+
+          {/* Transaction Info Grid */}
+          <div className="grid grid-cols-2 gap-x-8 gap-y-8 print:gap-y-2 pb-10 print:pb-4 border-b-2 border-zinc-100 relative">
+            <div className="absolute -bottom-1 left-0 w-12 h-1 bg-zinc-900" />
+            <div>
+              <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Invoice Details</p>
+              <p className="text-sm font-black text-zinc-900 tracking-tight">#INV-{id.split('-').pop()?.toUpperCase() || id.slice(-6).toUpperCase()}</p>
+              <p className="text-[10px] font-bold text-zinc-400 mt-0.5">POS: UNIT-01 / Cashier: System</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Date & Time</p>
+              <p className="text-sm font-black text-zinc-900">{format(new Date(date), "dd MMMM, yyyy")}</p>
+              <p className="text-[10px] font-bold text-zinc-400 mt-0.5">{format(new Date(date), "hh:mm a")}</p>
+            </div>
+            <div>
+              <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Billed To</p>
+              <p className="text-sm font-black text-zinc-900">{custName}</p>
+              <p className="text-[10px] font-bold text-zinc-400 mt-0.5">+91 {mobile}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1.5">Payment Mode</p>
+              <div className="flex items-center justify-end gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <p className="text-sm font-black text-zinc-900 uppercase tracking-tight">
+                  {fin ? `EMI (${fco})` : type} SUCCESS
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Items Section */}
+          <div className="flex-1 space-y-6 print:space-y-2">
+            <div className="flex justify-between text-[10px] font-black text-zinc-900 uppercase tracking-widest pb-3 print:pb-1 border-b border-zinc-100">
+              <span>Item Description</span>
+              <span>Amount</span>
+            </div>
+            
+            <div className="space-y-6">
+               {parsedItems.map((item, idx) => (
+                 <div key={idx} className="flex justify-between items-start gap-4">
+                   <div className="flex-1">
+                     <p className="text-md font-black text-zinc-900 tracking-tight leading-tight uppercase">{item.name}</p>
+                     {item.imei && (
+                       <p className="text-[9px] font-black text-orange-500 mt-1 uppercase">IMEI No: {item.imei}</p>
+                     )}
+                     <p className="text-[9px] font-bold text-zinc-400 mt-1 uppercase">HSN: 9963 | Qty: 1.00</p>
+                   </div>
+                   <p className="text-md font-black text-zinc-900">₹{item.price}.00</p>
+                 </div>
+               ))}
+            </div>
+          </div>
+
+          {/* Totals Section */}
+          <div className="bg-zinc-900 text-white rounded-[2.5rem] print:rounded-2xl p-8 print:p-4 space-y-4 print:space-y-1 shadow-2xl shadow-zinc-200">
+            <div className="flex justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+              <span>Subtotal (Net)</span>
+              <span>₹{subtotal}</span>
+            </div>
+            {hasGst && (
+              <>
+                <div className="flex justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                  <span>CGST ({(gstRate / 2).toFixed(1)}%)</span>
+                  <span>₹{cgst}</span>
+                </div>
+                <div className="flex justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                  <span>SGST ({(gstRate / 2).toFixed(1)}%)</span>
+                  <span>₹{sgst}</span>
+                </div>
+              </>
+            )}
+            
+            {extraChargeAmount > 0 && (
+              <div className="flex justify-between text-[10px] font-black text-orange-400 uppercase tracking-widest pt-2">
+                <span>{extraChargeName || "Extra Charge"}</span>
+                <span>₹{extraChargeAmount.toFixed(2)}</span>
+              </div>
+            )}
+
+            {discountAmount > 0 && (
+              <div className="flex justify-between text-[10px] font-black text-red-400 uppercase tracking-widest pt-2">
+                <span>Discount</span>
+                <span>-₹{discountAmount.toFixed(2)}</span>
+              </div>
+            )}
+
+            <div className="pt-4 border-t border-white/10 flex justify-between items-center">
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-orange-500">Total Amount</span>
+              <span className="text-4xl font-black tracking-tighter">₹{finalTotal.toFixed(2)}</span>
+            </div>
+          </div>
+
+          {fin && (
+            <div className="bg-blue-50 dark:bg-blue-900/10 rounded-[2.5rem] print:rounded-2xl p-8 print:p-4 border border-blue-100 dark:border-blue-900/20 space-y-3 print:space-y-1">
+              <h5 className="text-[10px] font-black uppercase tracking-widest text-blue-600">EMI & Finance Breakdown</h5>
+              <div className="h-[1px] bg-blue-100 dark:bg-blue-900/30 w-full" />
+              <div className="flex justify-between text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                <span>Finance Provider</span>
+                <span className="text-zinc-900 dark:text-white font-extrabold">{fco}</span>
+              </div>
+              <div className="flex justify-between text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                <span>Down Payment (Paid)</span>
+                <span className="text-zinc-900 dark:text-white font-extrabold">₹{Number(fdp).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                <span>Financed Loan Amount</span>
+                <span className="text-emerald-600 font-black">₹{Number(flo).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+                <span>Loan Application / File ID</span>
+                <span className="text-zinc-900 dark:text-white font-extrabold">{fid}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Scratch Card Section */}
+          {canScratch && !isLoadingCoupon && (
+            <div className="w-full bg-gradient-to-br from-zinc-900 to-black text-white rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden min-h-[200px] flex flex-col justify-center items-center text-center print-hide border border-white/5">
+              <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:20px_20px]" />
+              
+              {!scratchClaimed ? (
+                <div className="space-y-4 w-full h-full min-h-[160px] flex flex-col justify-center items-center relative z-10">
+                  <div className="w-12 h-12 bg-orange-500/10 rounded-2xl flex items-center justify-center animate-pulse">
+                    <Gift className="h-6 w-6 text-orange-500" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-md font-black uppercase tracking-tight">Scratch & Win Reward! 🎁</h4>
+                    <p className="text-[9px] text-zinc-400 font-bold max-w-[280px] leading-relaxed">
+                      Scratch the card below to win a discount coupon valid on your next visit at {restName}!
+                    </p>
+                  </div>
+                  {/* Canvas Overlay Scratch Card */}
+                  <ScratchCard 
+                    invoiceId={id} 
+                    ownerMobile={ownerMobile} 
+                    customerMobile={mobile} 
+                    storeName={restName}
+                    onWon={(coupon) => {
+                      setScratchClaimed(true);
+                      setClaimedCoupon(coupon);
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="space-y-4 relative z-10 animate-in zoom-in-95 duration-500 w-full">
+                  <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto">
+                    <Gift className="h-6 w-6 text-[#00c875]" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-md font-black uppercase tracking-tight text-white">CONGRATULATIONS! 🎉</h4>
+                    <p className="text-[9px] text-zinc-400 font-bold">
+                      You won <span className="text-[#00c875] font-black text-sm">₹{claimedCoupon?.discount_amount} Off</span> on your next bill at {restName}!
+                    </p>
+                  </div>
+                  
+                  {/* Coupon Code Copy Box */}
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center justify-between gap-4 max-w-[280px] mx-auto w-full">
+                    <div className="text-left">
+                      <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest block">Coupon Code</span>
+                      <span className="font-mono text-sm font-black tracking-wider text-orange-500">{claimedCoupon?.code}</span>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      onClick={() => {
+                        if (claimedCoupon?.code) {
+                          navigator.clipboard.writeText(claimedCoupon.code);
+                          setCopied(true);
+                          setTimeout(() => setCopied(false), 2000);
+                        }
+                      }}
+                      className="bg-orange-500 hover:bg-orange-600 h-9 px-3 rounded-xl flex items-center justify-center border-0 text-white"
+                    >
+                      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  
+                  <p className="text-[8px] text-zinc-500 font-bold uppercase tracking-wider">
+                    *Show this code at the billing counter to redeem.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Terms & Conditions - More Content */}
+          <div className="space-y-6 print:space-y-2 pb-10 print:pb-0">
+            <div className="bg-zinc-50 rounded-3xl print:rounded-xl p-6 print:p-3 border border-zinc-100">
+              <h5 className="text-[10px] font-black uppercase tracking-widest mb-3 print:mb-1 text-zinc-900">Terms & Conditions</h5>
+              <ul className="text-[9px] font-bold text-zinc-400 space-y-2 print:space-y-0.5 uppercase leading-relaxed">
+                <li>• This is a computer generated digital tax invoice.</li>
+                <li>• No signature is required for digital receipts.</li>
+                <li>• Please check items before leaving the counter.</li>
+                <li>• Items once sold cannot be returned or exchanged.</li>
+                <li>• Standard GST rates applied as per Govt. norms.</li>
+              </ul>
+            </div>
+ 
+            {/* Social & Experience */}
+            <div className="flex flex-col items-center text-center space-y-4 pt-4 print:hidden print-hide">
+              <div className="flex items-center gap-6">
+                <Camera className="w-5 h-5 text-zinc-300" />
+                <Globe className="w-5 h-5 text-zinc-300" />
+                <Phone className="w-5 h-5 text-zinc-300" />
+              </div>
+              <p className="text-[10px] font-black text-zinc-900 uppercase tracking-widest">How was your experience?</p>
+              <div className="flex gap-2">
+                 {[1,2,3,4,5].map(i => <div key={i} className="w-8 h-8 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 text-xs">★</div>)}
+              </div>
+            </div>
+          </div>
+
+          {/* Free Plan APK Download Promotion Banner */}
+          {isFree && (
+            <div className="bg-gradient-to-br from-orange-500 to-amber-600 text-white rounded-3xl p-6 shadow-xl text-center space-y-4 print-hide">
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                  <Download className="w-5 h-5 text-white animate-bounce" />
+                </div>
+                <div className="text-left">
+                  <p className="font-black text-sm uppercase tracking-tight">Create Bills Fast & Smart</p>
+                  <p className="text-[10px] opacity-90 font-bold uppercase tracking-tight">Download InstaMunim POS App Free</p>
+                </div>
+              </div>
+              <Button 
+                onClick={() => window.open("/InstaMunimSmartPOS_v1.3-release.apk?v=8", "_self")}
+                className="w-full h-12 bg-zinc-900 hover:bg-black text-white rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all shadow-md border-0"
+              >
+                Download Free APP
+              </Button>
+            </div>
+          )}
+
+          {/* Footer Barcode Style */}
+          <div className="text-center pt-10 print:pt-4 border-t-2 border-dashed border-zinc-100">
+            <div className="w-full h-12 bg-zinc-50 border-2 border-zinc-100 rounded-xl flex items-center justify-center mb-6 print:mb-2 opacity-30 overflow-hidden">
+               {/* Barcode Mock */}
+               <div className="flex gap-1">
+                  {[...Array(40)].map((_, i) => <div key={i} className={`w-[2px] h-8 bg-zinc-900 ${i % 3 === 0 ? 'w-[4px]' : ''}`} />)}
+               </div>
+            </div>
+            <p className="text-xs font-black text-zinc-900 uppercase tracking-[0.3em]">Thank you for shopping!</p>
+            <div className="mt-8 print:mt-2 pt-8 print:pt-2 border-t border-zinc-50 flex flex-col items-center gap-2">
+              <p className="text-[8px] font-black text-zinc-300 uppercase tracking-[0.3em]">Verified Digital Receipt</p>
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-orange-500"></div>
+                {isFree ? (
+                  <a 
+                    href="https://instamunim.com" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-[10px] font-black text-orange-600 hover:text-orange-500 uppercase tracking-widest italic underline print-hide"
+                  >
+                    Download App: instamunim.com
+                  </a>
+                ) : (
+                  <p className="text-[10px] font-black text-zinc-900 uppercase tracking-widest italic">
+                    Powered by InstaMunim
+                  </p>
+                )}
+                {isFree && (
+                  <span className="hidden print:inline text-[10px] font-black text-zinc-900 uppercase tracking-widest italic">
+                    Download App: instamunim.com
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function InvoicePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-zinc-900 text-white font-black uppercase tracking-[0.5em] text-xs">Authenticating Receipt...</div>}>
+      <InvoiceContent />
+    </Suspense>
+  );
+}
