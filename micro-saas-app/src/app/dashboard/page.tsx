@@ -6473,14 +6473,14 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                             </span>
                           </div>
 
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          <div className="flex flex-col space-y-2.5 w-full">
                             {/* 1. Bank Name */}
-                            <div className="space-y-0.5">
-                              <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">1. Bank Name</Label>
+                            <div className="space-y-1">
+                              <Label className="text-[9.5px] font-black uppercase text-zinc-500 tracking-wider">1. Bank Name</Label>
                               <select
                                 value={cardBankName}
                                 onChange={e => setCardBankName(e.target.value)}
-                                className="w-full h-9 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold px-2.5 shadow-sm"
+                                className="w-full h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-bold px-3.5 shadow-sm focus:border-indigo-500"
                               >
                                 <option value="HDFC Bank">HDFC Bank</option>
                                 <option value="ICICI Bank">ICICI Bank</option>
@@ -6493,12 +6493,12 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                             </div>
 
                             {/* 2. Card Network */}
-                            <div className="space-y-0.5">
-                              <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">2. Card Network</Label>
+                            <div className="space-y-1">
+                              <Label className="text-[9.5px] font-black uppercase text-zinc-500 tracking-wider">2. Card Network</Label>
                               <select
                                 value={cardType}
                                 onChange={e => setCardType(e.target.value)}
-                                className="w-full h-9 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold px-2.5 shadow-sm"
+                                className="w-full h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-bold px-3.5 shadow-sm focus:border-indigo-500"
                               >
                                 <option value="Visa">Visa</option>
                                 <option value="Mastercard">Mastercard</option>
@@ -6508,12 +6508,12 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                             </div>
 
                             {/* 3. POS Terminal */}
-                            <div className="space-y-0.5">
-                              <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">3. POS Machine</Label>
+                            <div className="space-y-1">
+                              <Label className="text-[9.5px] font-black uppercase text-zinc-500 tracking-wider">3. POS Machine</Label>
                               <select
                                 value={cardPosTerminal}
                                 onChange={e => setCardPosTerminal(e.target.value)}
-                                className="w-full h-9 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold px-2.5 shadow-sm"
+                                className="w-full h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-bold px-3.5 shadow-sm focus:border-indigo-500"
                               >
                                 <option value="Pine Labs POS">Pine Labs POS</option>
                                 <option value="Paytm POS">Paytm POS</option>
@@ -6525,12 +6525,12 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                             </div>
 
                             {/* 4. EMI Plan */}
-                            <div className="space-y-0.5">
-                              <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">4. Payment / EMI Plan</Label>
+                            <div className="space-y-1">
+                              <Label className="text-[9.5px] font-black uppercase text-zinc-500 tracking-wider">4. Payment / EMI Plan</Label>
                               <select
                                 value={cardEmiTenure}
                                 onChange={e => setCardEmiTenure(e.target.value)}
-                                className="w-full h-9 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold px-2.5 shadow-sm text-indigo-600"
+                                className="w-full h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-black px-3.5 shadow-sm text-indigo-600 focus:border-indigo-500"
                               >
                                 <option value="Full Payment">Full Payment (No EMI)</option>
                                 <option value="3 Months EMI">3 Months No-Cost EMI</option>
@@ -6541,24 +6541,24 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                             </div>
 
                             {/* 5. Auth / POS Slip Code */}
-                            <div className="space-y-0.5">
-                              <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">5. Auth / POS Slip Code</Label>
+                            <div className="space-y-1">
+                              <Label className="text-[9.5px] font-black uppercase text-zinc-500 tracking-wider">5. Auth / POS Slip Code</Label>
                               <Input
                                 placeholder="e.g. 482910"
                                 value={cardAuthCode}
                                 onChange={e => setCardAuthCode(e.target.value)}
-                                className="h-9 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold shadow-sm"
+                                className="h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-bold px-3.5 shadow-sm focus:border-indigo-500"
                               />
                             </div>
 
                             {/* 6. Cardholder Name */}
-                            <div className="space-y-0.5">
-                              <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">6. Cardholder Name (Optional)</Label>
+                            <div className="space-y-1">
+                              <Label className="text-[9.5px] font-black uppercase text-zinc-500 tracking-wider">6. Cardholder Name (Optional)</Label>
                               <Input
                                 placeholder="Name on card"
                                 value={cardHolderName}
                                 onChange={e => setCardHolderName(e.target.value)}
-                                className="h-9 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold shadow-sm"
+                                className="h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-bold px-3.5 shadow-sm focus:border-indigo-500"
                               />
                             </div>
                           </div>
