@@ -10251,7 +10251,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   value={editingSale.name}
                   onChange={e => setEditingSale({ ...editingSale, name: e.target.value })}
                   placeholder="e.g. Rahul Sharma"
-                  className="h-11 rounded-xl bg-zinc-50 dark:bg-zinc-800 text-xs font-bold border-0"
+                  className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border border-zinc-300 dark:border-zinc-700 shadow-sm focus:border-indigo-500 px-3.5"
                 />
               </div>
 
@@ -10264,7 +10264,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   value={editingSale.mobile}
                   onChange={e => setEditingSale({ ...editingSale, mobile: e.target.value })}
                   placeholder="e.g. 9876543210"
-                  className="h-11 rounded-xl bg-zinc-50 dark:bg-zinc-800 text-xs font-bold border-0"
+                  className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border border-zinc-300 dark:border-zinc-700 shadow-sm focus:border-indigo-500 px-3.5"
                 />
               </div>
 
@@ -10277,7 +10277,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   value={editingSale.item}
                   onChange={e => setEditingSale({ ...editingSale, item: e.target.value })}
                   placeholder="e.g. iPhone 15 128GB (Black)"
-                  className="h-11 rounded-xl bg-zinc-50 dark:bg-zinc-800 text-xs font-bold border-0"
+                  className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border border-zinc-300 dark:border-zinc-700 shadow-sm focus:border-indigo-500 px-3.5"
                 />
               </div>
 
@@ -10292,7 +10292,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     value={editingSale.price}
                     onChange={e => setEditingSale({ ...editingSale, price: e.target.value })}
                     placeholder="0"
-                    className="h-11 rounded-xl bg-zinc-50 dark:bg-zinc-800 text-xs font-bold border-0"
+                    className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border border-zinc-300 dark:border-zinc-700 shadow-sm focus:border-indigo-500 px-3.5"
                   />
                 </div>
 
@@ -10305,7 +10305,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     value={editingSale.discount}
                     onChange={e => setEditingSale({ ...editingSale, discount: e.target.value })}
                     placeholder="0"
-                    className="h-11 rounded-xl bg-zinc-50 dark:bg-zinc-800 text-xs font-bold border-0"
+                    className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border border-zinc-300 dark:border-zinc-700 shadow-sm focus:border-indigo-500 px-3.5"
                   />
                 </div>
               </div>
@@ -10318,7 +10318,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 <select
                   value={editingSale.type}
                   onChange={e => setEditingSale({ ...editingSale, type: e.target.value })}
-                  className="w-full h-11 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold text-xs px-3 text-zinc-900 dark:text-white"
+                  className="w-full h-11 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 shadow-sm focus:border-indigo-500 font-bold text-xs px-3.5 text-zinc-900 dark:text-white"
                 >
                   <option value="Cash">Cash Payment</option>
                   <option value="Online">Online / UPI</option>
