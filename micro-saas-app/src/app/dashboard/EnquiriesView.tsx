@@ -349,11 +349,6 @@ export function EnquiriesView({
               </>
             )}
           </Button>
-          {onClose && (
-            <Button onClick={onClose} variant="ghost" className="h-11 w-11 p-0 text-white/80 hover:text-white rounded-2xl">
-              <X className="h-6 w-6" />
-            </Button>
-          )}
         </div>
       </div>
 
