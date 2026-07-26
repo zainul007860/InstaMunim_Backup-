@@ -2232,6 +2232,8 @@ Requirements for the generated image prompt:
   const [editingItemImeis, setEditingItemImeis] = useState<string[]>([]);
   const [editingUnitDetails, setEditingUnitDetails] = useState<{ imei: string; color: string; purchaseRate: string; hsnCode: string; supplierName: string; }[]>([]);
   const [showEditStockModal, setShowEditStockModal] = useState(false);
+  const [editingSale, setEditingSale] = useState<{ id: string; name: string; mobile: string; item: string; price: string; type: string; discount: string; } | null>(null);
+  const [showEditSaleModal, setShowEditSaleModal] = useState(false);
   const [scanningEditItemIndex, setScanningEditItemIndex] = useState<number | null>(null);
   const [scannerError, setScannerError] = useState("");
   const [scannerDebugInfo, setScannerDebugInfo] = useState("Initializing...");
@@ -5204,6 +5206,40 @@ Stay safe & eat healthy! 🍕
       setEditingUnitDetails([]);
     } catch (err: any) {
       alert("Error saving stock: " + (err.message || "Unknown error"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdateSale = async () => {
+    if (!editingSale || !editingSale.id) return;
+    setIsLoading(true);
+    try {
+      const updatedPrice = Number(editingSale.price) || 0;
+      const updatedDiscount = Number(editingSale.discount) || 0;
+
+      const payload = {
+        name: editingSale.name.trim() || "Customer",
+        mobile: editingSale.mobile.trim() || "N/A",
+        item: editingSale.item.trim() || "General Order",
+        price: updatedPrice,
+        commission: updatedDiscount,
+        type: editingSale.type || "Cash"
+      };
+
+      const { error } = await supabase
+        .from("sales")
+        .update(payload)
+        .eq("id", editingSale.id);
+
+      if (error) throw error;
+
+      setSales(prev => prev.map(s => s.id === editingSale.id ? { ...s, ...payload } : s));
+      setShowEditSaleModal(false);
+      setEditingSale(null);
+      alert("✅ Bill updated successfully!");
+    } catch (err: any) {
+      alert("Failed to update bill: " + (err.message || "Unknown error"));
     } finally {
       setIsLoading(false);
     }
@@ -10171,6 +10207,134 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               </div>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* EDIT BILL MODAL */}
+      <Dialog open={showEditSaleModal} onOpenChange={setShowEditSaleModal}>
+        <DialogContent className="w-[95vw] sm:max-w-lg rounded-[2rem] p-5 sm:p-7 bg-white dark:bg-zinc-900 border border-indigo-100 dark:border-indigo-950 shadow-2xl">
+          <DialogHeader className="space-y-1 text-left border-b border-zinc-100 dark:border-zinc-800 pb-3">
+            <DialogTitle className="text-xl font-black tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
+              <FileText className="h-5 w-5 text-indigo-600" />
+              Edit Bill & Transaction Details
+            </DialogTitle>
+            <DialogDescription className="text-xs text-zinc-500 font-medium">
+              Update customer details, items, payment mode, or total price for this invoice.
+            </DialogDescription>
+          </DialogHeader>
+
+          {editingSale && (
+            <div className="space-y-4 my-4">
+              {/* Customer Name */}
+              <div className="space-y-1 text-left">
+                <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                  Customer Name *
+                </Label>
+                <Input
+                  value={editingSale.name}
+                  onChange={e => setEditingSale({ ...editingSale, name: e.target.value })}
+                  placeholder="e.g. Rahul Sharma"
+                  className="h-11 rounded-xl bg-zinc-50 dark:bg-zinc-800 text-xs font-bold border-0"
+                />
+              </div>
+
+              {/* Mobile Number */}
+              <div className="space-y-1 text-left">
+                <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                  Mobile Number (WhatsApp)
+                </Label>
+                <Input
+                  value={editingSale.mobile}
+                  onChange={e => setEditingSale({ ...editingSale, mobile: e.target.value })}
+                  placeholder="e.g. 9876543210"
+                  className="h-11 rounded-xl bg-zinc-50 dark:bg-zinc-800 text-xs font-bold border-0"
+                />
+              </div>
+
+              {/* Order Items / Details */}
+              <div className="space-y-1 text-left">
+                <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                  Order Details / Items
+                </Label>
+                <Input
+                  value={editingSale.item}
+                  onChange={e => setEditingSale({ ...editingSale, item: e.target.value })}
+                  placeholder="e.g. iPhone 15 128GB (Black)"
+                  className="h-11 rounded-xl bg-zinc-50 dark:bg-zinc-800 text-xs font-bold border-0"
+                />
+              </div>
+
+              {/* Amount & Discount */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1 text-left">
+                  <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                    Total Amount (₹) *
+                  </Label>
+                  <Input
+                    type="number"
+                    value={editingSale.price}
+                    onChange={e => setEditingSale({ ...editingSale, price: e.target.value })}
+                    placeholder="0"
+                    className="h-11 rounded-xl bg-zinc-50 dark:bg-zinc-800 text-xs font-bold border-0"
+                  />
+                </div>
+
+                <div className="space-y-1 text-left">
+                  <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                    Discount / Commission (₹)
+                  </Label>
+                  <Input
+                    type="number"
+                    value={editingSale.discount}
+                    onChange={e => setEditingSale({ ...editingSale, discount: e.target.value })}
+                    placeholder="0"
+                    className="h-11 rounded-xl bg-zinc-50 dark:bg-zinc-800 text-xs font-bold border-0"
+                  />
+                </div>
+              </div>
+
+              {/* Payment Mode */}
+              <div className="space-y-1 text-left">
+                <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                  Payment Mode / Type
+                </Label>
+                <select
+                  value={editingSale.type}
+                  onChange={e => setEditingSale({ ...editingSale, type: e.target.value })}
+                  className="w-full h-11 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold text-xs px-3 text-zinc-900 dark:text-white"
+                >
+                  <option value="Cash">Cash Payment</option>
+                  <option value="Online">Online / UPI</option>
+                  <option value="Card">Card / POS Machine</option>
+                  <option value="Udhaar">Udhaar (Credit)</option>
+                  <option value="Finance">Finance / EMI</option>
+                  <option value="Split">Split Payment</option>
+                </select>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2.5 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                <Button
+                  onClick={() => {
+                    setShowEditSaleModal(false);
+                    setEditingSale(null);
+                  }}
+                  variant="outline"
+                  className="flex-1 h-11 rounded-xl font-bold text-xs"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleUpdateSale}
+                  disabled={isLoading}
+                  className="flex-1 h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md"
+                >
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                  Update & Save Bill
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
