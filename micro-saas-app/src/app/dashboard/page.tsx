@@ -5059,7 +5059,7 @@ Stay safe & eat healthy! 🍕
     const baseUrl = (typeof window !== 'undefined' && window.location.port === '3000')
       ? "http://localhost:3000"
       : "https://www.instamunim.com";
-    let url = `${baseUrl}/invoice?gst=${isGstEnabled}&gstRate=${gstRate}&n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${s.price}&d=${encodeURIComponent(new Date(s.date).toISOString())}&t=${s.type}&id=${s.id}&m=${s.mobile || ""}&cn=${encodeURIComponent(s.name || "")}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}${extraPart}${discountPart}${financePart}${sigPart}`;
+    let url = `${baseUrl}/invoice?gst=${isGstEnabled}&gstRate=${gstRate}&n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${s.price}&d=${encodeURIComponent(new Date(s.date).toISOString())}&t=${encodeURIComponent(s.type || "")}&id=${s.id}&m=${s.mobile || ""}&cn=${encodeURIComponent(s.name || "")}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}${extraPart}${discountPart}${financePart}${sigPart}`;
     if (!isSubscribed) {
       url += "&free=true";
     }
