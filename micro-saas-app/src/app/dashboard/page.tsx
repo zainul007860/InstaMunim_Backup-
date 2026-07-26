@@ -34,7 +34,17 @@ const getDisplayCategory = (cat: string) => {
 const getImeis = (cat: string): string[] => {
   if (!cat) return [];
   if (cat.includes("|IMEIs:")) {
-    return cat.split("|IMEIs:")[1].split(",").filter(Boolean);
+    const rawStr = cat.split("|IMEIs:")[1];
+    return rawStr.split(",").filter(Boolean).map(item => {
+      let clean = item;
+      if (clean.includes("{")) {
+        clean = clean.split("{")[0];
+      }
+      if (clean.startsWith("IMEI:")) {
+        clean = clean.replace("IMEI:", "");
+      }
+      return clean.trim();
+    }).filter(Boolean);
   }
   return [];
 };
@@ -1218,6 +1228,8 @@ export default function Dashboard() {
   const [newItemPrice, setNewItemPrice] = useState("");
   const [newItemCategory, setNewItemCategory] = useState("General");
   const [newItemImeis, setNewItemImeis] = useState<string[]>([]);
+  const [unitDetails, setUnitDetails] = useState<{ imei: string; color: string; purchaseRate: string; hsnCode: string; supplierName: string; }[]>([]);
+  const [isUnitModalOpen, setIsUnitModalOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newMobile, setNewMobile] = useState("");
   const [newType, setNewType] = useState("Cash");
@@ -5311,8 +5323,27 @@ Stay safe & eat healthy! 🍕
       }
 
       let finalCategory = newItemCategory;
-      if (businessType === "Mobile/Electronics" && newItemImeis.length > 0) {
-        finalCategory = `${newItemCategory}|IMEIs:${newItemImeis.filter(Boolean).map(x => x.trim()).join(",")}`;
+      if (businessType === "Mobile/Electronics") {
+        if (unitDetails.length > 0) {
+          const encodedUnits = unitDetails
+            .filter(u => u.imei && u.imei.trim())
+            .map(u => {
+              const imei = u.imei.trim();
+              const meta = [
+                u.color ? `Color:${u.color.trim()}` : "",
+                u.purchaseRate ? `Cost:${u.purchaseRate.trim()}` : "",
+                u.hsnCode ? `HSN:${u.hsnCode.trim()}` : "",
+                u.supplierName ? `Supplier:${u.supplierName.trim()}` : ""
+              ].filter(Boolean).join(";");
+              return meta ? `IMEI:${imei}{${meta}}` : imei;
+            })
+            .join(",");
+          if (encodedUnits) {
+            finalCategory = `${newItemCategory}|IMEIs:${encodedUnits}`;
+          }
+        } else if (newItemImeis.length > 0) {
+          finalCategory = `${newItemCategory}|IMEIs:${newItemImeis.filter(Boolean).map(x => x.trim()).join(",")}`;
+        }
       }
 
       const { data: newItem, error } = await supabase
@@ -5325,6 +5356,7 @@ Stay safe & eat healthy! 🍕
       setMenuItems([...menuItems, { id: newItem.id, name: newItem.name, price: newItem.price, category: newItem.category }]);
       setNewItemName(""); setNewItemPrice("");
       setNewItemImeis([]);
+      setUnitDetails([]);
     } catch (err: any) {
       alert("Menu Sync Error: " + (err.message || "Unknown error"));
     } finally {
@@ -7797,50 +7829,191 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     </Select>
                   </div>
                   {businessType === "Mobile/Electronics" && (
-                    <div className="space-y-3 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200/50 dark:border-zinc-800">
+                    <div className="space-y-3 p-4 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-2xl border border-indigo-100 dark:border-indigo-900/40">
                       <div className="flex justify-between items-center px-1">
-                        <Label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Stock IMEIs / Serials ({newItemImeis.length} Units)</Label>
+                        <div>
+                          <Label className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+                            Unit Details Manager
+                          </Label>
+                          <p className="text-[10px] font-bold text-zinc-500">
+                            {unitDetails.length > 0 ? `${unitDetails.length} Unit(s) Logged` : `${newItemImeis.length} Unit(s) Logged`}
+                          </p>
+                        </div>
                         <Button 
                           size="sm" 
-                          variant="ghost" 
-                          onClick={() => setNewItemImeis([...newItemImeis, ""])}
-                          className="h-6 text-[9px] font-black text-blue-500 hover:text-blue-600 uppercase tracking-wider p-0 bg-transparent"
+                          onClick={() => {
+                            if (unitDetails.length === 0 && newItemImeis.length > 0) {
+                              setUnitDetails(newItemImeis.map(i => ({ imei: i, color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" })));
+                            } else if (unitDetails.length === 0) {
+                              setUnitDetails([{ imei: "", color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" }]);
+                            }
+                            setIsUnitModalOpen(true);
+                          }}
+                          className="h-9 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] uppercase tracking-wider rounded-xl shadow-md"
                         >
-                          + Add Unit
+                          📱 + Add / Edit Unit Rows
                         </Button>
                       </div>
-                      
-                      {newItemImeis.length === 0 ? (
-                        <p className="text-[10px] text-zinc-400 italic px-1">No units added yet. Click "+ Add Unit" to log IMEIs.</p>
-                      ) : (
-                        <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                          {newItemImeis.map((imei, index) => (
-                            <div key={index} className="flex gap-2 items-center">
-                              <span className="text-[9px] font-bold text-zinc-400 w-8">#{index + 1}</span>
-                              <ImeiInput 
-                                placeholder={`Unit ${index + 1} IMEI`} 
-                                value={imei} 
-                                onChange={val => {
-                                  const updated = [...newItemImeis];
-                                  updated[index] = val;
-                                  setNewItemImeis(updated);
-                                }} 
-                                className="h-9 flex-1 rounded-xl bg-white dark:bg-zinc-900 border-0 font-bold px-3 text-[11px]" 
-                              />
-                              <Button 
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => {
-                                  setNewItemImeis(newItemImeis.filter((_, idx) => idx !== index));
-                                }}
-                                className="h-9 w-9 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl flex items-center justify-center border-0"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+
+                      {unitDetails.length > 0 && (
+                        <div className="space-y-1 pt-1 border-t border-indigo-100 dark:border-indigo-900/30">
+                          {unitDetails.map((u, i) => (
+                            <div key={i} className="text-[10px] font-bold text-zinc-600 dark:text-zinc-300 flex items-center justify-between bg-white dark:bg-zinc-900 p-2 rounded-xl border border-zinc-100 dark:border-zinc-800">
+                              <span>#{i + 1} IMEI: <strong className="text-indigo-600">{u.imei || 'N/A'}</strong></span>
+                              <span className="text-[9px] text-zinc-400">
+                                {u.color ? `Color: ${u.color}` : ''} {u.purchaseRate ? `| Rate: ₹${u.purchaseRate}` : ''} {u.supplierName ? `| Supplier: ${u.supplierName}` : ''}
+                              </span>
                             </div>
                           ))}
                         </div>
                       )}
+
+                      {/* POPUP MODAL FOR UNIT DETAILS */}
+                      <Dialog open={isUnitModalOpen} onOpenChange={setIsUnitModalOpen}>
+                        <DialogContent className="max-w-4xl rounded-[2.5rem] p-6 sm:p-8 bg-white dark:bg-zinc-900 border-0 shadow-2xl max-h-[90vh] overflow-y-auto">
+                          <DialogHeader className="space-y-1 text-left border-b border-zinc-100 dark:border-zinc-800 pb-4">
+                            <DialogTitle className="text-xl sm:text-2xl font-black tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
+                              <Smartphone className="h-6 w-6 text-indigo-600" />
+                              Mobile Unit Details Manager
+                            </DialogTitle>
+                            <DialogDescription className="text-xs text-zinc-500 font-medium">
+                              Enter row-wise parameters for each phone unit (IMEI, Color, Purchase Rate, HSN Code, Supplier Name).
+                            </DialogDescription>
+                          </DialogHeader>
+
+                          <div className="space-y-4 my-4">
+                            {unitDetails.length === 0 ? (
+                              <div className="text-center py-8 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-dashed border-zinc-200">
+                                <p className="text-xs font-bold text-zinc-500">No unit rows added yet.</p>
+                                <Button
+                                  type="button"
+                                  onClick={() => setUnitDetails([{ imei: "", color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" }])}
+                                  className="mt-2 h-9 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl"
+                                >
+                                  + Add First Unit Row
+                                </Button>
+                              </div>
+                            ) : (
+                              <div className="space-y-3">
+                                {unitDetails.map((unit, index) => (
+                                  <div key={index} className="p-4 bg-zinc-50 dark:bg-zinc-800/60 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-3">
+                                    <div className="flex items-center justify-between border-b border-zinc-200/50 dark:border-zinc-700/50 pb-2">
+                                      <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+                                        Unit #{index + 1}
+                                      </span>
+                                      <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => setUnitDetails(unitDetails.filter((_, idx) => idx !== index))}
+                                        className="h-7 text-[10px] font-bold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 px-2 rounded-lg"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Row
+                                      </Button>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                                      {/* IMEI Field */}
+                                      <div className="space-y-1 text-left">
+                                        <Label className="text-[9px] font-bold uppercase text-zinc-500">IMEI / Serial *</Label>
+                                        <ImeiInput
+                                          placeholder="IMEI Number"
+                                          value={unit.imei}
+                                          onChange={val => {
+                                            const updated = [...unitDetails];
+                                            updated[index].imei = val;
+                                            setUnitDetails(updated);
+                                          }}
+                                          className="h-10 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-0"
+                                        />
+                                      </div>
+
+                                      {/* Color Field */}
+                                      <div className="space-y-1 text-left">
+                                        <Label className="text-[9px] font-bold uppercase text-zinc-500">Color</Label>
+                                        <Input
+                                          placeholder="e.g. Black / Blue"
+                                          value={unit.color}
+                                          onChange={e => {
+                                            const updated = [...unitDetails];
+                                            updated[index].color = e.target.value;
+                                            setUnitDetails(updated);
+                                          }}
+                                          className="h-10 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-0"
+                                        />
+                                      </div>
+
+                                      {/* Purchase Rate Field */}
+                                      <div className="space-y-1 text-left">
+                                        <Label className="text-[9px] font-bold uppercase text-zinc-500">Purchase Rate (₹)</Label>
+                                        <Input
+                                          type="number"
+                                          placeholder="e.g. 15000"
+                                          value={unit.purchaseRate}
+                                          onChange={e => {
+                                            const updated = [...unitDetails];
+                                            updated[index].purchaseRate = e.target.value;
+                                            setUnitDetails(updated);
+                                          }}
+                                          className="h-10 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-0"
+                                        />
+                                      </div>
+
+                                      {/* HSN Code Field */}
+                                      <div className="space-y-1 text-left">
+                                        <Label className="text-[9px] font-bold uppercase text-zinc-500">HSN Code</Label>
+                                        <Input
+                                          placeholder="8517"
+                                          value={unit.hsnCode}
+                                          onChange={e => {
+                                            const updated = [...unitDetails];
+                                            updated[index].hsnCode = e.target.value;
+                                            setUnitDetails(updated);
+                                          }}
+                                          className="h-10 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-0"
+                                        />
+                                      </div>
+
+                                      {/* Supplier Name Field */}
+                                      <div className="space-y-1 text-left">
+                                        <Label className="text-[9px] font-bold uppercase text-zinc-500">Supplier Name</Label>
+                                        <Input
+                                          placeholder="e.g. Ramesh Telecom"
+                                          value={unit.supplierName}
+                                          onChange={e => {
+                                            const updated = [...unitDetails];
+                                            updated[index].supplierName = e.target.value;
+                                            setUnitDetails(updated);
+                                          }}
+                                          className="h-10 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-0"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            <div className="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                              <Button
+                                type="button"
+                                onClick={() => setUnitDetails([...unitDetails, { imei: "", color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" }])}
+                                className="h-10 px-4 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 font-black text-xs rounded-xl border border-indigo-200 dark:border-indigo-900/40"
+                              >
+                                + Add Another Unit Row
+                              </Button>
+
+                              <Button
+                                type="button"
+                                onClick={() => setIsUnitModalOpen(false)}
+                                className="h-10 px-6 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md"
+                              >
+                                Save Units ({unitDetails.length}) & Close
+                              </Button>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   )}
                   <Button 
