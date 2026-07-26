@@ -7960,15 +7960,31 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                         </span>
                                         Unit Specifications
                                       </span>
-                                      <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="ghost"
-                                        onClick={() => setUnitDetails(unitDetails.filter((_, idx) => idx !== index))}
-                                        className="h-8 text-[11px] font-extrabold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 px-3 rounded-xl"
-                                      >
-                                        <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Unit
-                                      </Button>
+                                      <div className="flex items-center gap-1.5">
+                                        <Button
+                                          type="button"
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() => {
+                                            const copied = { ...unit, imei: "" };
+                                            const next = [...unitDetails];
+                                            next.splice(index + 1, 0, copied);
+                                            setUnitDetails(next);
+                                          }}
+                                          className="h-8 text-[11px] font-extrabold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 px-3 rounded-xl border border-indigo-200 dark:border-indigo-900/40"
+                                        >
+                                          <Copy className="h-3.5 w-3.5 mr-1" /> Copy Unit
+                                        </Button>
+                                        <Button
+                                          type="button"
+                                          size="sm"
+                                          variant="ghost"
+                                          onClick={() => setUnitDetails(unitDetails.filter((_, idx) => idx !== index))}
+                                          className="h-8 text-[11px] font-extrabold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 px-3 rounded-xl"
+                                        >
+                                          <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Unit
+                                        </Button>
+                                      </div>
                                     </div>
 
                                     {/* LINE BY LINE STACKED INPUTS */}
@@ -9963,15 +9979,31 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         </span>
                         Unit Specifications
                       </span>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setEditingUnitDetails(editingUnitDetails.filter((_, idx) => idx !== index))}
-                        className="h-8 text-[11px] font-extrabold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 px-3 rounded-xl"
-                      >
-                        <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Unit
-                      </Button>
+                      <div className="flex items-center gap-1.5">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            const copied = { ...unit, imei: "" };
+                            const next = [...editingUnitDetails];
+                            next.splice(index + 1, 0, copied);
+                            setEditingUnitDetails(next);
+                          }}
+                          className="h-8 text-[11px] font-extrabold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 px-3 rounded-xl border border-indigo-200 dark:border-indigo-900/40"
+                        >
+                          <Copy className="h-3.5 w-3.5 mr-1" /> Copy Unit
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setEditingUnitDetails(editingUnitDetails.filter((_, idx) => idx !== index))}
+                          className="h-8 text-[11px] font-extrabold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 px-3 rounded-xl"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Unit
+                        </Button>
+                      </div>
                     </div>
 
                     {/* LINE BY LINE STACKED INPUTS */}
