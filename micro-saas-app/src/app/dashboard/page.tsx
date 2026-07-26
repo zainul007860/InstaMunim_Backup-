@@ -2244,6 +2244,7 @@ Requirements for the generated image prompt:
   const [newScannedQty, setNewScannedQty] = useState("1");
   const [restaurantName, setRestaurantName] = useState("InstaMunim");
   const [storeLogo, setStoreLogo] = useState<string | null>(null);
+  const [storeSignature, setStoreSignature] = useState<string | null>(null);
   const [currentStoreId, setCurrentStoreId] = useState<string>("");
 
   useEffect(() => {
@@ -3508,6 +3509,7 @@ Stay safe & eat healthy! 🍕
         } else {
           const savedName = localStorage.getItem("saas_store_name");
           const savedLogo = localStorage.getItem("saas_store_logo");
+          const savedSig = localStorage.getItem("saas_store_signature");
           const savedAddress = localStorage.getItem("saas_store_address");
           const savedPhone = localStorage.getItem("saas_store_phone");
           const savedWebsite = localStorage.getItem("saas_store_website");
@@ -3520,6 +3522,7 @@ Stay safe & eat healthy! 🍕
 
           if (savedName) setRestaurantName(savedName);
           if (savedLogo) setStoreLogo(savedLogo);
+          if (savedSig) setStoreSignature(savedSig);
           if (savedAddress) setStoreAddress(savedAddress);
           if (savedPhone) setStorePhone(savedPhone);
           if (savedWebsite) setStoreWebsite(savedWebsite);
@@ -5032,10 +5035,12 @@ Stay safe & eat healthy! 🍕
     const financeMatch = rawItemString.match(/\[FINANCE:([^:]+):(\d+(?:\.\d+)?):(\d+(?:\.\d+)?):([^:]+):(Pending|Settled)\]/);
     const financePart = financeMatch ? `&fin=true&fco=${encodeURIComponent(financeMatch[1])}&flo=${financeMatch[2]}&fdp=${financeMatch[3]}&fid=${encodeURIComponent(financeMatch[4])}` : "";
 
+    const sigPart = storeSignature ? `&sig=${encodeURIComponent(storeSignature)}` : "";
+
     const baseUrl = (typeof window !== 'undefined' && window.location.port === '3000')
       ? "http://localhost:3000"
       : "https://www.instamunim.com";
-    let url = `${baseUrl}/invoice?gst=${isGstEnabled}&gstRate=${gstRate}&n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${s.price}&d=${encodeURIComponent(new Date(s.date).toISOString())}&t=${s.type}&id=${s.id}&m=${s.mobile || ""}&cn=${encodeURIComponent(s.name || "")}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}${extraPart}${discountPart}${financePart}`;
+    let url = `${baseUrl}/invoice?gst=${isGstEnabled}&gstRate=${gstRate}&n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${s.price}&d=${encodeURIComponent(new Date(s.date).toISOString())}&t=${s.type}&id=${s.id}&m=${s.mobile || ""}&cn=${encodeURIComponent(s.name || "")}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}${extraPart}${discountPart}${financePart}${sigPart}`;
     if (!isSubscribed) {
       url += "&free=true";
     }
@@ -8849,6 +8854,52 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 placeholder="https://example.com/logo.png"
                               />
                               <p className="text-[8px] font-bold text-zinc-400 px-2 italic uppercase">Recommended if Cloud Save is not active</p>
+                            </div>
+
+                            {/* AUTHORISED SIGNATURE UPLOADER */}
+                            <div className="space-y-3 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                              <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Authorised Signature (Prints on Invoices)</Label>
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-200/60 dark:border-zinc-800">
+                                <div className="w-32 h-16 rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 flex items-center justify-center overflow-hidden p-1 shadow-sm">
+                                  {storeSignature ? (
+                                    <img src={storeSignature} alt="Authorised Signature" className="w-full h-full object-contain" />
+                                  ) : (
+                                    <span className="text-[9px] font-black text-zinc-400 uppercase tracking-tight">No Signature</span>
+                                  )}
+                                </div>
+                                <div className="space-y-2">
+                                  <div className="flex gap-2 items-center">
+                                    <label className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest inline-block hover:bg-indigo-500 transition-all active:scale-95 shadow-sm">
+                                      Upload Signature
+                                      <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                                        const file = e.target.files?.[0];
+                                        if (file) {
+                                          const reader = new FileReader();
+                                          reader.onloadend = () => {
+                                            const sig = reader.result as string;
+                                            setStoreSignature(sig);
+                                            localStorage.setItem("saas_store_signature", sig);
+                                          };
+                                          reader.readAsDataURL(file);
+                                        }
+                                      }} />
+                                    </label>
+                                    {storeSignature && (
+                                      <button 
+                                        type="button"
+                                        onClick={() => {
+                                          setStoreSignature(null);
+                                          localStorage.removeItem("saas_store_signature");
+                                        }}
+                                        className="text-[10px] font-black text-red-500 hover:text-red-600 uppercase px-2 py-1"
+                                      >
+                                        Remove
+                                      </button>
+                                    )}
+                                  </div>
+                                  <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-tight">Appears on bottom right of digital tax invoices</p>
+                                </div>
+                              </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -46,6 +46,7 @@ function InvoiceContent() {
   const fid = searchParams.get("fid") || "";
 
   const logoFromUrl = searchParams.get("logo") || "";
+  const sigFromUrl = searchParams.get("sig") || "";
 
   const isBannerView = searchParams.get("banner") === "true";
   const bannerOffer = searchParams.get("o") || "";
@@ -1225,15 +1226,28 @@ function InvoiceContent() {
 
           {/* Terms & Conditions - More Content */}
           <div className="space-y-6 print:space-y-2 pb-10 print:pb-0">
-            <div className="bg-zinc-50 rounded-3xl print:rounded-xl p-6 print:p-3 border border-zinc-100">
-              <h5 className="text-[10px] font-black uppercase tracking-widest mb-3 print:mb-1 text-zinc-900">Terms & Conditions</h5>
-              <ul className="text-[9px] font-bold text-zinc-400 space-y-2 print:space-y-0.5 uppercase leading-relaxed">
-                <li>• This is a computer generated digital tax invoice.</li>
-                <li>• No signature is required for digital receipts.</li>
-                <li>• Please check items before leaving the counter.</li>
-                <li>• Items once sold cannot be returned or exchanged.</li>
-                <li>• Standard GST rates applied as per Govt. norms.</li>
-              </ul>
+            <div className="bg-zinc-50 rounded-3xl print:rounded-xl p-6 print:p-3 border border-zinc-100 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+              <div>
+                <h5 className="text-[10px] font-black uppercase tracking-widest mb-3 print:mb-1 text-zinc-900">Terms & Conditions</h5>
+                <ul className="text-[9px] font-bold text-zinc-400 space-y-2 print:space-y-0.5 uppercase leading-relaxed">
+                  <li>• This is a computer generated digital tax invoice.</li>
+                  <li>• Please check items before leaving the counter.</li>
+                  <li>• Items once sold cannot be returned or exchanged.</li>
+                  <li>• Standard GST rates applied as per Govt. norms.</li>
+                </ul>
+              </div>
+
+              {/* AUTHORISED SIGNATURE BOX (EXACT RED CIRCLE LOCATION) */}
+              <div className="text-right flex flex-col items-center justify-end min-w-[130px] self-end pt-2 sm:pt-0">
+                {sigFromUrl ? (
+                  <img src={sigFromUrl} alt="Authorised Signature" className="max-h-12 max-w-[130px] object-contain mb-1" />
+                ) : (
+                  <div className="h-9 w-24 flex items-center justify-center text-[8px] font-bold text-zinc-300 italic">No Signature</div>
+                )}
+                <div className="border-t border-zinc-400 pt-1 w-32 text-center">
+                  <span className="text-[9px] font-black uppercase text-zinc-700 tracking-wider">Authorised Signatory</span>
+                </div>
+              </div>
             </div>
  
             {/* Social & Experience */}
