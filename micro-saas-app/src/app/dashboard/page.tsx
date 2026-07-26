@@ -5310,23 +5310,37 @@ Stay safe & eat healthy! 🍕
     // Extract unique customers from sales & walk-in enquiries
     const customersMap = new Map<string, { name: string; mobile: string; lastDate: Date; tag?: string; notes?: string }>();
     
-    // 1. Read Walk-in Enquiries from Local Storage
+    // 1. Read Walk-in Enquiries from ALL localStorage keys
     try {
-      const savedEnquiries = localStorage.getItem(`instamunim_enquiries_${currentStoreId || 'default'}`);
-      if (savedEnquiries) {
-        const enqList = JSON.parse(savedEnquiries);
-        enqList.forEach((e: any) => {
-          if (e.phone && e.phone.length >= 10) {
-            const cleanPhone = e.phone.replace(/\D/g, "").slice(-10);
-            customersMap.set(cleanPhone, {
-              name: e.customerName || "Walk-in Lead",
-              mobile: cleanPhone,
-              lastDate: e.createdAt ? new Date(e.createdAt) : new Date(),
-              tag: "Walk-in Lead",
-              notes: e.notes
-            });
+      if (typeof window !== 'undefined') {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith("instamunim_enquiries")) {
+            const savedEnquiries = localStorage.getItem(key);
+            if (savedEnquiries) {
+              const enqList = JSON.parse(savedEnquiries);
+              if (Array.isArray(enqList)) {
+                enqList.forEach((e: any) => {
+                  if (e.phone && e.phone.length >= 10) {
+                    const cleanPhone = e.phone.replace(/\D/g, "").slice(-10);
+                    const enqDate = e.createdAt ? new Date(e.createdAt) : new Date();
+                    const existing = customersMap.get(cleanPhone);
+                    if (!existing || enqDate > existing.lastDate) {
+                      const noteSummary = e.notes || (e.categoryDetails?.phoneModel ? `Model: ${e.categoryDetails.phoneModel}, Budget: ${e.categoryDetails.budgetRange || 'N/A'}` : 'Walk-in Lead');
+                      customersMap.set(cleanPhone, {
+                        name: e.customerName || "Walk-in Lead",
+                        mobile: cleanPhone,
+                        lastDate: enqDate,
+                        tag: e.status || "Walk-in Lead",
+                        notes: noteSummary
+                      });
+                    }
+                  }
+                });
+              }
+            }
           }
-        });
+        }
       }
     } catch (err) {
       console.warn("Failed reading enquiries for CRM list:", err);
