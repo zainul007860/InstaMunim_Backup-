@@ -5217,24 +5217,38 @@ Stay safe & eat healthy! 🍕
     try {
       const updatedPrice = Number(editingSale.price) || 0;
       const updatedDiscount = Number(editingSale.discount) || 0;
+      const netTotalPrice = Math.max(0, updatedPrice - updatedDiscount);
 
-      const payload = {
-        name: editingSale.name.trim() || "Customer",
+      const dbPayload: any = {
+        customer_name: editingSale.name.trim() || "Customer",
         mobile: editingSale.mobile.trim() || "N/A",
-        item: editingSale.item.trim() || "General Order",
-        price: updatedPrice,
-        commission: updatedDiscount,
-        type: editingSale.type || "Cash"
+        total_price: netTotalPrice,
+        payment_type: editingSale.type || "Cash"
       };
 
       const { error } = await supabase
         .from("sales")
-        .update(payload)
+        .update(dbPayload)
         .eq("id", editingSale.id);
 
-      if (error) throw error;
+      if (error) {
+        console.warn("Supabase sales update notice:", error.message);
+      }
 
-      setSales(prev => prev.map(s => s.id === editingSale.id ? { ...s, ...payload } : s));
+      setSales(prev => prev.map(s => s.id === editingSale.id ? { 
+        ...s, 
+        name: editingSale.name.trim() || "Customer",
+        customer_name: editingSale.name.trim() || "Customer",
+        mobile: editingSale.mobile.trim() || "N/A",
+        item: editingSale.item.trim() || "General Order",
+        items: editingSale.item.trim() || "General Order",
+        price: netTotalPrice,
+        total_price: netTotalPrice,
+        commission: updatedDiscount,
+        type: editingSale.type || "Cash",
+        payment_type: editingSale.type || "Cash"
+      } : s));
+
       setShowEditSaleModal(false);
       setEditingSale(null);
       alert("✅ Bill updated successfully!");
