@@ -7870,14 +7870,14 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
                       {/* POPUP MODAL FOR UNIT DETAILS */}
                       <Dialog open={isUnitModalOpen} onOpenChange={setIsUnitModalOpen}>
-                        <DialogContent className="max-w-4xl rounded-[2.5rem] p-6 sm:p-8 bg-white dark:bg-zinc-900 border-0 shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <DialogContent className="w-[95vw] sm:max-w-2xl md:max-w-3xl rounded-[2.5rem] p-5 sm:p-7 bg-white dark:bg-zinc-900 border border-indigo-100 dark:border-indigo-950 shadow-2xl max-h-[85vh] overflow-y-auto">
                           <DialogHeader className="space-y-1 text-left border-b border-zinc-100 dark:border-zinc-800 pb-4">
                             <DialogTitle className="text-xl sm:text-2xl font-black tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
                               <Smartphone className="h-6 w-6 text-indigo-600" />
                               Mobile Unit Details Manager
                             </DialogTitle>
                             <DialogDescription className="text-xs text-zinc-500 font-medium">
-                              Enter row-wise parameters for each phone unit (IMEI, Color, Purchase Rate, HSN Code, Supplier Name).
+                              Add parameters for each phone unit (IMEI, Color, Purchase Rate, HSN, Supplier).
                             </DialogDescription>
                           </DialogHeader>
 
@@ -7888,105 +7888,121 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 <Button
                                   type="button"
                                   onClick={() => setUnitDetails([{ imei: "", color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" }])}
-                                  className="mt-2 h-9 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl"
+                                  className="mt-2 h-10 px-5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md"
                                 >
-                                  + Add First Unit Row
+                                  + Add First Unit
                                 </Button>
                               </div>
                             ) : (
-                              <div className="space-y-3">
+                              <div className="space-y-4">
                                 {unitDetails.map((unit, index) => (
-                                  <div key={index} className="p-4 bg-zinc-50 dark:bg-zinc-800/60 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-3">
-                                    <div className="flex items-center justify-between border-b border-zinc-200/50 dark:border-zinc-700/50 pb-2">
-                                      <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
-                                        Unit #{index + 1}
+                                  <div key={index} className="p-4 sm:p-5 bg-zinc-50/80 dark:bg-zinc-800/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800 space-y-3.5 shadow-sm">
+                                    <div className="flex items-center justify-between border-b border-zinc-200/50 dark:border-zinc-700/50 pb-2.5">
+                                      <span className="text-xs sm:text-sm font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                                        <span className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center text-[10px] font-black">
+                                          #{index + 1}
+                                        </span>
+                                        Unit Specifications
                                       </span>
                                       <Button
                                         type="button"
                                         size="sm"
                                         variant="ghost"
                                         onClick={() => setUnitDetails(unitDetails.filter((_, idx) => idx !== index))}
-                                        className="h-7 text-[10px] font-bold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 px-2 rounded-lg"
+                                        className="h-8 text-[11px] font-extrabold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 px-3 rounded-xl"
                                       >
-                                        <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Row
+                                        <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Unit
                                       </Button>
                                     </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
-                                      {/* IMEI Field */}
+                                    {/* LINE BY LINE STACKED INPUTS */}
+                                    <div className="space-y-3">
+                                      {/* Line 1: IMEI Number (Full Width) */}
                                       <div className="space-y-1 text-left">
-                                        <Label className="text-[9px] font-bold uppercase text-zinc-500">IMEI / Serial *</Label>
+                                        <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                                          1. IMEI / Serial Number *
+                                        </Label>
                                         <ImeiInput
-                                          placeholder="IMEI Number"
+                                          placeholder="Enter or scan 15-digit IMEI number"
                                           value={unit.imei}
                                           onChange={val => {
                                             const updated = [...unitDetails];
                                             updated[index].imei = val;
                                             setUnitDetails(updated);
                                           }}
-                                          className="h-10 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-0"
+                                          className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
                                         />
                                       </div>
 
-                                      {/* Color Field */}
-                                      <div className="space-y-1 text-left">
-                                        <Label className="text-[9px] font-bold uppercase text-zinc-500">Color</Label>
-                                        <Input
-                                          placeholder="e.g. Black / Blue"
-                                          value={unit.color}
-                                          onChange={e => {
-                                            const updated = [...unitDetails];
-                                            updated[index].color = e.target.value;
-                                            setUnitDetails(updated);
-                                          }}
-                                          className="h-10 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-0"
-                                        />
+                                      {/* Line 2: Color & Purchase Rate */}
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div className="space-y-1 text-left">
+                                          <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                                            2. Color
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. Titanium Black, Pacific Blue"
+                                            value={unit.color}
+                                            onChange={e => {
+                                              const updated = [...unitDetails];
+                                              updated[index].color = e.target.value;
+                                              setUnitDetails(updated);
+                                            }}
+                                            className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                                          />
+                                        </div>
+
+                                        <div className="space-y-1 text-left">
+                                          <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                                            3. Purchase Rate / Cost Price (₹)
+                                          </Label>
+                                          <Input
+                                            type="number"
+                                            placeholder="e.g. 18500"
+                                            value={unit.purchaseRate}
+                                            onChange={e => {
+                                              const updated = [...unitDetails];
+                                              updated[index].purchaseRate = e.target.value;
+                                              setUnitDetails(updated);
+                                            }}
+                                            className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                                          />
+                                        </div>
                                       </div>
 
-                                      {/* Purchase Rate Field */}
-                                      <div className="space-y-1 text-left">
-                                        <Label className="text-[9px] font-bold uppercase text-zinc-500">Purchase Rate (₹)</Label>
-                                        <Input
-                                          type="number"
-                                          placeholder="e.g. 15000"
-                                          value={unit.purchaseRate}
-                                          onChange={e => {
-                                            const updated = [...unitDetails];
-                                            updated[index].purchaseRate = e.target.value;
-                                            setUnitDetails(updated);
-                                          }}
-                                          className="h-10 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-0"
-                                        />
-                                      </div>
+                                      {/* Line 3: HSN Code & Supplier Name */}
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        <div className="space-y-1 text-left">
+                                          <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                                            4. HSN Code
+                                          </Label>
+                                          <Input
+                                            placeholder="8517 (Default)"
+                                            value={unit.hsnCode}
+                                            onChange={e => {
+                                              const updated = [...unitDetails];
+                                              updated[index].hsnCode = e.target.value;
+                                              setUnitDetails(updated);
+                                            }}
+                                            className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                                          />
+                                        </div>
 
-                                      {/* HSN Code Field */}
-                                      <div className="space-y-1 text-left">
-                                        <Label className="text-[9px] font-bold uppercase text-zinc-500">HSN Code</Label>
-                                        <Input
-                                          placeholder="8517"
-                                          value={unit.hsnCode}
-                                          onChange={e => {
-                                            const updated = [...unitDetails];
-                                            updated[index].hsnCode = e.target.value;
-                                            setUnitDetails(updated);
-                                          }}
-                                          className="h-10 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-0"
-                                        />
-                                      </div>
-
-                                      {/* Supplier Name Field */}
-                                      <div className="space-y-1 text-left">
-                                        <Label className="text-[9px] font-bold uppercase text-zinc-500">Supplier Name</Label>
-                                        <Input
-                                          placeholder="e.g. Ramesh Telecom"
-                                          value={unit.supplierName}
-                                          onChange={e => {
-                                            const updated = [...unitDetails];
-                                            updated[index].supplierName = e.target.value;
-                                            setUnitDetails(updated);
-                                          }}
-                                          className="h-10 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-0"
-                                        />
+                                        <div className="space-y-1 text-left">
+                                          <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                                            5. Supplier / Vendor Name
+                                          </Label>
+                                          <Input
+                                            placeholder="e.g. Ramesh Telecom / Wholesaler"
+                                            value={unit.supplierName}
+                                            onChange={e => {
+                                              const updated = [...unitDetails];
+                                              updated[index].supplierName = e.target.value;
+                                              setUnitDetails(updated);
+                                            }}
+                                            className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                                          />
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
@@ -7994,19 +8010,19 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                               </div>
                             )}
 
-                            <div className="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
                               <Button
                                 type="button"
                                 onClick={() => setUnitDetails([...unitDetails, { imei: "", color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" }])}
-                                className="h-10 px-4 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 font-black text-xs rounded-xl border border-indigo-200 dark:border-indigo-900/40"
+                                className="w-full sm:w-auto h-11 px-5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 font-extrabold text-xs rounded-xl border border-indigo-200 dark:border-indigo-900/40"
                               >
-                                + Add Another Unit Row
+                                + Add Another Unit
                               </Button>
 
                               <Button
                                 type="button"
                                 onClick={() => setIsUnitModalOpen(false)}
-                                className="h-10 px-6 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md"
+                                className="w-full sm:w-auto h-11 px-8 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-indigo-600/20"
                               >
                                 Save Units ({unitDetails.length}) & Close
                               </Button>
