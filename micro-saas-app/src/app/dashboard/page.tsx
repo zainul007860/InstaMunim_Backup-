@@ -8120,20 +8120,20 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     <Badge variant="outline" className="rounded-full px-3 py-1 font-bold bg-white dark:bg-zinc-800 border-zinc-100 dark:border-zinc-800 shadow-sm">{menuItems.length} {getLabels(businessType).items.includes("Stock") || getLabels(businessType).items.includes("Inventory") ? "Products" : "Items"}</Badge>
                     <button 
                       onClick={() => {
-                        const csvContent = "Name,Price,Category"; // Clean header only
+                        const csvContent = "Name,Price,Category,IMEI,Color,PurchaseRate,HSNCode,SupplierName\niPhone 15 128GB,59999,Smartphones,358741098234156,Titanium Black,52000,8517,Ramesh Telecom\nSamsung S24 Ultra,119999,Smartphones,358741098234157,Cobalt Violet,105000,8517,National Distributors";
                         const blob = new Blob([csvContent], { type: 'text/csv' });
                         const url = window.URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.href = url;
-                        a.download = 'menu_template.csv';
+                        a.download = 'stock_template.csv';
                         a.click();
                       }}
-                      className="text-[9px] font-bold text-blue-500 hover:text-blue-600 uppercase tracking-widest flex items-center gap-1"
+                      className="text-[9px] font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-widest flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/30 px-2.5 py-1 rounded-lg border border-indigo-100 dark:border-indigo-900/40"
                     >
-                      <Download className="h-3 w-3" /> Template
+                      <Download className="h-3 w-3" /> Stock Template
                     </button>
-                    <label className="cursor-pointer text-[9px] font-bold text-orange-500 hover:text-orange-600 uppercase tracking-widest flex items-center gap-1">
-                      <Upload className="h-3 w-3" /> Import
+                    <label className="cursor-pointer text-[9px] font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-widest flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1 rounded-lg border border-emerald-100 dark:border-emerald-900/40">
+                      <Upload className="h-3 w-3" /> Import Stock CSV
                       <input 
                         type="file" 
                         accept=".csv" 
@@ -8145,19 +8145,60 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                             reader.onload = async (event) => {
                               const text = event.target?.result as string;
                               const lines = text.split("\n").filter(l => l.trim() !== "");
-                              const newItemsFromCsv: any[] = [];
-                              
+                              if (lines.length <= 1) {
+                                alert("CSV file is empty or missing data rows.");
+                                return;
+                              }
+
+                              const aggregatedMap = new Map<string, { name: string; price: number; category: string; units: string[] }>();
+
                               // Skip header row
                               for (let i = 1; i < lines.length; i++) {
-                                const [name, price, category] = lines[i].split(",").map(s => s.trim());
-                                if (name && price) {
-                                  newItemsFromCsv.push({
-                                    name,
-                                    price: Number(price),
-                                    category: category || "General"
-                                  });
+                                const parts = lines[i].split(",").map(s => s.trim());
+                                if (!parts[0] || !parts[1]) continue;
+
+                                const name = parts[0];
+                                const price = Number(parts[1]);
+                                if (isNaN(price)) continue;
+
+                                const baseCategory = parts[2] || "General";
+                                const imei = parts[3] || "";
+                                const color = parts[4] || "";
+                                const purchaseRate = parts[5] || "";
+                                const hsnCode = parts[6] || "8517";
+                                const supplierName = parts[7] || "";
+
+                                const key = `${name.toLowerCase()}_${price}`;
+                                const existing = aggregatedMap.get(key) || { name, price, category: baseCategory, units: [] };
+
+                                if (imei || color || purchaseRate || supplierName) {
+                                  const meta = [
+                                    color ? `Color:${color}` : "",
+                                    purchaseRate ? `Cost:${purchaseRate}` : "",
+                                    hsnCode ? `HSN:${hsnCode}` : "",
+                                    supplierName ? `Supplier:${supplierName}` : ""
+                                  ].filter(Boolean).join(";");
+
+                                  const encodedUnit = meta ? `IMEI:${imei}{${meta}}` : imei;
+                                  if (encodedUnit) {
+                                    existing.units.push(encodedUnit);
+                                  }
                                 }
+
+                                aggregatedMap.set(key, existing);
                               }
+
+                              const newItemsFromCsv = Array.from(aggregatedMap.values()).map(item => {
+                                let finalCategory = item.category;
+                                if (item.units.length > 0) {
+                                  finalCategory = `${item.category}|IMEIs:${item.units.join(",")}`;
+                                }
+                                return {
+                                  name: item.name,
+                                  price: item.price,
+                                  category: finalCategory
+                                };
+                              });
 
                               if (newItemsFromCsv.length > 0) {
                                 setIsLoading(true);
@@ -8177,7 +8218,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                   
                                   if (error) throw error;
                                   setMenuItems([...menuItems, ...insertedData]);
-                                  alert(`Successfully imported ${insertedData.length} items!`);
+                                  alert(`Successfully imported ${insertedData.length} stock items from CSV!`);
                                 } catch (err: any) {
                                   alert("Import Error: " + err.message);
                                 } finally {
