@@ -6884,12 +6884,29 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 ₹{s.price - (s.commission || 0)}
                               </td>
                               <td className="py-2 px-4 text-right whitespace-nowrap">
-                                <div className="flex gap-2 justify-end">
+                                <div className="flex gap-1.5 justify-end">
                                   <button 
                                     onClick={() => window.open(getInvoiceUrlForSale(s), "_blank")}
                                     className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 font-bold text-[9px] uppercase tracking-wider rounded-lg transition-all active:scale-95"
                                   >
                                     View
+                                  </button>
+                                  <button 
+                                    onClick={() => {
+                                      setEditingSale({
+                                        id: s.id,
+                                        name: s.name || "",
+                                        mobile: s.mobile || "",
+                                        item: s.item || "",
+                                        price: String(s.price || 0),
+                                        type: s.type || "Cash",
+                                        discount: String(s.commission || 0)
+                                      });
+                                      setShowEditSaleModal(true);
+                                    }}
+                                    className="px-2.5 py-1 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-bold text-[9px] uppercase tracking-wider rounded-lg transition-all active:scale-95 border border-indigo-200 dark:border-indigo-900/40"
+                                  >
+                                    Edit
                                   </button>
                                   {s.mobile && s.mobile !== "N/A" && s.mobile.length === 10 && (
                                     <button 
