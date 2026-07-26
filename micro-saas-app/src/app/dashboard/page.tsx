@@ -1267,6 +1267,14 @@ export default function Dashboard() {
   const [newMobile, setNewMobile] = useState("");
   const [newType, setNewType] = useState("Cash");
 
+  // Credit Card State Hooks
+  const [cardBankName, setCardBankName] = useState("HDFC Bank");
+  const [cardType, setCardType] = useState("Visa");
+  const [cardPosTerminal, setCardPosTerminal] = useState("Pine Labs POS");
+  const [cardEmiTenure, setCardEmiTenure] = useState("Full Payment");
+  const [cardHolderName, setCardHolderName] = useState("");
+  const [cardAuthCode, setCardAuthCode] = useState("");
+
   // Buyback State Hooks
   const [buybackCustName, setBuybackCustName] = useState("");
   const [buybackCustMobile, setBuybackCustMobile] = useState("");
@@ -4603,6 +4611,17 @@ Stay safe & eat healthy! 🍕
         const cashPart = Number(splitCash) || 0;
         const upiPart = Math.max(0, cartTotal - cashPart);
         paymentTypeDb = `Split (Cash: ${cashPart} | UPI: ${upiPart})`;
+      } else if (newType === "Credit Card") {
+        const cardDetails = [
+          cardBankName ? `Bank: ${cardBankName}` : "",
+          cardType ? `Card: ${cardType}` : "",
+          cardPosTerminal ? `POS: ${cardPosTerminal}` : "",
+          cardEmiTenure ? `Plan: ${cardEmiTenure}` : "",
+          cardAuthCode ? `Auth: ${cardAuthCode}` : "",
+          cardHolderName ? `Name: ${cardHolderName}` : ""
+        ].filter(Boolean).join(" | ");
+
+        paymentTypeDb = `Credit Card (${cardDetails})`;
       }
 
       const { data: newSale, error } = await supabase
@@ -6446,7 +6465,107 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         </div>
                       )}
 
-                      <div className="relative w-40">
+                      {newType === "Credit Card" && (
+                        <div className="p-4 bg-indigo-50/60 dark:bg-indigo-950/20 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 space-y-3 text-left animate-in fade-in slide-in-from-top-2">
+                          <div className="flex items-center justify-between border-b border-indigo-100 dark:border-indigo-900/40 pb-2">
+                            <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                              💳 Credit Card & EMI Details
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            {/* 1. Bank Name */}
+                            <div className="space-y-0.5">
+                              <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">1. Bank Name</Label>
+                              <select
+                                value={cardBankName}
+                                onChange={e => setCardBankName(e.target.value)}
+                                className="w-full h-9 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold px-2.5 shadow-sm"
+                              >
+                                <option value="HDFC Bank">HDFC Bank</option>
+                                <option value="ICICI Bank">ICICI Bank</option>
+                                <option value="SBI Card">SBI Card</option>
+                                <option value="Axis Bank">Axis Bank</option>
+                                <option value="Kotak Mahindra">Kotak Mahindra</option>
+                                <option value="OneCard">OneCard</option>
+                                <option value="Other Bank">Other Bank</option>
+                              </select>
+                            </div>
+
+                            {/* 2. Card Network */}
+                            <div className="space-y-0.5">
+                              <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">2. Card Network</Label>
+                              <select
+                                value={cardType}
+                                onChange={e => setCardType(e.target.value)}
+                                className="w-full h-9 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold px-2.5 shadow-sm"
+                              >
+                                <option value="Visa">Visa</option>
+                                <option value="Mastercard">Mastercard</option>
+                                <option value="RuPay">RuPay</option>
+                                <option value="Amex">American Express</option>
+                              </select>
+                            </div>
+
+                            {/* 3. POS Terminal */}
+                            <div className="space-y-0.5">
+                              <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">3. POS Machine</Label>
+                              <select
+                                value={cardPosTerminal}
+                                onChange={e => setCardPosTerminal(e.target.value)}
+                                className="w-full h-9 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold px-2.5 shadow-sm"
+                              >
+                                <option value="Pine Labs POS">Pine Labs POS</option>
+                                <option value="Paytm POS">Paytm POS</option>
+                                <option value="Plutus POS">Plutus POS</option>
+                                <option value="Mosambee POS">Mosambee POS</option>
+                                <option value="PhonePe POS">PhonePe POS</option>
+                                <option value="Other POS">Other Machine</option>
+                              </select>
+                            </div>
+
+                            {/* 4. EMI Plan */}
+                            <div className="space-y-0.5">
+                              <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">4. Payment / EMI Plan</Label>
+                              <select
+                                value={cardEmiTenure}
+                                onChange={e => setCardEmiTenure(e.target.value)}
+                                className="w-full h-9 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold px-2.5 shadow-sm text-indigo-600"
+                              >
+                                <option value="Full Payment">Full Payment (No EMI)</option>
+                                <option value="3 Months EMI">3 Months No-Cost EMI</option>
+                                <option value="6 Months EMI">6 Months No-Cost EMI</option>
+                                <option value="9 Months EMI">9 Months Low-Cost EMI</option>
+                                <option value="12 Months EMI">12 Months Low-Cost EMI</option>
+                              </select>
+                            </div>
+
+                            {/* 5. Auth / POS Slip Code */}
+                            <div className="space-y-0.5">
+                              <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">5. Auth / POS Slip Code</Label>
+                              <Input
+                                placeholder="e.g. 482910"
+                                value={cardAuthCode}
+                                onChange={e => setCardAuthCode(e.target.value)}
+                                className="h-9 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold shadow-sm"
+                              />
+                            </div>
+
+                            {/* 6. Cardholder Name */}
+                            <div className="space-y-0.5">
+                              <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">6. Cardholder Name (Optional)</Label>
+                              <Input
+                                placeholder="Name on card"
+                                value={cardHolderName}
+                                onChange={e => setCardHolderName(e.target.value)}
+                                className="h-9 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-xs font-bold shadow-sm"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="relative w-44">
                         <select 
                           value={newType} 
                           onChange={(e) => setNewType(e.target.value)}
@@ -6454,6 +6573,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         >
                           <option value="Cash">Cash Sale</option>
                           <option value="Online">Online/UPI</option>
+                          <option value="Credit Card">Credit Card / Card EMI</option>
                           <option value="Split">Split (Cash + UPI)</option>
                           <option value="Udhaar">Udhaar Khata</option>
                           <option value="Swiggy">{getPartnerName(businessType, "Swiggy")}</option>
@@ -10403,6 +10523,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 >
                   <option value="Cash">Cash Payment</option>
                   <option value="Online">Online / UPI</option>
+                  <option value="Credit Card">Credit Card / Card EMI</option>
                   <option value="Card">Card / POS Machine</option>
                   <option value="Udhaar">Udhaar (Credit)</option>
                   <option value="Finance">Finance / EMI</option>
