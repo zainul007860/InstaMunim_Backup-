@@ -49,6 +49,39 @@ const getImeis = (cat: string): string[] => {
   return [];
 };
 
+const parseUnitDetailsFromCategory = (catStr: string) => {
+  if (!catStr || !catStr.includes("|IMEIs:")) return [];
+  const rawStr = catStr.split("|IMEIs:")[1];
+  if (!rawStr) return [];
+
+  return rawStr.split(",").filter(Boolean).map(item => {
+    let imei = item.trim();
+    let color = "";
+    let purchaseRate = "";
+    let hsnCode = "8517";
+    let supplierName = "";
+
+    if (imei.includes("{") && imei.includes("}")) {
+      const match = imei.match(/^(.*?)\{(.*?)\}$/);
+      if (match) {
+        imei = match[1].replace("IMEI:", "").trim();
+        const metaStr = match[2];
+        metaStr.split(";").forEach(pair => {
+          const [k, v] = pair.split(":");
+          if (k === "Color") color = v || "";
+          if (k === "Cost") purchaseRate = v || "";
+          if (k === "HSN") hsnCode = v || "8517";
+          if (k === "Supplier") supplierName = v || "";
+        });
+      }
+    } else {
+      if (imei.startsWith("IMEI:")) imei = imei.replace("IMEI:", "");
+    }
+
+    return { imei, color, purchaseRate, hsnCode, supplierName };
+  }).filter(u => u.imei);
+};
+
 interface BarcodeScannerResult {
   barcode: string;
   format?: string;
@@ -2197,6 +2230,7 @@ Requirements for the generated image prompt:
   const [scanningNewItemIndex, setScanningNewItemIndex] = useState<number | null>(null);
   const [editingItem, setEditingItem] = useState<any | null>(null);
   const [editingItemImeis, setEditingItemImeis] = useState<string[]>([]);
+  const [editingUnitDetails, setEditingUnitDetails] = useState<{ imei: string; color: string; purchaseRate: string; hsnCode: string; supplierName: string; }[]>([]);
   const [showEditStockModal, setShowEditStockModal] = useState(false);
   const [scanningEditItemIndex, setScanningEditItemIndex] = useState<number | null>(null);
   const [scannerError, setScannerError] = useState("");
@@ -5128,10 +5162,31 @@ Stay safe & eat healthy! 🍕
     setIsLoading(true);
     try {
       const cleanCategory = getDisplayCategory(editingItem.category);
-      const filteredImeis = editingItemImeis.filter(Boolean).map(x => x.trim());
-      const updatedCategory = filteredImeis.length > 0 
-        ? `${cleanCategory}|IMEIs:${filteredImeis.join(",")}` 
-        : cleanCategory;
+      let updatedCategory = cleanCategory;
+
+      if (editingUnitDetails.length > 0) {
+        const encodedUnits = editingUnitDetails
+          .filter(u => u.imei && u.imei.trim())
+          .map(u => {
+            const imei = u.imei.trim();
+            const meta = [
+              u.color ? `Color:${u.color.trim()}` : "",
+              u.purchaseRate ? `Cost:${u.purchaseRate.trim()}` : "",
+              u.hsnCode ? `HSN:${u.hsnCode.trim()}` : "",
+              u.supplierName ? `Supplier:${u.supplierName.trim()}` : ""
+            ].filter(Boolean).join(";");
+            return meta ? `IMEI:${imei}{${meta}}` : imei;
+          })
+          .join(",");
+        if (encodedUnits) {
+          updatedCategory = `${cleanCategory}|IMEIs:${encodedUnits}`;
+        }
+      } else if (editingItemImeis.length > 0) {
+        const filteredImeis = editingItemImeis.filter(Boolean).map(x => x.trim());
+        if (filteredImeis.length > 0) {
+          updatedCategory = `${cleanCategory}|IMEIs:${filteredImeis.join(",")}`;
+        }
+      }
 
       const { error } = await supabase
         .from('menu_items')
@@ -5146,6 +5201,7 @@ Stay safe & eat healthy! 🍕
 
       setShowEditStockModal(false);
       setEditingItem(null);
+      setEditingUnitDetails([]);
     } catch (err: any) {
       alert("Error saving stock: " + (err.message || "Unknown error"));
     } finally {
@@ -8155,6 +8211,12 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                               if (isMobile) {
                                 setEditingItem(item);
                                 setEditingItemImeis(itemImeis);
+                                const parsedUnits = parseUnitDetailsFromCategory(item.category);
+                                if (parsedUnits.length > 0) {
+                                  setEditingUnitDetails(parsedUnits);
+                                } else {
+                                  setEditingUnitDetails(itemImeis.map(i => ({ imei: i, color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" })));
+                                }
                                 setShowEditStockModal(true);
                               }
                             }}
@@ -9867,80 +9929,175 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
       {/* EDIT STOCK / IMEI MODAL */}
       <Dialog open={showEditStockModal} onOpenChange={setShowEditStockModal}>
-        <DialogContent className="p-6 border-0 max-w-[360px] bg-white dark:bg-zinc-900 rounded-xl shadow-2xl">
-          <div className="space-y-5">
-            <div className="text-center space-y-1">
-              <DialogTitle className="text-lg font-black tracking-tight uppercase text-zinc-950 dark:text-white">Edit Stock / IMEIs</DialogTitle>
-              <DialogDescription className="text-zinc-500 font-bold text-xs uppercase tracking-tighter">
-                {editingItem?.name}
-              </DialogDescription>
-            </div>
+        <DialogContent className="w-[95vw] sm:max-w-2xl md:max-w-3xl rounded-[2.5rem] p-5 sm:p-7 bg-white dark:bg-zinc-900 border border-indigo-100 dark:border-indigo-950 shadow-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader className="space-y-1 text-left border-b border-zinc-100 dark:border-zinc-800 pb-4">
+            <DialogTitle className="text-xl sm:text-2xl font-black tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
+              <Smartphone className="h-6 w-6 text-indigo-600" />
+              Edit Mobile Unit Stock ({editingItem?.name || "Product"})
+            </DialogTitle>
+            <DialogDescription className="text-xs text-zinc-500 font-medium">
+              Update IMEI, Color, Purchase Rate, HSN Code, and Supplier Name for each unit.
+            </DialogDescription>
+          </DialogHeader>
 
-            <div className="space-y-4">
-              <div className="flex justify-between items-center px-1">
-                <Label className="text-[10px] font-black uppercase text-zinc-400">IMEI List ({editingItemImeis.length} Units)</Label>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={() => setEditingItemImeis([...editingItemImeis, ""])}
-                  className="h-6 text-[9px] font-black text-blue-500 hover:text-blue-600 uppercase tracking-wider p-0 bg-transparent"
+          <div className="space-y-4 my-4">
+            {editingUnitDetails.length === 0 ? (
+              <div className="text-center py-8 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-dashed border-zinc-200">
+                <p className="text-xs font-bold text-zinc-500">No unit rows present.</p>
+                <Button
+                  type="button"
+                  onClick={() => setEditingUnitDetails([{ imei: "", color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" }])}
+                  className="mt-2 h-10 px-5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md"
                 >
-                  + Add Unit
+                  + Add First Unit
                 </Button>
               </div>
-
-              {editingItemImeis.length === 0 ? (
-                <p className="text-[10px] text-zinc-400 italic text-center py-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl">Stock empty. Click "+ Add Unit" to add units.</p>
-              ) : (
-                <div className="space-y-2 max-h-60 overflow-y-auto pr-1 animate-in fade-in duration-300">
-                  {editingItemImeis.map((imei, index) => (
-                    <div key={index} className="flex gap-2 items-center">
-                      <span className="text-[9px] font-bold text-zinc-400 w-8">#{index + 1}</span>
-                      <ImeiInput 
-                        placeholder={`Unit ${index + 1} IMEI`} 
-                        value={imei} 
-                        onChange={val => {
-                          const updated = [...editingItemImeis];
-                          updated[index] = val;
-                          setEditingItemImeis(updated);
-                        }} 
-                        className="h-9 flex-1 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-3 text-[11px]" 
-                      />
-                      <Button 
+            ) : (
+              <div className="space-y-4">
+                {editingUnitDetails.map((unit, index) => (
+                  <div key={index} className="p-4 sm:p-5 bg-zinc-50/80 dark:bg-zinc-800/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800 space-y-3.5 shadow-sm">
+                    <div className="flex items-center justify-between border-b border-zinc-200/50 dark:border-zinc-700/50 pb-2.5">
+                      <span className="text-xs sm:text-sm font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center text-[10px] font-black">
+                          #{index + 1}
+                        </span>
+                        Unit Specifications
+                      </span>
+                      <Button
+                        type="button"
                         size="sm"
                         variant="ghost"
-                        onClick={() => {
-                          setEditingItemImeis(editingItemImeis.filter((_, idx) => idx !== index));
-                        }}
-                        className="h-9 w-9 p-0 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl flex items-center justify-center border-0"
+                        onClick={() => setEditingUnitDetails(editingUnitDetails.filter((_, idx) => idx !== index))}
+                        className="h-8 text-[11px] font-extrabold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 px-3 rounded-xl"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Unit
                       </Button>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
 
-            <div className="flex gap-2.5 pt-2">
-              <Button 
-                onClick={handleSaveEditStock} 
-                disabled={isLoading}
-                className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-black text-xs active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                    {/* LINE BY LINE STACKED INPUTS */}
+                    <div className="space-y-3">
+                      {/* Line 1: IMEI Number */}
+                      <div className="space-y-1 text-left">
+                        <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                          1. IMEI / Serial Number *
+                        </Label>
+                        <ImeiInput
+                          placeholder="Enter or scan 15-digit IMEI number"
+                          value={unit.imei}
+                          onChange={val => {
+                            const updated = [...editingUnitDetails];
+                            updated[index].imei = val;
+                            setEditingUnitDetails(updated);
+                          }}
+                          className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                        />
+                      </div>
+
+                      {/* Line 2: Color & Purchase Rate */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1 text-left">
+                          <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                            2. Color
+                          </Label>
+                          <Input
+                            placeholder="e.g. Titanium Black, Pacific Blue"
+                            value={unit.color}
+                            onChange={e => {
+                              const updated = [...editingUnitDetails];
+                              updated[index].color = e.target.value;
+                              setEditingUnitDetails(updated);
+                            }}
+                            className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                          />
+                        </div>
+
+                        <div className="space-y-1 text-left">
+                          <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                            3. Purchase Rate / Cost Price (₹)
+                          </Label>
+                          <Input
+                            type="number"
+                            placeholder="e.g. 18500"
+                            value={unit.purchaseRate}
+                            onChange={e => {
+                              const updated = [...editingUnitDetails];
+                              updated[index].purchaseRate = e.target.value;
+                              setEditingUnitDetails(updated);
+                            }}
+                            className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Line 3: HSN Code & Supplier Name */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1 text-left">
+                          <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                            4. HSN Code
+                          </Label>
+                          <Input
+                            placeholder="8517 (Default)"
+                            value={unit.hsnCode}
+                            onChange={e => {
+                              const updated = [...editingUnitDetails];
+                              updated[index].hsnCode = e.target.value;
+                              setEditingUnitDetails(updated);
+                            }}
+                            className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                          />
+                        </div>
+
+                        <div className="space-y-1 text-left">
+                          <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                            5. Supplier / Vendor Name
+                          </Label>
+                          <Input
+                            placeholder="e.g. Ramesh Telecom / Wholesaler"
+                            value={unit.supplierName}
+                            onChange={e => {
+                              const updated = [...editingUnitDetails];
+                              updated[index].supplierName = e.target.value;
+                              setEditingUnitDetails(updated);
+                            }}
+                            className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+              <Button
+                type="button"
+                onClick={() => setEditingUnitDetails([...editingUnitDetails, { imei: "", color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" }])}
+                className="w-full sm:w-auto h-11 px-5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 font-extrabold text-xs rounded-xl border border-indigo-200 dark:border-indigo-900/40"
               >
-                {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-                SAVE STOCK
+                + Add Another Unit
               </Button>
-              <Button 
-                onClick={() => {
-                  setShowEditStockModal(false);
-                  setEditingItem(null);
-                }} 
-                variant="outline" 
-                className="h-12 rounded-xl font-black text-xs active:scale-95 transition-all"
-              >
-                CANCEL
-              </Button>
+
+              <div className="flex gap-2.5 w-full sm:w-auto">
+                <Button 
+                  onClick={() => {
+                    setShowEditStockModal(false);
+                    setEditingItem(null);
+                  }} 
+                  variant="outline" 
+                  className="flex-1 sm:flex-none h-11 px-5 rounded-xl font-black text-xs"
+                >
+                  CANCEL
+                </Button>
+                <Button 
+                  onClick={handleSaveEditStock} 
+                  disabled={isLoading}
+                  className="flex-1 sm:flex-none h-11 px-8 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-indigo-600/20"
+                >
+                  {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                  SAVE STOCK ({editingUnitDetails.length})
+                </Button>
+              </div>
             </div>
           </div>
         </DialogContent>
