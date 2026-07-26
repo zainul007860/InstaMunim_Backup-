@@ -12,6 +12,7 @@ import { supabase } from "@/lib/supabase";
 function InvoiceContent() {
   const searchParams = useSearchParams();
   const [cloudLogo, setCloudLogo] = useState<string | null>(null);
+  const [cloudSignature, setCloudSignature] = useState<string | null>(null);
   const isFree = searchParams.get("free") === "true";
 
   // Scratch card coupon states
@@ -416,6 +417,7 @@ function InvoiceContent() {
               try {
                 const settings = JSON.parse(rawLogo.substring(9));
                 setCloudLogo(settings.logo || null);
+                setCloudSignature(settings.signature || settings.authorisedSignature || null);
                 if (!bType) bType = settings.businessType || "";
               } catch (e) {
                 setCloudLogo(rawLogo);
@@ -1238,16 +1240,21 @@ function InvoiceContent() {
               </div>
 
               {/* AUTHORISED SIGNATURE BOX (EXACT RED CIRCLE LOCATION) */}
-              <div className="text-right flex flex-col items-center justify-end min-w-[130px] self-end pt-2 sm:pt-0">
-                {sigFromUrl ? (
-                  <img src={sigFromUrl} alt="Authorised Signature" className="max-h-12 max-w-[130px] object-contain mb-1" />
-                ) : (
-                  <div className="h-9 w-24 flex items-center justify-center text-[8px] font-bold text-zinc-300 italic">No Signature</div>
-                )}
-                <div className="border-t border-zinc-400 pt-1 w-32 text-center">
-                  <span className="text-[9px] font-black uppercase text-zinc-700 tracking-wider">Authorised Signatory</span>
-                </div>
-              </div>
+              {(() => {
+                const activeSig = sigFromUrl || cloudSignature || (typeof window !== 'undefined' ? (localStorage.getItem('saas_store_signature') || null) : null);
+                return (
+                  <div className="text-right flex flex-col items-center justify-end min-w-[130px] self-end pt-2 sm:pt-0">
+                    {activeSig ? (
+                      <img src={activeSig} alt="Authorised Signature" className="max-h-12 max-w-[130px] object-contain mb-1" />
+                    ) : (
+                      <div className="h-9 w-24 flex items-center justify-center text-[8px] font-bold text-zinc-300 italic">No Signature</div>
+                    )}
+                    <div className="border-t border-zinc-400 pt-1 w-32 text-center">
+                      <span className="text-[9px] font-black uppercase text-zinc-700 tracking-wider">Authorised Signatory</span>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
  
             {/* Social & Experience */}

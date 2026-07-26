@@ -8690,6 +8690,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       try {
                         // Save everything locally first to ensure persistence
                         localStorage.setItem("saas_store_logo", storeLogo || "");
+                        localStorage.setItem("saas_store_signature", storeSignature || "");
                         localStorage.setItem("saas_store_name", restaurantName);
                         localStorage.setItem("saas_store_address", storeAddress);
                         localStorage.setItem("saas_store_phone", storePhone);
@@ -8710,6 +8711,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           upiId: storeUpiId || "",
                           upiName: storeUpiName || "",
                           logo: storeLogo || "",
+                          signature: storeSignature || "",
                           address: storeAddress || "",
                           phone: storePhone || "",
                           website: storeWebsite || "",
