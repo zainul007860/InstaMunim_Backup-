@@ -7926,36 +7926,36 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
                       {/* POPUP MODAL FOR UNIT DETAILS */}
                       <Dialog open={isUnitModalOpen} onOpenChange={setIsUnitModalOpen}>
-                        <DialogContent className="w-[95vw] sm:max-w-2xl md:max-w-3xl rounded-[2.5rem] p-5 sm:p-7 bg-white dark:bg-zinc-900 border border-indigo-100 dark:border-indigo-950 shadow-2xl max-h-[85vh] overflow-y-auto">
-                          <DialogHeader className="space-y-1 text-left border-b border-zinc-100 dark:border-zinc-800 pb-4">
-                            <DialogTitle className="text-xl sm:text-2xl font-black tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
-                              <Smartphone className="h-6 w-6 text-indigo-600" />
+                        <DialogContent className="w-[95vw] sm:max-w-3xl md:max-w-4xl rounded-[2rem] p-4 sm:p-5 bg-white dark:bg-zinc-900 border border-indigo-100 dark:border-indigo-950 shadow-2xl max-h-[90vh] overflow-y-auto">
+                          <DialogHeader className="space-y-0.5 text-left border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                            <DialogTitle className="text-lg sm:text-xl font-black tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
+                              <Smartphone className="h-5 w-5 text-indigo-600" />
                               Mobile Unit Details Manager
                             </DialogTitle>
-                            <DialogDescription className="text-xs text-zinc-500 font-medium">
-                              Add parameters for each phone unit (IMEI, Color, Purchase Rate, HSN, Supplier).
+                            <DialogDescription className="text-[11px] text-zinc-500 font-medium">
+                              Add parameters per unit row (IMEI, Color, Purchase Rate, HSN, Supplier).
                             </DialogDescription>
                           </DialogHeader>
 
-                          <div className="space-y-4 my-4">
+                          <div className="space-y-3 my-3">
                             {unitDetails.length === 0 ? (
-                              <div className="text-center py-8 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-dashed border-zinc-200">
+                              <div className="text-center py-6 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-dashed border-zinc-200">
                                 <p className="text-xs font-bold text-zinc-500">No unit rows added yet.</p>
                                 <Button
                                   type="button"
                                   onClick={() => setUnitDetails([{ imei: "", color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" }])}
-                                  className="mt-2 h-10 px-5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md"
+                                  className="mt-2 h-9 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md"
                                 >
                                   + Add First Unit
                                 </Button>
                               </div>
                             ) : (
-                              <div className="space-y-4">
+                              <div className="space-y-3">
                                 {unitDetails.map((unit, index) => (
-                                  <div key={index} className="p-4 sm:p-5 bg-zinc-50/80 dark:bg-zinc-800/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800 space-y-3.5 shadow-sm">
-                                    <div className="flex items-center justify-between border-b border-zinc-200/50 dark:border-zinc-700/50 pb-2.5">
-                                      <span className="text-xs sm:text-sm font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
-                                        <span className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center text-[10px] font-black">
+                                  <div key={index} className="p-3.5 sm:p-4 bg-zinc-50/90 dark:bg-zinc-800/60 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 space-y-2.5 shadow-sm">
+                                    <div className="flex items-center justify-between border-b border-zinc-200/50 dark:border-zinc-700/50 pb-2">
+                                      <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                                        <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center text-[9px] font-black">
                                           #{index + 1}
                                         </span>
                                         Unit Specifications
@@ -7971,108 +7971,107 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                             next.splice(index + 1, 0, copied);
                                             setUnitDetails(next);
                                           }}
-                                          className="h-8 text-[11px] font-extrabold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 px-3 rounded-xl border border-indigo-200 dark:border-indigo-900/40"
+                                          className="h-7 text-[10px] font-extrabold text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 px-2.5 rounded-lg border border-indigo-200 dark:border-indigo-900/40"
                                         >
-                                          <Copy className="h-3.5 w-3.5 mr-1" /> Copy Unit
+                                          <Copy className="h-3 w-3 mr-1" /> Copy Unit
                                         </Button>
                                         <Button
                                           type="button"
                                           size="sm"
                                           variant="ghost"
                                           onClick={() => setUnitDetails(unitDetails.filter((_, idx) => idx !== index))}
-                                          className="h-8 text-[11px] font-extrabold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 px-3 rounded-xl"
+                                          className="h-7 text-[10px] font-extrabold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 px-2.5 rounded-lg"
                                         >
-                                          <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Unit
+                                          <Trash2 className="h-3 w-3 mr-1" /> Delete
                                         </Button>
                                       </div>
                                     </div>
 
-                                    {/* LINE BY LINE STACKED INPUTS */}
-                                    <div className="space-y-3">
-                                      {/* Line 1: IMEI Number (Full Width) */}
-                                      <div className="space-y-1 text-left">
-                                        <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
-                                          1. IMEI / Serial Number *
-                                        </Label>
-                                        <ImeiInput
-                                          placeholder="Enter or scan 15-digit IMEI number"
-                                          value={unit.imei}
-                                          onChange={val => {
-                                            const updated = [...unitDetails];
-                                            updated[index].imei = val;
-                                            setUnitDetails(updated);
-                                          }}
-                                          className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
-                                        />
-                                      </div>
+                                    {/* COMPACT 2-ROW GRID */}
+                                    <div className="space-y-2">
+                                      {/* Row 1: IMEI (2 cols) + Color (1 col) */}
+                                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                        <div className="sm:col-span-2 space-y-0.5 text-left">
+                                          <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+                                            IMEI / Serial Number *
+                                          </Label>
+                                          <ImeiInput
+                                            placeholder="15-digit IMEI number"
+                                            value={unit.imei}
+                                            onChange={val => {
+                                              const updated = [...unitDetails];
+                                              updated[index].imei = val;
+                                              setUnitDetails(updated);
+                                            }}
+                                            className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                                          />
+                                        </div>
 
-                                      {/* Line 2: Color & Purchase Rate */}
-                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div className="space-y-1 text-left">
-                                          <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
-                                            2. Color
+                                        <div className="space-y-0.5 text-left">
+                                          <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+                                            Color
                                           </Label>
                                           <Input
-                                            placeholder="e.g. Titanium Black, Pacific Blue"
+                                            placeholder="e.g. Black / Blue"
                                             value={unit.color}
                                             onChange={e => {
                                               const updated = [...unitDetails];
                                               updated[index].color = e.target.value;
                                               setUnitDetails(updated);
                                             }}
-                                            className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                                            className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
                                           />
                                         </div>
+                                      </div>
 
-                                        <div className="space-y-1 text-left">
-                                          <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
-                                            3. Purchase Rate / Cost Price (₹)
+                                      {/* Row 2: Purchase Rate + HSN Code + Supplier Name */}
+                                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                        <div className="space-y-0.5 text-left">
+                                          <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+                                            Purchase Rate (₹)
                                           </Label>
                                           <Input
                                             type="number"
-                                            placeholder="e.g. 18500"
+                                            placeholder="e.g. 15000"
                                             value={unit.purchaseRate}
                                             onChange={e => {
                                               const updated = [...unitDetails];
                                               updated[index].purchaseRate = e.target.value;
                                               setUnitDetails(updated);
                                             }}
-                                            className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                                            className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
                                           />
                                         </div>
-                                      </div>
 
-                                      {/* Line 3: HSN Code & Supplier Name */}
-                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                        <div className="space-y-1 text-left">
-                                          <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
-                                            4. HSN Code
+                                        <div className="space-y-0.5 text-left">
+                                          <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+                                            HSN Code
                                           </Label>
                                           <Input
-                                            placeholder="8517 (Default)"
+                                            placeholder="8517"
                                             value={unit.hsnCode}
                                             onChange={e => {
                                               const updated = [...unitDetails];
                                               updated[index].hsnCode = e.target.value;
                                               setUnitDetails(updated);
                                             }}
-                                            className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                                            className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
                                           />
                                         </div>
 
-                                        <div className="space-y-1 text-left">
-                                          <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
-                                            5. Supplier / Vendor Name
+                                        <div className="space-y-0.5 text-left">
+                                          <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+                                            Supplier Name
                                           </Label>
                                           <Input
-                                            placeholder="e.g. Ramesh Telecom / Wholesaler"
+                                            placeholder="e.g. Ramesh Telecom"
                                             value={unit.supplierName}
                                             onChange={e => {
                                               const updated = [...unitDetails];
                                               updated[index].supplierName = e.target.value;
                                               setUnitDetails(updated);
                                             }}
-                                            className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                                            className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
                                           />
                                         </div>
                                       </div>
@@ -8082,11 +8081,11 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                               </div>
                             )}
 
-                            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-2.5 border-t border-zinc-100 dark:border-zinc-800">
                               <Button
                                 type="button"
                                 onClick={() => setUnitDetails([...unitDetails, { imei: "", color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" }])}
-                                className="w-full sm:w-auto h-11 px-5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 font-extrabold text-xs rounded-xl border border-indigo-200 dark:border-indigo-900/40"
+                                className="w-full sm:w-auto h-10 px-4 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 font-extrabold text-xs rounded-xl border border-indigo-200 dark:border-indigo-900/40"
                               >
                                 + Add Another Unit
                               </Button>
@@ -8094,7 +8093,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                               <Button
                                 type="button"
                                 onClick={() => setIsUnitModalOpen(false)}
-                                className="w-full sm:w-auto h-11 px-8 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-indigo-600/20"
+                                className="w-full sm:w-auto h-10 px-7 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md"
                               >
                                 Save Units ({unitDetails.length}) & Close
                               </Button>
@@ -9945,36 +9944,36 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
       {/* EDIT STOCK / IMEI MODAL */}
       <Dialog open={showEditStockModal} onOpenChange={setShowEditStockModal}>
-        <DialogContent className="w-[95vw] sm:max-w-2xl md:max-w-3xl rounded-[2.5rem] p-5 sm:p-7 bg-white dark:bg-zinc-900 border border-indigo-100 dark:border-indigo-950 shadow-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader className="space-y-1 text-left border-b border-zinc-100 dark:border-zinc-800 pb-4">
-            <DialogTitle className="text-xl sm:text-2xl font-black tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
-              <Smartphone className="h-6 w-6 text-indigo-600" />
+        <DialogContent className="w-[95vw] sm:max-w-3xl md:max-w-4xl rounded-[2rem] p-4 sm:p-5 bg-white dark:bg-zinc-900 border border-indigo-100 dark:border-indigo-950 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="space-y-0.5 text-left border-b border-zinc-100 dark:border-zinc-800 pb-3">
+            <DialogTitle className="text-lg sm:text-xl font-black tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
+              <Smartphone className="h-5 w-5 text-indigo-600" />
               Edit Mobile Unit Stock ({editingItem?.name || "Product"})
             </DialogTitle>
-            <DialogDescription className="text-xs text-zinc-500 font-medium">
+            <DialogDescription className="text-[11px] text-zinc-500 font-medium">
               Update IMEI, Color, Purchase Rate, HSN Code, and Supplier Name for each unit.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 my-4">
+          <div className="space-y-3 my-3">
             {editingUnitDetails.length === 0 ? (
-              <div className="text-center py-8 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-dashed border-zinc-200">
+              <div className="text-center py-6 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-dashed border-zinc-200">
                 <p className="text-xs font-bold text-zinc-500">No unit rows present.</p>
                 <Button
                   type="button"
                   onClick={() => setEditingUnitDetails([{ imei: "", color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" }])}
-                  className="mt-2 h-10 px-5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md"
+                  className="mt-2 h-9 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md"
                 >
                   + Add First Unit
                 </Button>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {editingUnitDetails.map((unit, index) => (
-                  <div key={index} className="p-4 sm:p-5 bg-zinc-50/80 dark:bg-zinc-800/60 rounded-3xl border border-zinc-200/60 dark:border-zinc-800 space-y-3.5 shadow-sm">
-                    <div className="flex items-center justify-between border-b border-zinc-200/50 dark:border-zinc-700/50 pb-2.5">
-                      <span className="text-xs sm:text-sm font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
-                        <span className="w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center text-[10px] font-black">
+                  <div key={index} className="p-3.5 sm:p-4 bg-zinc-50/90 dark:bg-zinc-800/60 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 space-y-2.5 shadow-sm">
+                    <div className="flex items-center justify-between border-b border-zinc-200/50 dark:border-zinc-700/50 pb-2">
+                      <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center text-[9px] font-black">
                           #{index + 1}
                         </span>
                         Unit Specifications
@@ -9990,108 +9989,107 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                             next.splice(index + 1, 0, copied);
                             setEditingUnitDetails(next);
                           }}
-                          className="h-8 text-[11px] font-extrabold text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 px-3 rounded-xl border border-indigo-200 dark:border-indigo-900/40"
+                          className="h-7 text-[10px] font-extrabold text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 px-2.5 rounded-lg border border-indigo-200 dark:border-indigo-900/40"
                         >
-                          <Copy className="h-3.5 w-3.5 mr-1" /> Copy Unit
+                          <Copy className="h-3 w-3 mr-1" /> Copy Unit
                         </Button>
                         <Button
                           type="button"
                           size="sm"
                           variant="ghost"
                           onClick={() => setEditingUnitDetails(editingUnitDetails.filter((_, idx) => idx !== index))}
-                          className="h-8 text-[11px] font-extrabold text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 px-3 rounded-xl"
+                          className="h-7 text-[10px] font-extrabold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 px-2.5 rounded-lg"
                         >
-                          <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete Unit
+                          <Trash2 className="h-3 w-3 mr-1" /> Delete
                         </Button>
                       </div>
                     </div>
 
-                    {/* LINE BY LINE STACKED INPUTS */}
-                    <div className="space-y-3">
-                      {/* Line 1: IMEI Number */}
-                      <div className="space-y-1 text-left">
-                        <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
-                          1. IMEI / Serial Number *
-                        </Label>
-                        <ImeiInput
-                          placeholder="Enter or scan 15-digit IMEI number"
-                          value={unit.imei}
-                          onChange={val => {
-                            const updated = [...editingUnitDetails];
-                            updated[index].imei = val;
-                            setEditingUnitDetails(updated);
-                          }}
-                          className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
-                        />
-                      </div>
+                    {/* COMPACT 2-ROW GRID */}
+                    <div className="space-y-2">
+                      {/* Row 1: IMEI (2 cols) + Color (1 col) */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <div className="sm:col-span-2 space-y-0.5 text-left">
+                          <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+                            IMEI / Serial Number *
+                          </Label>
+                          <ImeiInput
+                            placeholder="15-digit IMEI number"
+                            value={unit.imei}
+                            onChange={val => {
+                              const updated = [...editingUnitDetails];
+                              updated[index].imei = val;
+                              setEditingUnitDetails(updated);
+                            }}
+                            className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                          />
+                        </div>
 
-                      {/* Line 2: Color & Purchase Rate */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="space-y-1 text-left">
-                          <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
-                            2. Color
+                        <div className="space-y-0.5 text-left">
+                          <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+                            Color
                           </Label>
                           <Input
-                            placeholder="e.g. Titanium Black, Pacific Blue"
+                            placeholder="e.g. Black / Blue"
                             value={unit.color}
                             onChange={e => {
                               const updated = [...editingUnitDetails];
                               updated[index].color = e.target.value;
                               setEditingUnitDetails(updated);
                             }}
-                            className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                            className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
                           />
                         </div>
+                      </div>
 
-                        <div className="space-y-1 text-left">
-                          <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
-                            3. Purchase Rate / Cost Price (₹)
+                      {/* Row 2: Purchase Rate + HSN Code + Supplier Name */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <div className="space-y-0.5 text-left">
+                          <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+                            Purchase Rate (₹)
                           </Label>
                           <Input
                             type="number"
-                            placeholder="e.g. 18500"
+                            placeholder="e.g. 15000"
                             value={unit.purchaseRate}
                             onChange={e => {
                               const updated = [...editingUnitDetails];
                               updated[index].purchaseRate = e.target.value;
                               setEditingUnitDetails(updated);
                             }}
-                            className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                            className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
                           />
                         </div>
-                      </div>
 
-                      {/* Line 3: HSN Code & Supplier Name */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="space-y-1 text-left">
-                          <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
-                            4. HSN Code
+                        <div className="space-y-0.5 text-left">
+                          <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+                            HSN Code
                           </Label>
                           <Input
-                            placeholder="8517 (Default)"
+                            placeholder="8517"
                             value={unit.hsnCode}
                             onChange={e => {
                               const updated = [...editingUnitDetails];
                               updated[index].hsnCode = e.target.value;
                               setEditingUnitDetails(updated);
                             }}
-                            className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                            className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
                           />
                         </div>
 
-                        <div className="space-y-1 text-left">
-                          <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
-                            5. Supplier / Vendor Name
+                        <div className="space-y-0.5 text-left">
+                          <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+                            Supplier Name
                           </Label>
                           <Input
-                            placeholder="e.g. Ramesh Telecom / Wholesaler"
+                            placeholder="e.g. Ramesh Telecom"
                             value={unit.supplierName}
                             onChange={e => {
                               const updated = [...editingUnitDetails];
                               updated[index].supplierName = e.target.value;
                               setEditingUnitDetails(updated);
                             }}
-                            className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                            className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
                           />
                         </div>
                       </div>
@@ -10101,11 +10099,11 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               </div>
             )}
 
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-2.5 border-t border-zinc-100 dark:border-zinc-800">
               <Button
                 type="button"
                 onClick={() => setEditingUnitDetails([...editingUnitDetails, { imei: "", color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" }])}
-                className="w-full sm:w-auto h-11 px-5 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 font-extrabold text-xs rounded-xl border border-indigo-200 dark:border-indigo-900/40"
+                className="w-full sm:w-auto h-10 px-4 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 font-extrabold text-xs rounded-xl border border-indigo-200 dark:border-indigo-900/40"
               >
                 + Add Another Unit
               </Button>
@@ -10117,14 +10115,14 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     setEditingItem(null);
                   }} 
                   variant="outline" 
-                  className="flex-1 sm:flex-none h-11 px-5 rounded-xl font-black text-xs"
+                  className="flex-1 sm:flex-none h-10 px-5 rounded-xl font-black text-xs"
                 >
                   CANCEL
                 </Button>
                 <Button 
                   onClick={handleSaveEditStock} 
                   disabled={isLoading}
-                  className="flex-1 sm:flex-none h-11 px-8 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg shadow-indigo-600/20"
+                  className="flex-1 sm:flex-none h-10 px-7 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md"
                 >
                   {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
                   SAVE STOCK ({editingUnitDetails.length})
