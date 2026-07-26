@@ -4612,16 +4612,7 @@ Stay safe & eat healthy! 🍕
         const upiPart = Math.max(0, cartTotal - cashPart);
         paymentTypeDb = `Split (Cash: ${cashPart} | UPI: ${upiPart})`;
       } else if (newType === "Credit Card") {
-        const cardDetails = [
-          cardBankName ? `Bank: ${cardBankName}` : "",
-          cardType ? `Card: ${cardType}` : "",
-          cardPosTerminal ? `POS: ${cardPosTerminal}` : "",
-          cardEmiTenure ? `Plan: ${cardEmiTenure}` : "",
-          cardAuthCode ? `Auth: ${cardAuthCode}` : "",
-          cardHolderName ? `Name: ${cardHolderName}` : ""
-        ].filter(Boolean).join(" | ");
-
-        paymentTypeDb = `Credit Card (${cardDetails})`;
+        paymentTypeDb = cardBankName ? `Credit Card (${cardBankName})` : "Credit Card";
       }
 
       const { data: newSale, error } = await supabase

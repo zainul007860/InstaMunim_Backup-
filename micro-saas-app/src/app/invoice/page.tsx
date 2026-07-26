@@ -1070,7 +1070,19 @@ function InvoiceContent() {
               <div className="flex items-center justify-end gap-2">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                 <p className="text-sm font-black text-zinc-900 uppercase tracking-tight">
-                  {fin ? `EMI (${fco})` : type} SUCCESS
+                  {(() => {
+                    if (fin) return `EMI (${fco}) SUCCESS`;
+                    const rawType = type || "CASH";
+                    if (rawType.toUpperCase().includes("CREDIT CARD") || rawType.toUpperCase().includes("CARD")) {
+                      const bankMatch = rawType.match(/Bank:\s*([^|)]+)/i) || rawType.match(/Credit Card\s*\(([^)]+)\)/i);
+                      let bankName = bankMatch ? bankMatch[1].trim() : "";
+                      if (bankName.toUpperCase().startsWith("BANK:")) {
+                        bankName = bankName.substring(5).trim();
+                      }
+                      return bankName ? `CREDIT CARD (${bankName.toUpperCase()}) SUCCESS` : `CREDIT CARD SUCCESS`;
+                    }
+                    return `${rawType.toUpperCase()} SUCCESS`;
+                  })()}
                 </p>
               </div>
             </div>
