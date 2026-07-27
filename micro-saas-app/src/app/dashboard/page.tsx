@@ -4938,11 +4938,12 @@ Stay safe & eat healthy! 🍕
 
     const financeMatch = (lastOrderDetails.item || "").match(/\[FINANCE:([^:]+):(\d+(?:\.\d+)?):(\d+(?:\.\d+)?):([^:]+):(Pending|Settled)\]/);
     const financePart = financeMatch ? `&fin=true&fco=${encodeURIComponent(financeMatch[1])}&flo=${financeMatch[2]}&fdp=${financeMatch[3]}&fid=${encodeURIComponent(financeMatch[4])}` : "";
+    const sigPart = storeSignature ? `&sig=${encodeURIComponent(storeSignature)}` : "";
 
     const baseUrl = (typeof window !== 'undefined' && window.location.port === '3000')
       ? "http://localhost:3000"
       : "https://www.instamunim.com";
-    let invoiceUrl = `${baseUrl}/invoice?gst=${isGstEnabled}&gstRate=${gstRate}&n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${lastOrderDetails.price}&d=${encodeURIComponent(lastOrderDetails.date.toISOString())}&t=${lastOrderDetails.type}&id=${lastOrderDetails.id}&m=${lastOrderDetails.mobile}&cn=${encodeURIComponent(lastOrderDetails.name)}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}${extraPart}${discountPart}${financePart}`;
+    let invoiceUrl = `${baseUrl}/invoice?gst=${isGstEnabled}&gstRate=${gstRate}&n=${encodeURIComponent(restaurantName)}&i=${encodeURIComponent(itemsParam)}&p=${lastOrderDetails.price}&d=${encodeURIComponent(lastOrderDetails.date.toISOString())}&t=${encodeURIComponent(lastOrderDetails.type || "")}&id=${lastOrderDetails.id}&m=${lastOrderDetails.mobile}&cn=${encodeURIComponent(lastOrderDetails.name)}&a=${encodeURIComponent(storeAddress)}&ph=${encodeURIComponent(storePhone)}&w=${encodeURIComponent(storeWebsite)}&g=${encodeURIComponent(storeGstin)}&o=${ownerMobile}${extraPart}${discountPart}${financePart}${sigPart}`;
     if (!isSubscribed) {
       invoiceUrl += "&free=true";
     }
