@@ -684,6 +684,7 @@ export default function Dashboard() {
   const [mounted, setMounted] = useState(false);
   const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-01"));
   const [endDate, setEndDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [isPrivacyMode, setIsPrivacyMode] = useState(false);
   const [salesSearchQuery, setSalesSearchQuery] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
@@ -6688,6 +6689,14 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       className="bg-transparent text-[8px] font-black focus:outline-none text-zinc-700 dark:text-zinc-300 w-[80px] border-0 p-0 cursor-pointer"
                     />
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsPrivacyMode(!isPrivacyMode)}
+                    className="h-7 w-7 rounded-full bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 shadow-sm flex items-center justify-center text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 active:scale-90 transition-all"
+                    title={isPrivacyMode ? "Disable Privacy Mode" : "Enable Privacy Mode"}
+                  >
+                    {isPrivacyMode ? <EyeOff className="h-3.5 w-3.5 text-zinc-500" /> : <Eye className="h-3.5 w-3.5 text-zinc-500" />}
+                  </button>
                 </div>
               </header>
 
@@ -6758,7 +6767,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 <Card className="bg-gradient-to-br from-orange-500 to-red-600 text-white p-4 rounded-[1.5rem] border-0 shadow-lg shadow-orange-600/10 h-32 flex flex-col justify-between">
                   <p className="text-[13px] font-black uppercase tracking-wider">{t("Net Profit")}</p>
                   <div>
-                    <h3 className="text-[28px] font-black tracking-tight leading-none">₹{Math.round(netProfit)}</h3>
+                    <h3 className={`text-[28px] font-black tracking-tight leading-none transition-all duration-300 ${isPrivacyMode ? 'blur-[8px] select-none pointer-events-none' : ''}`}>₹{Math.round(netProfit)}</h3>
                     <p className="text-[11px] font-black uppercase mt-1 tracking-wider leading-none">{t("After Expenses")}</p>
                   </div>
                 </Card>
@@ -6766,7 +6775,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 <Card className="bg-white dark:bg-zinc-900 p-4 rounded-[1.5rem] border-0 shadow-sm border-b-[3px] border-blue-500 h-32 flex flex-col justify-between">
                   <p className="text-[13px] font-black text-zinc-700 dark:text-zinc-200 uppercase tracking-wider">{t("Gross Sales")}</p>
                   <div>
-                    <h3 className="text-[28px] font-black tracking-tight leading-none">₹{totalSales}</h3>
+                    <h3 className={`text-[28px] font-black tracking-tight leading-none transition-all duration-300 ${isPrivacyMode ? 'blur-[8px] select-none pointer-events-none' : ''}`}>₹{totalSales}</h3>
                     <p className="text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase mt-1 tracking-wider leading-none">{t("Gross Income")}</p>
                   </div>
                 </Card>
@@ -6777,7 +6786,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 >
                   <p className="text-[13px] font-black text-red-700 dark:text-red-400 uppercase tracking-wider">{t("Pending Udhaar")}</p>
                   <div>
-                    <h3 className="text-[28px] font-black text-red-600 tracking-tight leading-none">₹{totalUdhaar}</h3>
+                    <h3 className={`text-[28px] font-black text-red-600 tracking-tight leading-none transition-all duration-300 ${isPrivacyMode ? 'blur-[8px] select-none pointer-events-none' : ''}`}>₹{totalUdhaar}</h3>
                     <p className="text-[11px] font-black text-red-500 dark:text-red-400 uppercase mt-1 flex items-center gap-1 leading-none"><Users className="h-2.5 w-2.5" /> {t("From Khata")}</p>
                   </div>
                 </Card>
@@ -6788,7 +6797,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 >
                   <p className="text-[13px] font-black text-zinc-700 dark:text-zinc-200 uppercase tracking-wider">{t("Total Expense")}</p>
                   <div>
-                    <h3 className="text-[28px] font-black tracking-tight leading-none">₹{Math.round(totalExpenses)}</h3>
+                    <h3 className={`text-[28px] font-black tracking-tight leading-none transition-all duration-300 ${isPrivacyMode ? 'blur-[8px] select-none pointer-events-none' : ''}`}>₹{Math.round(totalExpenses)}</h3>
                     <p className="text-[11px] font-black text-zinc-500 dark:text-zinc-400 uppercase mt-1 tracking-wider leading-none">{t("Operational Costs")}</p>
                   </div>
                 </Card>
@@ -6822,7 +6831,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           )}
                         </div>
                       </div>
-                      <p className="text-base font-bold tracking-tight">
+                      <p className={`text-base font-bold tracking-tight transition-all duration-300 ${isPrivacyMode ? 'blur-[8px] select-none pointer-events-none' : ''}`}>
                         ₹{s.price - (s.commission || 0)}
                       </p>
                     </div>
