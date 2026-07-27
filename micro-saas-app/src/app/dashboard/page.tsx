@@ -4119,6 +4119,10 @@ Stay safe & eat healthy! 🍕
             if (settingsPacket.upiId !== undefined) setStoreUpiId(settingsPacket.upiId);
             if (settingsPacket.upiName !== undefined) setStoreUpiName(settingsPacket.upiName);
             if (settingsPacket.logo !== undefined) setStoreLogo(settingsPacket.logo);
+            if (settingsPacket.signature !== undefined) {
+              setStoreSignature(settingsPacket.signature);
+              localStorage.setItem("saas_store_signature", settingsPacket.signature);
+            }
             if (settingsPacket.address !== undefined) setStoreAddress(settingsPacket.address);
             if (settingsPacket.phone !== undefined) setStorePhone(settingsPacket.phone);
             if (settingsPacket.website !== undefined) setStoreWebsite(settingsPacket.website);
