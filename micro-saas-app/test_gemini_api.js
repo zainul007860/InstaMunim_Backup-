@@ -6,7 +6,7 @@ async function test() {
   const offerTitle = 'Sunday offer';
   const discountDetails = '10% Discount on all Electronic Devices';
   const productName = 'All Products';
-  
+
   try {
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`,
@@ -40,7 +40,7 @@ Requirements for the generated prompt:
         })
       }
     );
-    
+
     const geminiData = await response.json();
     console.log("Raw Gemini Response Candidates:", JSON.stringify(geminiData, null, 2));
     const rawText = geminiData.candidates?.[0]?.content?.parts?.[0]?.text;
