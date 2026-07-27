@@ -6611,28 +6611,30 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
           {activeTab === "Dashboard" && (
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24 px-1">
               {/* COMPACT HEADER */}
-              <header className="flex justify-between items-center py-2">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white dark:border-zinc-800 shadow-md bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
-                    {storeLogo ? (
-                      <img src={storeLogo} alt="Store Logo" className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-black text-sm">
-                        {restaurantName?.charAt(0) || "M"}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <span className={`font-black text-sm tracking-tight leading-none uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
-                        {restaurantName || "My Store"}
-                      </span>
-                      <div className="bg-emerald-500/10 text-emerald-500 text-[7px] font-bold px-1.5 h-3.5 rounded-full flex items-center gap-1 uppercase tracking-tighter"><div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" /> Live</div>
+              <header className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between py-2 pb-3">
+                <div className="flex items-center justify-between w-full sm:w-auto">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white dark:border-zinc-800 shadow-md bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                      {storeLogo ? (
+                        <img src={storeLogo} alt="Store Logo" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-black text-sm">
+                          {restaurantName?.charAt(0) || "M"}
+                        </div>
+                      )}
                     </div>
-                    <div className="text-[7px] font-bold text-orange-500 uppercase tracking-widest leading-none mt-1">Beyond Billing</div>
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <span className={`font-black text-sm tracking-tight leading-none uppercase ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                          {restaurantName || "My Store"}
+                        </span>
+                        <div className="bg-emerald-500/10 text-emerald-500 text-[7px] font-bold px-1.5 h-3.5 rounded-full flex items-center gap-1 uppercase tracking-tighter"><div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" /> Live</div>
+                      </div>
+                      <div className="text-[7px] font-bold text-orange-500 uppercase tracking-widest leading-none mt-1">Beyond Billing</div>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap justify-between sm:justify-end w-full sm:w-auto">
                   <Select value={lang} onValueChange={(val) => {
                     setLang(val || "en");
                     const testPhrases: Record<string, string> = {
@@ -7850,21 +7852,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                       >
                                         Print Receipt
                                       </Button>
-                                      <Button 
-                                        size="sm"
-                                        onClick={async () => {
-                                          if (confirm("Are you sure you want to delete this buyback record?")) {
-                                            const { error } = await supabase.from('expenses').delete().eq('id', item.id);
-                                            if (!error) {
-                                              setExpenses(prev => prev.filter(e => e.id !== item.id));
-                                              alert("Record deleted successfully.");
-                                            }
-                                          }
-                                        }}
-                                        className="bg-red-50 hover:bg-red-100 text-red-650 border border-red-100 dark:border-zinc-800 rounded-lg text-[9px] font-black uppercase tracking-wider px-2.5 h-8 shadow-sm"
-                                      >
-                                        Delete
-                                      </Button>
+
                                     </div>
                                   </div>
                                 </div>
