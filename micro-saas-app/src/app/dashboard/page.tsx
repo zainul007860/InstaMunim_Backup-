@@ -682,7 +682,8 @@ export default function Dashboard() {
   const [admobInterstitialId, setAdmobInterstitialId] = useState("ca-app-pub-6433517681109667/4211760677");
 
   const [mounted, setMounted] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState(format(new Date(), "yyyy-MM"));
+  const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-01"));
+  const [endDate, setEndDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [salesSearchQuery, setSalesSearchQuery] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [authMode, setAuthMode] = useState<"login" | "signup">("login");
@@ -1681,7 +1682,7 @@ export default function Dashboard() {
 
   const handleExportSalesToExcel = async () => {
     const baseUrl = "https://www.instamunim.com";
-    const url = `${baseUrl}/invoice?exportExcel=true&o=${ownerMobile}&m=${selectedMonth}&n=${encodeURIComponent(restaurantName)}`;
+    const url = `${baseUrl}/invoice?exportExcel=true&o=${ownerMobile}&startDate=${startDate}&endDate=${endDate}&m=${startDate.substring(0, 7)}&n=${encodeURIComponent(restaurantName)}`;
     
     const isCapacitor = typeof window !== 'undefined' && !!(window as any).Capacitor?.isNative;
     if (isCapacitor) {
@@ -1731,9 +1732,9 @@ export default function Dashboard() {
 
     const formattedMonthName = (() => {
       try {
-        return format(new Date(selectedMonth + "-02"), "MMMM yyyy");
+        return `${format(new Date(startDate), "dd MMM yyyy")} - ${format(new Date(endDate), "dd MMM yyyy")}`;
       } catch (e: any) {
-        return selectedMonth;
+        return `${startDate} to ${endDate}`;
       }
     })();
 
@@ -1823,7 +1824,7 @@ export default function Dashboard() {
 
       const opt = {
         margin: 10,
-        filename: `Sales_Report_${restaurantName.replace(/\s+/g, '_')}_${selectedMonth}.pdf`,
+        filename: `Sales_Report_${restaurantName.replace(/\s+/g, '_')}_${startDate}_to_${endDate}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -5274,7 +5275,16 @@ Stay safe & eat healthy! 🍕
     }
   };
 
-  const filteredSales = useMemo(() => sales.filter(s => format(new Date(s.date), "yyyy-MM") === selectedMonth), [sales, selectedMonth]);
+  const filteredSales = useMemo(() => {
+    return sales.filter(s => {
+      try {
+        const saleDateStr = format(new Date(s.date), "yyyy-MM-dd");
+        return saleDateStr >= startDate && saleDateStr <= endDate;
+      } catch (err) {
+        return false;
+      }
+    });
+  }, [sales, startDate, endDate]);
   const searchedSales = useMemo(() => {
     if (!salesSearchQuery.trim()) return filteredSales;
     const query = salesSearchQuery.toLowerCase().trim();
@@ -5287,7 +5297,16 @@ Stay safe & eat healthy! 🍕
       return name.includes(query) || mobile.includes(query) || items.includes(query) || type.includes(query) || price.includes(query);
     });
   }, [filteredSales, salesSearchQuery]);
-  const filteredExpenses = useMemo(() => expenses.filter(e => format(new Date(e.date), "yyyy-MM") === selectedMonth), [expenses, selectedMonth]);
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter(e => {
+      try {
+        const expDateStr = format(new Date(e.date), "yyyy-MM-dd");
+        return expDateStr >= startDate && expDateStr <= endDate;
+      } catch (err) {
+        return false;
+      }
+    });
+  }, [expenses, startDate, endDate]);
   
   const totalSales = useMemo(() => filteredSales.reduce((sum, s) => sum + s.price, 0), [filteredSales]);
   const totalExpenses = useMemo(() => {
@@ -6650,18 +6669,22 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       <SelectItem value="ml">മലയാളം (Malayalam)</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Select value={selectedMonth} onValueChange={(val) => setSelectedMonth(val || "")}>
-                    <SelectTrigger className="h-7 rounded-full bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 shadow-sm font-bold text-[8px] px-3 gap-1.5">
-                      <SelectValue placeholder="Month" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-2xl border-0 shadow-2xl font-bold">
-                      {["01","02","03","04","05","06","07","08","09","10","11","12"].map(m => (
-                        <SelectItem key={m} value={`2026-${m}`} className="rounded-xl">
-                          {format(new Date(2026, parseInt(m)-1), "MMMM")}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex items-center gap-1 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-full px-2 py-0.5 shadow-sm text-zinc-650 dark:text-zinc-350">
+                    <Filter className="h-3 w-3 text-zinc-400 mr-0.5" />
+                    <input 
+                      type="date" 
+                      value={startDate} 
+                      onChange={(e) => setStartDate(e.target.value)} 
+                      className="bg-transparent text-[8px] font-black focus:outline-none text-zinc-700 dark:text-zinc-300 w-[80px] border-0 p-0 cursor-pointer"
+                    />
+                    <span className="text-[8px] text-zinc-400 font-bold px-0.5">to</span>
+                    <input 
+                      type="date" 
+                      value={endDate} 
+                      onChange={(e) => setEndDate(e.target.value)} 
+                      className="bg-transparent text-[8px] font-black focus:outline-none text-zinc-700 dark:text-zinc-300 w-[80px] border-0 p-0 cursor-pointer"
+                    />
+                  </div>
                 </div>
               </header>
 
@@ -9727,13 +9750,13 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
           <DialogHeader>
             <DialogTitle className="text-lg font-black uppercase tracking-wider text-purple-650">Expense Breakdown</DialogTitle>
             <DialogDescription className="text-xs font-bold text-zinc-450 uppercase tracking-widest">
-              Detailed list of operational costs for {selectedMonth}
+              Detailed list of operational costs for {startDate} to {endDate}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1 mt-4 divide-y dark:divide-zinc-850">
             {filteredExpenses.length === 0 ? (
-              <p className="text-center py-8 text-zinc-400 font-bold italic text-xs">No expenses recorded for this month.</p>
+              <p className="text-center py-8 text-zinc-400 font-bold italic text-xs">No expenses recorded for this range.</p>
             ) : (
               filteredExpenses.map((exp) => (
                 <div key={exp.id} className="pt-3 first:pt-0 flex justify-between items-center gap-4">
