@@ -4453,6 +4453,7 @@ Stay safe & eat healthy! 🍕
   const handleLogout = async () => {
     setIsLoggedIn(false);
     localStorage.removeItem("saas_is_logged_in");
+    clearStoreCache();
     setAuthMode("login");
     // We keep saas_owner_mobile in localStorage to remember who logged out,
     // so we can detect if a different user logs in later.
