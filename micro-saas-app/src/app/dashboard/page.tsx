@@ -2257,6 +2257,32 @@ Requirements for the generated image prompt:
   const [storeSignature, setStoreSignature] = useState<string | null>(null);
   const [currentStoreId, setCurrentStoreId] = useState<string>("");
 
+  const uploadToSupabaseStorage = async (file: File, folderName: 'logo' | 'signature') => {
+    try {
+      const fileExt = file.name.split('.').pop() || 'png';
+      const filePath = `${ownerMobile || 'unknown'}/${folderName}_${Date.now()}.${fileExt}`;
+      
+      const { data, error } = await supabase.storage
+        .from('Logos and Images')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+        
+      if (error) throw error;
+      
+      const { data: { publicUrl } } = supabase.storage
+        .from('Logos and Images')
+        .getPublicUrl(filePath);
+        
+      return publicUrl;
+    } catch (err: any) {
+      console.error("Storage upload failed:", err.message);
+      alert("Image upload fail ho gayi. Dobara try karein: " + err.message);
+      return null;
+    }
+  };
+
   useEffect(() => {
     if (!currentStoreId) return;
 
