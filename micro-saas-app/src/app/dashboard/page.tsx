@@ -8984,12 +8984,13 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 <div className="space-y-2">
                                   <label className="cursor-pointer bg-orange-50 dark:bg-orange-950/20 text-orange-600 px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest inline-block hover:bg-orange-100 transition-all active:scale-95 border border-orange-100 dark:border-orange-900/30 shadow-sm">
                                     Choose File
-                                    <input type="file" className="hidden" onChange={(e) => {
+                                    <input type="file" className="hidden" onChange={async (e) => {
                                       const file = e.target.files?.[0];
                                       if (file) {
-                                        const reader = new FileReader();
-                                        reader.onloadend = () => setStoreLogo(reader.result as string);
-                                        reader.readAsDataURL(file);
+                                        setIsApiLoading(true);
+                                        const publicUrl = await uploadToSupabaseStorage(file, 'logo');
+                                        if (publicUrl) setStoreLogo(publicUrl);
+                                        setIsApiLoading(false);
                                       }
                                     }} />
                                   </label>
@@ -9024,16 +9025,16 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                   <div className="flex gap-2 items-center">
                                     <label className="cursor-pointer bg-indigo-600 text-white px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest inline-block hover:bg-indigo-500 transition-all active:scale-95 shadow-sm">
                                       Upload Signature
-                                      <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                                      <input type="file" className="hidden" accept="image/*" onChange={async (e) => {
                                         const file = e.target.files?.[0];
                                         if (file) {
-                                          const reader = new FileReader();
-                                          reader.onloadend = () => {
-                                            const sig = reader.result as string;
-                                            setStoreSignature(sig);
-                                            localStorage.setItem("saas_store_signature", sig);
-                                          };
-                                          reader.readAsDataURL(file);
+                                          setIsApiLoading(true);
+                                          const publicUrl = await uploadToSupabaseStorage(file, 'signature');
+                                          if (publicUrl) {
+                                            setStoreSignature(publicUrl);
+                                            localStorage.setItem("saas_store_signature", publicUrl);
+                                          }
+                                          setIsApiLoading(false);
                                         }
                                       }} />
                                     </label>
