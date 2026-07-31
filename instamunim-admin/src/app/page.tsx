@@ -25,6 +25,7 @@ export default function AdminDashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [updatingStoreId, setUpdatingStoreId] = useState<string | null>(null);
   const [customPrices, setCustomPrices] = useState<{[key: string]: string}>({});
+  const [selectedPlanPerStore, setSelectedPlanPerStore] = useState<{[key: string]: string}>({});
   const [revealedPasswords, setRevealedPasswords] = useState<{[key: string]: boolean}>({});
   
   // Reset Account states
@@ -309,6 +310,61 @@ export default function AdminDashboard() {
       fetchAdminData();
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const getDefaultPlanId = (store: any) => {
+    const rent = Number(store.monthly_rent);
+    if (rent === 199) return 'starter_monthly';
+    if (rent === 2000) return 'starter_yearly';
+    if (rent === 399) return 'pro_monthly';
+    if (rent === 3500) return 'pro_yearly';
+    if (rent === 999) return 'vip_monthly';
+    if (rent === 7500) return 'vip_yearly';
+    if (rent === 1999) return 'pro_yearly';
+    return 'starter_monthly';
+  };
+
+  const applyPlanToStore = async (store: any) => {
+    const planKey = selectedPlanPerStore[store.id] || getDefaultPlanId(store);
+    
+    let days = 30;
+    let price = 199;
+    let planTitle = "Starter Monthly (₹199)";
+
+    if (planKey === 'starter_monthly') { days = 30; price = 199; planTitle = "Starter Monthly (₹199 / mo)"; }
+    else if (planKey === 'starter_yearly') { days = 365; price = 2000; planTitle = "Starter Yearly (₹2,000 / yr)"; }
+    else if (planKey === 'pro_monthly') { days = 30; price = 399; planTitle = "Pro Business Monthly (₹399 / mo)"; }
+    else if (planKey === 'pro_yearly') { days = 365; price = 3500; planTitle = "Pro Business Yearly (₹3,500 / yr)"; }
+    else if (planKey === 'vip_monthly') { days = 30; price = 999; planTitle = "Enterprise VIP Monthly (₹999 / mo)"; }
+    else if (planKey === 'vip_yearly') { days = 365; price = 7500; planTitle = "Enterprise VIP Yearly (₹7,500 / yr)"; }
+    else if (planKey === 'freemium') { days = 0; price = 0; planTitle = "Freemium / Deactive (₹0)"; }
+
+    if (!confirm(`Confirm Action: Activate "${planTitle}" for store "${store.store_name}"?`)) return;
+
+    setUpdatingStoreId(store.id);
+    try {
+      let newExpiry;
+      if (days === 0) {
+        newExpiry = subDays(new Date(), 1);
+      } else {
+        newExpiry = addDays(new Date(), days);
+      }
+
+      const { error } = await supabase.from('stores').update({ 
+        subscription_expiry: newExpiry.toISOString(),
+        monthly_rent: price
+      }).eq('id', store.id);
+
+      if (error) throw error;
+
+      alert(`SUCCESS: ${store.store_name} updated to ${planTitle}. Expiry: ${days === 0 ? 'Freemium' : format(newExpiry, "MMM dd, yyyy")}`);
+      await fetchAdminData();
+    } catch (err: any) {
+      console.error(err);
+      alert("Sync Error: " + (err.message || JSON.stringify(err) || "Unknown error"));
+    } finally {
+      setUpdatingStoreId(null);
     }
   };
 
@@ -669,12 +725,20 @@ export default function AdminDashboard() {
                       <td>{s.store_name}</td>
                       <td>
                         {isPaidActive ? (
-                          s.monthly_rent === 1999 ? (
-                            <span style={{ color: '#10b981', fontWeight: 800 }}>Yearly (₹1999)</span>
+                          s.monthly_rent === 199 ? (
+                            <span style={{ color: '#3b82f6', fontWeight: 800 }}>Starter Monthly (₹199)</span>
+                          ) : s.monthly_rent === 2000 ? (
+                            <span style={{ color: '#2563eb', fontWeight: 800 }}>Starter Yearly (₹2,000)</span>
+                          ) : s.monthly_rent === 399 ? (
+                            <span style={{ color: '#f97316', fontWeight: 800 }}>Pro Business (₹399)</span>
+                          ) : s.monthly_rent === 3500 ? (
+                            <span style={{ color: '#ea580c', fontWeight: 800 }}>Pro Yearly (₹3,500)</span>
+                          ) : s.monthly_rent === 999 ? (
+                            <span style={{ color: '#8b5cf6', fontWeight: 800 }}>Enterprise VIP (₹999)</span>
+                          ) : s.monthly_rent === 7500 ? (
+                            <span style={{ color: '#7c3aed', fontWeight: 800 }}>Enterprise VIP (₹7,500)</span>
                           ) : (
-                            <span style={{ color: '#f97316', fontWeight: 800 }}>
-                              Monthly (<span style={{ textDecoration: 'line-through', opacity: 0.5 }}>₹299</span> ₹199)
-                            </span>
+                            <span style={{ color: '#10b981', fontWeight: 800 }}>Active (₹{s.monthly_rent})</span>
                           )
                         ) : (
                           <span style={{ color: '#a1a1aa', fontWeight: 800 }}>Freemium</span>
@@ -692,90 +756,95 @@ export default function AdminDashboard() {
                       </td>
                       <td>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <input 
-                            type="number" 
-                            placeholder="Custom ₹" 
-                            value={customPrices[s.id] || ""}
-                            onChange={(e) => setCustomPrices({ ...customPrices, [s.id]: e.target.value })}
+                          {/* Plan Selection Dropdown */}
+                          <select 
+                            value={selectedPlanPerStore[s.id] || getDefaultPlanId(s)}
+                            onChange={(e) => setSelectedPlanPerStore({ ...selectedPlanPerStore, [s.id]: e.target.value })}
                             style={{ 
-                              width: '75px', 
-                              height: '32px', 
+                              height: '34px', 
                               borderRadius: '8px', 
                               border: '1px solid var(--border)', 
                               padding: '0 8px', 
                               fontSize: '11px', 
-                              fontWeight: 600,
+                              fontWeight: 700,
                               outline: 'none',
                               color: 'var(--text)',
-                              background: '#ffffff'
+                              background: '#ffffff',
+                              cursor: 'pointer'
                             }}
-                          />
+                          >
+                            <option value="starter_monthly">Starter Monthly (₹199 / mo - 30 Days)</option>
+                            <option value="starter_yearly">Starter Yearly (₹2,000 / yr - 365 Days)</option>
+                            <option value="pro_monthly">Pro Business Monthly (₹399 / mo - 30 Days)</option>
+                            <option value="pro_yearly">Pro Business Yearly (₹3,500 / yr - 365 Days)</option>
+                            <option value="vip_monthly">Enterprise VIP Monthly (₹999 / mo - 30 Days)</option>
+                            <option value="vip_yearly">Enterprise VIP Yearly (₹7,500 / yr - 365 Days)</option>
+                            <option value="freemium">Deactivate / Freemium (₹0)</option>
+                          </select>
+
+                          {/* Execute / Apply Plan Button */}
+                          <button 
+                            disabled={updatingStoreId === s.id}
+                            onClick={() => applyPlanToStore(s)} 
+                            style={{ 
+                              padding: '8px 14px', 
+                              background: 'linear-gradient(135deg, #f97316, #ea580c)', 
+                              color: 'white', 
+                              borderRadius: '8px', 
+                              border: 'none', 
+                              fontWeight: 900, 
+                              cursor: 'pointer', 
+                              fontSize: '10px', 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '6px', 
+                              opacity: updatingStoreId === s.id ? 0.5 : 1,
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            {updatingStoreId === s.id ? <Loader2 className="animate-spin" size={12} /> : null}
+                            {updatingStoreId === s.id ? 'SAVING...' : 'ACTIVATE PLAN'}
+                          </button>
+
+                          {/* Quick +30 Days Button */}
                           <button 
                             disabled={updatingStoreId === s.id}
                             onClick={() => addSubscriptionDays(s, 30)} 
-                            style={{ padding: '8px 12px', background: '#f97316', color: 'white', borderRadius: '10px', border: 'none', fontWeight: 900, cursor: 'pointer', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '6px', opacity: updatingStoreId === s.id ? 0.5 : 1 }}
-                          >
-                            {updatingStoreId === s.id ? <Loader2 className="animate-spin" size={12} /> : null}
-                            {updatingStoreId === s.id ? 'WAIT...' : '+ 30 DAYS'}
-                          </button>
-                          <button 
-                            disabled={updatingStoreId === s.id}
-                            onClick={() => addSubscriptionDays(s, 365)} 
-                            style={{ padding: '8px 12px', background: '#10b981', color: 'white', borderRadius: '10px', border: 'none', fontWeight: 900, cursor: 'pointer', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '6px', opacity: updatingStoreId === s.id ? 0.5 : 1 }}
-                          >
-                            {updatingStoreId === s.id ? <Loader2 className="animate-spin" size={12} /> : null}
-                            {updatingStoreId === s.id ? 'WAIT...' : '+ 365 DAYS'}
-                          </button>
-                          <button 
-                            disabled={updatingStoreId === s.id}
-                            onClick={() => toggleSubscriptionActive(s, !!isPaidActive)} 
+                            title="Quick extend 30 days"
                             style={{ 
-                              padding: '8px 12px', 
-                              background: isPaidActive ? '#ef4444' : '#10b981', 
+                              padding: '8px 10px', 
+                              background: '#10b981', 
                               color: 'white', 
-                              borderRadius: '10px', 
+                              borderRadius: '8px', 
                               border: 'none', 
                               fontWeight: 900, 
                               cursor: 'pointer', 
                               fontSize: '10px', 
-                              opacity: updatingStoreId === s.id ? 0.5 : 1 
+                              opacity: updatingStoreId === s.id ? 0.5 : 1,
+                              whiteSpace: 'nowrap'
                             }}
                           >
-                            {updatingStoreId === s.id ? '...' : (isPaidActive ? 'DEACTIVATE' : 'ACTIVATE')}
+                            +30D
                           </button>
-                          <button 
-                            disabled={updatingStoreId === s.id}
-                            onClick={() => makeStoreFreemium(s)} 
-                            style={{ 
-                              padding: '8px 12px', 
-                              background: '#71717a', 
-                              color: 'white', 
-                              borderRadius: '10px', 
-                              border: 'none', 
-                              fontWeight: 900, 
-                              cursor: 'pointer', 
-                              fontSize: '10px', 
-                              opacity: updatingStoreId === s.id ? 0.5 : 1 
-                            }}
-                          >
-                            {updatingStoreId === s.id ? '...' : 'MAKE FREEMIUM'}
-                          </button>
+
+                          {/* Delete Store Button */}
                           <button 
                             disabled={updatingStoreId === s.id}
                             onClick={() => deleteStore(s)} 
                             style={{ 
-                              padding: '8px 12px', 
+                              padding: '8px 10px', 
                               background: '#ef4444', 
                               color: 'white', 
-                              borderRadius: '10px', 
+                              borderRadius: '8px', 
                               border: 'none', 
                               fontWeight: 900, 
                               cursor: 'pointer', 
                               fontSize: '10px', 
-                              opacity: updatingStoreId === s.id ? 0.5 : 1 
+                              opacity: updatingStoreId === s.id ? 0.5 : 1,
+                              whiteSpace: 'nowrap'
                             }}
                           >
-                            {updatingStoreId === s.id ? '...' : 'DELETE'}
+                            DELETE
                           </button>
                         </div>
                       </td>
