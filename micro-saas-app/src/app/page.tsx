@@ -28,6 +28,7 @@ export default function LandingPage() {
   const [storeNameInput, setStoreNameInput] = useState('');
   const [ownerMobileInput, setOwnerMobileInput] = useState('');
   const [copiedUpi, setCopiedUpi] = useState(false);
+  const [paymentSubmitted, setPaymentSubmitted] = useState(false);
 
   // FAQ state
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
@@ -1010,118 +1011,164 @@ export default function LandingPage() {
           <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] max-w-lg w-full p-6 sm:p-8 shadow-2xl relative my-8">
             {/* Close Button */}
             <button 
-              onClick={() => setPaymentModalOpen(false)}
+              onClick={() => {
+                setPaymentModalOpen(false);
+                setPaymentSubmitted(false);
+              }}
               className="absolute top-6 right-6 w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-500 flex items-center justify-center transition-colors border-0 cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
 
-            {/* Modal Header */}
-            <div className="text-center space-y-2 mb-6">
-              <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3.5 py-1 rounded-full border border-emerald-200 text-[10px] font-black uppercase tracking-wider">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> 100% SECURED UPI PAYMENT
-              </div>
-              <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight mt-1">Activate {selectedPlan.name}</h3>
-              <p className="text-xs font-bold text-zinc-400">Scan QR Code or copy UPI ID to complete payment</p>
-            </div>
-
-            {/* Selected Plan Price Banner */}
-            <div className="bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-2xl p-4 flex items-center justify-between shadow-md mb-6">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest opacity-90">{selectedPlan.cycle === 'yearly' ? 'Yearly Package' : 'Monthly Subscription'}</p>
-                <p className="text-lg font-black">{selectedPlan.name}</p>
-              </div>
-              <div className="text-right">
-                {selectedPlan.originalPrice && (
-                  <p className="text-xs font-bold line-through opacity-75">₹{selectedPlan.originalPrice.toLocaleString('en-IN')}</p>
-                )}
-                <p className="text-3xl font-black">₹{selectedPlan.price.toLocaleString('en-IN')}</p>
-              </div>
-            </div>
-
-            {/* QR Code Scanner Section */}
-            <div className="bg-zinc-50 dark:bg-zinc-800/50 p-6 rounded-3xl border border-zinc-150 dark:border-zinc-700/50 text-center space-y-4 mb-6">
-              <div className="inline-block p-3 bg-white rounded-2xl shadow-md border border-zinc-100">
-                <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(`upi://pay?pa=7838229178@paytm&pn=InstaMunim%20POS&am=${selectedPlan.price}&cu=INR&tn=${encodeURIComponent(selectedPlan.name)}`)}&size=220x220`}
-                  alt="InstaMunim Payment QR Scanner" 
-                  className="w-48 h-48 rounded-xl object-contain mx-auto"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">ACCEPTED VIA ALL UPI APPS</p>
-                <p className="text-xs font-extrabold text-zinc-700 dark:text-zinc-300">GPay • PhonePe • Paytm • BHIM • AmazonPay</p>
-              </div>
-
-              {/* Copy UPI ID Button */}
-              <div className="flex items-center justify-center gap-2 pt-2">
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 px-4 py-2 rounded-xl text-xs font-black text-zinc-900 dark:text-white select-all">
-                  7838229178@paytm
+            {paymentSubmitted ? (
+              /* SUCCESS / SUBMITTED SCREEN */
+              <div className="text-center space-y-6 py-6 animate-in zoom-in-95 duration-200">
+                <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-950/40 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
+                  <CheckCircle2 className="w-10 h-10" />
                 </div>
+                
+                <div className="space-y-2">
+                  <span className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3.5 py-1 rounded-full border border-emerald-200 text-[10px] font-black uppercase tracking-wider">
+                    PAYMENT NOTIFICATION SENT
+                  </span>
+                  <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight mt-2">Verification In Progress</h3>
+                  <p className="text-xs font-bold text-zinc-500 leading-relaxed max-w-sm mx-auto">
+                    Thank you! We have opened WhatsApp to receive your receipt. Our team is verifying your payment and your <span className="text-zinc-900 dark:text-white font-extrabold">{selectedPlan.name}</span> will be activated within <span className="text-emerald-600 font-extrabold">15 minutes</span>.
+                  </p>
+                </div>
+
+                <div className="bg-zinc-50 dark:bg-zinc-800/60 p-4 rounded-2xl border border-zinc-150 dark:border-zinc-700/50 text-left space-y-1">
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">NEED HELP?</p>
+                  <p className="text-xs font-extrabold text-zinc-800 dark:text-zinc-200">
+                    If you face any issues, feel free to call us directly at <span className="text-orange-500">+91 7838229178</span>
+                  </p>
+                </div>
+
                 <button 
                   onClick={() => {
-                    navigator.clipboard.writeText("7838229178@paytm");
-                    setCopiedUpi(true);
-                    setTimeout(() => setCopiedUpi(false), 2500);
+                    setPaymentModalOpen(false);
+                    setPaymentSubmitted(false);
+                    setStoreNameInput('');
+                    setOwnerMobileInput('');
                   }}
-                  className="bg-zinc-900 dark:bg-zinc-100 hover:bg-black dark:hover:bg-white text-white dark:text-zinc-900 font-bold px-3 py-2 rounded-xl text-xs transition-colors border-0 cursor-pointer flex items-center gap-1"
+                  className="w-full bg-zinc-900 hover:bg-black text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest border-0 cursor-pointer shadow-md active:scale-95 transition-all"
                 >
-                  {copiedUpi ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : null}
-                  {copiedUpi ? 'COPIED!' : 'COPY UPI'}
+                  OK, GOT IT!
                 </button>
               </div>
-            </div>
+            ) : (
+              /* REGULAR QR PAYMENT FORM */
+              <>
+                {/* Modal Header */}
+                <div className="text-center space-y-2 mb-6">
+                  <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3.5 py-1 rounded-full border border-emerald-200 text-[10px] font-black uppercase tracking-wider">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> 100% SECURED UPI PAYMENT
+                  </div>
+                  <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight mt-1">Activate {selectedPlan.name}</h3>
+                  <p className="text-xs font-bold text-zinc-400">Scan QR Code or copy UPI ID to complete payment</p>
+                </div>
 
-            {/* Input details for Activation */}
-            <div className="space-y-3 mb-6 text-left">
-              <div>
-                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1 block mb-1">Your Store / Business Name</label>
-                <input 
-                  type="text" 
-                  value={storeNameInput} 
-                  onChange={e => setStoreNameInput(e.target.value)} 
-                  placeholder="e.g. Zaika Cafe & Biryani" 
-                  className="w-full h-11 px-4 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-orange-500"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1 block mb-1">Owner Mobile Number</label>
-                <input 
-                  type="tel" 
-                  value={ownerMobileInput} 
-                  onChange={e => setOwnerMobileInput(e.target.value)} 
-                  placeholder="e.g. 9876543210" 
-                  className="w-full h-11 px-4 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-orange-500"
-                />
-              </div>
-            </div>
+                {/* Selected Plan Price Banner */}
+                <div className="bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-2xl p-4 flex items-center justify-between shadow-md mb-6">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-90">{selectedPlan.cycle === 'yearly' ? 'Yearly Package' : 'Monthly Subscription'}</p>
+                    <p className="text-lg font-black">{selectedPlan.name}</p>
+                  </div>
+                  <div className="text-right">
+                    {selectedPlan.originalPrice && (
+                      <p className="text-xs font-bold line-through opacity-75">₹{selectedPlan.originalPrice.toLocaleString('en-IN')}</p>
+                    )}
+                    <p className="text-3xl font-black">₹{selectedPlan.price.toLocaleString('en-IN')}</p>
+                  </div>
+                </div>
 
-            {/* Security Clauses & Guarantees */}
-            <div className="bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 rounded-2xl p-4 text-left space-y-2 mb-6 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
-              <div className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span>Instant Account Activation within 15 Minutes of Payment</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span>No Auto-Debit Mandate • No Hidden Renewal Charges</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                <span>100% Money-Back Guarantee if setup is not completed</span>
-              </div>
-            </div>
+                {/* QR Code Scanner Section */}
+                <div className="bg-zinc-50 dark:bg-zinc-800/50 p-6 rounded-3xl border border-zinc-150 dark:border-zinc-700/50 text-center space-y-4 mb-6">
+                  <div className="inline-block p-3 bg-white rounded-2xl shadow-md border border-zinc-100">
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(`upi://pay?pa=7838229178@paytm&pn=InstaMunim%20POS&am=${selectedPlan.price}&cu=INR&tn=${encodeURIComponent(selectedPlan.name)}`)}&size=220x220`}
+                      alt="InstaMunim Payment QR Scanner" 
+                      className="w-48 h-48 rounded-xl object-contain mx-auto"
+                    />
+                  </div>
 
-            {/* WhatsApp Confirmation Button */}
-            <a 
-              href={`https://wa.me/917838229178?text=${encodeURIComponent(`Hi InstaMunim Team, I have made the payment of ₹${selectedPlan.price} for ${selectedPlan.name} (${selectedPlan.cycle}). 🚀\n\nStore Name: ${storeNameInput || '[Not Entered]'}\nOwner Mobile: ${ownerMobileInput || '[Not Entered]'}\n\nPlease verify my payment and activate my account.`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest text-center shadow-lg shadow-emerald-600/20 block border-0 active:scale-95 transition-all"
-            >
-              I HAVE PAID — SEND RECEIPT ON WHATSAPP
-            </a>
+                  <div className="space-y-1.5">
+                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">ACCEPTED VIA ALL UPI APPS</p>
+                    <p className="text-xs font-extrabold text-zinc-700 dark:text-zinc-300">GPay • PhonePe • Paytm • BHIM • AmazonPay</p>
+                  </div>
+
+                  {/* Copy UPI ID Button */}
+                  <div className="flex items-center justify-center gap-2 pt-2">
+                    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 px-4 py-2 rounded-xl text-xs font-black text-zinc-900 dark:text-white select-all">
+                      7838229178@paytm
+                    </div>
+                    <button 
+                      onClick={() => {
+                        navigator.clipboard.writeText("7838229178@paytm");
+                        setCopiedUpi(true);
+                        setTimeout(() => setCopiedUpi(false), 2500);
+                      }}
+                      className="bg-zinc-900 dark:bg-zinc-100 hover:bg-black dark:hover:bg-white text-white dark:text-zinc-900 font-bold px-3 py-2 rounded-xl text-xs transition-colors border-0 cursor-pointer flex items-center gap-1"
+                    >
+                      {copiedUpi ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : null}
+                      {copiedUpi ? 'COPIED!' : 'COPY UPI'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Input details for Activation */}
+                <div className="space-y-3 mb-6 text-left">
+                  <div>
+                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1 block mb-1">Your Store / Business Name</label>
+                    <input 
+                      type="text" 
+                      value={storeNameInput} 
+                      onChange={e => setStoreNameInput(e.target.value)} 
+                      placeholder="e.g. Zaika Cafe & Biryani" 
+                      className="w-full h-11 px-4 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-orange-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1 block mb-1">Owner Mobile Number</label>
+                    <input 
+                      type="tel" 
+                      value={ownerMobileInput} 
+                      onChange={e => setOwnerMobileInput(e.target.value)} 
+                      placeholder="e.g. 9876543210" 
+                      className="w-full h-11 px-4 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-orange-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Security Clauses & Guarantees */}
+                <div className="bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 rounded-2xl p-4 text-left space-y-2 mb-6 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>Instant Account Activation within 15 Minutes of Payment</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>No Auto-Debit Mandate • No Hidden Renewal Charges</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    <span>100% Money-Back Guarantee if setup is not completed</span>
+                  </div>
+                </div>
+
+                {/* WhatsApp Confirmation Button */}
+                <button 
+                  onClick={() => {
+                    const waUrl = `https://wa.me/917838229178?text=${encodeURIComponent(`Hi InstaMunim Team, I have made the payment of ₹${selectedPlan.price} for ${selectedPlan.name} (${selectedPlan.cycle}). 🚀\n\nStore Name: ${storeNameInput || '[Not Entered]'}\nOwner Mobile: ${ownerMobileInput || '[Not Entered]'}\n\nPlease verify my payment and activate my account.`)}`;
+                    window.open(waUrl, "_blank");
+                    setPaymentSubmitted(true);
+                  }}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest text-center shadow-lg shadow-emerald-600/20 block border-0 active:scale-95 transition-all cursor-pointer"
+                >
+                  I HAVE PAID — SEND RECEIPT ON WHATSAPP
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
