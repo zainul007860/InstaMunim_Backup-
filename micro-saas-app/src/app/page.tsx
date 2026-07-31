@@ -15,6 +15,20 @@ export default function LandingPage() {
   const [isApp, setIsApp] = useState<boolean | null>(null);
   const [isYearly, setIsYearly] = useState(false);
 
+  // Payment Modal State
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<{
+    name: string;
+    price: number;
+    originalPrice?: number;
+    savings?: number;
+    cycle: 'monthly' | 'yearly';
+    planKey: 'starter' | 'pro' | 'vip';
+  } | null>(null);
+  const [storeNameInput, setStoreNameInput] = useState('');
+  const [ownerMobileInput, setOwnerMobileInput] = useState('');
+  const [copiedUpi, setCopiedUpi] = useState(false);
+
   // FAQ state
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
 
@@ -798,7 +812,7 @@ export default function LandingPage() {
 
           {/* Monthly/Yearly Toggle Switch */}
           <div className="flex items-center justify-center gap-3 mb-16">
-            <span className={`text-xs font-black uppercase transition-colors ${!isYearly ? 'text-zinc-900' : 'text-zinc-400'}`}>Monthly</span>
+            <span className={`text-xs font-black uppercase transition-colors ${!isYearly ? 'text-zinc-900' : 'text-zinc-400'}`}>Monthly Plans</span>
             <button 
               onClick={() => setIsYearly(!isYearly)}
               className="w-14 h-8 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 rounded-full p-1 transition-colors flex items-center relative cursor-pointer border border-zinc-200/55 dark:border-zinc-700/55"
@@ -806,8 +820,8 @@ export default function LandingPage() {
               <div className={`w-6 h-6 bg-orange-500 rounded-full shadow-md transition-transform duration-300 transform ${isYearly ? 'translate-x-6' : 'translate-x-0'}`} />
             </button>
             <div className="flex items-center gap-1.5">
-              <span className={`text-xs font-black uppercase transition-colors ${isYearly ? 'text-zinc-900' : 'text-zinc-400'}`}>Yearly</span>
-              <span className="bg-orange-100 text-orange-600 border border-orange-200 text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">Save 20%</span>
+              <span className={`text-xs font-black uppercase transition-colors ${isYearly ? 'text-zinc-900' : 'text-zinc-400'}`}>Yearly Super Offer</span>
+              <span className="bg-orange-500 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse shadow-sm">Save Up To ₹4,488</span>
             </div>
           </div>
 
@@ -821,9 +835,22 @@ export default function LandingPage() {
                   <p className="text-zinc-450 text-[10px] font-bold mt-1">Best for Street Food, Juice Stalls & Cart Vendors</p>
                 </div>
                 
-                <div className="flex items-end gap-1.5 py-2">
-                  <span className="text-4xl font-black text-zinc-900 tracking-tight">₹{isYearly ? '1,999' : '199'}</span>
-                  <span className="text-zinc-400 text-xs font-bold">/ {isYearly ? 'year' : 'month'}</span>
+                <div className="flex flex-col py-1">
+                  {isYearly ? (
+                    <div>
+                      <span className="line-through text-zinc-400 text-xs font-black tracking-wider block">₹199 × 12 = ₹2,388</span>
+                      <div className="flex items-end gap-1.5 mt-0.5">
+                        <span className="text-4xl font-black text-zinc-900 tracking-tight">₹2,000</span>
+                        <span className="text-zinc-400 text-xs font-bold">/ year</span>
+                        <span className="bg-emerald-100 text-emerald-700 text-[9px] font-black px-2 py-0.5 rounded-full uppercase ml-1">Save ₹388</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-end gap-1.5">
+                      <span className="text-4xl font-black text-zinc-900 tracking-tight">₹199</span>
+                      <span className="text-zinc-400 text-xs font-bold">/ month</span>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="border-t border-zinc-100 pt-6 space-y-4 text-xs font-semibold text-zinc-600">
@@ -837,14 +864,22 @@ export default function LandingPage() {
                   <div className="flex items-center gap-2.5 opacity-40"><X className="text-red-400 w-4 h-4 shrink-0" /> Priority Support & Setup</div>
                 </div>
               </div>
-              <a 
-                href={`https://wa.me/917838229178?text=${encodeURIComponent(`Hi InstaMunim Team, I want to activate the Starter Plan (${isYearly ? '₹1999/yr' : '₹199/mo'}) for my store. 🚀\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process.`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full bg-zinc-900 hover:bg-black text-white font-black py-4 rounded-2xl text-xs mt-8 transition-colors text-center uppercase tracking-widest border-0 block"
+              <button 
+                onClick={() => {
+                  setSelectedPlan({
+                    name: 'Starter Plan',
+                    price: isYearly ? 2000 : 199,
+                    originalPrice: isYearly ? 2388 : undefined,
+                    savings: isYearly ? 388 : undefined,
+                    cycle: isYearly ? 'yearly' : 'monthly',
+                    planKey: 'starter'
+                  });
+                  setPaymentModalOpen(true);
+                }}
+                className="w-full bg-zinc-900 hover:bg-black text-white font-black py-4 rounded-2xl text-xs mt-8 transition-all text-center uppercase tracking-widest border-0 cursor-pointer shadow-md active:scale-95"
               >
-                Activate Starter
-              </a>
+                ACTIVATE STARTER
+              </button>
             </div>
 
             {/* PRO BUSINESS PLAN */}
@@ -857,10 +892,22 @@ export default function LandingPage() {
                   <p className="text-orange-600/80 text-[10px] font-bold mt-1">Ideal for Cafes, Restaurants & Retail Shops</p>
                 </div>
                 
-                <div className="flex items-end gap-1.5 py-2">
-                  <span className="text-4xl font-black text-zinc-900 tracking-tight">₹{isYearly ? '4,799' : '499'}</span>
-                  <span className="text-zinc-400 text-xs font-bold">/ {isYearly ? 'year' : 'month'}</span>
-                  {isYearly && <span className="text-[10px] text-orange-500 font-extrabold ml-1">Equivalent to ₹399/mo</span>}
+                <div className="flex flex-col py-1">
+                  {isYearly ? (
+                    <div>
+                      <span className="line-through text-zinc-400 text-xs font-black tracking-wider block">₹399 × 12 = ₹4,788</span>
+                      <div className="flex items-end gap-1.5 mt-0.5">
+                        <span className="text-4xl font-black text-zinc-900 tracking-tight">₹3,500</span>
+                        <span className="text-zinc-400 text-xs font-bold">/ year</span>
+                        <span className="bg-orange-100 text-orange-700 text-[9px] font-black px-2 py-0.5 rounded-full uppercase ml-1">Save ₹1,288</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-end gap-1.5">
+                      <span className="text-4xl font-black text-zinc-900 tracking-tight">₹399</span>
+                      <span className="text-zinc-400 text-xs font-bold">/ month</span>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="border-t border-zinc-100 pt-6 space-y-4 text-xs font-semibold text-zinc-650">
@@ -874,14 +921,22 @@ export default function LandingPage() {
                   <div className="flex items-center gap-2.5 opacity-40"><X className="text-red-400 w-4 h-4 shrink-0" /> Priority 24/7 Setup & Phone Support</div>
                 </div>
               </div>
-              <a 
-                href={`https://wa.me/917838229178?text=${encodeURIComponent(`Hi InstaMunim Team, I want to activate the Pro Business Plan (${isYearly ? '₹4799/yr' : '₹499/mo'}) for my store. 🚀\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process.`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black py-4 rounded-2xl text-xs mt-8 transition-all text-center uppercase tracking-widest shadow-md shadow-orange-500/10 block border-0 cursor-pointer"
+              <button 
+                onClick={() => {
+                  setSelectedPlan({
+                    name: 'Pro Business Plan',
+                    price: isYearly ? 3500 : 399,
+                    originalPrice: isYearly ? 4788 : undefined,
+                    savings: isYearly ? 1288 : undefined,
+                    cycle: isYearly ? 'yearly' : 'monthly',
+                    planKey: 'pro'
+                  });
+                  setPaymentModalOpen(true);
+                }}
+                className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black py-4 rounded-2xl text-xs mt-8 transition-all text-center uppercase tracking-widest shadow-md shadow-orange-500/10 border-0 cursor-pointer active:scale-95"
               >
-                Activate Pro
-              </a>
+                ACTIVATE PRO
+              </button>
             </div>
 
             {/* ENTERPRISE PLAN */}
@@ -893,10 +948,22 @@ export default function LandingPage() {
                   <p className="text-zinc-400 text-[10px] font-bold mt-1">For Showrooms, Salons & Multi-outlets</p>
                 </div>
                 
-                <div className="flex items-end gap-1.5 py-2">
-                  <span className="text-4xl font-black text-zinc-900 tracking-tight">₹{isYearly ? '9,599' : '999'}</span>
-                  <span className="text-zinc-400 text-xs font-bold">/ {isYearly ? 'year' : 'month'}</span>
-                  {isYearly && <span className="text-[10px] text-indigo-500 font-extrabold ml-1">Equivalent to ₹799/mo</span>}
+                <div className="flex flex-col py-1">
+                  {isYearly ? (
+                    <div>
+                      <span className="line-through text-zinc-400 text-xs font-black tracking-wider block">₹999 × 12 = ₹11,988</span>
+                      <div className="flex items-end gap-1.5 mt-0.5">
+                        <span className="text-4xl font-black text-zinc-900 tracking-tight">₹7,500</span>
+                        <span className="text-zinc-400 text-xs font-bold">/ year</span>
+                        <span className="bg-indigo-100 text-indigo-700 text-[9px] font-black px-2 py-0.5 rounded-full uppercase ml-1">Save ₹4,488</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-end gap-1.5">
+                      <span className="text-4xl font-black text-zinc-900 tracking-tight">₹999</span>
+                      <span className="text-zinc-400 text-xs font-bold">/ month</span>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="border-t border-zinc-100 pt-6 space-y-4 text-xs font-semibold text-zinc-650">
@@ -910,14 +977,22 @@ export default function LandingPage() {
                   <div className="flex items-center gap-2.5 text-indigo-600 font-black"><Check className="text-indigo-500 w-4 h-4 shrink-0" /> 1-on-1 Business Scaling Consultation</div>
                 </div>
               </div>
-              <a 
-                href={`https://wa.me/917838229178?text=${encodeURIComponent(`Hi InstaMunim Team, I want to activate the Enterprise Plan (${isYearly ? '₹9599/yr' : '₹999/mo'}) for my store. 🚀\n\nStore Name: \nOwner Name: \n\nPlease guide me with the payment and activation process.`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full bg-zinc-900 hover:bg-black text-white font-black py-4 rounded-2xl text-xs mt-8 transition-colors text-center uppercase tracking-widest border-0 block"
+              <button 
+                onClick={() => {
+                  setSelectedPlan({
+                    name: 'Enterprise & VIP Plan',
+                    price: isYearly ? 7500 : 999,
+                    originalPrice: isYearly ? 11988 : undefined,
+                    savings: isYearly ? 4488 : undefined,
+                    cycle: isYearly ? 'yearly' : 'monthly',
+                    planKey: 'vip'
+                  });
+                  setPaymentModalOpen(true);
+                }}
+                className="w-full bg-zinc-900 hover:bg-black text-white font-black py-4 rounded-2xl text-xs mt-8 transition-all text-center uppercase tracking-widest border-0 cursor-pointer shadow-md active:scale-95"
               >
-                Activate VIP
-              </a>
+                ACTIVATE VIP
+              </button>
             </div>
           </div>
 
@@ -928,6 +1003,128 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* SECURED UPI PAYMENT MODAL */}
+      {paymentModalOpen && selectedPlan && (
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] max-w-lg w-full p-6 sm:p-8 shadow-2xl relative my-8">
+            {/* Close Button */}
+            <button 
+              onClick={() => setPaymentModalOpen(false)}
+              className="absolute top-6 right-6 w-9 h-9 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-500 flex items-center justify-center transition-colors border-0 cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Modal Header */}
+            <div className="text-center space-y-2 mb-6">
+              <div className="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-700 px-3.5 py-1 rounded-full border border-emerald-200 text-[10px] font-black uppercase tracking-wider">
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" /> 100% SECURED UPI PAYMENT
+              </div>
+              <h3 className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight mt-1">Activate {selectedPlan.name}</h3>
+              <p className="text-xs font-bold text-zinc-400">Scan QR Code or copy UPI ID to complete payment</p>
+            </div>
+
+            {/* Selected Plan Price Banner */}
+            <div className="bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-2xl p-4 flex items-center justify-between shadow-md mb-6">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-90">{selectedPlan.cycle === 'yearly' ? 'Yearly Package' : 'Monthly Subscription'}</p>
+                <p className="text-lg font-black">{selectedPlan.name}</p>
+              </div>
+              <div className="text-right">
+                {selectedPlan.originalPrice && (
+                  <p className="text-xs font-bold line-through opacity-75">₹{selectedPlan.originalPrice.toLocaleString('en-IN')}</p>
+                )}
+                <p className="text-3xl font-black">₹{selectedPlan.price.toLocaleString('en-IN')}</p>
+              </div>
+            </div>
+
+            {/* QR Code Scanner Section */}
+            <div className="bg-zinc-50 dark:bg-zinc-800/50 p-6 rounded-3xl border border-zinc-150 dark:border-zinc-700/50 text-center space-y-4 mb-6">
+              <div className="inline-block p-3 bg-white rounded-2xl shadow-md border border-zinc-100">
+                <img 
+                  src={`https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(`upi://pay?pa=7838229178@paytm&pn=InstaMunim%20POS&am=${selectedPlan.price}&cu=INR&tn=${encodeURIComponent(selectedPlan.name)}`)}&size=220x220`}
+                  alt="InstaMunim Payment QR Scanner" 
+                  className="w-48 h-48 rounded-xl object-contain mx-auto"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">ACCEPTED VIA ALL UPI APPS</p>
+                <p className="text-xs font-extrabold text-zinc-700 dark:text-zinc-300">GPay • PhonePe • Paytm • BHIM • AmazonPay</p>
+              </div>
+
+              {/* Copy UPI ID Button */}
+              <div className="flex items-center justify-center gap-2 pt-2">
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 px-4 py-2 rounded-xl text-xs font-black text-zinc-900 dark:text-white select-all">
+                  7838229178@paytm
+                </div>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText("7838229178@paytm");
+                    setCopiedUpi(true);
+                    setTimeout(() => setCopiedUpi(false), 2500);
+                  }}
+                  className="bg-zinc-900 dark:bg-zinc-100 hover:bg-black dark:hover:bg-white text-white dark:text-zinc-900 font-bold px-3 py-2 rounded-xl text-xs transition-colors border-0 cursor-pointer flex items-center gap-1"
+                >
+                  {copiedUpi ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : null}
+                  {copiedUpi ? 'COPIED!' : 'COPY UPI'}
+                </button>
+              </div>
+            </div>
+
+            {/* Input details for Activation */}
+            <div className="space-y-3 mb-6 text-left">
+              <div>
+                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1 block mb-1">Your Store / Business Name</label>
+                <input 
+                  type="text" 
+                  value={storeNameInput} 
+                  onChange={e => setStoreNameInput(e.target.value)} 
+                  placeholder="e.g. Zaika Cafe & Biryani" 
+                  className="w-full h-11 px-4 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-orange-500"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1 block mb-1">Owner Mobile Number</label>
+                <input 
+                  type="tel" 
+                  value={ownerMobileInput} 
+                  onChange={e => setOwnerMobileInput(e.target.value)} 
+                  placeholder="e.g. 9876543210" 
+                  className="w-full h-11 px-4 rounded-xl bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs font-bold text-zinc-900 dark:text-white outline-none focus:border-orange-500"
+                />
+              </div>
+            </div>
+
+            {/* Security Clauses & Guarantees */}
+            <div className="bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 rounded-2xl p-4 text-left space-y-2 mb-6 text-[10px] font-bold text-emerald-800 dark:text-emerald-300">
+              <div className="flex items-center gap-2">
+                <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>Instant Account Activation within 15 Minutes of Payment</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>No Auto-Debit Mandate • No Hidden Renewal Charges</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>100% Money-Back Guarantee if setup is not completed</span>
+              </div>
+            </div>
+
+            {/* WhatsApp Confirmation Button */}
+            <a 
+              href={`https://wa.me/917838229178?text=${encodeURIComponent(`Hi InstaMunim Team, I have made the payment of ₹${selectedPlan.price} for ${selectedPlan.name} (${selectedPlan.cycle}). 🚀\n\nStore Name: ${storeNameInput || '[Not Entered]'}\nOwner Mobile: ${ownerMobileInput || '[Not Entered]'}\n\nPlease verify my payment and activate my account.`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest text-center shadow-lg shadow-emerald-600/20 block border-0 active:scale-95 transition-all"
+            >
+              I HAVE PAID — SEND RECEIPT ON WHATSAPP
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* FAQS */}
       <section className="py-20 bg-zinc-50 border-t border-zinc-150">
