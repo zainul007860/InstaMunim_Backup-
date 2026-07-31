@@ -5,7 +5,7 @@ import {
   Download, Shield, ShieldCheck, ArrowRight, CheckCircle2, Check, X,
   RefreshCw, Heart, Zap, BarChart3, Camera, CreditCard, Lock,
   Users, HelpCircle, ChevronDown, MessageSquare, Star, Eye,
-  Receipt, Wallet, Scan, Home, Wand2, Cpu, Smartphone
+  Receipt, Wallet, Scan, Home, Wand2, Cpu, Smartphone, FileText, Printer
 } from "lucide-react";
 import { Capacitor } from '@capacitor/core';
 import Dashboard from "./dashboard/page";
@@ -29,6 +29,101 @@ export default function LandingPage() {
   const [ownerMobileInput, setOwnerMobileInput] = useState('');
   const [copiedUpi, setCopiedUpi] = useState(false);
   const [paymentSubmitted, setPaymentSubmitted] = useState(false);
+
+  const handlePrintReceipt = () => {
+    if (!selectedPlan) return;
+    const receiptId = `REC-IM-${Math.floor(100000 + Math.random() * 900000)}`;
+    const currentDate = new Date().toLocaleString('en-IN', {
+      dateStyle: 'medium',
+      timeStyle: 'short'
+    });
+
+    const printWindow = window.open('', '_blank', 'width=650,height=750');
+    if (printWindow) {
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>InstaMunim Payment Receipt - ${receiptId}</title>
+            <style>
+              body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 25px; background: #f4f4f5; color: #18181b; margin: 0; }
+              .receipt-card { background: white; max-width: 480px; margin: 0 auto; padding: 32px; border-radius: 24px; border: 1px solid #e4e4e7; box-shadow: 0 10px 30px rgba(0,0,0,0.06); }
+              .header { text-align: center; border-bottom: 2px dashed #e4e4e7; padding-bottom: 20px; margin-bottom: 24px; }
+              .brand { font-size: 24px; font-weight: 900; color: #ea580c; letter-spacing: -0.5px; }
+              .sub-brand { font-size: 11px; font-weight: 800; color: #71717a; text-transform: uppercase; letter-spacing: 2px; margin-top: 2px; }
+              .badge { display: inline-block; background: #ecfdf5; color: #047857; font-size: 10px; font-weight: 800; padding: 4px 14px; border-radius: 99px; margin-top: 12px; border: 1px solid #a7f3d0; text-transform: uppercase; }
+              .row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 13px; }
+              .label { font-weight: 700; color: #71717a; }
+              .val { font-weight: 900; color: #09090b; text-align: right; }
+              .amount-box { background: linear-gradient(135deg, #ea580c, #f59e0b); color: white; border-radius: 16px; padding: 20px; text-align: center; margin: 24px 0; shadow: 0 4px 12px rgba(234, 88, 12, 0.2); }
+              .amount-title { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; opacity: 0.9; }
+              .amount-val { font-size: 32px; font-weight: 900; margin-top: 4px; }
+              .footer { text-align: center; font-size: 10px; color: #a1a1aa; border-top: 1px solid #f4f4f5; padding-top: 18px; margin-top: 24px; font-weight: 600; leading-height: 1.5; }
+              @media print {
+                body { background: white; padding: 0; }
+                .receipt-card { border: none; box-shadow: none; max-width: 100%; padding: 10px; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="receipt-card">
+              <div class="header">
+                <div class="brand">InstaMunim POS</div>
+                <div class="sub-brand">Official Subscription Receipt</div>
+                <div class="badge">✓ Payment Notification Received</div>
+              </div>
+              
+              <div class="row">
+                <span class="label">Receipt No:</span>
+                <span class="val">${receiptId}</span>
+              </div>
+              <div class="row">
+                <span class="label">Date & Time:</span>
+                <span class="val">${currentDate}</span>
+              </div>
+              <div class="row">
+                <span class="label">Store Name:</span>
+                <span class="val">${storeNameInput || 'Registered Store'}</span>
+              </div>
+              <div class="row">
+                <span class="label">Owner Mobile:</span>
+                <span class="val">${ownerMobileInput || 'N/A'}</span>
+              </div>
+              <div class="row">
+                <span class="label">Subscription Plan:</span>
+                <span class="val">${selectedPlan.name} (${selectedPlan.cycle.toUpperCase()})</span>
+              </div>
+
+              <div class="amount-box">
+                <div class="amount-title">Total Amount Paid</div>
+                <div class="amount-val">₹${selectedPlan.price.toLocaleString('en-IN')}</div>
+              </div>
+
+              <div class="row">
+                <span class="label">Activation Status:</span>
+                <span class="val" style="color: #059669;">Verification in Progress (15 Mins)</span>
+              </div>
+              <div class="row">
+                <span class="label">Support Helpline:</span>
+                <span class="val">+91 7838229178</span>
+              </div>
+
+              <div class="footer">
+                This is a computer-generated official subscription receipt issued by InstaMunim Smart POS.<br/>
+                Support Email: instamunim@gmail.com • Web: www.instamunim.com
+              </div>
+            </div>
+            <script>
+              window.onload = function() {
+                window.print();
+              }
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
 
   // FAQ state
   const [activeFaq, setActiveFaq] = useState<number | null>(null);
@@ -1044,17 +1139,25 @@ export default function LandingPage() {
                   </p>
                 </div>
 
-                <button 
-                  onClick={() => {
-                    setPaymentModalOpen(false);
-                    setPaymentSubmitted(false);
-                    setStoreNameInput('');
-                    setOwnerMobileInput('');
-                  }}
-                  className="w-full bg-zinc-900 hover:bg-black text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest border-0 cursor-pointer shadow-md active:scale-95 transition-all"
-                >
-                  OK, GOT IT!
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                  <button 
+                    onClick={handlePrintReceipt}
+                    className="flex-1 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black py-3.5 rounded-2xl text-xs uppercase tracking-widest border-0 cursor-pointer shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
+                  >
+                    <FileText className="w-4 h-4" /> RECEIPT (PDF)
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setPaymentModalOpen(false);
+                      setPaymentSubmitted(false);
+                      setStoreNameInput('');
+                      setOwnerMobileInput('');
+                    }}
+                    className="flex-1 bg-zinc-900 hover:bg-black text-white font-black py-3.5 rounded-2xl text-xs uppercase tracking-widest border-0 cursor-pointer shadow-md active:scale-95 transition-all"
+                  >
+                    OK, GOT IT!
+                  </button>
+                </div>
               </div>
             ) : (
               /* REGULAR QR PAYMENT FORM */
