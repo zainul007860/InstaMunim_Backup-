@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Capacitor } from '@capacitor/core';
 import Dashboard from "./dashboard/page";
+import { sendDiscordAlert } from "@/lib/discord";
 
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
@@ -1265,6 +1266,20 @@ export default function LandingPage() {
                     const waUrl = `https://wa.me/917838229178?text=${encodeURIComponent(`Hi InstaMunim Team, I have made the payment of ₹${selectedPlan.price} for ${selectedPlan.name} (${selectedPlan.cycle}). 🚀\n\nStore Name: ${storeNameInput || '[Not Entered]'}\nOwner Mobile: ${ownerMobileInput || '[Not Entered]'}\n\nPlease verify my payment and activate my account.`)}`;
                     window.open(waUrl, "_blank");
                     setPaymentSubmitted(true);
+
+                    // Trigger Discord Alert
+                    sendDiscordAlert(
+                      "💳 Subscription Payment Claimed!",
+                      "A merchant has submitted a payment confirmation request from the website pricing section.",
+                      [
+                        { name: "Store Name", value: storeNameInput || "Not Entered", inline: true },
+                        { name: "Owner Mobile", value: ownerMobileInput || "Not Entered", inline: true },
+                        { name: "Plan Name", value: selectedPlan.name, inline: true },
+                        { name: "Amount Paid", value: `₹${selectedPlan.price.toLocaleString('en-IN')}`, inline: true },
+                        { name: "Billing Cycle", value: selectedPlan.cycle.toUpperCase(), inline: true }
+                      ],
+                      5763719
+                    );
                   }}
                   className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-4 rounded-2xl text-xs uppercase tracking-widest text-center shadow-lg shadow-emerald-600/20 block border-0 active:scale-95 transition-all cursor-pointer"
                 >

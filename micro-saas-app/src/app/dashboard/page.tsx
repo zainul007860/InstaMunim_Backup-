@@ -17,6 +17,7 @@ import { Preferences } from '@capacitor/preferences';
 import { App } from '@capacitor/app';
 import { trackEvent } from "@/lib/firebase";
 import { EnquiriesView } from "./EnquiriesView";
+import { sendDiscordAlert } from "@/lib/discord";
 
 const getDisplayCategory = (cat: string) => {
   if (!cat) return "General";
@@ -4045,6 +4046,19 @@ Stay safe & eat healthy! 🍕
             setLoginError("Mobile already registered or error occurred.");
           }
         } else {
+          // Send Discord Notification for new Merchant Signup
+          sendDiscordAlert(
+            "🏪 New Merchant Registered / Store Created!",
+            "A new merchant has just registered on InstaMunim POS App.",
+            [
+              { name: "Store Name", value: signupStoreName || "N/A", inline: true },
+              { name: "Owner Mobile", value: loginMobile || "N/A", inline: true },
+              { name: "Business Type", value: signupBusinessType || "Restaurant/Cafe", inline: true },
+              { name: "Store ID", value: data.id ? String(data.id) : "N/A", inline: true }
+            ],
+            15844367
+          );
+
           // Seed presets based on the selected business type
           const categoryPresets = BUSINESS_CATEGORIES[signupBusinessType]?.presets || [];
           if (categoryPresets.length > 0) {
