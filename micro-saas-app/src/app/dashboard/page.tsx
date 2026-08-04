@@ -2363,6 +2363,7 @@ Requirements for the generated image prompt:
   };
 
   const isSubscribed = checkSubscription();
+  const isProOrAbove = isSubscribed && (monthlyRent === 399 || monthlyRent === 3500 || monthlyRent === 999 || monthlyRent === 7500);
 
   const handleDeleteAccount = async () => {
     if (!deleteMobile || !deletePassword) {
@@ -5996,7 +5997,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
       className={`min-h-screen flex flex-col font-sans selection:bg-orange-500/30 ${isDarkMode ? 'dark bg-zinc-950 text-white' : 'bg-[#fafafa] text-zinc-900'}`}
       style={{ paddingTop: isAdMobActive && adProvider === "admob" ? `${admobHeight}px` : "0px" }}
     >
-      {((adProvider === "web" || (adProvider === "admob" && isAdMobBannerFailed)) && !isSubscribed && webAdScriptUrl) && (
+      {((adProvider === "web" || (adProvider === "admob" && isAdMobBannerFailed)) && !isProOrAbove && webAdScriptUrl) && (
         <WebAdBanner scriptUrl={webAdScriptUrl} adKey={webAdKey} />
       )}
       {((adProvider === "web" || (adProvider === "admob" && isAdMobBannerFailed)) && !isSubscribed && webAdVignetteUrl && webAdVignetteKey) && (
