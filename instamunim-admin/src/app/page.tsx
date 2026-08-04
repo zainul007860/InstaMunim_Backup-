@@ -44,6 +44,7 @@ export default function AdminDashboard() {
 
   // Remote Config states
   const [remoteAdsEnabled, setRemoteAdsEnabled] = useState(true);
+  const [remoteDisableStarterAds, setRemoteDisableStarterAds] = useState(false);
   const [remoteAdProvider, setRemoteAdProvider] = useState<"admob" | "web" | "none">("web");
   const [remoteWebAdScriptUrl, setRemoteWebAdScriptUrl] = useState("");
   const [remoteWebAdKey, setRemoteWebAdKey] = useState("");
@@ -89,6 +90,7 @@ export default function AdminDashboard() {
       if (data && data.store_logo && data.store_logo.startsWith("JSON_CFG:")) {
         const config = JSON.parse(data.store_logo.substring(9));
         setRemoteAdsEnabled(config.adsEnabled ?? true);
+        setRemoteDisableStarterAds(config.disableStarterAds ?? false);
         setRemoteAdProvider(config.adProvider ?? "web");
         setRemoteWebAdScriptUrl(config.webAdScriptUrl ?? "");
         setRemoteWebAdKey(config.webAdKey ?? "");
@@ -126,6 +128,7 @@ export default function AdminDashboard() {
     try {
       const configObj = {
         adsEnabled: remoteAdsEnabled,
+        disableStarterAds: remoteDisableStarterAds,
         adProvider: remoteAdProvider,
         webAdScriptUrl: remoteWebAdScriptUrl,
         webAdKey: remoteWebAdKey,
@@ -1433,6 +1436,32 @@ export default function AdminDashboard() {
                         position: 'absolute', content: '""', height: '18px', width: '18px', left: '3px', bottom: '3px',
                         backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
                         transform: remoteAdsEnabled ? 'translateX(20px)' : 'none'
+                      }} />
+                    </span>
+                  </label>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff7ed', padding: '10px 12px', borderRadius: '12px', border: '1px solid #ffedd5' }}>
+                  <div>
+                    <span style={{ fontSize: '12px', fontWeight: 800, color: '#c2410c' }}>Disable Ads for Starter (₹199) Plan</span>
+                    <p style={{ fontSize: '9px', color: '#9a3412', margin: 0, fontWeight: 600 }}>Turn ON to remove top banner ads for ₹199 merchants as well (100% Ad-Free)</p>
+                  </div>
+                  <label className="switch-toggle" style={{ position: 'relative', display: 'inline-block', width: '44px', height: '24px', flexShrink: 0 }}>
+                    <input 
+                      type="checkbox" 
+                      checked={remoteDisableStarterAds} 
+                      onChange={(e) => setRemoteDisableStarterAds(e.target.checked)} 
+                      style={{ opacity: 0, width: 0, height: 0 }}
+                    />
+                    <span style={{
+                      position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
+                      backgroundColor: remoteDisableStarterAds ? '#ef4444' : '#e4e4e7',
+                      transition: '.4s', borderRadius: '24px'
+                    }}>
+                      <span style={{
+                        position: 'absolute', content: '""', height: '18px', width: '18px', left: '3px', bottom: '3px',
+                        backgroundColor: 'white', transition: '.4s', borderRadius: '50%',
+                        transform: remoteDisableStarterAds ? 'translateX(20px)' : 'none'
                       }} />
                     </span>
                   </label>

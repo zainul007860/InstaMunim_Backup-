@@ -2362,8 +2362,10 @@ Requirements for the generated image prompt:
     return isBefore(now, trialEnds);
   };
 
+  const [disableStarterAds, setDisableStarterAds] = useState(false);
   const isSubscribed = checkSubscription();
-  const isProOrAbove = isSubscribed && (monthlyRent === 399 || monthlyRent === 3500 || monthlyRent === 999 || monthlyRent === 7500);
+  const isStarterAdsDisabled = disableStarterAds && (monthlyRent === 199 || monthlyRent === 2000);
+  const isProOrAbove = (isSubscribed && (monthlyRent === 399 || monthlyRent === 3500 || monthlyRent === 999 || monthlyRent === 7500)) || isStarterAdsDisabled;
 
   const handleDeleteAccount = async () => {
     if (!deleteMobile || !deletePassword) {
@@ -3450,6 +3452,7 @@ Stay safe & eat healthy! 🍕
 
           // 4. Remote Ad Configuration Overrides & Frequency Rate-Limiter
           if (config.adFrequency) setRemoteAdFrequency(config.adFrequency);
+          if (config.disableStarterAds !== undefined) setDisableStarterAds(config.disableStarterAds);
 
           if (config.adsEnabled === false) {
             setAdProvider("none");
