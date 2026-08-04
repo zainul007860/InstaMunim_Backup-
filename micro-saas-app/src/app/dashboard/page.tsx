@@ -9576,12 +9576,21 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                     : adProvider === "web" ? "Web Ads (Monetag)" : "None / Disabled"}
                                 </span>
                               </div>
-                              {adProvider === "admob" && (
+                              {isProOrAbove ? (
+                                <div>
+                                  <span className="font-bold text-emerald-500">Plan Tier Status:</span> Pro / VIP Plan (100% Ad-Free)
+                                </div>
+                              ) : isSubscribed ? (
+                                <div>
+                                  <span className="font-bold text-orange-500">Plan Tier Status:</span> Starter Plan ₹199 (Top Banner Active • Video Ads Disabled)
+                                </div>
+                              ) : null}
+                              {adProvider === "admob" && !isProOrAbove && (
                                 <div>
                                   <span className="font-bold text-orange-500">AdMob Status:</span> {admobDebugInfo}
                                 </div>
                               )}
-                              {(adProvider === "web" || (adProvider === "admob" && isAdMobBannerFailed)) && (
+                              {(adProvider === "web" || (adProvider === "admob" && isAdMobBannerFailed)) && !isProOrAbove && (
                                 <div>
                                   <span className="font-bold text-orange-500">Monetag Status:</span> {webAdScriptUrl ? "Running successfully" : "Not configured"}
                                 </div>
