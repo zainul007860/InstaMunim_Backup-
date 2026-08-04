@@ -3122,8 +3122,8 @@ Stay safe & eat healthy! 🍕
         setAdmobHeight(0);
         return;
       }
-      if (isSubscribed) {
-        setAdmobDebugInfo("Subscribed user: AdMob inactive");
+      if (isProOrAbove) {
+        setAdmobDebugInfo("Pro user: AdMob inactive");
         setIsAdMobActive(false);
         setAdmobHeight(0);
         return;
@@ -3220,7 +3220,7 @@ Stay safe & eat healthy! 🍕
       };
       cleanUp();
     };
-  }, [isSubscribed, adProvider]);
+  }, [isProOrAbove, adProvider]);
 
   // Hide AdMob banner when Sale popup is open, show when closed
   useEffect(() => {
@@ -3229,7 +3229,7 @@ Stay safe & eat healthy! 🍕
         
         if (!Capacitor.isNativePlatform() || !admobRef.current) return;
         
-        if (isSubscribed || adProvider !== "admob") {
+        if (isProOrAbove || adProvider !== "admob") {
           try {
             await admobRef.current.hideBanner();
           } catch (e: any) {}
