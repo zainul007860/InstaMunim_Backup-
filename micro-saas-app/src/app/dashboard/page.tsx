@@ -3988,6 +3988,18 @@ Stay safe & eat healthy! 🍕
           localStorage.setItem("saas_store_expiry", storeData.subscription_expiry || "");
  
           await fetchStoreData(storeData.id);
+
+          // Send Discord Alert for Merchant Login / Session Active
+          sendDiscordAlert(
+            "🔑 Merchant Logged In / App Opened",
+            `Merchant **${storeData.store_name}** has logged into InstaMunim POS.`,
+            [
+              { name: "Store Name", value: storeData.store_name || "N/A", inline: true },
+              { name: "Owner Mobile", value: storeData.owner_mobile || "N/A", inline: true },
+              { name: "Store ID", value: String(storeData.id), inline: true }
+            ],
+            3447003
+          );
         }
       } else {
         // Create initial config JSON packet to store in database store_logo column
@@ -4783,6 +4795,21 @@ Stay safe & eat healthy! 🍕
       };
       setSales([sale, ...sales]);
       setLastOrderDetails(sale);
+
+      // Trigger Live Sales Alert on Discord
+      sendDiscordAlert(
+        "💰 New Sale Billing Recorded!",
+        `Merchant **${restaurantName || 'InstaMunim Merchant'}** has recorded a new sale.`,
+        [
+          { name: "Store Name", value: restaurantName || "N/A", inline: true },
+          { name: "Owner Mobile", value: ownerMobile || "N/A", inline: true },
+          { name: "Sale Amount", value: `₹${newSale.total_price.toLocaleString('en-IN')}`, inline: true },
+          { name: "Payment Mode", value: newSale.payment_type || "Cash", inline: true },
+          { name: "Customer Name", value: newSale.customer_name || "Walk-in Customer", inline: true },
+          { name: "Items Billed", value: newSale.items || "N/A", inline: false }
+        ],
+        5763719
+      );
 
       // Trigger voice cashier announcement
       try {
