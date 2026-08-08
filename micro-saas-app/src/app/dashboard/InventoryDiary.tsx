@@ -198,7 +198,7 @@ export default function InventoryDiary({
 
     const meta = getItemStockMeta(target.category);
     const currentQty = meta.qty !== null ? meta.qty : 0;
-    const newQty = Math.max(0, currentQty + addQty);
+    const newQty = currentQty + addQty;
     const newCatStr = buildCategoryString(meta.cleanCat, newQty, meta.supplier, meta.cost, meta.lowLimit);
 
     updateItemsState(prev => prev.map(i => i.id === itemId ? { ...i, category: newCatStr } : i));
@@ -475,7 +475,7 @@ export default function InventoryDiary({
                         </span>
                       ) : meta.qty < 0 ? (
                         <span className="text-[9px] font-black text-red-600 bg-red-100 dark:bg-red-950/40 px-2 py-0.5 rounded-md animate-pulse border border-red-200 dark:border-red-900/50">
-                          🔴 Negative Stock: {meta.qty} Pcs
+                          🔴 Out of Stock ({meta.qty} Pcs)
                         </span>
                       ) : meta.qty === 0 ? (
                         <span className="text-[9px] font-black text-red-500 bg-red-50 dark:bg-red-950/20 px-2 py-0.5 rounded-md">

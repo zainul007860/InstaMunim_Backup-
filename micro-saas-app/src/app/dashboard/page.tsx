@@ -4769,7 +4769,7 @@ Stay safe & eat healthy! 🍕
           const stockMeta = getItemStockMeta(matchedItem.category);
           if (stockMeta.hasQtyTracked) {
             const currentQty = stockMeta.qty || 0;
-            const newQty = Math.max(0, currentQty - cartItem.qty);
+            const newQty = currentQty - cartItem.qty;
             const updatedCategoryStr = buildCategoryString(stockMeta.cleanCat, newQty, stockMeta.supplier, stockMeta.cost, stockMeta.lowLimit);
 
             // Update Supabase DB
