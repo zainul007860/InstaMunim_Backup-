@@ -5227,26 +5227,6 @@ Stay safe & eat healthy! 🍕
   };
 
   const addToCart = (item: any) => {
-    // 1. Stock Check & Warning Alert
-    const targetItem = menuItems.find(m => m.id === item.id || m.name.toLowerCase() === (item.name || '').toLowerCase()) || item;
-    if (targetItem && targetItem.category) {
-      const stockMeta = getItemStockMeta(targetItem.category);
-      if (stockMeta.hasQtyTracked) {
-        const existingInCart = cart.find(c => c.name.toLowerCase() === (item.name || '').toLowerCase());
-        const currentCartQty = existingInCart ? existingInCart.qty : 0;
-        const requestedQty = currentCartQty + 1;
-
-        if (requestedQty > stockMeta.qty) {
-          if (stockMeta.qty <= 0) {
-            alert(`⚠️ Out of Stock Alert!\n\n"${targetItem.name}" is currently Out of Stock (0 Pcs available in inventory).\nPlease add stock in Daily Stock before selling.`);
-          } else {
-            alert(`⚠️ Insufficient Stock Alert!\n\n"${targetItem.name}" ka available stock sirf ${stockMeta.qty} Pcs hai.\nAap ${requestedQty} quantity add karne ki koshish kar rahe hain!`);
-          }
-          return;
-        }
-      }
-    }
-
     setCart(prev => {
       let matchedImei = item.imei || "";
       if (!matchedImei && businessType === "Mobile/Electronics") {
@@ -6362,19 +6342,26 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         <>
                           <div className="grid grid-cols-3 gap-1.5">
                             {filteredMenuItems.slice(0, 15).map(item => {
-                              const qty = getImeis(item.category).length;
+                              const stockMeta = getItemStockMeta(item.category);
+                              const qty = stockMeta.hasQtyTracked ? stockMeta.qty : getImeis(item.category).length;
+                              const isTracked = stockMeta.hasQtyTracked || businessType === "Mobile/Electronics";
                               return (
                                 <button key={item.id} onClick={() => addToCart(item)} className="p-1.5 bg-white dark:bg-zinc-900 rounded-xl text-left border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all active:scale-95 group flex flex-col justify-between min-h-[58px]">
                                   <p className="font-bold text-[10px] text-zinc-900 dark:text-white lowercase leading-tight truncate w-full">{item.name}</p>
-                                  <div className="flex justify-between items-center w-full mt-1 gap-1">
-                                    <p className="text-[8px] font-bold text-zinc-400 shrink-0">₹{item.price}</p>
-                                    {businessType === "Mobile/Electronics" && (
-                                      <span className={`text-[6.5px] font-black px-1 py-0.5 rounded shrink-0 uppercase tracking-wider ${qty > 0
-                                        ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400'
-                                        : 'bg-red-50 dark:bg-red-950/20 text-red-650 dark:text-red-400'}`}
-                                      >
-                                        {qty > 0 ? `Qty: ${qty}` : 'Out'}
-                                      </span>
+                                  <div className="flex flex-col w-full mt-1 gap-0.5">
+                                    <div className="flex justify-between items-center w-full gap-1">
+                                      <p className="text-[8px] font-bold text-zinc-400 shrink-0">₹{item.price}</p>
+                                      {isTracked && (
+                                        <span className={`text-[6.5px] font-black px-1 py-0.5 rounded shrink-0 uppercase tracking-wider ${qty > 0
+                                          ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400'
+                                          : 'bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400'}`}
+                                        >
+                                          {qty > 0 ? `Stock: ${qty}` : `Stock: ${qty}`}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {isTracked && qty <= 0 && (
+                                      <p className="text-[6.5px] font-black text-red-500 uppercase tracking-tighter">Low Stock (Minus stock ok)</p>
                                     )}
                                   </div>
                                 </button>
@@ -6407,31 +6394,56 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       </div>
                     ) : (
                       <div className="w-full divide-y dark:divide-zinc-800">
-                        {cart.map(c => (
-                          <div key={c.name} className="flex flex-col py-2 first:pt-0 last:pb-0 gap-2">
-                            <div className="flex justify-between items-center w-full">
-                              <div className="flex flex-col">
-                                <span className="font-bold text-[11px]">{c.name}</span>
-                                <span className="text-[9px] text-zinc-400">₹{c.price} per unit</span>
+                        {cart.map(c => {
+                          const targetItem = menuItems.find(m => m.name.toLowerCase() === c.name.toLowerCase());
+                          const stockMeta = targetItem ? getItemStockMeta(targetItem.category) : { hasQtyTracked: false, qty: 0 };
+                          const isStockExceeded = stockMeta.hasQtyTracked && c.qty > stockMeta.qty;
+
+                          return (
+                            <div key={c.name} className="flex flex-col py-2 first:pt-0 last:pb-0 gap-1.5">
+                              <div className="flex justify-between items-center w-full">
+                                <div className="flex flex-col">
+                                  <span className="font-bold text-[11px]">{c.name}</span>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[9px] text-zinc-400">₹{c.price} per unit</span>
+                                    {stockMeta.hasQtyTracked && (
+                                      <span className={`text-[8.5px] font-black ${stockMeta.qty <= 0 ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                                        (Stock: {stockMeta.qty} Pcs)
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-1 rounded-lg">
+                                  <button onClick={() => removeFromCart(c.name)} className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-red-500 transition-colors"><Minus className="h-3 w-3" /></button>
+                                  <span className="font-black text-xs px-1 min-w-[20px] text-center">{c.qty}</span>
+                                  <button onClick={() => addToCart({ name: c.name, price: c.price })} className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-orange-600 transition-colors"><Plus className="h-3 w-3" /></button>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-1 rounded-lg">
-                                <button onClick={() => removeFromCart(c.name)} className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-red-500 transition-colors"><Minus className="h-3 w-3" /></button>
-                                <span className="font-black text-xs px-1 min-w-[20px] text-center">{c.qty}</span>
-                                <button onClick={() => addToCart({ name: c.name, price: c.price })} className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-orange-600 transition-colors"><Plus className="h-3 w-3" /></button>
-                              </div>
+
+                              {stockMeta.hasQtyTracked && isStockExceeded && (
+                                <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900/40 rounded-lg p-1.5 text-[8px] font-extrabold text-red-600 dark:text-red-400 space-y-0.5">
+                                  <p className="flex items-center gap-1 font-black uppercase tracking-tight">
+                                    ⚠️ Low Stock Alert (Negative Stock Allowed)
+                                  </p>
+                                  <p className="font-semibold text-zinc-650 dark:text-zinc-300">
+                                    Selling {c.qty} Pcs exceeds available stock of {stockMeta.qty} Pcs. New stock balance will be <span className="font-black text-red-600 dark:text-red-400">{stockMeta.qty - c.qty} Pcs</span>.
+                                  </p>
+                                </div>
+                              )}
+
+                              {businessType === "Mobile/Electronics" && (
+                                <div className="flex items-center gap-2 mt-1 w-full">
+                                  <ImeiInput
+                                    placeholder="IMEI / Serial Number"
+                                    value={c.imei || ""}
+                                    onChange={val => updateCartItemImei(c.name, val)}
+                                    className="h-8 flex-1 rounded-xl bg-white dark:bg-zinc-800 border-0 font-bold px-3 text-[10px]"
+                                  />
+                                </div>
+                              )}
                             </div>
-                            {businessType === "Mobile/Electronics" && (
-                              <div className="flex items-center gap-2 mt-1 w-full">
-                                <ImeiInput
-                                  placeholder="IMEI / Serial Number"
-                                  value={c.imei || ""}
-                                  onChange={val => updateCartItemImei(c.name, val)}
-                                  className="h-8 flex-1 rounded-xl bg-white dark:bg-zinc-800 border-0 font-bold px-3 text-[10px]"
-                                />
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
