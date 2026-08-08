@@ -18,6 +18,7 @@ import { App } from '@capacitor/app';
 import { trackEvent } from "@/lib/firebase";
 import { EnquiriesView } from "./EnquiriesView";
 import { sendDiscordAlert } from "@/lib/discord";
+import InventoryDiary, { INVENTORY_CATEGORY_CONFIGS, getItemStockMeta, buildCategoryString } from "./InventoryDiary";
 
 const getDisplayCategory = (cat: string) => {
   if (!cat) return "General";
@@ -4762,6 +4763,30 @@ Stay safe & eat healthy! 🍕
         }
       }
 
+      // Auto-deduct stock quantities for tracked inventory items
+      for (const cartItem of cart) {
+        const matchedItem = menuItems.find(m => m.id === cartItem.id || m.name.toLowerCase() === cartItem.name.toLowerCase());
+        if (matchedItem && matchedItem.category) {
+          const stockMeta = getItemStockMeta(matchedItem.category);
+          if (stockMeta.hasQtyTracked) {
+            const currentQty = stockMeta.qty || 0;
+            const newQty = Math.max(0, currentQty - cartItem.qty);
+            const updatedCategoryStr = buildCategoryString(stockMeta.cleanCat, newQty, stockMeta.supplier, stockMeta.cost, stockMeta.lowLimit);
+
+            // Update Supabase DB
+            supabase
+              .from('menu_items')
+              .update({ category: updatedCategoryStr })
+              .eq('id', matchedItem.id)
+              .then(({ error }) => {
+                if (!error) {
+                  setMenuItems(prev => prev.map(m => m.id === matchedItem.id ? { ...m, category: updatedCategoryStr } : m));
+                }
+              });
+          }
+        }
+      }
+
       trackEvent("add_sale", { store_id: storeId, amount: cartTotal, payment_type: newType });
       // Save new products to menu_items in background
       try {
@@ -5203,6 +5228,26 @@ Stay safe & eat healthy! 🍕
   };
 
   const addToCart = (item: any) => {
+    // 1. Stock Check & Warning Alert
+    const targetItem = menuItems.find(m => m.id === item.id || m.name.toLowerCase() === (item.name || '').toLowerCase()) || item;
+    if (targetItem && targetItem.category) {
+      const stockMeta = getItemStockMeta(targetItem.category);
+      if (stockMeta.hasQtyTracked) {
+        const existingInCart = cart.find(c => c.name.toLowerCase() === (item.name || '').toLowerCase());
+        const currentCartQty = existingInCart ? existingInCart.qty : 0;
+        const requestedQty = currentCartQty + 1;
+
+        if (requestedQty > stockMeta.qty) {
+          if (stockMeta.qty <= 0) {
+            alert(`⚠️ Out of Stock Alert!\n\n"${targetItem.name}" is currently Out of Stock (0 Pcs available in inventory).\nPlease add stock in Daily Stock before selling.`);
+          } else {
+            alert(`⚠️ Insufficient Stock Alert!\n\n"${targetItem.name}" ka available stock sirf ${stockMeta.qty} Pcs hai.\nAap ${requestedQty} quantity add karne ki koshish kar rahe hain!`);
+          }
+          return;
+        }
+      }
+    }
+
     setCart(prev => {
       let matchedImei = item.imei || "";
       if (!matchedImei && businessType === "Mobile/Electronics") {

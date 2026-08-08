@@ -31,16 +31,17 @@ const getDisplayCategory = (cat: string) => {
   return clean || "General";
 };
 
-const getItemStockMeta = (cat: string) => {
-  if (!cat) return { cleanCat: "General", qty: 0, cost: null, supplier: "", lowLimit: 5 };
+export const getItemStockMeta = (cat: string) => {
+  if (!cat) return { cleanCat: "General", qty: 0, hasQtyTracked: false, cost: null, supplier: "", lowLimit: 5 };
   let cleanCat = cat;
 
   let qty: number | null = null;
   let cost: number | null = null;
   let supplier = "";
   let lowLimit = 5;
+  const hasQtyTracked = cleanCat.includes("|Qty:");
 
-  if (cleanCat.includes("|Qty:")) {
+  if (hasQtyTracked) {
     const parts = cleanCat.split("|Qty:");
     cleanCat = parts[0];
     const rest = parts[1].split("|")[0];
@@ -67,10 +68,10 @@ const getItemStockMeta = (cat: string) => {
   if (qty === null) {
     qty = 0;
   }
-  return { cleanCat, qty, cost, supplier, lowLimit };
+  return { cleanCat, qty, hasQtyTracked, cost, supplier, lowLimit };
 };
 
-const buildCategoryString = (cleanCat: string, qty?: number | null, supplier?: string, cost?: number | null, lowLimit?: number | null) => {
+export const buildCategoryString = (cleanCat: string, qty?: number | null, supplier?: string, cost?: number | null, lowLimit?: number | null) => {
   let res = cleanCat || "General";
   if (qty !== undefined && qty !== null && !isNaN(qty)) {
     res += `|Qty:${qty}`;
