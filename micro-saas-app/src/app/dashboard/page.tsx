@@ -3,10 +3,10 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { format, isBefore, isAfter } from "date-fns";
 import jsQR from "jsqr";
-import { 
+import {
   LayoutDashboard, FileText, Settings, LogOut, Search,
   PlusCircle, Loader2, Book, Trash2, Send, ShoppingCart, Package,
-  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera, Volume2, Globe, Wand2, Copy, Keyboard, Megaphone, MessageSquare, AlertTriangle, ExternalLink
+  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera, Volume2, Globe, Wand2, Copy, Keyboard, Megaphone, MessageSquare, AlertTriangle, ExternalLink, Zap
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -89,18 +89,18 @@ interface BarcodeScannerResult {
   cancelled?: boolean;
 }
 
-const ImeiInput = ({ 
-  value, 
-  onChange, 
-  placeholder, 
-  className, 
-  onScan, 
-  onCancel 
-}: { 
-  value: string; 
-  onChange: (val: string) => void; 
-  placeholder: string; 
-  className?: string; 
+const ImeiInput = ({
+  value,
+  onChange,
+  placeholder,
+  className,
+  onScan,
+  onCancel
+}: {
+  value: string;
+  onChange: (val: string) => void;
+  placeholder: string;
+  className?: string;
   onScan?: (scanned: BarcodeScannerResult) => void;
   onCancel?: () => void;
 }) => {
@@ -179,7 +179,7 @@ const ImeiInput = ({
           onBlur={() => onChange(localVal)}
           className={`${className} pr-12`}
         />
-        
+
         <button
           type="button"
           onClick={handleNativeScan}
@@ -193,9 +193,9 @@ const ImeiInput = ({
       {scanError && (
         <div className="absolute top-full mt-2 left-0 right-0 flex justify-center z-30">
           <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950/80 text-red-700 dark:text-red-300 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider shadow-md border border-red-200 dark:border-red-900/50">
-            <button 
-              type="button" 
-              onClick={() => setScanError(null)} 
+            <button
+              type="button"
+              onClick={() => setScanError(null)}
               className="hover:opacity-85 active:scale-90 flex items-center justify-center p-0.5 rounded-full hover:bg-red-200 dark:hover:bg-red-900/40 transition-all"
             >
               <X className="h-3.5 w-3.5" />
@@ -1317,11 +1317,11 @@ export default function Dashboard() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [crmMessage, setCrmMessage] = useState("Hi [NAME], we miss you at [SHOP]! 🍕 Come back today for a special offer just for you!\n\nनमस्ते [NAME], [SHOP] में आपकी याद आ रही है! 🍕 आज ही आएं और अपने लिए खास ऑफर पाएं!");
   const [templateLang, setTemplateLang] = useState<'both' | 'en' | 'hi'>('both');
-  
+
   // Business Type / Category states
   const [businessType, setBusinessType] = useState("Restaurant/Cafe");
   const [signupBusinessType, setSignupBusinessType] = useState("Restaurant/Cafe");
-  
+
   // AI Banner Generator states
   const [offerTitle, setOfferTitle] = useState("");
   const [discountDetails, setDiscountDetails] = useState("");
@@ -1337,7 +1337,7 @@ export default function Dashboard() {
   const uploadBannerToStorage = async (base64Str: string) => {
     try {
       if (!base64Str || !base64Str.startsWith("data:")) return null;
-      
+
       // 1. Try Supabase Storage first
       try {
         const res = await fetch(base64Str);
@@ -1491,7 +1491,7 @@ export default function Dashboard() {
       setBuybackIdPhotoBack("");
       setBuybackDevicePhoto("");
       setBuybackDeclared(false);
-      
+
       alert("Buyback purchase successfully saved & logged in expenses!");
     } catch (err: any) {
       alert("Error saving buyback: " + err.message);
@@ -1514,7 +1514,7 @@ export default function Dashboard() {
     el.style.zIndex = "9999";
     el.style.opacity = "1";
     el.style.pointerEvents = "none";
-    
+
     el.innerHTML = `
       <div style="border: 2px solid #e2e8f0; border-radius: 20px; padding: 30px; background: #ffffff; color: #000000;">
         <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #ea580c; padding-bottom: 15px; margin-bottom: 20px;">
@@ -1655,7 +1655,7 @@ export default function Dashboard() {
       } catch (err: any) {
         console.error("PDF generation failed:", err);
         alert("PDF Generation Failed: " + err.message);
-        try { document.body.removeChild(el); } catch (e: any) {}
+        try { document.body.removeChild(el); } catch (e: any) { }
       }
     };
 
@@ -1673,7 +1673,7 @@ export default function Dashboard() {
     const storeGst = storeGstin || "";
     const baseUrl = "https://www.instamunim.com";
     const url = `${baseUrl}/invoice?decId=${item.id}&o=${ownerMobile}&n=${encodeURIComponent(restaurantName)}&a=${encodeURIComponent(storeAddress || "")}&ph=${encodeURIComponent(storePhone || "")}&g=${encodeURIComponent(storeGst)}`;
-    
+
     const isCapacitor = (typeof window !== 'undefined' && !!(window as any).Capacitor?.isNative);
     if (isCapacitor) {
       window.open(url, '_system');
@@ -1685,7 +1685,7 @@ export default function Dashboard() {
   const handleExportSalesToExcel = async () => {
     const baseUrl = "https://www.instamunim.com";
     const url = `${baseUrl}/invoice?exportExcel=true&o=${ownerMobile}&startDate=${startDate}&endDate=${endDate}&m=${startDate.substring(0, 7)}&n=${encodeURIComponent(restaurantName)}`;
-    
+
     const isCapacitor = typeof window !== 'undefined' && !!(window as any).Capacitor?.isNative;
     if (isCapacitor) {
       window.open(url, '_system');
@@ -1822,7 +1822,7 @@ export default function Dashboard() {
           Promise.all(imagePromises),
           new Promise((resolve) => setTimeout(resolve, 3000))
         ]);
-      } catch (e: any) {}
+      } catch (e: any) { }
 
       const opt = {
         margin: 10,
@@ -1862,7 +1862,7 @@ export default function Dashboard() {
       } catch (err: any) {
         console.error("PDF generation failed:", err);
         alert("PDF Generation Failed: " + err.message);
-        try { document.body.removeChild(el); } catch (e: any) {}
+        try { document.body.removeChild(el); } catch (e: any) { }
       }
     };
 
@@ -1903,7 +1903,7 @@ export default function Dashboard() {
     const runGeneration = async () => {
       try {
         let cleanPrompt = `Professional commercial studio photography social media ad poster banner. A realistic close-up shot of '${productName}' in premium packaging, set on a modern studio surface with clean lighting. Cinematic lighting, sharp focus, 8k resolution, high-end commercial setup. Plain background with no text, letters, or words.`;
-        
+
         // Enhance prompt with Google Gemini if API Key is loaded
         if (geminiApiKey) {
           try {
@@ -1956,7 +1956,7 @@ Requirements for the generated image prompt:
         setAiBannerPrompt(cleanPrompt);
         const encodedPrompt = encodeURIComponent(cleanPrompt);
         const generatedUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=1024&height=1024&nologo=true&seed=${seed}&model=flux`;
-      
+
         const drawBannerOverlays = (backgroundImage: any, logoImage: any, logoLoaded: any) => {
           try {
             const canvas = document.createElement("canvas");
@@ -1966,25 +1966,25 @@ Requirements for the generated image prompt:
             if (ctx) {
               // Helper to draw text with dynamic wrapping or auto-scaling font size
               const drawTextWithFit = (
-                textStr: string, 
-                centerX: number, 
-                yPos: number, 
-                maxWidth: number, 
-                maxFontSize: number, 
-                isBold: boolean, 
+                textStr: string,
+                centerX: number,
+                yPos: number,
+                maxWidth: number,
+                maxFontSize: number,
+                isBold: boolean,
                 color: string
               ) => {
                 let fontSize = maxFontSize;
                 ctx.textAlign = "center";
                 ctx.textBaseline = "middle";
                 ctx.fillStyle = color;
-                
+
                 // Reduce font size until it fits, down to a minimum of 20px
                 do {
                   ctx.font = `${isBold ? '900' : 'bold'} ${fontSize}px sans-serif`;
                   fontSize -= 2;
                 } while (ctx.measureText(textStr).width > maxWidth && fontSize > 20);
-                
+
                 // If it still exceeds, wrap it into two lines
                 if (ctx.measureText(textStr).width > maxWidth) {
                   fontSize = maxFontSize - 6;
@@ -1993,7 +1993,7 @@ Requirements for the generated image prompt:
                   const words = textStr.split(" ");
                   let line = "";
                   const lines = [];
-                  
+
                   for (let n = 0; n < words.length; n++) {
                     const testLine = line + words[n] + " ";
                     const metrics = ctx.measureText(testLine);
@@ -2005,11 +2005,11 @@ Requirements for the generated image prompt:
                     }
                   }
                   lines.push(line.trim());
-                  
+
                   // Adjust y position to center the block of lines
                   const lineHeight = fontSize + 10;
                   const startY = yPos - ((lines.length - 1) * lineHeight) / 2;
-                  
+
                   lines.forEach((lineText, idx) => {
                     ctx.fillText(lineText, centerX, startY + idx * lineHeight);
                   });
@@ -2101,7 +2101,7 @@ Requirements for the generated image prompt:
         img.src = generatedUrl;
         img.onload = () => {
           setRawAiImageUrl(generatedUrl);
-          
+
           if (storeLogo) {
             const logoImg = new Image();
             logoImg.crossOrigin = "anonymous";
@@ -2138,19 +2138,19 @@ Requirements for the generated image prompt:
     const isNative = typeof window !== 'undefined' && !!(window as any).Capacitor?.isNative;
 
     if (isNative) {
-      const nativeScheme = cleanMobile 
+      const nativeScheme = cleanMobile
         ? `whatsapp://send?phone=91${cleanMobile}&text=${encodedText}`
         : `whatsapp://send?text=${encodedText}`;
       try {
         window.location.href = nativeScheme;
       } catch (e) {
-        const waUrl = cleanMobile 
+        const waUrl = cleanMobile
           ? `https://wa.me/91${cleanMobile}?text=${encodedText}`
           : `https://wa.me/?text=${encodedText}`;
         window.open(waUrl, '_system');
       }
     } else {
-      const waUrl = cleanMobile 
+      const waUrl = cleanMobile
         ? `https://wa.me/91${cleanMobile}?text=${encodedText}`
         : `https://wa.me/?text=${encodedText}`;
       window.open(waUrl, '_blank');
@@ -2207,7 +2207,7 @@ Requirements for the generated image prompt:
       alert("Please generate an AI banner first!");
       return;
     }
-    
+
     const cleanMobile = (mobile || '').replace(/\D/g, '').slice(-10);
     if (!cleanMobile || cleanMobile.length < 10) {
       alert("Invalid customer phone number!");
@@ -2218,14 +2218,14 @@ Requirements for the generated image prompt:
       const baseUrl = (typeof window !== 'undefined' && window.location.port === '3000')
         ? "http://localhost:3000"
         : "https://www.instamunim.com";
-      
+
       const seedParam = aiBannerSeed ? `&sd=${aiBannerSeed}` : "";
       const viewerUrl = `${baseUrl}/invoice?banner=true${seedParam}&n=${encodeURIComponent(restaurantName)}&o=${encodeURIComponent(offerTitle)}&d=${encodeURIComponent(discountDetails)}&p=${encodeURIComponent(productName)}&oM=${encodeURIComponent(ownerMobile)}`;
 
       const customMsgEn = `Special offer for you, ${name}! 🛍️\nShop: ${restaurantName}\nOffer: ${offerTitle}\nDeal: ${discountDetails} on ${productName}`;
       const customMsgHi = `आपके लिए खास ऑफर, ${name}! 🛍️\nदुकान: ${restaurantName}\nऑफर: ${offerTitle}\nडील: ${productName} पर ${discountDetails}`;
       const customMsg = `${customMsgEn}\n\n${customMsgHi}\n\n🌐 View Digital Banner:\n${viewerUrl}`;
-      
+
       launchWhatsApp(cleanMobile, customMsg);
     } catch (err: any) {
       console.error("Error sending image:", err);
@@ -2262,20 +2262,20 @@ Requirements for the generated image prompt:
     try {
       const fileExt = file.name.split('.').pop() || 'png';
       const filePath = `${ownerMobile || 'unknown'}/${folderName}_${Date.now()}.${fileExt}`;
-      
+
       const { data, error } = await supabase.storage
         .from('Logos and Images')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: true
         });
-        
+
       if (error) throw error;
-      
+
       const { data: { publicUrl } } = supabase.storage
         .from('Logos and Images')
         .getPublicUrl(filePath);
-        
+
       return publicUrl;
     } catch (err: any) {
       console.error("Storage upload failed:", err.message);
@@ -2288,7 +2288,7 @@ Requirements for the generated image prompt:
     if (!currentStoreId) return;
 
     const channel = supabase.channel('online-users');
-    
+
     const trackPresence = async () => {
       channel
         .subscribe(async (status) => {
@@ -2331,14 +2331,21 @@ Requirements for the generated image prompt:
   const [deleteError, setDeleteError] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Smart CRM Batch Marketing & Sent Tracking States
+  const [sentCrmMobiles, setSentCrmMobiles] = useState<string[]>([]);
+  const [crmFilterTab, setCrmFilterTab] = useState<"all" | "pending" | "sent">("pending");
+  const [selectedCrmMobiles, setSelectedCrmMobiles] = useState<string[]>([]);
+  const [showBatchCampaignModal, setShowBatchCampaignModal] = useState(false);
+  const [campaignIndex, setCampaignIndex] = useState(0);
+
   // POS Keyboard Shortcuts Refs & States
   const itemSearchInputRef = useRef<HTMLInputElement | null>(null);
   const customerMobileInputRef = useRef<HTMLInputElement | null>(null);
   const discountInputRef = useRef<HTMLInputElement | null>(null);
-  const handleSaleRef = useRef<() => void>(() => {});
+  const handleSaleRef = useRef<() => void>(() => { });
   const [showShortcutsModal, setShowShortcutsModal] = useState(false);
 
-  const grandTotal = Math.max(0, cart.reduce((s,i) => s + (i.price*i.qty), 0) + (Number(extraChargeAmount) || 0) - (Number(discount) || 0));
+  const grandTotal = Math.max(0, cart.reduce((s, i) => s + (i.price * i.qty), 0) + (Number(extraChargeAmount) || 0) - (Number(discount) || 0));
 
   const checkSubscription = () => {
 
@@ -2347,17 +2354,17 @@ Requirements for the generated image prompt:
     if (ownerMobile === "8130707236") return false;
 
     if (!storeCreatedAt) return true; // Loading state safety
-    
+
     const now = new Date();
     const created = new Date(storeCreatedAt);
     const trialEnds = new Date(created.getTime() + (7 * 24 * 60 * 60 * 1000)); // 7 Days Trial
-    
+
     // If active subscription exists
     if (subscriptionExpiry) {
       const expiry = new Date(subscriptionExpiry);
       return isAfter(expiry, now);
     }
-    
+
     // Check if within trial period
     return isBefore(now, trialEnds);
   };
@@ -2404,9 +2411,9 @@ Requirements for the generated image prompt:
       // Success — clear everything locally and reload
       localStorage.clear();
       try {
-        
+
         if (Capacitor.isNativePlatform()) {
-          
+
           await Preferences.clear();
         }
       } catch (e: any) { /* ignore on web */ }
@@ -2466,7 +2473,7 @@ Stay safe & eat healthy! 🍕
   const [lastMatch, setLastMatch] = useState("");
   const [voiceHistory, setVoiceHistory] = useState<string[]>([]);
   const recognitionRef = useRef<any>(null);
-  const lastAddedRef = useRef<{name: string, time: number}>({name: "", time: 0});
+  const lastAddedRef = useRef<{ name: string, time: number }>({ name: "", time: 0 });
   const mobileDigitsRef = useRef<string>("");
 
   // Global Keyboard Shortcuts Event Listener (Conflict-Free Web POS Hotkeys)
@@ -2649,14 +2656,14 @@ Stay safe & eat healthy! 🍕
   // SMART TRANSLITERATION (Hindi Script to English Font)
   const transliterate = (text: string) => {
     const map: any = {
-      'अ':'a','आ':'aa','इ':'i','ई':'ee','उ':'u','ऊ':'oo','ए':'e','ऐ':'ai','ओ':'o','औ':'au','अं':'an','अः':'ah',
-      'क':'k','ख':'kh','ग':'g','घ':'gh','ङ':'n','च':'ch','छ':'chh','ज':'j','झ':'jh','ञ':'n','ट':'t','ठ':'th','ड':'d','ढ':'dh','ण':'n',
-      'त':'t','थ':'th','द':'d','ध':'dh','न':'n','प':'p','फ':'ph','ब':'b','भ':'bh','म':'m','य':'y','र':'r','ल':'l','व':'v','श':'sh','ष':'sh','स':'s','ह':'h',
-      'ा':'a','ि':'i','ी':'ee','ु':'u','ू':'oo','े':'e','ै':'ai','ो':'o','ौ':'au','ं':'n','ः':'h','्':'','़':''
+      'अ': 'a', 'आ': 'aa', 'इ': 'i', 'ई': 'ee', 'उ': 'u', 'ऊ': 'oo', 'ए': 'e', 'ऐ': 'ai', 'ओ': 'o', 'औ': 'au', 'अं': 'an', 'अः': 'ah',
+      'क': 'k', 'ख': 'kh', 'ग': 'g', 'घ': 'gh', 'ङ': 'n', 'च': 'ch', 'छ': 'chh', 'ज': 'j', 'झ': 'jh', 'ञ': 'n', 'ट': 't', 'ठ': 'th', 'ड': 'd', 'ढ': 'dh', 'ण': 'n',
+      'त': 't', 'थ': 'th', 'द': 'd', 'ध': 'dh', 'न': 'n', 'प': 'p', 'फ': 'ph', 'ब': 'b', 'भ': 'bh', 'म': 'm', 'य': 'y', 'र': 'r', 'ल': 'l', 'व': 'v', 'श': 'sh', 'ष': 'sh', 'स': 's', 'ह': 'h',
+      'ा': 'a', 'ि': 'i', 'ी': 'ee', 'ु': 'u', 'ू': 'oo', 'े': 'e', 'ै': 'ai', 'ो': 'o', 'ौ': 'au', 'ं': 'n', 'ः': 'h', '्': '', '़': ''
     };
     return text.split('').map(char => map[char] || char).join('').toUpperCase();
   };
-  
+
   const qrCodeRef = useRef<any>(null);
   const lastScannedRef = useRef<{ barcode: string; time: number } | null>(null);
   const scannerTargetRef = useRef<"cart" | "imei">("cart");
@@ -2705,7 +2712,7 @@ Stay safe & eat healthy! 🍕
   const [showScanMenuModal, setShowScanMenuModal] = useState(false);
   const [scanMenuImage, setScanMenuImage] = useState<string | null>(null);
   const [scanMenuLoading, setScanMenuLoading] = useState(false);
-  const [scanMenuResults, setScanMenuResults] = useState<{name: string, price: number, selected: boolean}[]>([]);
+  const [scanMenuResults, setScanMenuResults] = useState<{ name: string, price: number, selected: boolean }[]>([]);
   const [scanMenuStep, setScanMenuStep] = useState<'capture' | 'review'>('capture');
   const [geminiApiKey, setGeminiApiKey] = useState('');
 
@@ -2765,7 +2772,7 @@ Stay safe & eat healthy! 🍕
             }
           },
           successCallback,
-          () => {}
+          () => { }
         ).then(() => {
           try {
             const track = html5QrCode.getRunningTrack();
@@ -2899,14 +2906,14 @@ Stay safe & eat healthy! 🍕
 
   const handleScanSuccess = async (rawBarcode: string, html5QrCodeInstance?: any) => {
     playBeep();
-    
+
     // Clean rawBarcode: if it contains an IMEI sequence (14 to 16 digits), extract it.
     let barcode = rawBarcode.trim();
     const match = barcode.match(/\d{14,16}/);
     if (match) {
       barcode = match[0];
     }
-    
+
     setScannedBarcode(barcode);
 
     if (scannerTargetRef.current === "imei") {
@@ -2975,7 +2982,7 @@ Stay safe & eat healthy! 🍕
         return;
       }
     }
-    
+
     const matchedItem = menuItems.find(item => {
       const itemBarcode = getBarcode(item.category);
       return itemBarcode === barcode;
@@ -2989,7 +2996,7 @@ Stay safe & eat healthy! 🍕
       setNewScannedPrice("");
       setNewScannedQty("1");
       setShowNewProductModal(true);
-      
+
       try {
         const res = await fetch(`https://world.openfoodfacts.org/api/v0/product/${barcode}.json`);
         const data = await res.json();
@@ -3032,7 +3039,7 @@ Stay safe & eat healthy! 🍕
 
     setShowNewProductModal(false);
   };
-  
+
   // Latest State Ref to avoid stale closures in voice listener
   const latestStateRef = useRef({ menuItems, voicePhase, cart, newName, newMobile });
   useEffect(() => {
@@ -3041,10 +3048,10 @@ Stay safe & eat healthy! 🍕
   // BACK BUTTON HANDLING FOR MOBILE APP
   useEffect(() => {
     let backListener: any;
-    
+
     const initBackListener = async () => {
       try {
-        
+
         backListener = await App.addListener('backButton', () => {
           if (activeTab !== "Dashboard") {
             setActiveTab("Dashboard");
@@ -3096,7 +3103,7 @@ Stay safe & eat healthy! 🍕
     if (isSubscribed) return;
     try {
       const adModule = admobRef.current;
-      
+
       if (adModule && Capacitor.isNativePlatform()) {
         console.log("Preparing Interstitial Ad...");
         await adModule.prepareInterstitial({
@@ -3131,7 +3138,7 @@ Stay safe & eat healthy! 🍕
         return;
       }
       try {
-        
+
         if (!Capacitor.isNativePlatform()) {
           setAdmobDebugInfo("Non-native platform");
           return;
@@ -3207,7 +3214,7 @@ Stay safe & eat healthy! 🍕
     return () => {
       const cleanUp = async () => {
         try {
-          
+
           if (Capacitor.isNativePlatform() && admobRef.current) {
             if (loadedListener) loadedListener.remove();
             if (failedListener) failedListener.remove();
@@ -3228,13 +3235,13 @@ Stay safe & eat healthy! 🍕
   useEffect(() => {
     const toggleBanner = async () => {
       try {
-        
+
         if (!Capacitor.isNativePlatform() || !admobRef.current) return;
-        
+
         if (isProOrAbove || adProvider !== "admob") {
           try {
             await admobRef.current.hideBanner();
-          } catch (e: any) {}
+          } catch (e: any) { }
           setIsAdMobActive(false);
           return;
         }
@@ -3273,7 +3280,7 @@ Stay safe & eat healthy! 🍕
       const cleanText = text.toLowerCase().trim();
       const { menuItems: currentMenu } = latestStateRef.current;
       let hasMatchedItem = false;
-      
+
       const displayTranscript = cleanText.match(/[\u0900-\u097F]/) ? transliterate(cleanText) : cleanText;
 
       if (isFinal) {
@@ -3289,12 +3296,12 @@ Stay safe & eat healthy! 🍕
         const engVar = [name, name.replace(/er$|s$|els$/g, ""), name.replace(/ /g, "")];
         const hinVar: string[] = ["नूडल्स", "नूडल", "मैगी", "पनीर", "टिक्का", "रोल", "चाय", "टी"];
 
-        const isMatch = engVar.some(v => cleanText.includes(v)) || 
-                       (name.includes("nood") && (cleanText.includes("नूडल") || cleanText.includes("nood"))) ||
-                       (name.includes("maggi") && (cleanText.includes("मैगी") || cleanText.includes("maggi"))) ||
-                       (name.includes("paneer") && (cleanText.includes("पनीर") || cleanText.includes("paneer"))) ||
-                       (name.includes("tikka") && (cleanText.includes("टिक्का") || cleanText.includes("tikka"))) ||
-                       (name.includes("roll") && (cleanText.includes("रोल") || cleanText.includes("roll")));
+        const isMatch = engVar.some(v => cleanText.includes(v)) ||
+          (name.includes("nood") && (cleanText.includes("नूडल") || cleanText.includes("nood"))) ||
+          (name.includes("maggi") && (cleanText.includes("मैगी") || cleanText.includes("maggi"))) ||
+          (name.includes("paneer") && (cleanText.includes("पनीर") || cleanText.includes("paneer"))) ||
+          (name.includes("tikka") && (cleanText.includes("टिक्का") || cleanText.includes("tikka"))) ||
+          (name.includes("roll") && (cleanText.includes("रोल") || cleanText.includes("roll")));
 
         if (isMatch) {
           hasMatchedItem = true;
@@ -3307,7 +3314,7 @@ Stay safe & eat healthy! 🍕
           if (cleanText.match(/chaar|4|चार/)) qty = 4;
           if (cleanText.match(/paanch|5|पांच/)) qty = 5;
 
-          for(let i=0; i<qty; i++) addToCart(item);
+          for (let i = 0; i < qty; i++) addToCart(item);
           lastAddedRef.current = { name: item.name, time: now };
           setLastMatch(`${qty} x ${item.name}`);
           setVoiceInstruction(`Dala: ${qty} ${item.name} ✅`);
@@ -3353,7 +3360,7 @@ Stay safe & eat healthy! 🍕
     // Native Bridge Setup
     (window as any).onNativeSpeechResult = (text: string) => handleVoiceResult(text, true);
     (window as any).onNativeSpeechPartial = (text: string) => handleVoiceResult(text, false);
-    
+
     // Web Speech Setup
     let recognition: any = null;
     if (typeof window !== 'undefined' && !((window as any).NativeSpeech) && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
@@ -3370,7 +3377,7 @@ Stay safe & eat healthy! 🍕
           handleVoiceResult(event.results[i][0].transcript, event.results[i].isFinal);
         }
       };
-      recognition.onend = () => { if (isListening) try { recognition.start(); } catch (e: any) {} };
+      recognition.onend = () => { if (isListening) try { recognition.start(); } catch (e: any) { } };
     }
 
     if (isListening) {
@@ -3378,12 +3385,12 @@ Stay safe & eat healthy! 🍕
         setVoiceStatus("Listening");
         (window as any).NativeSpeech.startListening();
       } else if (recognition) {
-        try { recognition.start(); } catch (e: any) {}
+        try { recognition.start(); } catch (e: any) { }
       }
     }
 
     return () => {
-      if (recognition) try { recognition.stop(); } catch (e: any) {}
+      if (recognition) try { recognition.stop(); } catch (e: any) { }
       if ((window as any).NativeSpeech) (window as any).NativeSpeech.stopListening();
     };
   }, [isListening]);
@@ -3416,7 +3423,7 @@ Stay safe & eat healthy! 🍕
 
         if (data && data.store_logo && data.store_logo.startsWith("JSON_CFG:")) {
           const config = JSON.parse(data.store_logo.substring(9));
-          
+
           // 1. Maintenance Mode
           if (config.maintenanceMode) {
             setIsMaintenanceActive(true);
@@ -3539,7 +3546,7 @@ Stay safe & eat healthy! 🍕
     };
     document.addEventListener("click", unlockSpeech);
     document.addEventListener("touchstart", unlockSpeech);
-    
+
     // Exit Protection Logic
     const handleBackButton = (e: PopStateEvent) => {
       if (isLoggedIn) {
@@ -3597,9 +3604,9 @@ Stay safe & eat healthy! 🍕
     // Also check native Preferences (survives app restart on Android)
     const checkNativeSession = async () => {
       try {
-        
+
         if (Capacitor.isNativePlatform()) {
-          
+
           const { value: nativeLoggedIn } = await Preferences.get({ key: 'saas_is_logged_in' });
           const { value: nativeMobile } = await Preferences.get({ key: 'saas_owner_mobile' });
           if (nativeLoggedIn === 'true' && nativeMobile) {
@@ -3665,7 +3672,7 @@ Stay safe & eat healthy! 🍕
       setIsLoggedIn(true);
       if (savedOwnerMobile) {
         setOwnerMobile(savedOwnerMobile);
-        
+
         // Restore local settings immediately for UX
         const savedBType = localStorage.getItem("saas_business_type");
         if (savedBType) setBusinessType(savedBType);
@@ -3725,17 +3732,17 @@ Stay safe & eat healthy! 🍕
     }
 
     const savedSales = localStorage.getItem("saas_sales");
-    if (savedSales) { 
-      try { 
+    if (savedSales) {
+      try {
         setSales(JSON.parse(savedSales).map((s: any) => {
           // Parse commission from items if present
           const commMatch = s.items?.match(/\[COMM:(\d+(\.\d+)?)\]/);
           const commission = commMatch ? Number(commMatch[1]) : (s.commission || 0);
           return { ...s, date: new Date(s.date), commission };
-        })); 
-      } catch (e: any) { console.error(e); } 
+        }));
+      } catch (e: any) { console.error(e); }
     }
-    
+
     const savedExpenses = localStorage.getItem("saas_expenses");
     if (savedExpenses) { try { setExpenses(JSON.parse(savedExpenses).map((e: any) => ({ ...e, date: new Date(e.date) }))); } catch (e: any) { console.error(e); } }
 
@@ -3853,7 +3860,7 @@ Stay safe & eat healthy! 🍕
 
     const initAppStateListener = async () => {
       try {
-        
+
         appStateListener = await App.addListener('appStateChange', (state) => {
           if (!state.isActive) {
             localStorage.setItem("saas_inactive_timestamp", Date.now().toString());
@@ -3913,14 +3920,14 @@ Stay safe & eat healthy! 🍕
     e.preventDefault();
     setIsLoading(true);
     setLoginError("");
-    
+
     // Smart cache clearing: Only wipe settings if logging into a DIFFERENT account
     const lastMobile = localStorage.getItem("saas_owner_mobile");
     if (lastMobile && lastMobile !== loginMobile) {
       console.log("Different merchant logging in. Clearing device settings cache...");
       clearStoreCache();
     }
-    
+
     // 1. Immediate navigator connection check
     if (typeof navigator !== "undefined" && !navigator.onLine) {
       setLoginError("Connection failed. Check internet.");
@@ -3933,15 +3940,15 @@ Stay safe & eat healthy! 🍕
       setIsLoading(false);
       return;
     }
-    
+
     try {
       if (authMode === "login") {
         const { data, error } = await supabase
-          .rpc('verify_store_login', { 
-            mobile: loginMobile, 
-            input_pass: loginPassword 
+          .rpc('verify_store_login', {
+            mobile: loginMobile,
+            input_pass: loginPassword
           });
- 
+
         if (error) {
           const errMsg = (error as any).message || "";
           if (errMsg.toLowerCase().includes("fetch") || errMsg.toLowerCase().includes("network") || (error as any).status === 0) {
@@ -3966,14 +3973,14 @@ Stay safe & eat healthy! 🍕
           localStorage.setItem("saas_business_type", storeBType);
           // Save to native Preferences for app restart persistence
           try {
-            
+
             if (Capacitor.isNativePlatform()) {
-              
+
               await Preferences.set({ key: 'saas_is_logged_in', value: 'true' });
               await Preferences.set({ key: 'saas_owner_mobile', value: loginMobile });
             }
           } catch (e: any) { console.log('Preferences save error:', e); }
- 
+
           if (rememberMe) {
             localStorage.setItem("saas_rem_mobile", loginMobile);
             localStorage.setItem("saas_rem_pass", loginPassword);
@@ -3981,12 +3988,12 @@ Stay safe & eat healthy! 🍕
             localStorage.removeItem("saas_rem_mobile");
             localStorage.removeItem("saas_rem_pass");
           }
- 
+
           setStoreCreatedAt(storeData.created_at);
           setSubscriptionExpiry(storeData.subscription_expiry);
           localStorage.setItem("saas_store_created_at", storeData.created_at || "");
           localStorage.setItem("saas_store_expiry", storeData.subscription_expiry || "");
- 
+
           await fetchStoreData(storeData.id);
 
           // Send Discord Alert for Merchant Login / Session Active
@@ -4028,9 +4035,9 @@ Stay safe & eat healthy! 🍕
         // Signup
         let insertResult = await supabase
           .from('stores')
-          .insert([{ 
-            owner_mobile: loginMobile, 
-            store_name: signupStoreName, 
+          .insert([{
+            owner_mobile: loginMobile,
+            store_name: signupStoreName,
             password: loginPassword,
             business_type: signupBusinessType,
             store_logo: initialLogoVal
@@ -4042,9 +4049,9 @@ Stay safe & eat healthy! 🍕
           console.warn("Primary signup insert failed, retrying fallback without business_type column:", insertResult.error);
           insertResult = await supabase
             .from('stores')
-            .insert([{ 
-              owner_mobile: loginMobile, 
-              store_name: signupStoreName, 
+            .insert([{
+              owner_mobile: loginMobile,
+              store_name: signupStoreName,
               password: loginPassword,
               store_logo: initialLogoVal
             }])
@@ -4053,7 +4060,7 @@ Stay safe & eat healthy! 🍕
         }
 
         const { data, error } = insertResult;
- 
+
         if (error) {
           const errMsg = (error as any).message || "";
           if (errMsg.toLowerCase().includes("fetch") || errMsg.toLowerCase().includes("network") || (error as any).status === 0) {
@@ -4086,7 +4093,7 @@ Stay safe & eat healthy! 🍕
             }));
             await supabase.from('menu_items').insert(menuItemsToInsert);
           }
- 
+
           setIsLoggedIn(true);
           trackEvent("store_registration", { store_name: signupStoreName, owner_mobile: loginMobile, business_type: signupBusinessType });
           setOwnerMobile(loginMobile);
@@ -4099,7 +4106,7 @@ Stay safe & eat healthy! 🍕
           localStorage.setItem("saas_business_type", signupBusinessType);
           localStorage.setItem("saas_store_created_at", data.created_at || "");
           localStorage.setItem("saas_store_expiry", data.subscription_expiry || "");
- 
+
           await fetchStoreData(data.id);
         }
       }
@@ -4130,11 +4137,11 @@ Stay safe & eat healthy! 🍕
       // 0. Update Store Profile Info
       if (storeInfo) {
         setRestaurantName(storeInfo.store_name || storeInfo.name || localStorage.getItem("saas_store_name") || "");
-        
+
         // Smart fallback category detection for legacy users with store_logo = null
         let detectedBusinessType = storeInfo.business_type || localStorage.getItem("saas_business_type");
         if (!detectedBusinessType && menuData && menuData.length > 0) {
-          const hasMobile = menuData.some(item => 
+          const hasMobile = menuData.some(item =>
             item.name.toLowerCase().includes("iphone") ||
             item.name.toLowerCase().includes("vivo") ||
             item.name.toLowerCase().includes("charger") ||
@@ -4161,16 +4168,16 @@ Stay safe & eat healthy! 🍕
             }
           }
         }
-        
+
         const storeBType = detectedBusinessType || "Restaurant/Cafe";
         setBusinessType(storeBType);
         localStorage.setItem("saas_business_type", storeBType);
-        
+
         const cloudLogo = storeInfo.logo || storeInfo.store_logo || storeInfo.image || "";
         if (cloudLogo.startsWith('JSON_CFG:')) {
           try {
             const settingsPacket = JSON.parse(cloudLogo.substring(9));
-            
+
             // Hydrate React States from DB
             if (settingsPacket.upiId !== undefined) setStoreUpiId(settingsPacket.upiId);
             if (settingsPacket.upiName !== undefined) setStoreUpiName(settingsPacket.upiName);
@@ -4234,7 +4241,7 @@ Stay safe & eat healthy! 🍕
           const upiId = parts[0] || "";
           const upiName = parts[1] || "";
           const logo = parts[2] || "";
-          
+
           setStoreUpiId(upiId);
           setStoreUpiName(upiName);
           setStoreLogo(logo);
@@ -4254,7 +4261,7 @@ Stay safe & eat healthy! 🍕
         setMonthlyRent(storeInfo.monthly_rent || storeInfo.rent || Number(localStorage.getItem("saas_monthly_rent")) || 0);
         setSwiggyCommission(storeInfo.swiggy_commission || Number(localStorage.getItem("saas_swiggy_comm")) || 0);
         setZomatoCommission(storeInfo.zomato_commission || Number(localStorage.getItem("saas_zomato_comm")) || 0);
-        
+
         setStoreCreatedAt(storeInfo.created_at);
         setSubscriptionExpiry(storeInfo.subscription_expiry);
         localStorage.setItem("saas_store_created_at", storeInfo.created_at || "");
@@ -4282,13 +4289,13 @@ Stay safe & eat healthy! 🍕
       }
 
       // 2. Update Expenses
-      setExpenses(expData ? expData.map(e => ({ 
-        id: e.id, title: e.title, amount: e.amount, date: new Date(e.expense_date) 
+      setExpenses(expData ? expData.map(e => ({
+        id: e.id, title: e.title, amount: e.amount, date: new Date(e.expense_date)
       })) : []);
 
       // 3. Update Menu
-      setMenuItems(menuData ? menuData.map(m => ({ 
-        id: m.id, name: m.name, price: m.price, category: m.category 
+      setMenuItems(menuData ? menuData.map(m => ({
+        id: m.id, name: m.name, price: m.price, category: m.category
       })) : []);
 
       // 4. Fetch Enquiries safely
@@ -4317,7 +4324,7 @@ Stay safe & eat healthy! 🍕
         .eq('key', 'gemini_api_key')
         .single();
       if (configData?.value) setGeminiApiKey(configData.value);
-      
+
       setSyncStatus("synced");
     } catch (err: any) {
       setSyncStatus("error");
@@ -4384,7 +4391,7 @@ Stay safe & eat healthy! 🍕
       let insight = "";
       // Only show inventory advice if actually used
       const isInventoryUsed = menuItems.some(i => (i.stock || 0) > 0);
-      
+
       if (filteredSales.length === 0) {
         insight = "Bhai, aaj abhi tak koi sale nahi hui hai. Ek 'Combo Offer' banaiye aur WhatsApp par share kijiye! 🚀";
       } else if (isInventoryUsed && outOfStockCount > 0) {
@@ -4486,7 +4493,7 @@ Stay safe & eat healthy! 🍕
     setExpenses([]);
     setMenuItems([]);
     setBusinessType("Restaurant/Cafe");
-    
+
     const keysToRemove = [
       "saas_store_upi_id",
       "saas_store_upi_name",
@@ -4521,14 +4528,14 @@ Stay safe & eat healthy! 🍕
     setActiveTab("Dashboard");
     // Clear native Preferences on logout
     try {
-      
+
       if (Capacitor.isNativePlatform()) {
-        
+
         await Preferences.remove({ key: 'saas_is_logged_in' });
         await Preferences.remove({ key: 'saas_owner_mobile' });
       }
     } catch (e: any) { console.log('Preferences clear error:', e); }
-    
+
     if (!rememberMe) {
       setLoginMobile("");
       setLoginPassword("");
@@ -4540,7 +4547,7 @@ Stay safe & eat healthy! 🍕
 
   const announceVoice = async (text: string, forceLang?: string) => {
     if (!isVoiceAnnouncerEnabled) return;
-    
+
     const langToUse = forceLang || lang;
     const localeCodes: Record<string, string> = {
       hi: "hi-IN",
@@ -4558,7 +4565,7 @@ Stay safe & eat healthy! 🍕
 
     // 1. Check if running inside native Android / iOS app
     try {
-      
+
       if (Capacitor.isNativePlatform()) {
         const { TextToSpeech } = await import('@capacitor-community/text-to-speech');
         await TextToSpeech.stop();
@@ -4606,10 +4613,10 @@ Stay safe & eat healthy! 🍕
         const saleDate = s.date ? new Date(s.date) : new Date();
         const today = new Date();
         return saleDate.getDate() === today.getDate() &&
-               saleDate.getMonth() === today.getMonth() &&
-               saleDate.getFullYear() === today.getFullYear();
+          saleDate.getMonth() === today.getMonth() &&
+          saleDate.getFullYear() === today.getFullYear();
       }).length;
-      
+
       if (todaySales >= 40) {
         setShowUpgradeModal(true);
         return;
@@ -4617,7 +4624,7 @@ Stay safe & eat healthy! 🍕
     }
 
     setIsLoading(true);
-    
+
     try {
       // Get Store ID
       let storeId = currentStoreId;
@@ -4640,7 +4647,7 @@ Stay safe & eat healthy! 🍕
       const extraAmt = Number(extraChargeAmount) || 0;
       const discAmt = Number(discount) || 0;
       const cartTotal = Math.max(0, cartTotalBase + extraAmt - discAmt);
-      
+
       let commAmount = 0;
       if (newType === "Swiggy") {
         commAmount = swiggyCommType === "percent" ? (cartTotal * (swiggyCommission / 100)) : swiggyCommission;
@@ -4656,7 +4663,7 @@ Stay safe & eat healthy! 🍕
       if (discAmt > 0) {
         itemsWithMetadata += `\n[DISCOUNT:${discAmt}]`;
       }
-      
+
       // Embed Finance details
       if (newType === "Finance") {
         const loanAmt = Math.max(0, cartTotal - (Number(financeDownPayment) || 0));
@@ -4710,8 +4717,8 @@ Stay safe & eat healthy! 🍕
               const imeis = getImeis(matchedItem.category);
               const remainingImeis = imeis.filter(x => x !== cartItem.imei);
               const cleanCategory = getDisplayCategory(matchedItem.category);
-              const updatedCategory = remainingImeis.length > 0 
-                ? `${cleanCategory}|IMEIs:${remainingImeis.join(",")}` 
+              const updatedCategory = remainingImeis.length > 0
+                ? `${cleanCategory}|IMEIs:${remainingImeis.join(",")}`
                 : cleanCategory;
 
               // Always update category instead of deleting so the item remains in the list as Out of Stock
@@ -4721,7 +4728,7 @@ Stay safe & eat healthy! 🍕
                 .eq('id', matchedItem.id)
                 .then(async ({ error }) => {
                   if (!error) {
-                    setMenuItems(prev => prev.map(m => 
+                    setMenuItems(prev => prev.map(m =>
                       m.id === matchedItem.id ? { ...m, category: updatedCategory } : m
                     ));
 
@@ -4734,16 +4741,16 @@ Stay safe & eat healthy! 🍕
 
                       if (targetExpense) {
                         const isNewFormat = targetExpense.title.includes("###UNSOLD]");
-                        const updatedTitle = isNewFormat 
+                        const updatedTitle = isNewFormat
                           ? targetExpense.title.replace("###UNSOLD]", `###SOLD###${cartItem.price}`)
                           : targetExpense.title.replace(":UNSOLD]", `:SOLD:${cartItem.price}`);
-                        
+
                         await supabase
                           .from('expenses')
                           .update({ title: updatedTitle })
                           .eq('id', targetExpense.id);
 
-                        setExpenses(prev => prev.map(e => 
+                        setExpenses(prev => prev.map(e =>
                           e.id === targetExpense.id ? { ...e, title: updatedTitle } : e
                         ));
                       }
@@ -4783,13 +4790,13 @@ Stay safe & eat healthy! 🍕
         console.error("Failed to auto-onboard products:", dbErr);
       }
 
-      const sale = { 
-        id: newSale.id, 
-        name: newSale.customer_name, 
-        item: newSale.items, 
-        mobile: newSale.mobile, 
-        price: newSale.total_price, 
-        type: newSale.payment_type, 
+      const sale = {
+        id: newSale.id,
+        name: newSale.customer_name,
+        item: newSale.items,
+        mobile: newSale.mobile,
+        price: newSale.total_price,
+        type: newSale.payment_type,
         date: new Date(newSale.sale_date),
         commission: commAmount // Storing fixed commission at sale time
       };
@@ -4815,7 +4822,7 @@ Stay safe & eat healthy! 🍕
       try {
         const amt = sale.price;
         const type = sale.type; // Cash, Online, Udhaar, Swiggy, Zomato
-        
+
         const getVoicePartnerName = (t: string, langCode: string) => {
           if (t === "Online") {
             return { hi: "ऑनलाइन", mr: "ऑनलाइन", gu: "ઓનલાઇન", bn: "অনলাইন", pa: "ਆਨਲਾਈਨ", ta: "ஆன்லைன்", te: "ఆన్‌లైన్", kn: "ಆನ್‌ಲೈನ್", ml: "ഓൺലൈൻ" }[langCode] || "Online";
@@ -4842,35 +4849,35 @@ Stay safe & eat healthy! 🍕
         };
 
         const announceTemplates: Record<string, string> = {
-          hi: type === "Udhaar" 
-            ? `इंस्टामुनिम पर ${amt} रुपये का उधार दर्ज हुआ。` 
+          hi: type === "Udhaar"
+            ? `इंस्टामुनिम पर ${amt} रुपये का उधार दर्ज हुआ。`
             : `इंस्टामुनिम पर ${type === "Online" ? "ऑनलाइन" : type === "Swiggy" ? "स्वीगी" : type === "Zomato" ? "ज़ोमैटो" : "कैश"} के ${amt} रुपये प्राप्त हुए。`,
-          mr: type === "Udhaar" 
-            ? `इन्स्टामुनिमवर ${amt} रुपयांची उधारी नोंदवली गेली。` 
+          mr: type === "Udhaar"
+            ? `इन्स्टामुनिमवर ${amt} रुपयांची उधारी नोंदवली गेली。`
             : `इन्स्टामुनिमवर ${type === "Online" ? "ऑनलाइन" : type === "Swiggy" ? "स्वीगी" : type === "Zomato" ? "झोमॅटो" : "कॅश"}द्वारे ${amt} रुपये प्राप्त झाले。`,
-          gu: type === "Udhaar" 
-            ? `ઇન્સ્ટામુનિમ પર ${amt} રૂપિયાનું ઉધાર નોંધાયું છે。` 
+          gu: type === "Udhaar"
+            ? `ઇન્સ્ટામુનિમ પર ${amt} રૂપિયાનું ઉધાર નોંધાયું છે。`
             : `ઇન્સ્ટામુનિમ પર ${type === "Online" ? "ઓનલાઇન" : type === "Swiggy" ? "સ્વીગી" : type === "Zomato" ? "ઝોમેટો" : "કેશ"} દ્વારા ${amt} રૂપિયા મળ્યા છે。`,
-          bn: type === "Udhaar" 
-            ? `ইনস্টামুনিমে ${amt} টাকার ধার নথিভুক্ত করা হয়েছে。` 
+          bn: type === "Udhaar"
+            ? `ইনস্টামুনিমে ${amt} টাকার ধার নথিভুক্ত করা হয়েছে。`
             : `ইনস্টামুনিমে ${type === "Online" ? "অনলাইন" : type === "Swiggy" ? "সুইগি" : type === "Zomato" ? "জোম্যাটো" : "ক্যাশ"} এর মাধ্যমে ${amt} টাকা পাওয়া গেছে。`,
-          pa: type === "Udhaar" 
-            ? `ਇੰਸਟਾਮੁਨਿਮ 'ਤੇ ${amt} ਰੁਪਏ ਦਾ ਉਧਾਰ ਦਰਜ ਕੀਤਾ ਗਿਆ ਹੈ。` 
+          pa: type === "Udhaar"
+            ? `ਇੰਸਟਾਮੁਨਿਮ 'ਤੇ ${amt} ਰੁਪਏ ਦਾ ਉਧਾਰ ਦਰਜ ਕੀਤਾ ਗਿਆ ਹੈ。`
             : `ਇੰਸਟਾਮੁਨਿਮ 'ਤੇ ${type === "Online" ? "ਆਨਲਾਈਨ" : type === "Swiggy" ? "ਸਵਿਗੀ" : type === "Zomato" ? "ਜ਼ੋਮੈਟੋ" : "ਕੈਸ਼"} ਰਾਹੀਂ ${amt} ਰੁਪਏ ਪ੍ਰਾਪਤ ਹੋਏ。`,
-          ta: type === "Udhaar" 
-            ? `இன்ஸ்டாமுனிமில் ${amt} ரூபாய் கடன் பதிவு செய்யப்பட்டது。` 
+          ta: type === "Udhaar"
+            ? `இன்ஸ்டாமுனிமில் ${amt} ரூபாய் கடன் பதிவு செய்யப்பட்டது。`
             : `இன்ஸ்டாமுனிமில் ${type === "Online" ? "ஆன்லைன்" : type === "Swiggy" ? "ஸ்விக்கி" : type === "Zomato" ? "சொமாட்டோ" : "ரொக்கமாக"} மூலம் ${amt} ரூபாய் பெறப்பட்டது。`,
-          te: type === "Udhaar" 
-            ? `ఇన్‌స్టామునిమ్‌లో ${amt} రూపాయల అప్పు నమోదు చేయబడింది。` 
+          te: type === "Udhaar"
+            ? `ఇన్‌స్టామునిమ్‌లో ${amt} రూపాయల అప్పు నమోదు చేయబడింది。`
             : `ఇన్‌స్టామునిమ్‌లో ${type === "Online" ? "ఆన్‌లైన్" : type === "Swiggy" ? "స్విగ్గీ" : type === "Zomato" ? "జొమాటో" : "నగదు"} ద్వారా ${amt} రూపాయలు వచ్చాయి。`,
-          kn: type === "Udhaar" 
-            ? `ಇನ್ಸ್ಟಾಮುನಿಮ್ನಲ್ಲಿ ${amt} ರೂಪಾಯಿ ಉದ್ರಿ ದಾಖಲಾಗಿದೆ。` 
+          kn: type === "Udhaar"
+            ? `ಇನ್ಸ್ಟಾಮುನಿಮ್ನಲ್ಲಿ ${amt} ರೂಪಾಯಿ ಉದ್ರಿ ದಾಖಲಾಗಿದೆ。`
             : `ಇನ್ಸ್ಟಾಮುನಿಮ್ನಲ್ಲಿ ${type === "Online" ? "ಆನ್‌ಲೈನ್" : type === "Swiggy" ? "ಸ್ವಿಗ್ಗಿ" : type === "Zomato" ? "ಝೊಮ್ಯಾಟೊ" : "ನಗದು"} ಮೂಲಕ ${amt} ರೂಪಾಯಿ ಸ್ವೀಕರಿಸಲಾಗಿದೆ。`,
-          ml: type === "Udhaar" 
-            ? `ഇൻസ്റ്റാമുനിമിൽ ${amt} രൂപ കടം രേഖപ്പെടുത്തി。` 
+          ml: type === "Udhaar"
+            ? `ഇൻസ്റ്റാമുനിമിൽ ${amt} രൂപ കടം രേഖപ്പെടുത്തി。`
             : `ഇൻസ്റ്റാമുനിമിൽ ${type === "Online" ? "ഓൺലൈൻ" : type === "Swiggy" ? "സ്വിഗ്ഗി" : type === "Zomato" ? "സൊമാറ്റോ" : "പണമായി"} വഴി ${amt} രൂപ ലഭിച്ചു。`,
-          en: type === "Udhaar" 
-            ? `Udhaar of ${amt} rupees recorded on InstaMunim。` 
+          en: type === "Udhaar"
+            ? `Udhaar of ${amt} rupees recorded on InstaMunim。`
             : `Received ${amt} rupees on InstaMunim via ${type}。`
         };
 
@@ -4880,7 +4887,7 @@ Stay safe & eat healthy! 🍕
           const upiMatch = type.match(/UPI:\s*([\d\.]+)/);
           const cashVal = cashMatch ? Number(cashMatch[1]) : 0;
           const upiVal = upiMatch ? Number(upiMatch[1]) : 0;
-          
+
           const splitTemplates: Record<string, string> = {
             hi: `इंस्टामुनिम पर ${cashVal} रुपये कैश और ${upiVal} रुपये ऑनलाइन प्राप्त हुए。`,
             mr: `इन्स्टामुनिमवर ${cashVal} रुपये कॅश आणि ${upiVal} रुपये ऑनलाइन प्राप्त झाले。`,
@@ -4897,13 +4904,13 @@ Stay safe & eat healthy! 🍕
         } else {
           textToAnnounce = announceTemplates[lang] || announceTemplates['en'];
         }
-        
+
         // Dynamically replace platform names in announcement speech for correct branding
         const p1 = getPartnerName(businessType, "Swiggy");
         const p2 = getPartnerName(businessType, "Zomato");
         const vp1 = getVoicePartnerName("Swiggy", lang);
         const vp2 = getVoicePartnerName("Zomato", lang);
-        
+
         textToAnnounce = textToAnnounce
           .replaceAll("Swiggy", p1)
           .replaceAll("Zomato", p2)
@@ -4931,8 +4938,8 @@ Stay safe & eat healthy! 🍕
       }
       setIsSaleOpen(false);
       setShowSuccessDialog(true);
-      setCart([]); 
-      setNewName(""); 
+      setCart([]);
+      setNewName("");
       setNewMobile("");
       setExtraChargeName("");
       setExtraChargeAmount("");
@@ -4951,7 +4958,7 @@ Stay safe & eat healthy! 🍕
         const freq = remoteAdFrequency || 2;
         const nextCount = (Number(localStorage.getItem('ad_sale_count') || '0') + 1) % freq;
         localStorage.setItem('ad_sale_count', nextCount.toString());
-        
+
         if (nextCount === 0) {
           if (adProvider === "admob" && admobRef.current) {
             try {
@@ -4991,7 +4998,7 @@ Stay safe & eat healthy! 🍕
 
   const sendWhatsAppReceipt = () => {
     if (!lastOrderDetails || lastOrderDetails.mobile === "N/A" || !lastOrderDetails.mobile) return alert("No mobile number provided.");
-    
+
     // Construct items string for URL: Name:Price,Name:Price
     // lastOrderDetails.item is like "2 x Paneer Tikka (₹160)\n..."
     // We'll reconstruct from cart if possible or parse from string
@@ -5042,11 +5049,11 @@ Stay safe & eat healthy! 🍕
       .replaceAll("[ITEMS]", displayItems)
       .replaceAll("[TOTAL]", lastOrderDetails.price.toString())
       .replaceAll("[LINK]", invoiceUrl);
-      
+
     if (!isSubscribed) {
       msg += "\n\nGenerated by InstaMunim POS\nDownload App Free: https://instamunim.com";
     }
-      
+
     launchWhatsApp(lastOrderDetails.mobile, msg);
   };
 
@@ -5054,12 +5061,12 @@ Stay safe & eat healthy! 🍕
     const rawItemString = s.item || "";
     const typeStr = s.type || "Cash";
     const isSplitPayment = typeStr.includes("Split");
-    
+
     // Check finance details
     const financeMatch = rawItemString.match(/\[FINANCE:([^:]+):(\d+(?:\.\d+)?):(\d+(?:\.\d+)?):([^:]+):(Pending|Settled)\]/);
     // Check downpayment split
     const dpSplitMatch = rawItemString.match(/\[FINANCE_DP_SPLIT:Cash:(\d+(?:\.\d+)?):UPI:(\d+(?:\.\d+)?)\]/);
-    
+
     if (!isSplitPayment && !financeMatch) {
       const isUdhaar = s.type === "Udhaar";
       const isOnline = s.type === "Online";
@@ -5070,14 +5077,14 @@ Stay safe & eat healthy! 🍕
       else if (isOnline) badgeStyle = "bg-blue-100 text-blue-600";
       else if (isSwiggy || isZomato) badgeStyle = "bg-orange-100 text-orange-600";
       else if (s.type !== "Cash") badgeStyle = "bg-zinc-100 text-zinc-600";
-      
+
       return (
         <Badge className={`text-[8px] font-bold px-2 py-0.5 rounded-lg border-0 ${badgeStyle}`}>
           {getPartnerName(businessType, s.type).toUpperCase()}
         </Badge>
       );
     }
-    
+
     return (
       <div className="flex flex-col items-center sm:items-start gap-1">
         <Badge className="text-[8px] font-bold px-2 py-0.5 rounded-lg border-0 bg-blue-100 text-blue-600">
@@ -5165,11 +5172,11 @@ Stay safe & eat healthy! 🍕
       .replaceAll("[ITEMS]", displayItems)
       .replaceAll("[TOTAL]", s.price.toString())
       .replaceAll("[LINK]", invoiceUrl);
-      
+
     if (!isSubscribed) {
       msg += "\n\nGenerated by InstaMunim POS\nDownload App Free: https://instamunim.com";
     }
-      
+
     launchWhatsApp(s.mobile, msg);
   };
 
@@ -5217,7 +5224,7 @@ Stay safe & eat healthy! 🍕
 
       const existing = prev.find(c => c.name === item.name);
       if (existing) {
-        return prev.map(c => c.name === item.name ? {...c, qty: c.qty + 1, imei: matchedImei || c.imei} : c);
+        return prev.map(c => c.name === item.name ? { ...c, qty: c.qty + 1, imei: matchedImei || c.imei } : c);
       }
       return [...prev, { ...item, qty: 1, imei: matchedImei }];
     });
@@ -5226,7 +5233,7 @@ Stay safe & eat healthy! 🍕
   const removeFromCart = (name: string) => {
     setCart(prev => {
       const item = prev.find(c => c.name === name);
-      if (item && item.qty > 1) return prev.map(c => c.name === name ? {...c, qty: c.qty - 1} : c);
+      if (item && item.qty > 1) return prev.map(c => c.name === name ? { ...c, qty: c.qty - 1 } : c);
       return prev.filter(c => c.name !== name);
     });
   };
@@ -5291,7 +5298,7 @@ Stay safe & eat healthy! 🍕
 
       if (error) throw error;
 
-      setMenuItems(prev => prev.map(item => 
+      setMenuItems(prev => prev.map(item =>
         item.id === editingItem.id ? { ...item, category: updatedCategory } : item
       ));
 
@@ -5329,8 +5336,8 @@ Stay safe & eat healthy! 🍕
         console.warn("Supabase sales update notice:", error.message);
       }
 
-      setSales(prev => prev.map(s => s.id === editingSale.id ? { 
-        ...s, 
+      setSales(prev => prev.map(s => s.id === editingSale.id ? {
+        ...s,
         name: editingSale.name.trim() || "Customer",
         customer_name: editingSale.name.trim() || "Customer",
         mobile: editingSale.mobile.trim() || "N/A",
@@ -5385,7 +5392,7 @@ Stay safe & eat healthy! 🍕
       }
     });
   }, [expenses, startDate, endDate]);
-  
+
   const totalSales = useMemo(() => filteredSales.reduce((sum, s) => sum + s.price, 0), [filteredSales]);
   const totalExpenses = useMemo(() => {
     return filteredExpenses.reduce((sum, e) => {
@@ -5404,7 +5411,7 @@ Stay safe & eat healthy! 🍕
       return sum;
     }, 0);
   }, [filteredExpenses]);
-  
+
   const totalCommissions = useMemo(() => filteredSales.reduce((sum, s) => sum + (s.commission || 0), 0), [filteredSales]);
 
   const totalUdhaar = useMemo(() => filteredSales.filter(s => s.type === "Udhaar" && s.status !== "Paid").reduce((sum, s) => sum + s.price, 0), [filteredSales]);
@@ -5416,7 +5423,7 @@ Stay safe & eat healthy! 🍕
   const crmList = useMemo(() => {
     // Extract unique customers from sales & walk-in enquiries
     const customersMap = new Map<string, { name: string; mobile: string; lastDate: Date; tag?: string; notes?: string }>();
-    
+
     // 1. Read Walk-in Enquiries from ALL localStorage keys
     try {
       if (typeof window !== 'undefined') {
@@ -5494,27 +5501,77 @@ Stay safe & eat healthy! 🍕
     return derived;
   }, [sales, currentStoreId]);
 
-  const displayedCrmList = useMemo(() => {
-    if (!isSubscribed) {
-      return crmList.slice(0, 10);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`saas_sent_crm_mobiles_${currentStoreId || 'default'}`);
+      if (saved) {
+        setSentCrmMobiles(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.warn("Failed to load sent CRM mobiles:", e);
     }
-    return crmList;
-  }, [crmList, isSubscribed]);
+  }, [currentStoreId]);
+
+  const markCrmMobileAsSent = (mobile: string) => {
+    const clean = (mobile || '').replace(/\D/g, '').slice(-10);
+    if (!clean) return;
+    setSentCrmMobiles(prev => {
+      if (prev.includes(clean)) return prev;
+      const next = [...prev, clean];
+      try {
+        localStorage.setItem(`saas_sent_crm_mobiles_${currentStoreId || 'default'}`, JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
+  };
+
+  const resetCrmSentStatus = () => {
+    if (!confirm("Are you sure you want to reset sent status for all customers? This will mark all customers as Pending again.")) return;
+    setSentCrmMobiles([]);
+    setSelectedCrmMobiles([]);
+    try {
+      localStorage.removeItem(`saas_sent_crm_mobiles_${currentStoreId || 'default'}`);
+    } catch (e) {}
+  };
+
+  const fullCrmListWithStatus = useMemo(() => {
+    return crmList.map(c => {
+      const clean = (c.mobile || '').replace(/\D/g, '').slice(-10);
+      const isSent = sentCrmMobiles.includes(clean);
+      return { ...c, cleanMobile: clean, isSent };
+    });
+  }, [crmList, sentCrmMobiles]);
+
+  const pendingCrmCount = useMemo(() => fullCrmListWithStatus.filter(c => !c.isSent).length, [fullCrmListWithStatus]);
+  const sentCrmCount = useMemo(() => fullCrmListWithStatus.filter(c => c.isSent).length, [fullCrmListWithStatus]);
+
+  const displayedCrmList = useMemo(() => {
+    let list = fullCrmListWithStatus;
+    if (crmFilterTab === "pending") {
+      list = list.filter(c => !c.isSent);
+    } else if (crmFilterTab === "sent") {
+      list = list.filter(c => c.isSent);
+    }
+    if (!isSubscribed) {
+      return list.slice(0, 10);
+    }
+    return list;
+  }, [fullCrmListWithStatus, crmFilterTab, isSubscribed]);
 
   const rentTargetData = useMemo(() => {
     const dailyBase = Math.round(monthlyRent / 30);
     const today = new Date();
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const daysPassed = today.getDate();
-    
+
     const monthSalesToDate = sales
       .filter(s => new Date(s.date) >= startOfMonth && new Date(s.date) < today)
       .reduce((sum, s) => sum + s.price, 0);
-    
+
     const targetToDate = dailyBase * daysPassed;
     const carryOver = targetToDate - monthSalesToDate;
     const todaysTarget = dailyBase + (carryOver > 0 ? carryOver : 0);
-    
+
     const todayActual = sales
       .filter(s => format(new Date(s.date), "yyyy-MM-dd") === format(today, "yyyy-MM-dd"))
       .reduce((sum, s) => sum + s.price, 0);
@@ -5649,7 +5706,7 @@ Stay safe & eat healthy! 🍕
     try {
       const { error } = await supabase.from('sales').update({ payment_type: 'Cash' }).eq('id', id);
       if (error) throw error;
-      
+
       // Trigger voice cashier announcement for Udhaar payment completion
       const saleToPay = sales.find(s => s.id === id);
       if (saleToPay) {
@@ -5698,10 +5755,10 @@ Stay safe & eat healthy! 🍕
     try {
       const apiKey = geminiApiKey;
       if (!apiKey) throw new Error("Gemini API key not configured. Please set it in Supabase app_config table with key='gemini_api_key'.");
-      
+
       const base64Data = scanMenuImage.split(',')[1];
       const mimeType = scanMenuImage.split(';')[0].split(':')[1];
-      
+
       const response = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
         {
@@ -5755,21 +5812,21 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
           })
         }
       );
-      
+
       if (!response.ok) {
         const errData = await response.json();
         throw new Error(errData?.error?.message || `API Error: ${response.status}`);
       }
-      
+
       const data = await response.json();
       const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-      
+
       // Attempt to extract JSON array or object
       const arrayMatch = rawText.match(/\[[\s\S]*\]/);
       const objectMatch = rawText.match(/\{[\s\S]*\}/);
-      
+
       let items: any[] = [];
-      
+
       if (arrayMatch) {
         try {
           items = JSON.parse(arrayMatch[0]);
@@ -5792,7 +5849,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
           console.error("Failed to parse object JSON:", e);
         }
       }
-      
+
       if (!items || !Array.isArray(items) || items.length === 0) {
         const blockReason = data.candidates?.[0]?.finishReason;
         if (blockReason && blockReason !== "STOP") {
@@ -5800,7 +5857,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
         }
         throw new Error(`Could not parse menu. Gemini Output: ${rawText.replace(/[\r\n]+/g, ' ').substring(0, 150)}...`);
       }
-      
+
       setScanMenuResults(items.map((item: any) => ({
         name: String(item.name || '').trim(),
         price: Number(item.price) || 0,
@@ -5817,7 +5874,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
   const handleAddScannedItems = async () => {
     const selectedItems = scanMenuResults.filter(i => i.selected && i.name.trim());
     if (selectedItems.length === 0) return alert("Koi item select nahi hai!");
-    
+
     setIsLoading(true);
     try {
       let storeId = currentStoreId;
@@ -5827,12 +5884,12 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
         storeId = store.id;
         setCurrentStoreId(store.id);
       }
-      
+
       const { data: insertedData, error } = await supabase
         .from('menu_items')
         .insert(selectedItems.map(item => ({ store_id: storeId, name: item.name, price: item.price, category: 'General' })))
         .select();
-      
+
       if (error) throw error;
       setMenuItems(prev => [...prev, ...insertedData]);
       setShowScanMenuModal(false);
@@ -5857,9 +5914,9 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
             <div className="flex flex-col items-center text-center mb-6 pt-14 sm:pt-16">
               <div className="w-full flex justify-center">
                 <div className="w-full max-w-[420px] h-64 relative animate-in zoom-in duration-700 flex items-center justify-center">
-                  <img 
-                    src={isDarkMode ? "/assets/logo-dark.png" : "/assets/logo-light.png"} 
-                    alt="InstaMunim Logo" 
+                  <img
+                    src={isDarkMode ? "/assets/logo-dark.png" : "/assets/logo-light.png"}
+                    alt="InstaMunim Logo"
                     className="w-full h-full object-contain"
                   />
                 </div>
@@ -5868,9 +5925,9 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
             {authMode === "login" && (
               <div className="flex flex-col items-center justify-center pb-6 border-b border-dashed border-zinc-200 dark:border-zinc-800 mb-6">
-                <Button 
-                  type="button" 
-                  onClick={() => { setAuthMode("signup"); setLoginError(""); }} 
+                <Button
+                  type="button"
+                  onClick={() => { setAuthMode("signup"); setLoginError(""); }}
                   className="w-full max-w-[340px] h-14 rounded-2xl font-black text-xs bg-orange-600 hover:bg-orange-500 text-white shadow-xl shadow-orange-500/10 active:scale-95 transition-all flex items-center justify-center gap-3 uppercase tracking-widest animate-pulse"
                 >
                   <PlusCircle className="h-4 w-4" /> Create Free Account
@@ -5881,9 +5938,9 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
             {authMode === "signup" && (
               <div className="flex flex-col items-center justify-center pb-6 border-b border-dashed border-zinc-200 dark:border-zinc-800 mb-6">
-                <Button 
-                  type="button" 
-                  onClick={() => { setAuthMode("login"); setLoginError(""); }} 
+                <Button
+                  type="button"
+                  onClick={() => { setAuthMode("login"); setLoginError(""); }}
                   className={`w-full max-w-[340px] h-14 rounded-2xl font-black text-xs active:scale-95 transition-all flex items-center justify-center gap-3 uppercase tracking-widest ${isDarkMode ? 'bg-zinc-800 hover:bg-zinc-700 text-white' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800'}`}
                 >
                   Already have an account? Login
@@ -5892,12 +5949,12 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
             )}
 
             <div className="text-center mb-8">
-               <h2 className={`text-xl font-black leading-none uppercase tracking-tight ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
-                 {authMode === "login" ? "Owner Login" : "Store Registration"}
-               </h2>
-               <p className="text-zinc-400 text-[10px] font-bold mt-2 uppercase tracking-widest">
-                 {authMode === "login" ? "Welcome back to your POS Dashboard" : "Register your business in 10 seconds"}
-               </p>
+              <h2 className={`text-xl font-black leading-none uppercase tracking-tight ${isDarkMode ? 'text-white' : 'text-zinc-900'}`}>
+                {authMode === "login" ? "Owner Login" : "Store Registration"}
+              </h2>
+              <p className="text-zinc-400 text-[10px] font-bold mt-2 uppercase tracking-widest">
+                {authMode === "login" ? "Welcome back to your POS Dashboard" : "Register your business in 10 seconds"}
+              </p>
             </div>
 
             <form onSubmit={handleAuth} className="space-y-4">
@@ -5905,12 +5962,12 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 <>
                   <div className="space-y-2">
                     <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">Store Name</Label>
-                    <Input 
-                      placeholder="e.g. Khan Kitchen" 
-                      value={signupStoreName} 
-                      onChange={e => setSignupStoreName(e.target.value)} 
-                      required 
-                      className={`h-14 rounded-xl border-0 font-bold px-6 focus-visible:ring-2 focus-visible:ring-orange-500 transition-all text-sm ${isDarkMode ? 'bg-zinc-800 text-white' : 'bg-zinc-50'}`} 
+                    <Input
+                      placeholder="e.g. Khan Kitchen"
+                      value={signupStoreName}
+                      onChange={e => setSignupStoreName(e.target.value)}
+                      required
+                      className={`h-14 rounded-xl border-0 font-bold px-6 focus-visible:ring-2 focus-visible:ring-orange-500 transition-all text-sm ${isDarkMode ? 'bg-zinc-800 text-white' : 'bg-zinc-50'}`}
                     />
                   </div>
                   <div className="space-y-2">
@@ -5930,19 +5987,19 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   </div>
                 </>
               )}
-              
+
               <div className="space-y-2">
                 <Label className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-1">Owner Mobile</Label>
                 <div className="relative group">
                   <div className={`absolute left-6 top-1/2 -translate-y-1/2 p-1 border-r ${isDarkMode ? 'border-zinc-700' : 'border-zinc-200'}`}>
                     <Smartphone className="h-3.5 w-3.5 text-zinc-400" />
                   </div>
-                  <Input 
-                    placeholder="99XXXXXXXX" 
-                    value={loginMobile} 
-                    onChange={e => setLoginMobile(e.target.value)} 
-                    required 
-                    className={`h-14 rounded-xl border-0 font-bold pl-16 focus-visible:ring-2 focus-visible:ring-orange-500 text-base transition-all ${isDarkMode ? 'bg-zinc-800 text-white' : 'bg-zinc-50'}`} 
+                  <Input
+                    placeholder="99XXXXXXXX"
+                    value={loginMobile}
+                    onChange={e => setLoginMobile(e.target.value)}
+                    required
+                    className={`h-14 rounded-xl border-0 font-bold pl-16 focus-visible:ring-2 focus-visible:ring-orange-500 text-base transition-all ${isDarkMode ? 'bg-zinc-800 text-white' : 'bg-zinc-50'}`}
                   />
                 </div>
               </div>
@@ -5953,17 +6010,17 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   <div className={`absolute left-6 top-1/2 -translate-y-1/2 p-1 border-r ${isDarkMode ? 'border-zinc-700' : 'border-zinc-200'}`}>
                     <Lock className="h-3.5 w-3.5 text-zinc-400" />
                   </div>
-                  <Input 
-                    type={showPassword ? "text" : "password"} 
-                    placeholder="••••••••" 
-                    value={loginPassword} 
-                    onChange={e => setLoginPassword(e.target.value)} 
-                    required 
-                    className={`h-14 rounded-xl border-0 font-bold pl-16 pr-14 focus-visible:ring-2 focus-visible:ring-orange-500 text-base tracking-widest transition-all ${isDarkMode ? 'bg-zinc-800 text-white' : 'bg-zinc-50'}`} 
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={loginPassword}
+                    onChange={e => setLoginPassword(e.target.value)}
+                    required
+                    className={`h-14 rounded-xl border-0 font-bold pl-16 pr-14 focus-visible:ring-2 focus-visible:ring-orange-500 text-base tracking-widest transition-all ${isDarkMode ? 'bg-zinc-800 text-white' : 'bg-zinc-50'}`}
                   />
-                  <button 
-                    type="button" 
-                    onClick={() => setShowPassword(!showPassword)} 
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-6 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-orange-500 transition-colors"
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
@@ -5972,26 +6029,26 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               </div>
 
               <div className="flex items-center gap-2 px-1 mb-4">
-                <input 
-                  type="checkbox" 
-                  id="rememberMe" 
-                  checked={rememberMe} 
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
                   onChange={e => setRememberMe(e.target.checked)}
                   className="w-4 h-4 rounded border-zinc-300 text-orange-500 focus:ring-orange-500"
                 />
                 <label htmlFor="rememberMe" className="text-xs font-bold text-zinc-500 cursor-pointer uppercase tracking-widest">Remember Me</label>
-                
+
                 <button type="button" onClick={() => setIsDarkMode(!isDarkMode)} className="ml-auto w-8 h-8 rounded-full flex items-center justify-center bg-zinc-100 dark:bg-zinc-800 transition-all">
-                   {isDarkMode ? <Sun className="h-4 w-4 text-orange-500" /> : <Moon className="h-4 w-4 text-zinc-400" />}
+                  {isDarkMode ? <Sun className="h-4 w-4 text-orange-500" /> : <Moon className="h-4 w-4 text-zinc-400" />}
                 </button>
               </div>
 
               {authMode === "signup" && (
                 <div className="flex items-center gap-2.5 px-1 py-1 mb-2">
-                  <input 
-                    type="checkbox" 
-                    id="acceptTerms" 
-                    checked={acceptTerms} 
+                  <input
+                    type="checkbox"
+                    id="acceptTerms"
+                    checked={acceptTerms}
                     onChange={e => setAcceptTerms(e.target.checked)}
                     required
                     className="w-4 h-4 rounded border-zinc-300 text-orange-500 focus:ring-orange-500 cursor-pointer"
@@ -6013,7 +6070,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               </div>
             </form>
           </Card>
-          
+
           <p className="text-center text-[8px] font-bold text-zinc-300 uppercase tracking-widest">
             Secured by InstaMunim Cloud Gateway
           </p>
@@ -6023,7 +6080,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
   }
 
   return (
-    <div 
+    <div
       className={`min-h-screen flex flex-col font-sans selection:bg-orange-500/30 ${isDarkMode ? 'dark bg-zinc-950 text-white' : 'bg-[#fafafa] text-zinc-900'}`}
       style={{ paddingTop: isAdMobActive && adProvider === "admob" ? `${admobHeight}px` : "0px" }}
     >
@@ -6035,14 +6092,14 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
       )}
       <main className="flex-1 pb-24 overflow-y-auto">
         <div className="max-w-full px-2 sm:px-4 py-8">
-          
+
           {remoteAlertEnabled && remoteAlertText && (
             <div className="mx-2 mb-6 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-2xl p-4 flex items-center justify-between shadow-lg shadow-orange-500/10 border border-orange-400/20 animate-in slide-in-from-top duration-300">
               <div className="flex items-center gap-3">
                 <Megaphone size={18} className="shrink-0 animate-bounce" />
                 <span className="text-xs font-black leading-relaxed">{remoteAlertText}</span>
               </div>
-              <button 
+              <button
                 onClick={() => setRemoteAlertEnabled(false)}
                 className="p-1 hover:bg-white/10 active:scale-90 transition-all rounded-lg border-0"
                 style={{ background: 'transparent', color: '#ffffff' }}
@@ -6051,7 +6108,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               </button>
             </div>
           )}
-          
+
           <Dialog open={isSaleOpen} onOpenChange={setIsSaleOpen}>
             <DialogContent className="p-0 border-0 max-w-[380px] w-[90%] left-1/2 -translate-x-1/2 bottom-4 top-auto !translate-y-0 bg-white dark:bg-zinc-950 rounded-2xl h-auto max-h-[94vh] overflow-hidden flex flex-col shadow-[0_20px_70px_-10px_rgba(0,0,0,0.3)] fixed">
               <div className="p-5 pb-2 shrink-0 flex items-start justify-between relative">
@@ -6090,8 +6147,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   </p>
                 </div>
                 <div className="flex items-center gap-2 pr-6">
-                  <button 
-                    onClick={toggleVoiceBilling} 
+                  <button
+                    onClick={toggleVoiceBilling}
                     className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all shadow-xl ${isListening ? 'bg-red-500 text-white animate-pulse' : 'bg-orange-600 text-white shadow-orange-600/40'}`}
                   >
                     <Mic className="h-6 w-6" />
@@ -6099,13 +6156,13 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   <button onClick={() => setIsSaleOpen(false)} className="text-zinc-300 hover:text-zinc-500"><X className="h-5 w-5" /></button>
                 </div>
               </div>
-              
+
               <div className="flex-1 overflow-y-auto p-5 pt-0 space-y-4 scrollbar-hide">
                 {/* SELECT ITEMS SECTION */}
                 <div className="space-y-3">
                   <div className="flex justify-between items-center px-1">
                     <h4 className="text-[9px] font-black uppercase text-zinc-400 tracking-[0.2em]">Select {getLabels(businessType).items}</h4>
-                    <button 
+                    <button
                       onClick={() => {
                         setIsManualMode(!isManualMode);
                         if (!isManualMode) {
@@ -6122,21 +6179,21 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     <div className="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
                       <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Custom Product Detail</p>
                       <div className="space-y-2">
-                        <Input 
-                          placeholder="Product Name (e.g. Cold Drink)" 
+                        <Input
+                          placeholder="Product Name (e.g. Cold Drink)"
                           value={manualItemName}
                           onChange={e => setManualItemName(e.target.value)}
                           className="h-10 rounded-xl bg-white dark:bg-zinc-950 font-bold text-xs"
                         />
                         <div className="flex gap-2">
-                          <Input 
+                          <Input
                             type="number"
-                            placeholder="Price (₹)" 
+                            placeholder="Price (₹)"
                             value={manualItemPrice}
                             onChange={e => setManualItemPrice(e.target.value)}
                             className="h-10 rounded-xl bg-white dark:bg-zinc-950 font-black text-xs flex-1"
                           />
-                          <button 
+                          <button
                             onClick={handleAddManualItem}
                             className="h-10 px-4 bg-orange-600 text-white rounded-xl font-black text-xs hover:bg-orange-700 active:scale-95 transition-all shadow-md shadow-orange-600/20"
                           >
@@ -6150,10 +6207,10 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       <div className="flex gap-2">
                         <div className="relative flex-1">
                           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-300" />
-                          <Input 
+                          <Input
                             ref={itemSearchInputRef}
-                            placeholder={`Search ${getLabels(businessType).items.toLowerCase()}...`} 
-                            value={itemSearch} 
+                            placeholder={`Search ${getLabels(businessType).items.toLowerCase()}...`}
+                            value={itemSearch}
                             onChange={e => {
                               const val = e.target.value;
                               setItemSearch(val);
@@ -6174,11 +6231,11 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                   }
                                 }
                               }
-                            }} 
-                            className="h-10 pl-10 rounded-xl bg-zinc-50 dark:bg-zinc-900 border-0 font-bold placeholder:text-zinc-300 text-xs w-full" 
+                            }}
+                            className="h-10 pl-10 rounded-xl bg-zinc-50 dark:bg-zinc-900 border-0 font-bold placeholder:text-zinc-300 text-xs w-full"
                           />
                         </div>
-                        <button 
+                        <button
                           onClick={async () => {
                             if (!isSubscribed) {
                               setShowUpgradeModal(true);
@@ -6223,7 +6280,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 setShowScanner(true);
                               }
                             }
-                          }} 
+                          }}
                           className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-300 flex items-center justify-center hover:bg-orange-600 hover:text-white transition-colors active:scale-95 shadow-sm"
                           title="Scan Barcode"
                         >
@@ -6236,13 +6293,13 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           <div className="p-4 bg-orange-50/50 dark:bg-orange-900/10 rounded-2xl border border-dashed border-orange-200 dark:border-orange-900/30 text-center space-y-2 animate-in fade-in duration-300">
                             <p className="text-[10px] font-bold text-zinc-500">"{itemSearch}" nahi mila.</p>
                             <div className="flex gap-2 justify-center max-w-[260px] mx-auto">
-                              <Input 
+                              <Input
                                 type="number"
                                 placeholder="Price (₹)"
                                 id="direct-price-input"
                                 className="h-8 rounded-lg bg-white dark:bg-zinc-950 font-black text-[10px] text-center w-24"
                               />
-                              <button 
+                              <button
                                 onClick={() => {
                                   const priceInput = document.getElementById("direct-price-input") as HTMLInputElement;
                                   const price = Number(priceInput?.value || 0);
@@ -6268,8 +6325,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                   <div className="flex justify-between items-center w-full mt-1 gap-1">
                                     <p className="text-[8px] font-bold text-zinc-400 shrink-0">₹{item.price}</p>
                                     {businessType === "Mobile/Electronics" && (
-                                      <span className={`text-[6.5px] font-black px-1 py-0.5 rounded shrink-0 uppercase tracking-wider ${qty > 0 
-                                        ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400' 
+                                      <span className={`text-[6.5px] font-black px-1 py-0.5 rounded shrink-0 uppercase tracking-wider ${qty > 0
+                                        ? 'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400'
                                         : 'bg-red-50 dark:bg-red-950/20 text-red-650 dark:text-red-400'}`}
                                       >
                                         {qty > 0 ? `Qty: ${qty}` : 'Out'}
@@ -6293,389 +6350,389 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
                 {/* ORDER SUMMARY SECTION */}
                 <div className="space-y-4 pb-6">
-                   <div className="flex items-center gap-2 text-orange-600">
-                     <ShoppingCart className="h-4 w-4" />
-                     <h4 className="text-[9px] font-black uppercase tracking-[0.2em]">Order Summary</h4>
-                   </div>
+                  <div className="flex items-center gap-2 text-orange-600">
+                    <ShoppingCart className="h-4 w-4" />
+                    <h4 className="text-[9px] font-black uppercase tracking-[0.2em]">Order Summary</h4>
+                  </div>
 
-                   <div className="min-h-[80px] flex flex-col items-center justify-center bg-zinc-50/50 dark:bg-zinc-900/50 rounded-[1.5rem] p-3 border border-zinc-200 dark:border-zinc-800">
-                      {cart.length === 0 ? (
-                        <div className="text-center space-y-2 opacity-20">
-                          <ShoppingCart className="h-8 w-8 mx-auto" />
-                          <p className="text-[8px] font-black uppercase tracking-widest italic">Cart is empty</p>
-                        </div>
-                      ) : (
-                        <div className="w-full divide-y dark:divide-zinc-800">
-                          {cart.map(c => (
-                            <div key={c.name} className="flex flex-col py-2 first:pt-0 last:pb-0 gap-2">
-                              <div className="flex justify-between items-center w-full">
-                                <div className="flex flex-col">
-                                  <span className="font-bold text-[11px]">{c.name}</span>
-                                  <span className="text-[9px] text-zinc-400">₹{c.price} per unit</span>
-                                </div>
-                                <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-1 rounded-lg">
-                                  <button onClick={() => removeFromCart(c.name)} className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-red-500 transition-colors"><Minus className="h-3 w-3" /></button>
-                                  <span className="font-black text-xs px-1 min-w-[20px] text-center">{c.qty}</span>
-                                  <button onClick={() => addToCart({ name: c.name, price: c.price })} className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-orange-600 transition-colors"><Plus className="h-3 w-3" /></button>
-                                </div>
+                  <div className="min-h-[80px] flex flex-col items-center justify-center bg-zinc-50/50 dark:bg-zinc-900/50 rounded-[1.5rem] p-3 border border-zinc-200 dark:border-zinc-800">
+                    {cart.length === 0 ? (
+                      <div className="text-center space-y-2 opacity-20">
+                        <ShoppingCart className="h-8 w-8 mx-auto" />
+                        <p className="text-[8px] font-black uppercase tracking-widest italic">Cart is empty</p>
+                      </div>
+                    ) : (
+                      <div className="w-full divide-y dark:divide-zinc-800">
+                        {cart.map(c => (
+                          <div key={c.name} className="flex flex-col py-2 first:pt-0 last:pb-0 gap-2">
+                            <div className="flex justify-between items-center w-full">
+                              <div className="flex flex-col">
+                                <span className="font-bold text-[11px]">{c.name}</span>
+                                <span className="text-[9px] text-zinc-400">₹{c.price} per unit</span>
                               </div>
-                              {businessType === "Mobile/Electronics" && (
-                                <div className="flex items-center gap-2 mt-1 w-full">
-                                  <ImeiInput 
-                                    placeholder="IMEI / Serial Number" 
-                                    value={c.imei || ""} 
-                                    onChange={val => updateCartItemImei(c.name, val)} 
-                                    className="h-8 flex-1 rounded-xl bg-white dark:bg-zinc-800 border-0 font-bold px-3 text-[10px]" 
-                                  />
-                                </div>
-                              )}
+                              <div className="flex items-center gap-2 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-1 rounded-lg">
+                                <button onClick={() => removeFromCart(c.name)} className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-red-500 transition-colors"><Minus className="h-3 w-3" /></button>
+                                <span className="font-black text-xs px-1 min-w-[20px] text-center">{c.qty}</span>
+                                <button onClick={() => addToCart({ name: c.name, price: c.price })} className="w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-orange-600 transition-colors"><Plus className="h-3 w-3" /></button>
+                              </div>
                             </div>
-                          ))}
-                        </div>
-                      )}
-                   </div>
-                    <div className="space-y-2 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
-                      <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest px-1">Extra Charges (Delivery/Packing)</p>
-                      <div className="flex gap-2">
-                        <Input 
-                          placeholder="e.g. Delivery" 
-                          value={extraChargeName} 
-                          onChange={e => setExtraChargeName(e.target.value)} 
-                          className="h-9 flex-1 rounded-xl bg-white dark:bg-zinc-800 border-0 font-bold px-4 text-[11px]" 
-                        />
-                        <Input 
-                          type="number" 
-                          placeholder="Amount" 
-                          value={extraChargeAmount} 
-                          onChange={e => setExtraChargeAmount(e.target.value)} 
-                          className="h-9 w-20 rounded-xl bg-white dark:bg-zinc-800 border-0 font-bold px-3 text-[11px] text-center" 
-                        />
+                            {businessType === "Mobile/Electronics" && (
+                              <div className="flex items-center gap-2 mt-1 w-full">
+                                <ImeiInput
+                                  placeholder="IMEI / Serial Number"
+                                  value={c.imei || ""}
+                                  onChange={val => updateCartItemImei(c.name, val)}
+                                  className="h-8 flex-1 rounded-xl bg-white dark:bg-zinc-800 border-0 font-bold px-3 text-[10px]"
+                                />
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                    <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest px-1">Extra Charges (Delivery/Packing)</p>
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="e.g. Delivery"
+                        value={extraChargeName}
+                        onChange={e => setExtraChargeName(e.target.value)}
+                        className="h-9 flex-1 rounded-xl bg-white dark:bg-zinc-800 border-0 font-bold px-4 text-[11px]"
+                      />
+                      <Input
+                        type="number"
+                        placeholder="Amount"
+                        value={extraChargeAmount}
+                        onChange={e => setExtraChargeAmount(e.target.value)}
+                        className="h-9 w-20 rounded-xl bg-white dark:bg-zinc-800 border-0 font-bold px-3 text-[11px] text-center"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
+                    <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest px-1">Discount (₹)</p>
+                    <div className="flex gap-2">
+                      <Input
+                        ref={discountInputRef}
+                        type="number"
+                        placeholder="0"
+                        value={discount}
+                        onChange={e => setDiscount(e.target.value)}
+                        className="h-9 flex-1 rounded-xl bg-white dark:bg-zinc-800 border-0 font-bold px-4 text-[11px]"
+                      />
+                    </div>
+                  </div>
+
+                  {availableCoupons.length > 0 && (
+                    <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl border border-dashed border-emerald-200 dark:border-emerald-800/40 space-y-2">
+                      <p className="text-[8px] font-black text-[#00c875] uppercase tracking-widest px-1">Available Coupons 🎉</p>
+                      <div className="space-y-1.5">
+                        {availableCoupons.map((coupon) => (
+                          <div key={coupon.id} className="flex justify-between items-center bg-white dark:bg-zinc-900 p-2 rounded-xl border border-zinc-100 dark:border-zinc-800">
+                            <div>
+                              <span className="font-mono text-xs font-black text-orange-500 tracking-wider block">{coupon.code}</span>
+                              <span className="text-[8px] font-bold text-zinc-400">Save ₹{coupon.discount_amount} on this bill</span>
+                            </div>
+                            {appliedCouponId === coupon.id ? (
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setDiscount("");
+                                  setAppliedCouponId(null);
+                                }}
+                                className="h-7 bg-red-500 hover:bg-red-600 text-white rounded-lg text-[9px] font-black uppercase tracking-wider px-2 border-0"
+                              >
+                                Remove
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setDiscount(coupon.discount_amount.toString());
+                                  setAppliedCouponId(coupon.id);
+                                }}
+                                className="h-7 bg-[#00c875] hover:bg-[#00b067] text-white rounded-lg text-[9px] font-black uppercase tracking-wider px-3 border-0"
+                              >
+                                Apply
+                              </Button>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     </div>
+                  )}
 
-                    <div className="space-y-2 p-3 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800">
-                      <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest px-1">Discount (₹)</p>
-                      <div className="flex gap-2">
-                        <Input 
-                          ref={discountInputRef}
-                          type="number" 
-                          placeholder="0" 
-                          value={discount} 
-                          onChange={e => setDiscount(e.target.value)} 
-                          className="h-9 flex-1 rounded-xl bg-white dark:bg-zinc-800 border-0 font-bold px-4 text-[11px]" 
-                        />
-                      </div>
+                  <div className="flex justify-end">
+                    <div className="text-right">
+                      <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Grand Total</p>
+                      <h3 className="text-4xl font-black tracking-tighter text-zinc-900 dark:text-white">
+                        ₹{grandTotal}
+                      </h3>
                     </div>
+                  </div>
 
-                    {availableCoupons.length > 0 && (
-                      <div className="p-3 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl border border-dashed border-emerald-200 dark:border-emerald-800/40 space-y-2">
-                        <p className="text-[8px] font-black text-[#00c875] uppercase tracking-widest px-1">Available Coupons 🎉</p>
-                        <div className="space-y-1.5">
-                          {availableCoupons.map((coupon) => (
-                            <div key={coupon.id} className="flex justify-between items-center bg-white dark:bg-zinc-900 p-2 rounded-xl border border-zinc-100 dark:border-zinc-800">
-                              <div>
-                                <span className="font-mono text-xs font-black text-orange-500 tracking-wider block">{coupon.code}</span>
-                                <span className="text-[8px] font-bold text-zinc-400">Save ₹{coupon.discount_amount} on this bill</span>
-                              </div>
-                              {appliedCouponId === coupon.id ? (
-                                <Button 
-                                  size="sm"
-                                  onClick={() => {
-                                    setDiscount("");
-                                    setAppliedCouponId(null);
-                                  }}
-                                  className="h-7 bg-red-500 hover:bg-red-600 text-white rounded-lg text-[9px] font-black uppercase tracking-wider px-2 border-0"
-                                >
-                                  Remove
-                                </Button>
-                              ) : (
-                                <Button 
-                                  size="sm"
-                                  onClick={() => {
-                                    setDiscount(coupon.discount_amount.toString());
-                                    setAppliedCouponId(coupon.id);
-                                  }}
-                                  className="h-7 bg-[#00c875] hover:bg-[#00b067] text-white rounded-lg text-[9px] font-black uppercase tracking-wider px-3 border-0"
-                                >
-                                  Apply
-                                </Button>
-                              )}
-                            </div>
-                          ))}
+                  <div className="space-y-3">
+                    <Input placeholder="Customer Name (Optional)" value={newName} onChange={e => setNewName(e.target.value)} className="h-11 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold px-4 text-sm" />
+                    <Input
+                      ref={customerMobileInputRef}
+                      placeholder="Mobile Number (Optional)"
+                      value={newMobile}
+                      onChange={e => {
+                        const val = e.target.value.replace(/\D/g, "");
+                        if (val.length <= 10) setNewMobile(val);
+                      }}
+                      className="h-11 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold px-4 text-sm"
+                    />
+
+                    {newType === "Cash" && (
+                      <div className="p-4 bg-orange-50/50 dark:bg-orange-900/10 rounded-2xl border border-orange-100 dark:border-orange-900/20 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest pl-1">Cash Received</span>
+                          <Input
+                            type="number"
+                            placeholder={grandTotal.toString()}
+                            value={cashReceived}
+                            onChange={e => setCashReceived(e.target.value)}
+                            className="w-28 h-9 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-black text-sm text-center shadow-sm"
+                          />
+                        </div>
+                        <div className="h-[1px] bg-orange-200/50 dark:bg-orange-900/30 w-full" />
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest pl-1">Return Change</span>
+                          <span className="text-lg font-black text-emerald-600">
+                            ₹{Math.max(0, Number(cashReceived) - grandTotal)}
+                          </span>
                         </div>
                       </div>
                     )}
 
-                   <div className="flex justify-end">
-                      <div className="text-right">
-                        <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">Grand Total</p>
-                        <h3 className="text-4xl font-black tracking-tighter text-zinc-900 dark:text-white">
-                          ₹{grandTotal}
-                        </h3>
-                      </div>
-                   </div>
-
-                   <div className="space-y-3">
-                      <Input placeholder="Customer Name (Optional)" value={newName} onChange={e => setNewName(e.target.value)} className="h-11 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold px-4 text-sm" />
-                      <Input 
-                        ref={customerMobileInputRef}
-                        placeholder="Mobile Number (Optional)" 
-                        value={newMobile} 
-                        onChange={e => {
-                          const val = e.target.value.replace(/\D/g, "");
-                          if (val.length <= 10) setNewMobile(val);
-                        }} 
-                        className="h-11 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold px-4 text-sm" 
-                      />
-                   
-                      {newType === "Cash" && (
-                        <div className="p-4 bg-orange-50/50 dark:bg-orange-900/10 rounded-2xl border border-orange-100 dark:border-orange-900/20 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest pl-1">Cash Received</span>
-                            <Input 
-                              type="number" 
-                              placeholder={grandTotal.toString()}
-                              value={cashReceived} 
-                              onChange={e => setCashReceived(e.target.value)} 
-                              className="w-28 h-9 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-black text-sm text-center shadow-sm" 
-                            />
-                          </div>
-                          <div className="h-[1px] bg-orange-200/50 dark:bg-orange-900/30 w-full" />
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest pl-1">Return Change</span>
-                            <span className="text-lg font-black text-emerald-600">
-                              ₹{Math.max(0, Number(cashReceived) - grandTotal)}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-
-                      {newType === "Online" && (
-                        <div className="p-6 bg-zinc-950 text-white rounded-[2rem] border border-zinc-850 flex flex-col items-center justify-center space-y-4 text-center w-full">
-                          {storeUpiId ? (
-                            <>
-                              <div className="relative p-4 bg-white rounded-3xl overflow-hidden shadow-2xl flex items-center justify-center">
-                                <img 
-                                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-                                    `upi://pay?pa=${storeUpiId}&pn=${encodeURIComponent(storeUpiName || restaurantName)}&am=${grandTotal}&cu=INR&tn=Invoice`
-                                  )}`} 
-                                  alt="UPI Payment QR Code" 
-                                  className="w-40 h-40 object-contain"
-                                  />
-                              </div>
-                              <div className="space-y-1">
-                                <p className="text-[10px] font-black tracking-widest text-zinc-400 uppercase">SCAN TO PAY</p>
-                                <p className="text-2xl font-black text-orange-500">₹{grandTotal.toFixed(2)}</p>
-                                <p className="text-[9px] font-bold text-zinc-300 leading-none">
-                                  Paying to: <span className="text-white font-extrabold">{storeUpiName || restaurantName}</span>
-                                </p>
-                                <p className="text-[8px] font-bold text-zinc-500 leading-none mt-1 select-all" title="Click to copy UPI ID">{storeUpiId}</p>
-                              </div>
-                            </>
-                          ) : (
-                            <div className="space-y-3 p-4">
-                              <p className="text-[11px] font-bold text-amber-500 leading-relaxed uppercase tracking-wider">⚠️ UPI ID Not Configured</p>
-                              <p className="text-[9px] text-zinc-400 leading-relaxed font-semibold">
-                                Please go to <span className="font-extrabold text-white">Settings &gt; Store Profile</span> and save or upload your UPI QR code scanner first.
-                              </p>
+                    {newType === "Online" && (
+                      <div className="p-6 bg-zinc-950 text-white rounded-[2rem] border border-zinc-850 flex flex-col items-center justify-center space-y-4 text-center w-full">
+                        {storeUpiId ? (
+                          <>
+                            <div className="relative p-4 bg-white rounded-3xl overflow-hidden shadow-2xl flex items-center justify-center">
+                              <img
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+                                  `upi://pay?pa=${storeUpiId}&pn=${encodeURIComponent(storeUpiName || restaurantName)}&am=${grandTotal}&cu=INR&tn=Invoice`
+                                )}`}
+                                alt="UPI Payment QR Code"
+                                className="w-40 h-40 object-contain"
+                              />
                             </div>
-                          )}
-                        </div>
-                      )}
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-black tracking-widest text-zinc-400 uppercase">SCAN TO PAY</p>
+                              <p className="text-2xl font-black text-orange-500">₹{grandTotal.toFixed(2)}</p>
+                              <p className="text-[9px] font-bold text-zinc-300 leading-none">
+                                Paying to: <span className="text-white font-extrabold">{storeUpiName || restaurantName}</span>
+                              </p>
+                              <p className="text-[8px] font-bold text-zinc-500 leading-none mt-1 select-all" title="Click to copy UPI ID">{storeUpiId}</p>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="space-y-3 p-4">
+                            <p className="text-[11px] font-bold text-amber-500 leading-relaxed uppercase tracking-wider">⚠️ UPI ID Not Configured</p>
+                            <p className="text-[9px] text-zinc-400 leading-relaxed font-semibold">
+                              Please go to <span className="font-extrabold text-white">Settings &gt; Store Profile</span> and save or upload your UPI QR code scanner first.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
-                      {newType === "Finance" && (
-                        <div className="p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-900/20 space-y-3 text-left">
-                          <div className="flex items-center justify-between gap-4">
-                            <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest pl-1">Finance Company</span>
-                            <select 
-                              value={financeCompany} 
-                              onChange={e => setFinanceCompany(e.target.value)}
-                              className="h-9 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold px-2 text-xs shadow-sm"
+                    {newType === "Finance" && (
+                      <div className="p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-900/20 space-y-3 text-left">
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest pl-1">Finance Company</span>
+                          <select
+                            value={financeCompany}
+                            onChange={e => setFinanceCompany(e.target.value)}
+                            className="h-9 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold px-2 text-xs shadow-sm"
+                          >
+                            <option value="Bajaj Finserv">Bajaj Finserv</option>
+                            <option value="HDB Finance">HDB Finance</option>
+                            <option value="IDFC First Bank">IDFC First Bank</option>
+                            <option value="TVS Credit">TVS Credit</option>
+                            <option value="Home Credit">Home Credit</option>
+                            <option value="Other">Other Finance</option>
+                          </select>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest pl-1">Down Payment (₹)</span>
+                          <Input
+                            type="number"
+                            placeholder="0"
+                            value={financeDownPayment}
+                            onChange={e => setFinanceDownPayment(e.target.value)}
+                            className="w-28 h-9 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-black text-sm text-center shadow-sm"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest pl-1">Loan Amount (₹)</span>
+                          <span className="text-lg font-black text-emerald-600">
+                            ₹{Math.max(0, grandTotal - (Number(financeDownPayment) || 0))}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest pl-1">File / App ID</span>
+                          <Input
+                            placeholder="e.g. BJ-9921"
+                            value={financeFileId}
+                            onChange={e => setFinanceFileId(e.target.value)}
+                            className="w-32 h-9 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold text-xs text-center shadow-sm"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {newType === "Split" && (
+                      <div className="p-4 bg-purple-50/50 dark:bg-purple-900/10 rounded-2xl border border-purple-100 dark:border-purple-900/20 space-y-3 text-left">
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest pl-1">Cash Amount</span>
+                          <Input
+                            type="number"
+                            placeholder="₹ Cash"
+                            value={splitCash}
+                            onChange={e => setSplitCash(e.target.value)}
+                            className="w-32 h-9 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold text-xs text-center shadow-sm"
+                          />
+                        </div>
+                        <div className="h-[1px] bg-purple-200/50 dark:bg-purple-900/30 w-full" />
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest pl-1">UPI Amount</span>
+                          <span className="text-lg font-black text-purple-600 pr-2">
+                            ₹{Math.max(0, grandTotal - (Number(splitCash) || 0))}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {newType === "Credit Card" && (
+                      <div className="p-4 bg-indigo-50/60 dark:bg-indigo-950/20 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 space-y-3 text-left animate-in fade-in slide-in-from-top-2">
+                        <div className="flex items-center justify-between border-b border-indigo-100 dark:border-indigo-900/40 pb-2">
+                          <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                            💳 Credit Card & EMI Details
+                          </span>
+                        </div>
+
+                        <div className="flex flex-col space-y-2.5 w-full">
+                          {/* 1. Bank Name */}
+                          <div className="space-y-1">
+                            <Label className="text-[9.5px] font-black uppercase text-zinc-500 tracking-wider">1. Bank Name</Label>
+                            <select
+                              value={cardBankName}
+                              onChange={e => setCardBankName(e.target.value)}
+                              className="w-full h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-bold px-3.5 shadow-sm focus:border-indigo-500"
                             >
-                              <option value="Bajaj Finserv">Bajaj Finserv</option>
-                              <option value="HDB Finance">HDB Finance</option>
-                              <option value="IDFC First Bank">IDFC First Bank</option>
-                              <option value="TVS Credit">TVS Credit</option>
-                              <option value="Home Credit">Home Credit</option>
-                              <option value="Other">Other Finance</option>
+                              <option value="HDFC Bank">HDFC Bank</option>
+                              <option value="ICICI Bank">ICICI Bank</option>
+                              <option value="SBI Card">SBI Card</option>
+                              <option value="Axis Bank">Axis Bank</option>
+                              <option value="Kotak Mahindra">Kotak Mahindra</option>
+                              <option value="OneCard">OneCard</option>
+                              <option value="Other Bank">Other Bank</option>
                             </select>
                           </div>
-                          
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest pl-1">Down Payment (₹)</span>
-                            <Input 
-                              type="number" 
-                              placeholder="0"
-                              value={financeDownPayment} 
-                              onChange={e => setFinanceDownPayment(e.target.value)} 
-                              className="w-28 h-9 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-black text-sm text-center shadow-sm" 
+
+                          {/* 2. Card Network */}
+                          <div className="space-y-1">
+                            <Label className="text-[9.5px] font-black uppercase text-zinc-500 tracking-wider">2. Card Network</Label>
+                            <select
+                              value={cardType}
+                              onChange={e => setCardType(e.target.value)}
+                              className="w-full h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-bold px-3.5 shadow-sm focus:border-indigo-500"
+                            >
+                              <option value="Visa">Visa</option>
+                              <option value="Mastercard">Mastercard</option>
+                              <option value="RuPay">RuPay</option>
+                              <option value="Amex">American Express</option>
+                            </select>
+                          </div>
+
+                          {/* 3. POS Terminal */}
+                          <div className="space-y-1">
+                            <Label className="text-[9.5px] font-black uppercase text-zinc-500 tracking-wider">3. POS Machine</Label>
+                            <select
+                              value={cardPosTerminal}
+                              onChange={e => setCardPosTerminal(e.target.value)}
+                              className="w-full h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-bold px-3.5 shadow-sm focus:border-indigo-500"
+                            >
+                              <option value="Pine Labs POS">Pine Labs POS</option>
+                              <option value="Paytm POS">Paytm POS</option>
+                              <option value="Plutus POS">Plutus POS</option>
+                              <option value="Mosambee POS">Mosambee POS</option>
+                              <option value="PhonePe POS">PhonePe POS</option>
+                              <option value="Other POS">Other Machine</option>
+                            </select>
+                          </div>
+
+                          {/* 4. EMI Plan */}
+                          <div className="space-y-1">
+                            <Label className="text-[9.5px] font-black uppercase text-zinc-500 tracking-wider">4. Payment / EMI Plan</Label>
+                            <select
+                              value={cardEmiTenure}
+                              onChange={e => setCardEmiTenure(e.target.value)}
+                              className="w-full h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-black px-3.5 shadow-sm text-indigo-600 focus:border-indigo-500"
+                            >
+                              <option value="Full Payment">Full Payment (No EMI)</option>
+                              <option value="3 Months EMI">3 Months No-Cost EMI</option>
+                              <option value="6 Months EMI">6 Months No-Cost EMI</option>
+                              <option value="9 Months EMI">9 Months Low-Cost EMI</option>
+                              <option value="12 Months EMI">12 Months Low-Cost EMI</option>
+                            </select>
+                          </div>
+
+                          {/* 5. Auth / POS Slip Code */}
+                          <div className="space-y-1">
+                            <Label className="text-[9.5px] font-black uppercase text-zinc-500 tracking-wider">5. Auth / POS Slip Code</Label>
+                            <Input
+                              placeholder="e.g. 482910"
+                              value={cardAuthCode}
+                              onChange={e => setCardAuthCode(e.target.value)}
+                              className="h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-bold px-3.5 shadow-sm focus:border-indigo-500"
                             />
                           </div>
 
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest pl-1">Loan Amount (₹)</span>
-                            <span className="text-lg font-black text-emerald-600">
-                              ₹{Math.max(0, grandTotal - (Number(financeDownPayment) || 0))}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest pl-1">File / App ID</span>
-                            <Input 
-                              placeholder="e.g. BJ-9921"
-                              value={financeFileId} 
-                              onChange={e => setFinanceFileId(e.target.value)} 
-                              className="w-32 h-9 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold text-xs text-center shadow-sm" 
+                          {/* 6. Cardholder Name */}
+                          <div className="space-y-1">
+                            <Label className="text-[9.5px] font-black uppercase text-zinc-500 tracking-wider">6. Cardholder Name (Optional)</Label>
+                            <Input
+                              placeholder="Name on card"
+                              value={cardHolderName}
+                              onChange={e => setCardHolderName(e.target.value)}
+                              className="h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-bold px-3.5 shadow-sm focus:border-indigo-500"
                             />
                           </div>
                         </div>
-                      )}
-
-                      {newType === "Split" && (
-                        <div className="p-4 bg-purple-50/50 dark:bg-purple-900/10 rounded-2xl border border-purple-100 dark:border-purple-900/20 space-y-3 text-left">
-                          <div className="flex items-center justify-between gap-4">
-                            <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest pl-1">Cash Amount</span>
-                            <Input 
-                              type="number"
-                              placeholder="₹ Cash"
-                              value={splitCash} 
-                              onChange={e => setSplitCash(e.target.value)} 
-                              className="w-32 h-9 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold text-xs text-center shadow-sm" 
-                            />
-                          </div>
-                          <div className="h-[1px] bg-purple-200/50 dark:bg-purple-900/30 w-full" />
-                          <div className="flex items-center justify-between gap-4">
-                            <span className="text-[10px] font-black text-purple-600 uppercase tracking-widest pl-1">UPI Amount</span>
-                            <span className="text-lg font-black text-purple-600 pr-2">
-                              ₹{Math.max(0, grandTotal - (Number(splitCash) || 0))}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-
-                      {newType === "Credit Card" && (
-                        <div className="p-4 bg-indigo-50/60 dark:bg-indigo-950/20 rounded-2xl border border-indigo-100 dark:border-indigo-900/30 space-y-3 text-left animate-in fade-in slide-in-from-top-2">
-                          <div className="flex items-center justify-between border-b border-indigo-100 dark:border-indigo-900/40 pb-2">
-                            <span className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
-                              💳 Credit Card & EMI Details
-                            </span>
-                          </div>
-
-                          <div className="flex flex-col space-y-2.5 w-full">
-                            {/* 1. Bank Name */}
-                            <div className="space-y-1">
-                              <Label className="text-[9.5px] font-black uppercase text-zinc-500 tracking-wider">1. Bank Name</Label>
-                              <select
-                                value={cardBankName}
-                                onChange={e => setCardBankName(e.target.value)}
-                                className="w-full h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-bold px-3.5 shadow-sm focus:border-indigo-500"
-                              >
-                                <option value="HDFC Bank">HDFC Bank</option>
-                                <option value="ICICI Bank">ICICI Bank</option>
-                                <option value="SBI Card">SBI Card</option>
-                                <option value="Axis Bank">Axis Bank</option>
-                                <option value="Kotak Mahindra">Kotak Mahindra</option>
-                                <option value="OneCard">OneCard</option>
-                                <option value="Other Bank">Other Bank</option>
-                              </select>
-                            </div>
-
-                            {/* 2. Card Network */}
-                            <div className="space-y-1">
-                              <Label className="text-[9.5px] font-black uppercase text-zinc-500 tracking-wider">2. Card Network</Label>
-                              <select
-                                value={cardType}
-                                onChange={e => setCardType(e.target.value)}
-                                className="w-full h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-bold px-3.5 shadow-sm focus:border-indigo-500"
-                              >
-                                <option value="Visa">Visa</option>
-                                <option value="Mastercard">Mastercard</option>
-                                <option value="RuPay">RuPay</option>
-                                <option value="Amex">American Express</option>
-                              </select>
-                            </div>
-
-                            {/* 3. POS Terminal */}
-                            <div className="space-y-1">
-                              <Label className="text-[9.5px] font-black uppercase text-zinc-500 tracking-wider">3. POS Machine</Label>
-                              <select
-                                value={cardPosTerminal}
-                                onChange={e => setCardPosTerminal(e.target.value)}
-                                className="w-full h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-bold px-3.5 shadow-sm focus:border-indigo-500"
-                              >
-                                <option value="Pine Labs POS">Pine Labs POS</option>
-                                <option value="Paytm POS">Paytm POS</option>
-                                <option value="Plutus POS">Plutus POS</option>
-                                <option value="Mosambee POS">Mosambee POS</option>
-                                <option value="PhonePe POS">PhonePe POS</option>
-                                <option value="Other POS">Other Machine</option>
-                              </select>
-                            </div>
-
-                            {/* 4. EMI Plan */}
-                            <div className="space-y-1">
-                              <Label className="text-[9.5px] font-black uppercase text-zinc-500 tracking-wider">4. Payment / EMI Plan</Label>
-                              <select
-                                value={cardEmiTenure}
-                                onChange={e => setCardEmiTenure(e.target.value)}
-                                className="w-full h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-black px-3.5 shadow-sm text-indigo-600 focus:border-indigo-500"
-                              >
-                                <option value="Full Payment">Full Payment (No EMI)</option>
-                                <option value="3 Months EMI">3 Months No-Cost EMI</option>
-                                <option value="6 Months EMI">6 Months No-Cost EMI</option>
-                                <option value="9 Months EMI">9 Months Low-Cost EMI</option>
-                                <option value="12 Months EMI">12 Months Low-Cost EMI</option>
-                              </select>
-                            </div>
-
-                            {/* 5. Auth / POS Slip Code */}
-                            <div className="space-y-1">
-                              <Label className="text-[9.5px] font-black uppercase text-zinc-500 tracking-wider">5. Auth / POS Slip Code</Label>
-                              <Input
-                                placeholder="e.g. 482910"
-                                value={cardAuthCode}
-                                onChange={e => setCardAuthCode(e.target.value)}
-                                className="h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-bold px-3.5 shadow-sm focus:border-indigo-500"
-                              />
-                            </div>
-
-                            {/* 6. Cardholder Name */}
-                            <div className="space-y-1">
-                              <Label className="text-[9.5px] font-black uppercase text-zinc-500 tracking-wider">6. Cardholder Name (Optional)</Label>
-                              <Input
-                                placeholder="Name on card"
-                                value={cardHolderName}
-                                onChange={e => setCardHolderName(e.target.value)}
-                                className="h-10 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 text-xs font-bold px-3.5 shadow-sm focus:border-indigo-500"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="relative w-44">
-                        <select 
-                          value={newType} 
-                          onChange={(e) => setNewType(e.target.value)}
-                          className="w-full h-10 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold px-4 appearance-none focus:ring-0 text-xs shadow-sm"
-                        >
-                          <option value="Cash">Cash Sale</option>
-                          <option value="Online">Online/UPI</option>
-                          <option value="Credit Card">Credit Card / Card EMI</option>
-                          <option value="Split">Split (Cash + UPI)</option>
-                          <option value="Udhaar">Udhaar Khata</option>
-                          <option value="Swiggy">{getPartnerName(businessType, "Swiggy")}</option>
-                          <option value="Zomato">{getPartnerName(businessType, "Zomato")}</option>
-                          {businessType === "Mobile/Electronics" && (
-                            <option value="Finance">Finance / EMI</option>
-                          )}
-                        </select>
-                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 pointer-events-none" />
                       </div>
-                   </div>
+                    )}
 
-                   <Button 
-                    onClick={handleSale} 
+                    <div className="relative w-44">
+                      <select
+                        value={newType}
+                        onChange={(e) => setNewType(e.target.value)}
+                        className="w-full h-10 rounded-xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 font-bold px-4 appearance-none focus:ring-0 text-xs shadow-sm"
+                      >
+                        <option value="Cash">Cash Sale</option>
+                        <option value="Online">Online/UPI</option>
+                        <option value="Credit Card">Credit Card / Card EMI</option>
+                        <option value="Split">Split (Cash + UPI)</option>
+                        <option value="Udhaar">Udhaar Khata</option>
+                        <option value="Swiggy">{getPartnerName(businessType, "Swiggy")}</option>
+                        <option value="Zomato">{getPartnerName(businessType, "Zomato")}</option>
+                        {businessType === "Mobile/Electronics" && (
+                          <option value="Finance">Finance / EMI</option>
+                        )}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={handleSale}
                     disabled={isLoading}
                     className="w-full h-14 bg-zinc-900 hover:bg-black text-white rounded-2xl font-black text-sm active:scale-95 transition-all shadow-xl uppercase tracking-widest mt-2"
                   >
@@ -6751,17 +6808,17 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   </Select>
                   <div className="flex items-center gap-1 bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-full px-2 py-0.5 shadow-sm text-zinc-650 dark:text-zinc-350">
                     <Filter className="h-3 w-3 text-zinc-400 mr-0.5" />
-                    <input 
-                      type="date" 
-                      value={startDate} 
-                      onChange={(e) => setStartDate(e.target.value)} 
+                    <input
+                      type="date"
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
                       className="bg-transparent text-[8px] font-black focus:outline-none text-zinc-700 dark:text-zinc-300 w-[80px] border-0 p-0 cursor-pointer"
                     />
                     <span className="text-[8px] text-zinc-400 font-bold px-0.5">to</span>
-                    <input 
-                      type="date" 
-                      value={endDate} 
-                      onChange={(e) => setEndDate(e.target.value)} 
+                    <input
+                      type="date"
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
                       className="bg-transparent text-[8px] font-black focus:outline-none text-zinc-700 dark:text-zinc-300 w-[80px] border-0 p-0 cursor-pointer"
                     />
                   </div>
@@ -6778,8 +6835,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
               {/* ACTION ROW COMPACT */}
               <div className="grid grid-cols-2 gap-2">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={async () => {
                     setIsSyncing(true);
                     let storeId = currentStoreId;
@@ -6795,13 +6852,13 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       setLastSyncedTime(format(new Date(), "hh:mm:ss aa"));
                     }
                     setIsSyncing(false);
-                  }} 
+                  }}
                   className="h-10 rounded-xl bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 font-bold text-[9px] uppercase tracking-widest gap-1.5 shadow-sm active:scale-90 transition-all"
                 >
                   <RefreshCw className={`h-3 w-3 text-zinc-400 ${isSyncing ? 'animate-spin' : ''}`} /> {t("Cloud Sync")}
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={generateAIInsight}
                   className="h-10 rounded-xl bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 font-bold text-[9px] uppercase tracking-widest gap-1.5 shadow-sm active:scale-90 transition-all"
                 >
@@ -6856,8 +6913,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   </div>
                 </Card>
 
-                <Card 
-                  onClick={() => setActiveTab("Khata")} 
+                <Card
+                  onClick={() => setActiveTab("Khata")}
                   className="bg-[#fff1f1] dark:bg-red-950/20 p-4 rounded-[1.5rem] border-0 h-32 flex flex-col justify-between active:scale-95 transition-all cursor-pointer hover:bg-red-100 dark:hover:bg-red-900/30"
                 >
                   <p className="text-[13px] font-black text-red-700 dark:text-red-400 uppercase tracking-wider">{t("Pending Udhaar")}</p>
@@ -6867,8 +6924,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   </div>
                 </Card>
 
-                <Card 
-                  onClick={() => setShowExpenseBreakdown(true)} 
+                <Card
+                  onClick={() => setShowExpenseBreakdown(true)}
                   className="bg-white dark:bg-zinc-900 p-4 rounded-[1.5rem] border-0 shadow-sm border-b-[3px] border-purple-500 h-32 flex flex-col justify-between active:scale-95 transition-all cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/30"
                 >
                   <p className="text-[13px] font-black text-zinc-700 dark:text-zinc-200 uppercase tracking-wider">{t("Total Expense")}</p>
@@ -6925,17 +6982,17 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 </div>
                 <div className="p-6 space-y-4">
                   <div className="space-y-2">
-                    <Input 
-                      placeholder="What did you buy?" 
+                    <Input
+                      placeholder="What did you buy?"
                       value={newExpTitle}
                       onChange={e => setNewExpTitle(e.target.value)}
                       className="h-14 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 font-medium px-6 focus-visible:ring-red-500"
                     />
                   </div>
                   <div className="space-y-2">
-                    <Input 
+                    <Input
                       type="number"
-                      placeholder="Amount (₹)" 
+                      placeholder="Amount (₹)"
                       value={newExpAmount}
                       onChange={e => setNewExpAmount(e.target.value)}
                       className="h-14 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 font-medium px-6 focus-visible:ring-red-500"
@@ -6969,7 +7026,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       Automatic carry-over cost calculation, Rent ledger, and daily target tracker are premium features of the Smart Business Plan.
                     </p>
                   </div>
-                  <Button 
+                  <Button
                     onClick={() => window.open(`https://wa.me/917838229178?text=${encodeURIComponent(`Hi Admin, I want to upgrade to the Paid Plan to unlock Rent Tracker for: ${restaurantName} (${ownerMobile}).`)}`, "_blank")}
                     className="h-14 px-8 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all z-10"
                   >
@@ -6979,46 +7036,46 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               ) : (
                 <>
                   <Card className="bg-blue-600 text-white p-10 rounded-[3rem] border-0 relative overflow-hidden shadow-2xl shadow-blue-600/30">
-                <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl" />
-                <Badge className="bg-white text-blue-600 border-0 font-black px-4 py-1.5 mb-6 rounded-full shadow-lg">MISSION TARGET</Badge>
-                <h3 className="text-7xl font-black tracking-tighter mb-2">₹{rentTargetData.todaysTarget}</h3>
-                <p className="text-lg font-bold opacity-80 uppercase tracking-[0.2em]">Remaining Today</p>
-                
-                <div className="mt-12 space-y-4">
-                  <div className="flex justify-between items-end text-xs font-black uppercase tracking-widest">
-                    <span>Performance</span>
-                    <span className="text-xl">{Math.min(100, Math.round((rentTargetData.todayActual / rentTargetData.todaysTarget) * 100 || 0))}%</span>
-                  </div>
-                  <div className="w-full h-4 bg-white/20 rounded-full overflow-hidden p-1">
-                    <div className="h-full bg-white rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(255,255,255,0.5)]" style={{ width: `${Math.min(100, (rentTargetData.todayActual / rentTargetData.todaysTarget) * 100 || 0)}%` }} />
-                  </div>
-                </div>
-              </Card>
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl" />
+                    <Badge className="bg-white text-blue-600 border-0 font-black px-4 py-1.5 mb-6 rounded-full shadow-lg">MISSION TARGET</Badge>
+                    <h3 className="text-7xl font-black tracking-tighter mb-2">₹{rentTargetData.todaysTarget}</h3>
+                    <p className="text-lg font-bold opacity-80 uppercase tracking-[0.2em]">Remaining Today</p>
 
-              <div className="grid grid-cols-2 gap-4">
-                <Card className="p-8 rounded-2xl bg-white dark:bg-zinc-900 border-0 shadow-sm relative overflow-hidden">
-                  <div className="absolute left-0 top-0 w-1.5 h-full bg-zinc-200 dark:bg-zinc-800" />
-                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Fixed Cost</p>
-                  <h4 className="text-3xl font-black">₹{rentTargetData.dailyBase}</h4>
-                  <p className="text-[9px] font-bold text-zinc-400 mt-2 italic">Base daily rent</p>
-                </Card>
-                <Card className="p-8 rounded-2xl bg-white dark:bg-zinc-900 border-0 shadow-sm relative overflow-hidden">
-                  <div className={`absolute left-0 top-0 w-1.5 h-full ${rentTargetData.carryOver > 0 ? 'bg-red-500' : 'bg-emerald-500'}`} />
-                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">History Impact</p>
-                  <h4 className={`text-3xl font-black ${rentTargetData.carryOver > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
-                    {rentTargetData.carryOver > 0 ? `+₹${rentTargetData.carryOver}` : `-₹${Math.abs(rentTargetData.carryOver)}`}
-                  </h4>
-                  <p className="text-[9px] font-bold text-zinc-400 mt-2 italic">Carry-over data</p>
-                </Card>
-              </div>
+                    <div className="mt-12 space-y-4">
+                      <div className="flex justify-between items-end text-xs font-black uppercase tracking-widest">
+                        <span>Performance</span>
+                        <span className="text-xl">{Math.min(100, Math.round((rentTargetData.todayActual / rentTargetData.todaysTarget) * 100 || 0))}%</span>
+                      </div>
+                      <div className="w-full h-4 bg-white/20 rounded-full overflow-hidden p-1">
+                        <div className="h-full bg-white rounded-full transition-all duration-1000 ease-out shadow-[0_0_15px_rgba(255,255,255,0.5)]" style={{ width: `${Math.min(100, (rentTargetData.todayActual / rentTargetData.todaysTarget) * 100 || 0)}%` }} />
+                      </div>
+                    </div>
+                  </Card>
 
-              <div className="p-6 bg-zinc-900 text-white rounded-2xl flex items-center justify-between">
-                 <div className="flex items-center gap-4">
-                   <div className="p-3 bg-blue-500 rounded-2xl"><PieChart className="h-6 w-6" /></div>
-                   <div><h5 className="font-black">Finance Check</h5><p className="text-[10px] font-bold opacity-60">Status: {rentTargetData.remaining === 0 ? "Profit Zone 🚀" : "Cost Recovery 💪"}</p></div>
-                 </div>
-                 <div className="text-right"><p className="text-[8px] font-black opacity-40 uppercase">Est. Monthly Profit</p><p className="text-xl font-black">₹{netProfit}</p></div>
-              </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Card className="p-8 rounded-2xl bg-white dark:bg-zinc-900 border-0 shadow-sm relative overflow-hidden">
+                      <div className="absolute left-0 top-0 w-1.5 h-full bg-zinc-200 dark:bg-zinc-800" />
+                      <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">Fixed Cost</p>
+                      <h4 className="text-3xl font-black">₹{rentTargetData.dailyBase}</h4>
+                      <p className="text-[9px] font-bold text-zinc-400 mt-2 italic">Base daily rent</p>
+                    </Card>
+                    <Card className="p-8 rounded-2xl bg-white dark:bg-zinc-900 border-0 shadow-sm relative overflow-hidden">
+                      <div className={`absolute left-0 top-0 w-1.5 h-full ${rentTargetData.carryOver > 0 ? 'bg-red-500' : 'bg-emerald-500'}`} />
+                      <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-2">History Impact</p>
+                      <h4 className={`text-3xl font-black ${rentTargetData.carryOver > 0 ? 'text-red-500' : 'text-emerald-500'}`}>
+                        {rentTargetData.carryOver > 0 ? `+₹${rentTargetData.carryOver}` : `-₹${Math.abs(rentTargetData.carryOver)}`}
+                      </h4>
+                      <p className="text-[9px] font-bold text-zinc-400 mt-2 italic">Carry-over data</p>
+                    </Card>
+                  </div>
+
+                  <div className="p-6 bg-zinc-900 text-white rounded-2xl flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="p-3 bg-blue-500 rounded-2xl"><PieChart className="h-6 w-6" /></div>
+                      <div><h5 className="font-black">Finance Check</h5><p className="text-[10px] font-bold opacity-60">Status: {rentTargetData.remaining === 0 ? "Profit Zone 🚀" : "Cost Recovery 💪"}</p></div>
+                    </div>
+                    <div className="text-right"><p className="text-[8px] font-black opacity-40 uppercase">Est. Monthly Profit</p><p className="text-xl font-black">₹{netProfit}</p></div>
+                  </div>
                 </>
               )}
             </div>
@@ -7027,25 +7084,25 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
           {activeTab === "Total Sale Report" && (
             <div className="max-w-full space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-28 px-2 sm:px-4 pt-4">
               <header className="px-2">
-                <h2 className="text-5xl font-bold tracking-tighter leading-none text-zinc-900 dark:text-white">Business<br/>Analytics</h2>
+                <h2 className="text-5xl font-bold tracking-tighter leading-none text-zinc-900 dark:text-white">Business<br />Analytics</h2>
                 <p className="text-sm font-bold text-zinc-400 mt-2 leading-relaxed">Comprehensive view of your store's performance.</p>
               </header>
 
               <div className="flex flex-col sm:flex-row gap-4 w-full px-2">
-                <Button 
-                  onClick={handleExportSalesToExcel} 
+                <Button
+                  onClick={handleExportSalesToExcel}
                   className="flex-1 h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-full text-xs shadow-xl flex items-center justify-center gap-2 uppercase tracking-widest active:scale-95 transition-all border-0 cursor-pointer"
                 >
                   <FileText className="h-4 w-4" /> EXPORT TO EXCEL
                 </Button>
-                <Button 
+                <Button
                   onClick={() => {
                     try {
                       window.print();
                     } catch (e: any) {
                       alert("Printing not supported in this view.");
                     }
-                  }} 
+                  }}
                   className="flex-1 h-14 bg-zinc-900 hover:bg-black text-white font-black rounded-full text-xs shadow-xl flex items-center justify-center gap-2 uppercase tracking-widest active:scale-95 transition-all border-0 cursor-pointer"
                 >
                   <Printer className="h-4 w-4" /> PRINT REPORT
@@ -7054,21 +7111,21 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <Card className="p-5 rounded-2xl border-0 shadow-sm bg-white dark:bg-zinc-900 flex flex-col justify-center relative overflow-hidden">
-                   <div className="absolute left-0 top-0 w-1 h-full bg-zinc-100 dark:bg-zinc-800" />
-                   <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-2 px-1">Orders</p>
-                   <h3 className="text-4xl font-bold tracking-tighter px-1">{filteredSales.length}</h3>
+                  <div className="absolute left-0 top-0 w-1 h-full bg-zinc-100 dark:bg-zinc-800" />
+                  <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-2 px-1">Orders</p>
+                  <h3 className="text-4xl font-bold tracking-tighter px-1">{filteredSales.length}</h3>
                 </Card>
 
                 <Card className="p-5 rounded-2xl border-0 shadow-sm bg-white dark:bg-zinc-900 flex flex-col justify-center relative overflow-hidden">
-                   <div className="absolute left-0 top-0 w-1 h-full bg-zinc-100 dark:bg-zinc-800" />
-                   <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-2 px-1">Avg. Ticket</p>
-                   <h3 className="text-4xl font-bold tracking-tighter px-1">₹{filteredSales.length > 0 ? Math.round(totalSales / filteredSales.length) : 0}</h3>
+                  <div className="absolute left-0 top-0 w-1 h-full bg-zinc-100 dark:bg-zinc-800" />
+                  <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-2 px-1">Avg. Ticket</p>
+                  <h3 className="text-4xl font-bold tracking-tighter px-1">₹{filteredSales.length > 0 ? Math.round(totalSales / filteredSales.length) : 0}</h3>
                 </Card>
 
                 <Card className="p-5 rounded-2xl border-0 shadow-sm bg-white dark:bg-zinc-900 flex flex-col justify-center relative overflow-hidden">
-                   <div className="absolute left-0 top-0 w-1 h-full bg-zinc-100 dark:bg-zinc-800" />
-                   <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-2 px-1">Revenue</p>
-                   <h3 className="text-4xl font-bold tracking-tighter px-1">₹{Math.round(totalSales)}</h3>
+                  <div className="absolute left-0 top-0 w-1 h-full bg-zinc-100 dark:bg-zinc-800" />
+                  <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mb-2 px-1">Revenue</p>
+                  <h3 className="text-4xl font-bold tracking-tighter px-1">₹{Math.round(totalSales)}</h3>
                 </Card>
               </div>
 
@@ -7084,11 +7141,11 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       }, {})
                     ).map(([mode, total]) => (
                       <Card key={mode} className="p-4 rounded-xl border-0 shadow-sm bg-white dark:bg-zinc-900 flex flex-col justify-center relative overflow-hidden">
-                         <div className="absolute left-0 top-0 w-1 h-full bg-orange-500" />
-                         <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest mb-1 px-1">
-                           {getPartnerName(businessType, mode).toUpperCase()}
-                         </p>
-                         <h4 className="text-xl font-bold tracking-tighter px-1">₹{Math.round(total as number)}</h4>
+                        <div className="absolute left-0 top-0 w-1 h-full bg-orange-500" />
+                        <p className="text-[8px] font-black text-zinc-400 uppercase tracking-widest mb-1 px-1">
+                          {getPartnerName(businessType, mode).toUpperCase()}
+                        </p>
+                        <h4 className="text-xl font-bold tracking-tighter px-1">₹{Math.round(total as number)}</h4>
                       </Card>
                     ))}
                   </div>
@@ -7100,7 +7157,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-2">
                   <h3 className="text-2xl font-bold tracking-tighter">Transaction History</h3>
                   <div className="relative w-full sm:max-w-xs">
-                    <Input 
+                    <Input
                       placeholder="Search name, mobile, item, amount..."
                       value={salesSearchQuery}
                       onChange={e => setSalesSearchQuery(e.target.value)}
@@ -7140,13 +7197,13 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                               </td>
                               <td className="py-2 px-4 text-right whitespace-nowrap">
                                 <div className="flex gap-1.5 justify-end">
-                                  <button 
+                                  <button
                                     onClick={() => window.open(getInvoiceUrlForSale(s), "_blank")}
                                     className="px-2.5 py-1 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-300 font-bold text-[9px] uppercase tracking-wider rounded-lg transition-all active:scale-95"
                                   >
                                     View
                                   </button>
-                                  <button 
+                                  <button
                                     onClick={() => {
                                       setEditingSale({
                                         id: s.id,
@@ -7164,7 +7221,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                     Edit
                                   </button>
                                   {s.mobile && s.mobile !== "N/A" && s.mobile.length === 10 && (
-                                    <button 
+                                    <button
                                       onClick={() => handleResendWhatsAppInvoice(s)}
                                       className="px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950/20 hover:bg-emerald-600 hover:text-white text-emerald-600 dark:text-emerald-400 font-bold text-[9px] uppercase tracking-wider rounded-lg transition-all active:scale-95"
                                     >
@@ -7185,15 +7242,15 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               {/* FINANCIAL ANALYTICS SECTION */}
               <div className="space-y-3">
                 <div className="px-2 flex justify-between items-end">
-                   <div>
-                     <h3 className="text-2xl font-bold tracking-tighter">Financial Analytics</h3>
-                     <p className="text-[10px] font-bold text-zinc-400">Total volume breakdown.</p>
-                   </div>
-                   <Badge className="bg-zinc-900 text-white px-3 py-1 rounded-full font-bold text-[9px]">{filteredSales.length} Sales</Badge>
+                  <div>
+                    <h3 className="text-2xl font-bold tracking-tighter">Financial Analytics</h3>
+                    <p className="text-[10px] font-bold text-zinc-400">Total volume breakdown.</p>
+                  </div>
+                  <Badge className="bg-zinc-900 text-white px-3 py-1 rounded-full font-bold text-[9px]">{filteredSales.length} Sales</Badge>
                 </div>
 
                 <Card className="rounded-2xl border-0 shadow-sm bg-white dark:bg-zinc-900 overflow-hidden">
-                   <div className="overflow-x-auto scrollbar-hide">
+                  <div className="overflow-x-auto scrollbar-hide">
                     <table className="min-w-max text-left border-collapse">
                       <thead>
                         <tr className="border-b dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-800/50">
@@ -7221,7 +7278,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         ))}
                       </tbody>
                     </table>
-                   </div>
+                  </div>
                 </Card>
               </div>
             </div>
@@ -7242,8 +7299,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       Only the first 10 customers are displayed. Upgrade to the Paid Plan to view and contact your entire customer base.
                     </p>
                   </div>
-                  <Button 
-                    onClick={() => setShowUpgradeModal(true)} 
+                  <Button
+                    onClick={() => setShowUpgradeModal(true)}
                     className="h-10 px-6 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-black text-[10px] uppercase tracking-wider shadow-md shrink-0 whitespace-nowrap active:scale-95 transition-all"
                   >
                     Unlock Unlimited
@@ -7261,10 +7318,10 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   </div>
                   <Badge className="bg-white dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300 border-0 font-black text-[8px] px-3 py-1 rounded-full shadow-sm">WHATSAPP TEMPLATE</Badge>
                 </div>
-                
-                <textarea 
-                  value={crmMessage} 
-                  onChange={e => setCrmMessage(e.target.value)} 
+
+                <textarea
+                  value={crmMessage}
+                  onChange={e => setCrmMessage(e.target.value)}
                   className="w-full h-40 bg-white/80 dark:bg-zinc-900/80 rounded-[2rem] border-0 focus:ring-2 focus:ring-indigo-500/20 text-sm font-bold resize-none p-6 leading-relaxed shadow-inner placeholder:text-zinc-300"
                   placeholder="Write your marketing message here..."
                 />
@@ -7298,9 +7355,9 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   </div>
                   <div className="flex gap-2 flex-wrap">
                     {getTemplates(businessType, restaurantName, templateLang).map(template => (
-                      <button 
-                        key={template.label} 
-                        onClick={() => setCrmMessage(template.msg)} 
+                      <button
+                        key={template.label}
+                        onClick={() => setCrmMessage(template.msg)}
                         className="bg-white dark:bg-zinc-800 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900 hover:bg-indigo-600 hover:text-white transition-all px-4 py-2.5 font-black text-[9px] rounded-xl shadow-sm active:scale-95 uppercase tracking-tighter"
                       >
                         {template.label}
@@ -7326,30 +7383,30 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   <div className="space-y-4">
                     <div className="space-y-1.5 text-left">
                       <Label className="text-[10px] font-black uppercase text-zinc-400">Offer Title</Label>
-                      <Input 
-                        value={offerTitle} 
-                        onChange={e => setOfferTitle(e.target.value)} 
-                        placeholder="e.g. Sunday Feast, Festival Discount" 
+                      <Input
+                        value={offerTitle}
+                        onChange={e => setOfferTitle(e.target.value)}
+                        placeholder="e.g. Sunday Feast, Festival Discount"
                         className="rounded-xl border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 font-bold text-sm h-11"
                       />
                     </div>
 
                     <div className="space-y-1.5 text-left">
                       <Label className="text-[10px] font-black uppercase text-zinc-400">Discount Details</Label>
-                      <Input 
-                        value={discountDetails} 
-                        onChange={e => setDiscountDetails(e.target.value)} 
-                        placeholder="e.g. Buy 1 Get 1 FREE, 25% OFF" 
+                      <Input
+                        value={discountDetails}
+                        onChange={e => setDiscountDetails(e.target.value)}
+                        placeholder="e.g. Buy 1 Get 1 FREE, 25% OFF"
                         className="rounded-xl border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 font-bold text-sm h-11"
                       />
                     </div>
 
                     <div className="space-y-1.5 text-left">
                       <Label className="text-[10px] font-black uppercase text-zinc-400">{getLabels(businessType).item} Name</Label>
-                      <Input 
-                        value={productName} 
-                        onChange={e => setProductName(e.target.value)} 
-                        placeholder={`e.g. ${getLabels(businessType).presets[0]?.name || "Item"}, All ${getLabels(businessType).items}`} 
+                      <Input
+                        value={productName}
+                        onChange={e => setProductName(e.target.value)}
+                        placeholder={`e.g. ${getLabels(businessType).presets[0]?.name || "Item"}, All ${getLabels(businessType).items}`}
                         className="rounded-xl border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 font-bold text-sm h-11"
                       />
                     </div>
@@ -7358,8 +7415,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       <p className="text-red-500 text-[10px] font-bold uppercase tracking-wider pl-1">{imageGenerationError}</p>
                     )}
 
-                    <Button 
-                      onClick={handleGenerateAIBanner} 
+                    <Button
+                      onClick={handleGenerateAIBanner}
                       disabled={isGeneratingImage}
                       className="w-full h-11 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-black text-[10px] uppercase tracking-wider shadow-md active:scale-95 transition-all mt-4 flex items-center justify-center gap-2"
                     >
@@ -7381,12 +7438,12 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   <div className="flex flex-col items-center justify-center border-2 border-dashed border-zinc-200 dark:border-zinc-800 rounded-3xl p-4 min-h-[260px] bg-white/40 dark:bg-zinc-950/20 relative">
                     {aiImageUrl ? (
                       <div className="w-full space-y-4">
-                        <img 
-                          src={aiImageUrl} 
-                          alt="AI generated ad banner" 
+                        <img
+                          src={aiImageUrl}
+                          alt="AI generated ad banner"
                           className="w-full aspect-square object-cover rounded-2xl shadow-md border border-zinc-100 dark:border-zinc-900"
                         />
-                        <Button 
+                        <Button
                           onClick={handleShareAIBanner}
                           className="w-full h-11 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-wider shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
                         >
@@ -7409,12 +7466,63 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 </div>
               </Card>
 
-              {/* RETENTION LIST SECTION */}
-              <div className="bg-white dark:bg-zinc-900 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 shadow-xl overflow-hidden">
-                <div className="bg-gradient-to-r from-violet-600 to-indigo-600 p-8">
-                  <h3 className="text-3xl font-black text-white tracking-tighter">Retention List</h3>
+              {/* RETENTION LIST & WHATSAPP BROADCAST SECTION */}
+              <div className="bg-white dark:bg-zinc-900 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 shadow-xl overflow-hidden space-y-4">
+                <div className="bg-gradient-to-r from-violet-600 to-indigo-600 p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-3xl font-black text-white tracking-tighter">Retention List & Customer Contacts</h3>
+                    <p className="text-xs font-bold text-violet-200 mt-1">Send direct messages or copy all phone numbers in 1-click for WhatsApp Business Broadcast!</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      onClick={() => {
+                        const cleanMobiles = displayedCrmList
+                          .map(c => (c.mobile || '').replace(/\D/g, '').slice(-10))
+                          .filter(m => m && m.length === 10)
+                          .map(m => `91${m}`);
+
+                        if (cleanMobiles.length === 0) {
+                          alert("No customer mobile numbers available to copy!");
+                          return;
+                        }
+                        const formattedList = Array.from(new Set(cleanMobiles)).join(", ");
+                        navigator.clipboard.writeText(formattedList);
+                        alert(`🎉 Copied ${cleanMobiles.length} Customer Phone Numbers!\n\nInstructions:\n1. Open WhatsApp Business App\n2. Tap Menu ➔ New Broadcast\n3. Paste copied numbers to send 1-click offer to all customers!`);
+                      }}
+                      className="h-12 px-6 bg-emerald-400 hover:bg-emerald-300 text-zinc-950 font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-emerald-400/20 active:scale-95 transition-all flex items-center gap-2"
+                    >
+                      <Copy className="h-4 w-4 fill-current" />
+                      Copy All Numbers ({displayedCrmList.length})
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        if (displayedCrmList.length === 0) {
+                          alert("No customer data to export!");
+                          return;
+                        }
+                        let csvContent = "data:text/csv;charset=utf-8,Name,Mobile,Tag,Last Visit\n";
+                        displayedCrmList.forEach(c => {
+                          const cleanMob = (c.mobile || '').replace(/\D/g, '').slice(-10);
+                          csvContent += `"${c.name || 'Customer'}","${cleanMob}","${c.tag || 'Customer'}","${c.last || ''}"\n`;
+                        });
+                        const encodedUri = encodeURI(csvContent);
+                        const link = document.createElement("a");
+                        link.setAttribute("href", encodedUri);
+                        link.setAttribute("download", `InstaMunim_Customer_List_${format(new Date(), "yyyyMMdd")}.csv`);
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      }}
+                      className="h-12 px-5 bg-white/10 hover:bg-white/20 text-white border-white/20 font-black text-xs uppercase tracking-widest rounded-2xl flex items-center gap-2"
+                    >
+                      <Download className="h-4 w-4" />
+                      Export CSV
+                    </Button>
+                  </div>
                 </div>
 
+                {/* TABLE */}
                 <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-zinc-200 dark:scrollbar-thumb-zinc-700">
                   <table className="w-full min-w-[700px]">
                     <thead>
@@ -7454,7 +7562,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           <td className="py-6 px-8 text-xs font-black text-zinc-500 uppercase tracking-widest">{cust.last}</td>
                           <td className="py-6 px-8">
                             <div className="flex gap-2.5">
-                              <Button 
+                              <Button
                                 onClick={() => {
                                   const cleanMobile = (cust.mobile || '').replace(/\D/g, '').slice(-10);
                                   if (!cleanMobile || cleanMobile.length < 10) {
@@ -7470,7 +7578,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                               >
                                 <Send className="h-3.5 w-3.5" /> Text
                               </Button>
-                              <Button 
+                              <Button
                                 onClick={() => handleSendImage(cust.mobile, cust.name)}
                                 className="bg-orange-500 hover:bg-orange-600 text-white rounded-2xl h-12 px-5 font-black text-[10px] shadow-md shadow-orange-500/10 flex items-center gap-2 active:scale-95 transition-all uppercase tracking-wider"
                               >
@@ -7581,7 +7689,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                   <p className="text-[9px] font-bold text-zinc-400">DP: ₹{fs.downPayment}</p>
                                 </div>
                                 {fs.status === "Pending" && (
-                                  <Button 
+                                  <Button
                                     size="sm"
                                     onClick={async () => {
                                       const updatedItems = fs.item.replace(":Pending]", ":Settled]");
@@ -7607,7 +7715,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
             </div>
           )}
 
-{activeTab === "BuybackTracker" && (
+          {activeTab === "BuybackTracker" && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8 pb-10">
               <header className="relative px-2">
                 <div className="absolute -left-10 -top-10 w-40 h-40 bg-orange-500/10 rounded-full blur-3xl" />
@@ -7619,7 +7727,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 const buybackExpenses = expenses.map(e => {
                   const title = e.title || "";
                   if (!title.includes("[BUYBACK###") && !title.includes("[BUYBACK:")) return null;
-                  
+
                   if (title.includes("[BUYBACK###")) {
                     const metaPart = title.substring(title.indexOf("[BUYBACK###") + 11, title.lastIndexOf("]"));
                     const parts = metaPart.split("###");
@@ -7693,7 +7801,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         <div className="space-y-3">
                           <div>
                             <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1">Customer Name</Label>
-                            <Input 
+                            <Input
                               value={buybackCustName}
                               onChange={e => setBuybackCustName(e.target.value)}
                               placeholder="Customer Name"
@@ -7702,7 +7810,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           </div>
                           <div>
                             <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1">Customer Mobile</Label>
-                            <Input 
+                            <Input
                               value={buybackCustMobile}
                               onChange={e => setBuybackCustMobile(e.target.value)}
                               placeholder="Mobile Number"
@@ -7712,7 +7820,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           </div>
                           <div>
                             <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1">Aadhaar / ID Card No.</Label>
-                            <Input 
+                            <Input
                               value={buybackAadhaar}
                               onChange={e => setBuybackAadhaar(e.target.value)}
                               placeholder="12 Digit Aadhaar No."
@@ -7722,7 +7830,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             <div>
                               <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1">Brand & Model</Label>
-                              <Input 
+                              <Input
                                 value={buybackBrandModel}
                                 onChange={e => setBuybackBrandModel(e.target.value)}
                                 placeholder="e.g. Vivo Y11"
@@ -7731,7 +7839,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                             </div>
                             <div>
                               <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1">IMEI Number (Scan / Type)</Label>
-                              <ImeiInput 
+                              <ImeiInput
                                 value={buybackImei}
                                 onChange={(val) => setBuybackImei(val)}
                                 placeholder="15 Digit IMEI"
@@ -7741,7 +7849,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           </div>
                           <div>
                             <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-1">Purchase / Buyback Price (₹)</Label>
-                            <Input 
+                            <Input
                               value={buybackPrice}
                               onChange={e => setBuybackPrice(e.target.value)}
                               placeholder="Amount Paid to Customer"
@@ -7749,7 +7857,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                               className="h-12 rounded-xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold shadow-sm text-orange-600"
                             />
                           </div>
-                          
+
                           {/* THREE PHOTO ATTACHMENT SLOTS */}
                           <div className="space-y-3 pt-2">
                             <span className="text-[10px] font-black text-zinc-450 uppercase tracking-wider block border-b border-zinc-100 dark:border-zinc-800 pb-1">Required Photo Captures</span>
@@ -7759,11 +7867,11 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 <Label className="text-[8px] font-black text-zinc-400 uppercase text-center leading-none">Aadhaar Front</Label>
                                 <label className="cursor-pointer bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-300 px-3 py-2 rounded-xl font-bold text-[9px] uppercase tracking-wider text-center w-full block shadow-sm border border-zinc-200 dark:border-zinc-700/50 hover:bg-orange-50 hover:text-orange-600 transition-colors">
                                   Capture
-                                  <input 
-                                    type="file" 
-                                    accept="image/*" 
-                                    capture="environment" 
-                                    className="hidden" 
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    capture="environment"
+                                    className="hidden"
                                     onChange={(e) => {
                                       const file = e.target.files?.[0];
                                       if (file) compressAndSetIdPhoto(file, 'front');
@@ -7785,11 +7893,11 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 <Label className="text-[8px] font-black text-zinc-400 uppercase text-center leading-none">Aadhaar Back</Label>
                                 <label className="cursor-pointer bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-300 px-3 py-2 rounded-xl font-bold text-[9px] uppercase tracking-wider text-center w-full block shadow-sm border border-zinc-200 dark:border-zinc-700/50 hover:bg-orange-50 hover:text-orange-600 transition-colors">
                                   Capture
-                                  <input 
-                                    type="file" 
-                                    accept="image/*" 
-                                    capture="environment" 
-                                    className="hidden" 
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    capture="environment"
+                                    className="hidden"
                                     onChange={(e) => {
                                       const file = e.target.files?.[0];
                                       if (file) compressAndSetIdPhoto(file, 'back');
@@ -7811,11 +7919,11 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 <Label className="text-[8px] font-black text-zinc-400 uppercase text-center leading-none">Device Photo</Label>
                                 <label className="cursor-pointer bg-zinc-100 dark:bg-zinc-800 text-zinc-650 dark:text-zinc-300 px-3 py-2 rounded-xl font-bold text-[9px] uppercase tracking-wider text-center w-full block shadow-sm border border-zinc-200 dark:border-zinc-700/50 hover:bg-orange-50 hover:text-orange-600 transition-colors">
                                   Capture
-                                  <input 
-                                    type="file" 
-                                    accept="image/*" 
-                                    capture="environment" 
-                                    className="hidden" 
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    capture="environment"
+                                    className="hidden"
                                     onChange={(e) => {
                                       const file = e.target.files?.[0];
                                       if (file) compressAndSetIdPhoto(file, 'device');
@@ -7836,11 +7944,11 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
                           {/* DECLARATION CHECKBOX */}
                           <div className="flex items-start gap-2.5 p-3.5 bg-orange-50/50 dark:bg-orange-950/15 rounded-2xl border border-orange-100/50 dark:border-orange-900/20 mt-2">
-                            <input 
-                              type="checkbox" 
-                              id="buybackDeclaration" 
-                              checked={buybackDeclared} 
-                              onChange={(e) => setBuybackDeclared(e.target.checked)} 
+                            <input
+                              type="checkbox"
+                              id="buybackDeclaration"
+                              checked={buybackDeclared}
+                              onChange={(e) => setBuybackDeclared(e.target.checked)}
                               className="mt-0.5 rounded accent-orange-600 h-4 w-4"
                             />
                             <label htmlFor="buybackDeclaration" className="text-[10px] font-bold text-zinc-650 dark:text-zinc-300 leading-snug cursor-pointer select-none">
@@ -7849,8 +7957,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           </div>
                         </div>
 
-                        <Button 
-                          onClick={handleSaveBuyback} 
+                        <Button
+                          onClick={handleSaveBuyback}
                           className="w-full h-12 bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-black text-xs uppercase tracking-widest mt-4 disabled:opacity-50"
                           disabled={isLoading || !buybackDeclared}
                         >
@@ -7903,7 +8011,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                   <div className="flex flex-col gap-2 min-w-[130px]">
                                     <div className="flex flex-wrap gap-1.5 justify-end">
                                       {item.photo && item.photo !== "N/A" && (
-                                        <Button 
+                                        <Button
                                           size="sm"
                                           onClick={() => setViewingIdPhoto(item.photo)}
                                           className="bg-orange-50 hover:bg-orange-100 text-orange-600 dark:bg-zinc-800 dark:text-zinc-200 border border-orange-100 dark:border-zinc-700 rounded-lg text-[8px] font-black uppercase tracking-wider px-2 h-7 shadow-sm"
@@ -7912,7 +8020,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                         </Button>
                                       )}
                                       {item.photoBack && item.photoBack !== "N/A" && (
-                                        <Button 
+                                        <Button
                                           size="sm"
                                           onClick={() => setViewingIdPhoto(item.photoBack)}
                                           className="bg-orange-50 hover:bg-orange-100 text-orange-600 dark:bg-zinc-800 dark:text-zinc-200 border border-orange-100 dark:border-zinc-700 rounded-lg text-[8px] font-black uppercase tracking-wider px-2 h-7 shadow-sm"
@@ -7921,7 +8029,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                         </Button>
                                       )}
                                       {item.photoDevice && item.photoDevice !== "N/A" && (
-                                        <Button 
+                                        <Button
                                           size="sm"
                                           onClick={() => setViewingIdPhoto(item.photoDevice)}
                                           className="bg-orange-50 hover:bg-orange-100 text-orange-600 dark:bg-zinc-800 dark:text-zinc-200 border border-orange-100 dark:border-zinc-700 rounded-lg text-[8px] font-black uppercase tracking-wider px-2 h-7 shadow-sm"
@@ -7931,7 +8039,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                       )}
                                     </div>
                                     <div className="flex gap-1.5 justify-end w-full">
-                                      <Button 
+                                      <Button
                                         size="sm"
                                         onClick={() => handlePrintBuyback(item)}
                                         className="flex-1 bg-[#4f46e5] hover:bg-[#4338ca] text-white rounded-lg text-[9px] font-black uppercase tracking-wider h-8 shadow-sm border-0"
@@ -7953,9 +8061,9 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     {viewingIdPhoto && (
                       <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[999] p-4 animate-in fade-in duration-250">
                         <div className="relative bg-zinc-900 rounded-3xl p-6 max-w-[600px] w-full max-h-[85vh] flex flex-col items-center gap-4">
-                          <button 
+                          <button
                             type="button"
-                            onClick={() => setViewingIdPhoto(null)} 
+                            onClick={() => setViewingIdPhoto(null)}
                             className="absolute -top-4 -right-4 w-10 h-10 bg-white text-zinc-990 rounded-full flex items-center justify-center font-bold text-lg shadow-xl"
                           >
                             ✕
@@ -7965,7 +8073,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                             <img src={viewingIdPhoto} alt="Aadhaar ID Card" className="max-w-full max-h-[50vh] object-contain" />
                           </div>
                           <div className="flex gap-4 w-full">
-                            <Button 
+                            <Button
                               onClick={() => {
                                 const link = document.createElement("a");
                                 link.href = viewingIdPhoto;
@@ -7976,8 +8084,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                             >
                               Download Image
                             </Button>
-                            <Button 
-                              onClick={() => setViewingIdPhoto(null)} 
+                            <Button
+                              onClick={() => setViewingIdPhoto(null)}
                               className="flex-1 h-12 bg-zinc-800 text-white hover:bg-zinc-700 rounded-xl font-black text-xs uppercase tracking-widest border-0"
                             >
                               Close
@@ -7992,7 +8100,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
             </div>
           )}
 
-                    {activeTab === "Khata" && (
+          {activeTab === "Khata" && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-8 pb-10">
               <header className="relative px-2">
                 <div className="absolute -left-10 -top-10 w-40 h-40 bg-red-500/10 rounded-full blur-3xl" />
@@ -8040,30 +8148,30 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           <p className="text-2xl font-black text-red-600">₹{s.price}</p>
                         </div>
                       </div>
-                      
+
                       <div className="mt-6 pt-6 border-t border-zinc-100 dark:border-zinc-800 flex gap-3">
-                        <Button 
-                          onClick={() => markAsPaid(s.id)} 
+                        <Button
+                          onClick={() => markAsPaid(s.id)}
                           className="flex-1 h-14 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-2xl text-[10px] uppercase tracking-widest shadow-xl shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
                         >
                           <CheckCircle2 className="h-4 w-4" /> MARK AS PAID
                         </Button>
-                        <Button 
+                        <Button
                           onClick={() => window.open(getInvoiceUrlForSale(s), "_blank")}
-                          variant="outline" 
+                          variant="outline"
                           className="w-14 h-14 p-0 rounded-2xl border-zinc-100 dark:border-zinc-800 text-zinc-400 hover:text-blue-500 hover:border-blue-500 transition-all shadow-sm"
                           title="View Invoice"
                         >
                           <FileText className="h-5 w-5" />
                         </Button>
-                        <Button 
+                        <Button
                           onClick={() => {
                             const udharMsgEn = `Hi ${s.name}, a friendly reminder for your pending Udhaar of ₹${s.price} at ${restaurantName}. Please pay soon! Thanks.`;
                             const udharMsgHi = `नमस्ते ${s.name}, ${restaurantName} पर आपका ₹${s.price} का बकाया/उधार पेंडिंग है। कृपया जल्द भुगतान करें! धन्यवाद।`;
                             const udharFullMsg = `${udharMsgEn}\n\n${udharMsgHi}`;
                             window.open(`https://wa.me/91${s.mobile}?text=${encodeURIComponent(udharFullMsg)}`, "_blank");
                           }}
-                          variant="outline" 
+                          variant="outline"
                           className="w-14 h-14 p-0 rounded-2xl border-zinc-100 dark:border-zinc-800 text-zinc-400 hover:text-emerald-500 hover:border-emerald-500 transition-all shadow-sm"
                         >
                           <MessageCircle className="h-6 w-6" />
@@ -8102,509 +8210,509 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 </a>
               </div>
             ) : (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24 px-3">
-              <header className="px-2 pt-4">
-                <h2 className="text-5xl font-bold tracking-tighter leading-tight text-zinc-900 dark:text-white">{getLabels(businessType).items.split(" & ")[0]}<br/>Control</h2>
-                <p className="text-sm font-medium text-zinc-400 mt-3 leading-relaxed">Update your digital {getLabels(businessType).items.toLowerCase()} and pricing.</p>
-              </header>
+              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-24 px-3">
+                <header className="px-2 pt-4">
+                  <h2 className="text-5xl font-bold tracking-tighter leading-tight text-zinc-900 dark:text-white">{getLabels(businessType).items.split(" & ")[0]}<br />Control</h2>
+                  <p className="text-sm font-medium text-zinc-400 mt-3 leading-relaxed">Update your digital {getLabels(businessType).items.toLowerCase()} and pricing.</p>
+                </header>
 
-              {/* SMART MENU AI SCANNER BUTTON */}
-              <button
-                onClick={() => {
-                  if (!flagAiScanner) {
-                    setShowFeatureLockModal("📷 AI Menu Scanner");
-                    return;
-                  }
-                  if (!isSubscribed) {
-                    setShowUpgradeModal(true);
-                  } else {
-                    setScanMenuStep('capture');
-                    setScanMenuImage(null);
-                    setScanMenuResults([]);
-                    setShowScanMenuModal(true);
-                  }
-                }}
-                className="w-full flex items-center justify-between p-5 bg-gradient-to-r from-violet-600 to-purple-600 rounded-2xl shadow-xl shadow-violet-500/25 active:scale-95 transition-all"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                    <Camera className="h-6 w-6 text-white" />
+                {/* SMART MENU AI SCANNER BUTTON */}
+                <button
+                  onClick={() => {
+                    if (!flagAiScanner) {
+                      setShowFeatureLockModal("📷 AI Menu Scanner");
+                      return;
+                    }
+                    if (!isSubscribed) {
+                      setShowUpgradeModal(true);
+                    } else {
+                      setScanMenuStep('capture');
+                      setScanMenuImage(null);
+                      setScanMenuResults([]);
+                      setShowScanMenuModal(true);
+                    }
+                  }}
+                  className="w-full flex items-center justify-between p-5 bg-gradient-to-r from-violet-600 to-purple-600 rounded-2xl shadow-xl shadow-violet-500/25 active:scale-95 transition-all"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                      <Camera className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-white font-black text-base leading-none">📷 Smart Menu Scanner</p>
+                      <p className="text-white/70 text-[10px] font-bold mt-1 uppercase tracking-widest">AI se menu card scan karein</p>
+                    </div>
                   </div>
-                  <div className="text-left">
-                    <p className="text-white font-black text-base leading-none">📷 Smart Menu Scanner</p>
-                    <p className="text-white/70 text-[10px] font-bold mt-1 uppercase tracking-widest">AI se menu card scan karein</p>
-                  </div>
-                </div>
-                <div className="text-white/60 text-xs font-black uppercase tracking-widest">AI ✨</div>
-              </button>
+                  <div className="text-white/60 text-xs font-black uppercase tracking-widest">AI ✨</div>
+                </button>
 
-              {/* NEW ITEM CARD - PREMIUM STYLE */}
-              <Card className="rounded-2xl border-0 shadow-2xl shadow-zinc-200 dark:shadow-none bg-white dark:bg-zinc-900 overflow-hidden">
-                <div className="bg-zinc-900 dark:bg-zinc-800 p-6">
-                  <h3 className="text-xl font-bold text-white">New {getLabels(businessType).item}</h3>
-                </div>
-                <div className="p-8 space-y-6">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-1">{getLabels(businessType).item} Name</Label>
-                    <Input 
-                      placeholder={`e.g. ${getLabels(businessType).presets[0]?.name || "Item Name"}`} 
-                      value={newItemName} 
-                      onChange={e => setNewItemName(e.target.value)} 
-                      className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-6 focus-visible:ring-2 focus-visible:ring-blue-500/20" 
-                    />
+                {/* NEW ITEM CARD - PREMIUM STYLE */}
+                <Card className="rounded-2xl border-0 shadow-2xl shadow-zinc-200 dark:shadow-none bg-white dark:bg-zinc-900 overflow-hidden">
+                  <div className="bg-zinc-900 dark:bg-zinc-800 p-6">
+                    <h3 className="text-xl font-bold text-white">New {getLabels(businessType).item}</h3>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-1">Price (₹)</Label>
-                    <Input 
-                      type="number" 
-                      placeholder="0" 
-                      value={newItemPrice} 
-                      onChange={e => setNewItemPrice(e.target.value)} 
-                      className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-6 focus-visible:ring-2 focus-visible:ring-blue-500/20" 
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-1">Category</Label>
-                    <Select value={newItemCategory} onValueChange={(v) => setNewItemCategory(v || "Others")}>
-                      <SelectTrigger className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-6 focus-visible:ring-2 focus-visible:ring-blue-500/20">
-                        <SelectValue placeholder="Select Category" />
-                      </SelectTrigger>
-                      <SelectContent className="rounded-2xl border-0 shadow-2xl">
-                        {(getLabels(businessType).categories || ["General", "Others"]).map(cat => (
-                          <SelectItem key={cat} value={cat} className="font-bold py-3">
-                            {cat}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {businessType === "Mobile/Electronics" && (
-                    <div className="space-y-3 p-4 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-2xl border border-indigo-100 dark:border-indigo-900/40">
-                      <div className="flex justify-between items-center px-1">
-                        <div>
-                          <Label className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
-                            Unit Details Manager
-                          </Label>
-                          <p className="text-[10px] font-bold text-zinc-500">
-                            {unitDetails.length > 0 ? `${unitDetails.length} Unit(s) Logged` : `${newItemImeis.length} Unit(s) Logged`}
-                          </p>
-                        </div>
-                        <Button 
-                          size="sm" 
-                          onClick={() => {
-                            if (unitDetails.length === 0 && newItemImeis.length > 0) {
-                              setUnitDetails(newItemImeis.map(i => ({ imei: i, color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" })));
-                            } else if (unitDetails.length === 0) {
-                              setUnitDetails([{ imei: "", color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" }]);
-                            }
-                            setIsUnitModalOpen(true);
-                          }}
-                          className="h-9 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] uppercase tracking-wider rounded-xl shadow-md"
-                        >
-                          📱 + Add / Edit Unit Rows
-                        </Button>
-                      </div>
-
-                      {unitDetails.length > 0 && (
-                        <div className="space-y-1 pt-1 border-t border-indigo-100 dark:border-indigo-900/30">
-                          {unitDetails.map((u, i) => (
-                            <div key={i} className="text-[10px] font-bold text-zinc-600 dark:text-zinc-300 flex items-center justify-between bg-white dark:bg-zinc-900 p-2 rounded-xl border border-zinc-100 dark:border-zinc-800">
-                              <span>#{i + 1} IMEI: <strong className="text-indigo-600">{u.imei || 'N/A'}</strong></span>
-                              <span className="text-[9px] text-zinc-400">
-                                {u.color ? `Color: ${u.color}` : ''} {u.purchaseRate ? `| Rate: ₹${u.purchaseRate}` : ''} {u.supplierName ? `| Supplier: ${u.supplierName}` : ''}
-                              </span>
-                            </div>
+                  <div className="p-8 space-y-6">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-1">{getLabels(businessType).item} Name</Label>
+                      <Input
+                        placeholder={`e.g. ${getLabels(businessType).presets[0]?.name || "Item Name"}`}
+                        value={newItemName}
+                        onChange={e => setNewItemName(e.target.value)}
+                        className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-6 focus-visible:ring-2 focus-visible:ring-blue-500/20"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-1">Price (₹)</Label>
+                      <Input
+                        type="number"
+                        placeholder="0"
+                        value={newItemPrice}
+                        onChange={e => setNewItemPrice(e.target.value)}
+                        className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-6 focus-visible:ring-2 focus-visible:ring-blue-500/20"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 px-1">Category</Label>
+                      <Select value={newItemCategory} onValueChange={(v) => setNewItemCategory(v || "Others")}>
+                        <SelectTrigger className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-6 focus-visible:ring-2 focus-visible:ring-blue-500/20">
+                          <SelectValue placeholder="Select Category" />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-2xl border-0 shadow-2xl">
+                          {(getLabels(businessType).categories || ["General", "Others"]).map(cat => (
+                            <SelectItem key={cat} value={cat} className="font-bold py-3">
+                              {cat}
+                            </SelectItem>
                           ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {businessType === "Mobile/Electronics" && (
+                      <div className="space-y-3 p-4 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-2xl border border-indigo-100 dark:border-indigo-900/40">
+                        <div className="flex justify-between items-center px-1">
+                          <div>
+                            <Label className="text-[10px] font-black uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+                              Unit Details Manager
+                            </Label>
+                            <p className="text-[10px] font-bold text-zinc-500">
+                              {unitDetails.length > 0 ? `${unitDetails.length} Unit(s) Logged` : `${newItemImeis.length} Unit(s) Logged`}
+                            </p>
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              if (unitDetails.length === 0 && newItemImeis.length > 0) {
+                                setUnitDetails(newItemImeis.map(i => ({ imei: i, color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" })));
+                              } else if (unitDetails.length === 0) {
+                                setUnitDetails([{ imei: "", color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" }]);
+                              }
+                              setIsUnitModalOpen(true);
+                            }}
+                            className="h-9 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-[10px] uppercase tracking-wider rounded-xl shadow-md"
+                          >
+                            📱 + Add / Edit Unit Rows
+                          </Button>
                         </div>
-                      )}
 
-                      {/* POPUP MODAL FOR UNIT DETAILS */}
-                      <Dialog open={isUnitModalOpen} onOpenChange={setIsUnitModalOpen}>
-                        <DialogContent className="w-[95vw] sm:max-w-3xl md:max-w-4xl rounded-[2rem] p-4 sm:p-5 bg-white dark:bg-zinc-900 border border-indigo-100 dark:border-indigo-950 shadow-2xl max-h-[90vh] overflow-y-auto">
-                          <DialogHeader className="space-y-0.5 text-left border-b border-zinc-100 dark:border-zinc-800 pb-3">
-                            <DialogTitle className="text-lg sm:text-xl font-black tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
-                              <Smartphone className="h-5 w-5 text-indigo-600" />
-                              Mobile Unit Details Manager
-                            </DialogTitle>
-                            <DialogDescription className="text-[11px] text-zinc-500 font-medium">
-                              Add parameters per unit row (IMEI, Color, Purchase Rate, HSN, Supplier).
-                            </DialogDescription>
-                          </DialogHeader>
+                        {unitDetails.length > 0 && (
+                          <div className="space-y-1 pt-1 border-t border-indigo-100 dark:border-indigo-900/30">
+                            {unitDetails.map((u, i) => (
+                              <div key={i} className="text-[10px] font-bold text-zinc-600 dark:text-zinc-300 flex items-center justify-between bg-white dark:bg-zinc-900 p-2 rounded-xl border border-zinc-100 dark:border-zinc-800">
+                                <span>#{i + 1} IMEI: <strong className="text-indigo-600">{u.imei || 'N/A'}</strong></span>
+                                <span className="text-[9px] text-zinc-400">
+                                  {u.color ? `Color: ${u.color}` : ''} {u.purchaseRate ? `| Rate: ₹${u.purchaseRate}` : ''} {u.supplierName ? `| Supplier: ${u.supplierName}` : ''}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
 
-                          <div className="space-y-3 my-3">
-                            {unitDetails.length === 0 ? (
-                              <div className="text-center py-6 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-dashed border-zinc-200">
-                                <p className="text-xs font-bold text-zinc-500">No unit rows added yet.</p>
+                        {/* POPUP MODAL FOR UNIT DETAILS */}
+                        <Dialog open={isUnitModalOpen} onOpenChange={setIsUnitModalOpen}>
+                          <DialogContent className="w-[95vw] sm:max-w-3xl md:max-w-4xl rounded-[2rem] p-4 sm:p-5 bg-white dark:bg-zinc-900 border border-indigo-100 dark:border-indigo-950 shadow-2xl max-h-[90vh] overflow-y-auto">
+                            <DialogHeader className="space-y-0.5 text-left border-b border-zinc-100 dark:border-zinc-800 pb-3">
+                              <DialogTitle className="text-lg sm:text-xl font-black tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
+                                <Smartphone className="h-5 w-5 text-indigo-600" />
+                                Mobile Unit Details Manager
+                              </DialogTitle>
+                              <DialogDescription className="text-[11px] text-zinc-500 font-medium">
+                                Add parameters per unit row (IMEI, Color, Purchase Rate, HSN, Supplier).
+                              </DialogDescription>
+                            </DialogHeader>
+
+                            <div className="space-y-3 my-3">
+                              {unitDetails.length === 0 ? (
+                                <div className="text-center py-6 p-4 bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-dashed border-zinc-200">
+                                  <p className="text-xs font-bold text-zinc-500">No unit rows added yet.</p>
+                                  <Button
+                                    type="button"
+                                    onClick={() => setUnitDetails([{ imei: "", color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" }])}
+                                    className="mt-2 h-9 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md"
+                                  >
+                                    + Add First Unit
+                                  </Button>
+                                </div>
+                              ) : (
+                                <div className="space-y-3">
+                                  {unitDetails.map((unit, index) => (
+                                    <div key={index} className="p-3.5 sm:p-4 bg-zinc-50/90 dark:bg-zinc-800/60 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 space-y-2.5 shadow-sm">
+                                      <div className="flex items-center justify-between border-b border-zinc-200/50 dark:border-zinc-700/50 pb-2">
+                                        <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                                          <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center text-[9px] font-black">
+                                            #{index + 1}
+                                          </span>
+                                          Unit Specifications
+                                        </span>
+                                        <div className="flex items-center gap-1.5">
+                                          <Button
+                                            type="button"
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => {
+                                              const copied = { ...unit, imei: "" };
+                                              const next = [...unitDetails];
+                                              next.splice(index + 1, 0, copied);
+                                              setUnitDetails(next);
+                                            }}
+                                            className="h-7 text-[10px] font-extrabold text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 px-2.5 rounded-lg border border-indigo-200 dark:border-indigo-900/40"
+                                          >
+                                            <Copy className="h-3 w-3 mr-1" /> Copy Unit
+                                          </Button>
+                                          <Button
+                                            type="button"
+                                            size="sm"
+                                            variant="ghost"
+                                            onClick={() => setUnitDetails(unitDetails.filter((_, idx) => idx !== index))}
+                                            className="h-7 text-[10px] font-extrabold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 px-2.5 rounded-lg"
+                                          >
+                                            <Trash2 className="h-3 w-3 mr-1" /> Delete
+                                          </Button>
+                                        </div>
+                                      </div>
+
+                                      {/* COMPACT 2-ROW GRID */}
+                                      <div className="space-y-2">
+                                        {/* Row 1: IMEI (2 cols) + Color (1 col) */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                          <div className="sm:col-span-2 space-y-0.5 text-left">
+                                            <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+                                              IMEI / Serial Number *
+                                            </Label>
+                                            <ImeiInput
+                                              placeholder="15-digit IMEI number"
+                                              value={unit.imei}
+                                              onChange={val => {
+                                                const updated = [...unitDetails];
+                                                updated[index].imei = val;
+                                                setUnitDetails(updated);
+                                              }}
+                                              className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                                            />
+                                          </div>
+
+                                          <div className="space-y-0.5 text-left">
+                                            <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+                                              Color
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. Black / Blue"
+                                              value={unit.color}
+                                              onChange={e => {
+                                                const updated = [...unitDetails];
+                                                updated[index].color = e.target.value;
+                                                setUnitDetails(updated);
+                                              }}
+                                              className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                                            />
+                                          </div>
+                                        </div>
+
+                                        {/* Row 2: Purchase Rate + HSN Code + Supplier Name */}
+                                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                          <div className="space-y-0.5 text-left">
+                                            <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+                                              Purchase Rate (₹)
+                                            </Label>
+                                            <Input
+                                              type="number"
+                                              placeholder="e.g. 15000"
+                                              value={unit.purchaseRate}
+                                              onChange={e => {
+                                                const updated = [...unitDetails];
+                                                updated[index].purchaseRate = e.target.value;
+                                                setUnitDetails(updated);
+                                              }}
+                                              className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                                            />
+                                          </div>
+
+                                          <div className="space-y-0.5 text-left">
+                                            <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+                                              HSN Code
+                                            </Label>
+                                            <Input
+                                              placeholder="8517"
+                                              value={unit.hsnCode}
+                                              onChange={e => {
+                                                const updated = [...unitDetails];
+                                                updated[index].hsnCode = e.target.value;
+                                                setUnitDetails(updated);
+                                              }}
+                                              className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                                            />
+                                          </div>
+
+                                          <div className="space-y-0.5 text-left">
+                                            <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
+                                              Supplier Name
+                                            </Label>
+                                            <Input
+                                              placeholder="e.g. Ramesh Telecom"
+                                              value={unit.supplierName}
+                                              onChange={e => {
+                                                const updated = [...unitDetails];
+                                                updated[index].supplierName = e.target.value;
+                                                setUnitDetails(updated);
+                                              }}
+                                              className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
+                                            />
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-2.5 border-t border-zinc-100 dark:border-zinc-800">
                                 <Button
                                   type="button"
-                                  onClick={() => setUnitDetails([{ imei: "", color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" }])}
-                                  className="mt-2 h-9 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-md"
+                                  onClick={() => setUnitDetails([...unitDetails, { imei: "", color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" }])}
+                                  className="w-full sm:w-auto h-10 px-4 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 font-extrabold text-xs rounded-xl border border-indigo-200 dark:border-indigo-900/40"
                                 >
-                                  + Add First Unit
+                                  + Add Another Unit
+                                </Button>
+
+                                <Button
+                                  type="button"
+                                  onClick={() => setIsUnitModalOpen(false)}
+                                  className="w-full sm:w-auto h-10 px-7 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md"
+                                >
+                                  Save Units ({unitDetails.length}) & Close
                                 </Button>
                               </div>
-                            ) : (
-                              <div className="space-y-3">
-                                {unitDetails.map((unit, index) => (
-                                  <div key={index} className="p-3.5 sm:p-4 bg-zinc-50/90 dark:bg-zinc-800/60 rounded-2xl border border-zinc-200/60 dark:border-zinc-800 space-y-2.5 shadow-sm">
-                                    <div className="flex items-center justify-between border-b border-zinc-200/50 dark:border-zinc-700/50 pb-2">
-                                      <span className="text-xs font-black text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
-                                        <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 flex items-center justify-center text-[9px] font-black">
-                                          #{index + 1}
-                                        </span>
-                                        Unit Specifications
-                                      </span>
-                                      <div className="flex items-center gap-1.5">
-                                        <Button
-                                          type="button"
-                                          size="sm"
-                                          variant="ghost"
-                                          onClick={() => {
-                                            const copied = { ...unit, imei: "" };
-                                            const next = [...unitDetails];
-                                            next.splice(index + 1, 0, copied);
-                                            setUnitDetails(next);
-                                          }}
-                                          className="h-7 text-[10px] font-extrabold text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 px-2.5 rounded-lg border border-indigo-200 dark:border-indigo-900/40"
-                                        >
-                                          <Copy className="h-3 w-3 mr-1" /> Copy Unit
-                                        </Button>
-                                        <Button
-                                          type="button"
-                                          size="sm"
-                                          variant="ghost"
-                                          onClick={() => setUnitDetails(unitDetails.filter((_, idx) => idx !== index))}
-                                          className="h-7 text-[10px] font-extrabold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 px-2.5 rounded-lg"
-                                        >
-                                          <Trash2 className="h-3 w-3 mr-1" /> Delete
-                                        </Button>
-                                      </div>
-                                    </div>
-
-                                    {/* COMPACT 2-ROW GRID */}
-                                    <div className="space-y-2">
-                                      {/* Row 1: IMEI (2 cols) + Color (1 col) */}
-                                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                                        <div className="sm:col-span-2 space-y-0.5 text-left">
-                                          <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
-                                            IMEI / Serial Number *
-                                          </Label>
-                                          <ImeiInput
-                                            placeholder="15-digit IMEI number"
-                                            value={unit.imei}
-                                            onChange={val => {
-                                              const updated = [...unitDetails];
-                                              updated[index].imei = val;
-                                              setUnitDetails(updated);
-                                            }}
-                                            className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
-                                          />
-                                        </div>
-
-                                        <div className="space-y-0.5 text-left">
-                                          <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
-                                            Color
-                                          </Label>
-                                          <Input
-                                            placeholder="e.g. Black / Blue"
-                                            value={unit.color}
-                                            onChange={e => {
-                                              const updated = [...unitDetails];
-                                              updated[index].color = e.target.value;
-                                              setUnitDetails(updated);
-                                            }}
-                                            className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
-                                          />
-                                        </div>
-                                      </div>
-
-                                      {/* Row 2: Purchase Rate + HSN Code + Supplier Name */}
-                                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                                        <div className="space-y-0.5 text-left">
-                                          <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
-                                            Purchase Rate (₹)
-                                          </Label>
-                                          <Input
-                                            type="number"
-                                            placeholder="e.g. 15000"
-                                            value={unit.purchaseRate}
-                                            onChange={e => {
-                                              const updated = [...unitDetails];
-                                              updated[index].purchaseRate = e.target.value;
-                                              setUnitDetails(updated);
-                                            }}
-                                            className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
-                                          />
-                                        </div>
-
-                                        <div className="space-y-0.5 text-left">
-                                          <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
-                                            HSN Code
-                                          </Label>
-                                          <Input
-                                            placeholder="8517"
-                                            value={unit.hsnCode}
-                                            onChange={e => {
-                                              const updated = [...unitDetails];
-                                              updated[index].hsnCode = e.target.value;
-                                              setUnitDetails(updated);
-                                            }}
-                                            className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
-                                          />
-                                        </div>
-
-                                        <div className="space-y-0.5 text-left">
-                                          <Label className="text-[9px] font-black uppercase text-zinc-500 tracking-wider">
-                                            Supplier Name
-                                          </Label>
-                                          <Input
-                                            placeholder="e.g. Ramesh Telecom"
-                                            value={unit.supplierName}
-                                            onChange={e => {
-                                              const updated = [...unitDetails];
-                                              updated[index].supplierName = e.target.value;
-                                              setUnitDetails(updated);
-                                            }}
-                                            className="h-9.5 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border-zinc-200"
-                                          />
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-
-                            <div className="flex flex-col sm:flex-row items-center justify-between gap-2.5 pt-2.5 border-t border-zinc-100 dark:border-zinc-800">
-                              <Button
-                                type="button"
-                                onClick={() => setUnitDetails([...unitDetails, { imei: "", color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" }])}
-                                className="w-full sm:w-auto h-10 px-4 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 font-extrabold text-xs rounded-xl border border-indigo-200 dark:border-indigo-900/40"
-                              >
-                                + Add Another Unit
-                              </Button>
-
-                              <Button
-                                type="button"
-                                onClick={() => setIsUnitModalOpen(false)}
-                                className="w-full sm:w-auto h-10 px-7 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md"
-                              >
-                                Save Units ({unitDetails.length}) & Close
-                              </Button>
                             </div>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  )}
-                  <Button 
-                    onClick={handleAddItem} 
-                    className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-md shadow-xl shadow-blue-500/30 active:scale-95 transition-all mt-4 uppercase tracking-wider"
-                  >
-                    ADD {getLabels(businessType).item.toUpperCase()}
-                  </Button>
-                </div>
-              </Card>
-
-              {/* LIVE MENU LIST */}
-              <div className="space-y-4 pt-4">
-                <div className="flex justify-between items-center px-2">
-                  <h3 className="text-2xl font-bold tracking-tight">Live {getLabels(businessType).items.split(" & ")[0]}</h3>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="rounded-full px-3 py-1 font-bold bg-white dark:bg-zinc-800 border-zinc-100 dark:border-zinc-800 shadow-sm">{menuItems.length} {getLabels(businessType).items.includes("Stock") || getLabels(businessType).items.includes("Inventory") ? "Products" : "Items"}</Badge>
-                    <button 
-                      onClick={() => {
-                        const csvContent = "Name,Price,Category,IMEI,Color,PurchaseRate,HSNCode,SupplierName\niPhone 15 128GB,59999,Smartphones,358741098234156,Titanium Black,52000,8517,Ramesh Telecom\nSamsung S24 Ultra,119999,Smartphones,358741098234157,Cobalt Violet,105000,8517,National Distributors";
-                        const blob = new Blob([csvContent], { type: 'text/csv' });
-                        const url = window.URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = 'stock_template.csv';
-                        a.click();
-                      }}
-                      className="text-[9px] font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-widest flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/30 px-2.5 py-1 rounded-lg border border-indigo-100 dark:border-indigo-900/40"
-                    >
-                      <Download className="h-3 w-3" /> Stock Template
-                    </button>
-                    <label className="cursor-pointer text-[9px] font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-widest flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1 rounded-lg border border-emerald-100 dark:border-emerald-900/40">
-                      <Upload className="h-3 w-3" /> Import Stock CSV
-                      <input 
-                        type="file" 
-                        accept=".csv" 
-                        className="hidden" 
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = async (event) => {
-                              const text = event.target?.result as string;
-                              const lines = text.split("\n").filter(l => l.trim() !== "");
-                              if (lines.length <= 1) {
-                                alert("CSV file is empty or missing data rows.");
-                                return;
-                              }
-
-                              const aggregatedMap = new Map<string, { name: string; price: number; category: string; units: string[] }>();
-
-                              // Skip header row
-                              for (let i = 1; i < lines.length; i++) {
-                                const parts = lines[i].split(",").map(s => s.trim());
-                                if (!parts[0] || !parts[1]) continue;
-
-                                const name = parts[0];
-                                const price = Number(parts[1]);
-                                if (isNaN(price)) continue;
-
-                                const baseCategory = parts[2] || "General";
-                                const imei = parts[3] || "";
-                                const color = parts[4] || "";
-                                const purchaseRate = parts[5] || "";
-                                const hsnCode = parts[6] || "8517";
-                                const supplierName = parts[7] || "";
-
-                                const key = `${name.toLowerCase()}_${price}`;
-                                const existing = aggregatedMap.get(key) || { name, price, category: baseCategory, units: [] };
-
-                                if (imei || color || purchaseRate || supplierName) {
-                                  const meta = [
-                                    color ? `Color:${color}` : "",
-                                    purchaseRate ? `Cost:${purchaseRate}` : "",
-                                    hsnCode ? `HSN:${hsnCode}` : "",
-                                    supplierName ? `Supplier:${supplierName}` : ""
-                                  ].filter(Boolean).join(";");
-
-                                  const encodedUnit = meta ? `IMEI:${imei}{${meta}}` : imei;
-                                  if (encodedUnit) {
-                                    existing.units.push(encodedUnit);
-                                  }
-                                }
-
-                                aggregatedMap.set(key, existing);
-                              }
-
-                              const newItemsFromCsv = Array.from(aggregatedMap.values()).map(item => {
-                                let finalCategory = item.category;
-                                if (item.units.length > 0) {
-                                  finalCategory = `${item.category}|IMEIs:${item.units.join(",")}`;
-                                }
-                                return {
-                                  name: item.name,
-                                  price: item.price,
-                                  category: finalCategory
-                                };
-                              });
-
-                              if (newItemsFromCsv.length > 0) {
-                                setIsLoading(true);
-                                try {
-                                  let storeId = currentStoreId;
-                                  if (!storeId) {
-                                    const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
-                                    if (!store) throw new Error("Store ID not found");
-                                    storeId = store.id;
-                                    setCurrentStoreId(store.id);
-                                  }
-                                  
-                                  const { data: insertedData, error } = await supabase
-                                    .from('menu_items')
-                                    .insert(newItemsFromCsv.map(item => ({ ...item, store_id: storeId })))
-                                    .select();
-                                  
-                                  if (error) throw error;
-                                  setMenuItems([...menuItems, ...insertedData]);
-                                  alert(`Successfully imported ${insertedData.length} stock items from CSV!`);
-                                } catch (err: any) {
-                                  alert("Import Error: " + err.message);
-                                } finally {
-                                  setIsLoading(false);
-                                }
-                              }
-                            };
-                            reader.readAsText(file);
-                          }
-                        }}
-                      />
-                    </label>
-                  </div>
-                </div>
-
-                <div className="relative group">
-                  <Search className="absolute left-4 top-4 h-5 w-5 text-zinc-300 group-focus-within:text-blue-500 transition-colors" />
-                  <Input 
-                    placeholder="Search inventory..." 
-                    value={itemSearch}
-                    onChange={e => setItemSearch(e.target.value)}
-                    className="h-14 pl-12 rounded-2xl bg-white dark:bg-zinc-900 border-0 shadow-sm font-bold text-zinc-600 dark:text-zinc-400"
-                  />
-                </div>
-
-                <Card className="rounded-2xl border-0 shadow-sm bg-white dark:bg-zinc-900 overflow-hidden">
-                  <div className="p-6 border-b dark:border-zinc-800 grid grid-cols-12 text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-8">
-                    <div className="col-span-7">Name</div>
-                    <div className="col-span-3 text-center">Price</div>
-                    <div className="col-span-2 text-right">Action</div>
-                  </div>
-                  <div className="divide-y dark:divide-zinc-800">
-                    {menuItems.length === 0 ? (
-                      <div className="p-12 text-center space-y-3">
-                         <div className="w-16 h-16 bg-zinc-50 dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto"><PlusCircle className="h-8 w-8 text-zinc-300" /></div>
-                         <p className="text-sm font-bold text-zinc-400 ">No items in menu. Add your first dish above!</p>
+                          </DialogContent>
+                        </Dialog>
                       </div>
-                    ) : (
-                      filteredMenuItems.map(item => {
-                        const itemImeis = getImeis(item.category);
-                        const isMobile = businessType === "Mobile/Electronics";
-                        return (
-                          <div 
-                            key={item.id} 
-                            onClick={() => {
-                              if (isMobile) {
-                                setEditingItem(item);
-                                setEditingItemImeis(itemImeis);
-                                const parsedUnits = parseUnitDetailsFromCategory(item.category);
-                                if (parsedUnits.length > 0) {
-                                  setEditingUnitDetails(parsedUnits);
-                                } else {
-                                  setEditingUnitDetails(itemImeis.map(i => ({ imei: i, color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" })));
+                    )}
+                    <Button
+                      onClick={handleAddItem}
+                      className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-md shadow-xl shadow-blue-500/30 active:scale-95 transition-all mt-4 uppercase tracking-wider"
+                    >
+                      ADD {getLabels(businessType).item.toUpperCase()}
+                    </Button>
+                  </div>
+                </Card>
+
+                {/* LIVE MENU LIST */}
+                <div className="space-y-4 pt-4">
+                  <div className="flex justify-between items-center px-2">
+                    <h3 className="text-2xl font-bold tracking-tight">Live {getLabels(businessType).items.split(" & ")[0]}</h3>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="rounded-full px-3 py-1 font-bold bg-white dark:bg-zinc-800 border-zinc-100 dark:border-zinc-800 shadow-sm">{menuItems.length} {getLabels(businessType).items.includes("Stock") || getLabels(businessType).items.includes("Inventory") ? "Products" : "Items"}</Badge>
+                      <button
+                        onClick={() => {
+                          const csvContent = "Name,Price,Category,IMEI,Color,PurchaseRate,HSNCode,SupplierName\niPhone 15 128GB,59999,Smartphones,358741098234156,Titanium Black,52000,8517,Ramesh Telecom\nSamsung S24 Ultra,119999,Smartphones,358741098234157,Cobalt Violet,105000,8517,National Distributors";
+                          const blob = new Blob([csvContent], { type: 'text/csv' });
+                          const url = window.URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = 'stock_template.csv';
+                          a.click();
+                        }}
+                        className="text-[9px] font-bold text-indigo-600 hover:text-indigo-700 uppercase tracking-widest flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/30 px-2.5 py-1 rounded-lg border border-indigo-100 dark:border-indigo-900/40"
+                      >
+                        <Download className="h-3 w-3" /> Stock Template
+                      </button>
+                      <label className="cursor-pointer text-[9px] font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-widest flex items-center gap-1 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1 rounded-lg border border-emerald-100 dark:border-emerald-900/40">
+                        <Upload className="h-3 w-3" /> Import Stock CSV
+                        <input
+                          type="file"
+                          accept=".csv"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = async (event) => {
+                                const text = event.target?.result as string;
+                                const lines = text.split("\n").filter(l => l.trim() !== "");
+                                if (lines.length <= 1) {
+                                  alert("CSV file is empty or missing data rows.");
+                                  return;
                                 }
-                                setShowEditStockModal(true);
-                              }
-                            }}
-                            className={`p-6 grid grid-cols-12 items-center hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors px-8 ${isMobile ? 'cursor-pointer' : ''}`}
-                          >
-                            <div className="col-span-7">
-                              <p className="font-bold text-md text-zinc-900 dark:text-white leading-none">{item.name}</p>
-                              <div className="flex flex-col gap-1 mt-1.5">
-                                <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">{getDisplayCategory(item.category)}</p>
-                                {isMobile && (
-                                  <>
-                                    {itemImeis.length === 0 ? (
-                                      <span className="text-[9px] font-black text-red-500 uppercase tracking-widest bg-red-50 dark:bg-red-950/20 px-2 py-0.5 rounded-md w-fit">Out of Stock</span>
-                                    ) : (
-                                      <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded-md w-fit">{itemImeis.length} Units in Stock</span>
-                                    )}
-                                    {itemImeis.length > 0 && (
-                                      <p className="text-[9px] text-zinc-400 italic max-w-xs truncate">IMEIs: {itemImeis.join(", ")}</p>
-                                    )}
-                                  </>
-                                )}
+
+                                const aggregatedMap = new Map<string, { name: string; price: number; category: string; units: string[] }>();
+
+                                // Skip header row
+                                for (let i = 1; i < lines.length; i++) {
+                                  const parts = lines[i].split(",").map(s => s.trim());
+                                  if (!parts[0] || !parts[1]) continue;
+
+                                  const name = parts[0];
+                                  const price = Number(parts[1]);
+                                  if (isNaN(price)) continue;
+
+                                  const baseCategory = parts[2] || "General";
+                                  const imei = parts[3] || "";
+                                  const color = parts[4] || "";
+                                  const purchaseRate = parts[5] || "";
+                                  const hsnCode = parts[6] || "8517";
+                                  const supplierName = parts[7] || "";
+
+                                  const key = `${name.toLowerCase()}_${price}`;
+                                  const existing = aggregatedMap.get(key) || { name, price, category: baseCategory, units: [] };
+
+                                  if (imei || color || purchaseRate || supplierName) {
+                                    const meta = [
+                                      color ? `Color:${color}` : "",
+                                      purchaseRate ? `Cost:${purchaseRate}` : "",
+                                      hsnCode ? `HSN:${hsnCode}` : "",
+                                      supplierName ? `Supplier:${supplierName}` : ""
+                                    ].filter(Boolean).join(";");
+
+                                    const encodedUnit = meta ? `IMEI:${imei}{${meta}}` : imei;
+                                    if (encodedUnit) {
+                                      existing.units.push(encodedUnit);
+                                    }
+                                  }
+
+                                  aggregatedMap.set(key, existing);
+                                }
+
+                                const newItemsFromCsv = Array.from(aggregatedMap.values()).map(item => {
+                                  let finalCategory = item.category;
+                                  if (item.units.length > 0) {
+                                    finalCategory = `${item.category}|IMEIs:${item.units.join(",")}`;
+                                  }
+                                  return {
+                                    name: item.name,
+                                    price: item.price,
+                                    category: finalCategory
+                                  };
+                                });
+
+                                if (newItemsFromCsv.length > 0) {
+                                  setIsLoading(true);
+                                  try {
+                                    let storeId = currentStoreId;
+                                    if (!storeId) {
+                                      const { data: store } = await supabase.from('stores').select('id').eq('owner_mobile', ownerMobile).single();
+                                      if (!store) throw new Error("Store ID not found");
+                                      storeId = store.id;
+                                      setCurrentStoreId(store.id);
+                                    }
+
+                                    const { data: insertedData, error } = await supabase
+                                      .from('menu_items')
+                                      .insert(newItemsFromCsv.map(item => ({ ...item, store_id: storeId })))
+                                      .select();
+
+                                    if (error) throw error;
+                                    setMenuItems([...menuItems, ...insertedData]);
+                                    alert(`Successfully imported ${insertedData.length} stock items from CSV!`);
+                                  } catch (err: any) {
+                                    alert("Import Error: " + err.message);
+                                  } finally {
+                                    setIsLoading(false);
+                                  }
+                                }
+                              };
+                              reader.readAsText(file);
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="relative group">
+                    <Search className="absolute left-4 top-4 h-5 w-5 text-zinc-300 group-focus-within:text-blue-500 transition-colors" />
+                    <Input
+                      placeholder="Search inventory..."
+                      value={itemSearch}
+                      onChange={e => setItemSearch(e.target.value)}
+                      className="h-14 pl-12 rounded-2xl bg-white dark:bg-zinc-900 border-0 shadow-sm font-bold text-zinc-600 dark:text-zinc-400"
+                    />
+                  </div>
+
+                  <Card className="rounded-2xl border-0 shadow-sm bg-white dark:bg-zinc-900 overflow-hidden">
+                    <div className="p-6 border-b dark:border-zinc-800 grid grid-cols-12 text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-8">
+                      <div className="col-span-7">Name</div>
+                      <div className="col-span-3 text-center">Price</div>
+                      <div className="col-span-2 text-right">Action</div>
+                    </div>
+                    <div className="divide-y dark:divide-zinc-800">
+                      {menuItems.length === 0 ? (
+                        <div className="p-12 text-center space-y-3">
+                          <div className="w-16 h-16 bg-zinc-50 dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto"><PlusCircle className="h-8 w-8 text-zinc-300" /></div>
+                          <p className="text-sm font-bold text-zinc-400 ">No items in menu. Add your first dish above!</p>
+                        </div>
+                      ) : (
+                        filteredMenuItems.map(item => {
+                          const itemImeis = getImeis(item.category);
+                          const isMobile = businessType === "Mobile/Electronics";
+                          return (
+                            <div
+                              key={item.id}
+                              onClick={() => {
+                                if (isMobile) {
+                                  setEditingItem(item);
+                                  setEditingItemImeis(itemImeis);
+                                  const parsedUnits = parseUnitDetailsFromCategory(item.category);
+                                  if (parsedUnits.length > 0) {
+                                    setEditingUnitDetails(parsedUnits);
+                                  } else {
+                                    setEditingUnitDetails(itemImeis.map(i => ({ imei: i, color: "", purchaseRate: "", hsnCode: "8517", supplierName: "" })));
+                                  }
+                                  setShowEditStockModal(true);
+                                }
+                              }}
+                              className={`p-6 grid grid-cols-12 items-center hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors px-8 ${isMobile ? 'cursor-pointer' : ''}`}
+                            >
+                              <div className="col-span-7">
+                                <p className="font-bold text-md text-zinc-900 dark:text-white leading-none">{item.name}</p>
+                                <div className="flex flex-col gap-1 mt-1.5">
+                                  <p className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">{getDisplayCategory(item.category)}</p>
+                                  {isMobile && (
+                                    <>
+                                      {itemImeis.length === 0 ? (
+                                        <span className="text-[9px] font-black text-red-500 uppercase tracking-widest bg-red-50 dark:bg-red-950/20 px-2 py-0.5 rounded-md w-fit">Out of Stock</span>
+                                      ) : (
+                                        <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded-md w-fit">{itemImeis.length} Units in Stock</span>
+                                      )}
+                                      {itemImeis.length > 0 && (
+                                        <p className="text-[9px] text-zinc-400 italic max-w-xs truncate">IMEIs: {itemImeis.join(", ")}</p>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="col-span-3 text-center">
+                                <p className="font-bold text-lg tracking-tight">₹{item.price}</p>
+                              </div>
+                              <div className="col-span-2 text-right flex justify-end gap-2" onClick={e => e.stopPropagation()}>
+                                <button
+                                  onClick={() => handleDeleteItem(item.id)}
+                                  className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all active:scale-90"
+                                >
+                                  <Trash2 className="h-5 w-5" />
+                                </button>
                               </div>
                             </div>
-                            <div className="col-span-3 text-center">
-                              <p className="font-bold text-lg tracking-tight">₹{item.price}</p>
-                            </div>
-                            <div className="col-span-2 text-right flex justify-end gap-2" onClick={e => e.stopPropagation()}>
-                              <button 
-                                onClick={() => handleDeleteItem(item.id)} 
-                                className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all active:scale-90"
-                              >
-                                <Trash2 className="h-5 w-5" />
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
+                          );
+                        })
+                      )}
                     </div>
                   </Card>
                 </div>
@@ -8635,13 +8743,13 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mt-2">Platform Admin</p>
                   </div>
                   <div className="w-full space-y-3 pt-2">
-                    <Button 
+                    <Button
                       onClick={() => window.open(`https://wa.me/917838229178?text=${encodeURIComponent("Hi Admin, I need help with my InstaMunim POS. Can you please assist me?")}`, "_blank")}
                       className="w-full h-16 bg-[#00c875] hover:bg-[#00b067] text-white rounded-3xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-3 active:scale-95 transition-all"
                     >
                       <MessageCircle className="h-5 w-5" /> Contact on WhatsApp
                     </Button>
-                    <Button 
+                    <Button
                       onClick={() => window.location.href = "mailto:instamunim@gmail.com?subject=InstaMunim Support Request"}
                       variant="outline"
                       className="w-full h-16 bg-white dark:bg-zinc-800 border-zinc-100 dark:border-zinc-700 rounded-3xl font-black text-xs uppercase tracking-widest shadow-sm flex items-center justify-center gap-3 active:scale-95 transition-all"
@@ -8655,7 +8763,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 <Card className="p-8 bg-zinc-900 text-white rounded-[3rem] border-0 shadow-2xl relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-3xl" />
                   <h3 className="text-2xl font-black tracking-tighter mb-8">Direct Support</h3>
-                  
+
                   <div className="space-y-8">
                     <div className="flex items-center gap-5">
                       <div className="w-14 h-14 bg-zinc-800 rounded-2xl flex items-center justify-center border border-zinc-700">
@@ -8799,7 +8907,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 storeId={currentStoreId}
                 businessType={businessType}
                 customers={[]}
-                setCustomers={() => {}}
+                setCustomers={() => { }}
                 supabase={supabase}
                 onClose={() => setActiveTab("MoreMenu")}
               />
@@ -8828,9 +8936,9 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   { id: "Support", label: "Support", icon: Smartphone, color: "text-emerald-500", bg: "bg-emerald-50" },
                   { id: "Enquiries", label: "Enquiries", icon: MessageCircle, color: "text-pink-500", bg: "bg-pink-50" },
                 ].map(item => (
-                  <button 
-                    key={item.id} 
-                    onClick={() => handleTabNavigation(item.id)} 
+                  <button
+                    key={item.id}
+                    onClick={() => handleTabNavigation(item.id)}
                     className="py-7 px-2 bg-white dark:bg-zinc-900 rounded-[2.5rem] flex flex-col items-center justify-center gap-3 shadow-sm hover:shadow-md transition-all active:scale-95 border border-zinc-100 dark:border-zinc-800"
                   >
                     <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${item.bg} dark:bg-opacity-10 border border-zinc-100 dark:border-zinc-800 shadow-sm`}>
@@ -8842,7 +8950,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               </div>
 
               <div className="flex flex-col items-center pt-2">
-                <button 
+                <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 px-8 py-3 bg-red-50 dark:bg-red-900/10 text-red-600 rounded-full border border-red-100 dark:border-red-900/20 shadow-sm hover:shadow-md transition-all active:scale-95 group"
                 >
@@ -8860,7 +8968,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 <div className="absolute -left-10 -top-10 w-40 h-40 bg-orange-500/10 rounded-full blur-3xl" />
                 <h2 className="text-4xl font-black tracking-tighter">{t("Daily Stock")}</h2>
                 <p className="text-zinc-500 font-bold flex items-center gap-2 mt-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" /> {t(INVENTORY_CATEGORY_CONFIGS[businessType]?.subtext || "Track your store raw items and recipe stock.")}
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse inline-block" /> {t(INVENTORY_CATEGORY_CONFIGS[businessType]?.subtext || "Track your store raw items and recipe stock.")}
                 </p>
               </header>
 
@@ -8876,7 +8984,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       Daily stock diaries, consumption logs, and inventory alerts are premium features of the Smart Business Plan.
                     </p>
                   </div>
-                  <Button 
+                  <Button
                     onClick={() => window.open(`https://wa.me/917838229178?text=${encodeURIComponent(`Hi Admin, I want to upgrade to the Paid Plan to unlock Daily Stock for: ${restaurantName} (${ownerMobile}).`)}`, "_blank")}
                     className="h-14 px-8 bg-orange-600 hover:bg-orange-500 text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all z-10"
                   >
@@ -8884,7 +8992,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   </Button>
                 </Card>
               ) : (
-                <InventoryDiary businessType={businessType} />
+                <InventoryDiary businessType={businessType} itemsProp={menuItems} setItemsProp={setMenuItems} storeId={currentStoreId} />
               )}
             </div>
           )}
@@ -8894,19 +9002,19 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               <header className="flex items-center justify-between px-2 mb-6">
                 <h2 className="text-3xl font-black tracking-tighter">{t("Settings")}</h2>
                 <div className="flex items-center gap-2">
-                  <button 
+                  <button
                     onClick={() => {
                       if (!isSubscribed) {
                         setShowUpgradeModal(true);
                       } else {
                         setIsDarkMode(!isDarkMode);
                       }
-                    }} 
+                    }}
                     className="w-10 h-10 rounded-full flex items-center justify-center border border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm"
                   >
                     {isDarkMode ? <Sun className="h-5 w-5 text-zinc-400" /> : <Moon className="h-5 w-5 text-zinc-400" />}
                   </button>
-                  <Button 
+                  <Button
                     onClick={async () => {
                       setIsSyncing(true);
                       try {
@@ -8927,7 +9035,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         localStorage.setItem("saas_zomato_comm_type", zomatoCommType);
                         localStorage.setItem("saas_store_upi_id", storeUpiId || "");
                         localStorage.setItem("saas_store_upi_name", storeUpiName || "");
-                        
+
                         // Serialize ALL store settings and configurations together into the store_logo column for database persistence
                         const settingsPacket = {
                           upiId: storeUpiId || "",
@@ -8960,10 +9068,10 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           gstInvoicing: flagGstInvoicing
                         };
                         const combinedLogo = "JSON_CFG:" + JSON.stringify(settingsPacket);
-                        
+
                         // Cloud Sync (Safe Mode via Secure RPC)
                         const { error: syncError } = await supabase
-                          .rpc('update_store_settings', { 
+                          .rpc('update_store_settings', {
                             input_mobile: ownerMobile,
                             input_name: restaurantName,
                             input_logo: combinedLogo,
@@ -8973,7 +9081,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                         if (syncError) {
                           console.warn("Cloud sync warning:", syncError.message);
                         }
-                        
+
                         // Success Feedback
                         setExpandedSetting(null);
                         setSyncStatus("synced");
@@ -9009,7 +9117,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   { id: "FAQSecurity", label: "FAQ & Data Security", icon: ShieldCheck },
                 ].map((item) => (
                   <div key={item.id} className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 shadow-sm overflow-hidden transition-all duration-300">
-                    <button 
+                    <button
                       onClick={() => setExpandedSetting(expandedSetting === item.id ? null : item.id)}
                       className={`w-full p-5 flex items-center justify-between transition-all active:scale-95 group ${expandedSetting === item.id && (item.id === "StoreProfile" || item.id === "AccountSecurity" || item.id === "SystemCloud" || item.id === "WhatsAppBot" || item.id === "AdSettings" || item.id === "FeesCommissions" || item.id === "HardwareSettings" || item.id === "FAQSecurity") ? 'bg-zinc-900 text-white' : 'hover:bg-zinc-50 dark:hover:bg-zinc-800/50'}`}
                     >
@@ -9026,10 +9134,10 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           <div className="space-y-8 pt-6">
                             <div className="space-y-3">
                               <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Business Name</Label>
-                              <Input 
-                                value={restaurantName} 
-                                onChange={e => setRestaurantName(e.target.value)} 
-                                className="h-16 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 shadow-inner text-xl font-black px-6 focus:ring-2 ring-orange-500/20 transition-all" 
+                              <Input
+                                value={restaurantName}
+                                onChange={e => setRestaurantName(e.target.value)}
+                                className="h-16 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 shadow-inner text-xl font-black px-6 focus:ring-2 ring-orange-500/20 transition-all"
                                 placeholder="Enter Business Name"
                               />
                             </div>
@@ -9072,10 +9180,10 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
                             <div className="space-y-3">
                               <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">OR Logo Link (URL)</Label>
-                              <Input 
-                                value={storeLogo || ""} 
-                                onChange={e => setStoreLogo(e.target.value)} 
-                                className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-6 shadow-sm" 
+                              <Input
+                                value={storeLogo || ""}
+                                onChange={e => setStoreLogo(e.target.value)}
+                                className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-6 shadow-sm"
                                 placeholder="https://example.com/logo.png"
                               />
                               <p className="text-[8px] font-bold text-zinc-400 px-2 italic uppercase">Recommended if Cloud Save is not active</p>
@@ -9110,7 +9218,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                       }} />
                                     </label>
                                     {storeSignature && (
-                                      <button 
+                                      <button
                                         type="button"
                                         onClick={() => {
                                           setStoreSignature(null);
@@ -9165,7 +9273,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                               </div>
                               <div className="space-y-3">
                                 <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">GST Rate (%)</Label>
-                                <select 
+                                <select
                                   value={gstRate}
                                   onChange={e => setGstRate(Number(e.target.value))}
                                   disabled={!isGstEnabled}
@@ -9181,11 +9289,11 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
                             <div className="space-y-3">
                               <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Monthly Rent (₹)</Label>
-                              <Input 
-                                type="number" 
-                                value={monthlyRent} 
-                                onChange={e => setMonthlyRent(Number(e.target.value))} 
-                                className="h-20 rounded-3xl bg-zinc-50 dark:bg-zinc-800 border-0 shadow-inner text-3xl font-black px-6 focus:ring-2 ring-orange-500/20 transition-all" 
+                              <Input
+                                type="number"
+                                value={monthlyRent}
+                                onChange={e => setMonthlyRent(Number(e.target.value))}
+                                className="h-20 rounded-3xl bg-zinc-50 dark:bg-zinc-800 border-0 shadow-inner text-3xl font-black px-6 focus:ring-2 ring-orange-500/20 transition-all"
                                 placeholder="0"
                               />
                             </div>
@@ -9193,23 +9301,23 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                             {/* UPI ID & Payments Config */}
                             <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800 space-y-6">
                               <h4 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-wider pl-1">UPI Payments Configuration</h4>
-                              
+
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-3">
                                   <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Store UPI ID</Label>
-                                  <Input 
-                                    value={storeUpiId} 
-                                    onChange={e => setStoreUpiId(e.target.value)} 
-                                    className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-6 shadow-sm" 
+                                  <Input
+                                    value={storeUpiId}
+                                    onChange={e => setStoreUpiId(e.target.value)}
+                                    className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-6 shadow-sm"
                                     placeholder="merchant@upi"
                                   />
                                 </div>
                                 <div className="space-y-3">
                                   <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">UPI Display Name (Merchant Name)</Label>
-                                  <Input 
-                                    value={storeUpiName} 
-                                    onChange={e => setStoreUpiName(e.target.value)} 
-                                    className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-6 shadow-sm" 
+                                  <Input
+                                    value={storeUpiName}
+                                    onChange={e => setStoreUpiName(e.target.value)}
+                                    className="h-14 rounded-2xl bg-zinc-50 dark:bg-zinc-800 border-0 font-bold px-6 shadow-sm"
                                     placeholder="Sharma Dhaba"
                                   />
                                 </div>
@@ -9220,11 +9328,11 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 <div className="flex flex-col sm:flex-row items-center gap-4 p-5 bg-zinc-50 dark:bg-zinc-950/40 rounded-3xl border border-zinc-150 dark:border-zinc-850">
                                   <label className="cursor-pointer bg-orange-500 hover:bg-orange-600 text-white px-6 py-3.5 rounded-2xl font-black text-xs uppercase tracking-widest inline-flex items-center gap-2 active:scale-95 transition-all shadow-md shadow-orange-500/20 shrink-0">
                                     <Camera className="h-4 w-4" /> Upload QR Code
-                                    <input 
-                                      type="file" 
-                                      className="hidden" 
-                                      accept="image/png, image/jpeg, image/jpg, .png, .jpg, .jpeg" 
-                                      onChange={handleQrUpload} 
+                                    <input
+                                      type="file"
+                                      className="hidden"
+                                      accept="image/png, image/jpeg, image/jpg, .png, .jpg, .jpeg"
+                                      onChange={handleQrUpload}
                                     />
                                   </label>
                                   <div className="text-left">
@@ -9261,11 +9369,11 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                             {/* --- Password Update --- */}
                             <div className="space-y-3">
                               <Label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2">Owner Password</Label>
-                              <Input 
-                                type="password" 
-                                value={ownerPassword} 
-                                onChange={e => setOwnerPassword(e.target.value)} 
-                                className="h-20 rounded-3xl bg-zinc-50 dark:bg-zinc-800 border-0 shadow-inner text-2xl font-black px-6 focus:ring-2 ring-orange-500/20 transition-all" 
+                              <Input
+                                type="password"
+                                value={ownerPassword}
+                                onChange={e => setOwnerPassword(e.target.value)}
+                                className="h-20 rounded-3xl bg-zinc-50 dark:bg-zinc-800 border-0 shadow-inner text-2xl font-black px-6 focus:ring-2 ring-orange-500/20 transition-all"
                               />
                             </div>
                             <Button className="w-full h-16 bg-[#00c875] hover:bg-[#00b067] text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
@@ -9431,7 +9539,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 <h4 className="font-black text-lg tracking-tight">Auto WhatsApp</h4>
                                 <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest leading-none mt-1">Invoice Sending</p>
                               </div>
-                              <button 
+                              <button
                                 onClick={() => setIsWhatsAppEnabled(!isWhatsAppEnabled)}
                                 className={`px-6 h-10 rounded-xl font-black text-xs transition-all active:scale-95 ${isWhatsAppEnabled ? 'bg-[#00c875] text-white shadow-lg shadow-emerald-500/10' : 'bg-zinc-100 text-zinc-400'}`}
                               >
@@ -9439,9 +9547,9 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                               </button>
                             </div>
                             <div className="bg-zinc-50 dark:bg-zinc-800/50 p-6 rounded-[2rem] border border-zinc-100 dark:border-zinc-800">
-                              <textarea 
-                                value={whatsappInvoiceTemplate} 
-                                onChange={e => setWhatsappInvoiceTemplate(e.target.value)} 
+                              <textarea
+                                value={whatsappInvoiceTemplate}
+                                onChange={e => setWhatsappInvoiceTemplate(e.target.value)}
                                 className="w-full h-44 bg-transparent border-0 text-sm font-bold leading-relaxed resize-none focus:ring-0 text-zinc-700 dark:text-zinc-300"
                                 placeholder="Write your invoice template here..."
                               />
@@ -9477,7 +9585,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 <div className="space-y-3">
                                   <div>
                                     <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1.5 ml-2">Ad Script URL</label>
-                                    <input 
+                                    <input
                                       type="text"
                                       value={webAdScriptUrl}
                                       onChange={(e) => setWebAdScriptUrl(e.target.value)}
@@ -9487,7 +9595,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                   </div>
                                   <div>
                                     <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1.5 ml-2">Ad Placement Key / ID (Optional)</label>
-                                    <input 
+                                    <input
                                       type="text"
                                       value={webAdKey}
                                       onChange={(e) => setWebAdKey(e.target.value)}
@@ -9497,7 +9605,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                   </div>
                                   <div>
                                     <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1.5 ml-2">Web Interstitial / Direct Link URL</label>
-                                    <input 
+                                    <input
                                       type="text"
                                       value={webAdDirectLink}
                                       onChange={(e) => setWebAdDirectLink(e.target.value)}
@@ -9507,7 +9615,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                   </div>
                                   <div>
                                     <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1.5 ml-2">Vignette Video Script URL</label>
-                                    <input 
+                                    <input
                                       type="text"
                                       value={webAdVignetteUrl}
                                       onChange={(e) => setWebAdVignetteUrl(e.target.value)}
@@ -9517,7 +9625,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                   </div>
                                   <div>
                                     <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest block mb-1.5 ml-2">Vignette Video Zone ID</label>
-                                    <input 
+                                    <input
                                       type="text"
                                       value={webAdVignetteKey}
                                       onChange={(e) => setWebAdVignetteKey(e.target.value)}
@@ -9544,8 +9652,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 <span className="font-black text-sm">{getPartnerName(businessType, "Swiggy")}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <select 
-                                  value={swiggyCommType} 
+                                <select
+                                  value={swiggyCommType}
                                   onChange={e => setSwiggyCommType(e.target.value)}
                                   className="bg-zinc-100 dark:bg-zinc-700/80 rounded-xl px-2.5 py-1.5 font-black text-xs border-0 focus:ring-0 text-zinc-700 dark:text-zinc-200"
                                 >
@@ -9564,8 +9672,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 <span className="font-black text-sm">{getPartnerName(businessType, "Zomato")}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <select 
-                                  value={zomatoCommType} 
+                                <select
+                                  value={zomatoCommType}
                                   onChange={e => setZomatoCommType(e.target.value)}
                                   className="bg-zinc-100 dark:bg-zinc-700/80 rounded-xl px-2.5 py-1.5 font-black text-xs border-0 focus:ring-0 text-zinc-700 dark:text-zinc-200"
                                 >
@@ -9584,25 +9692,25 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                               <div>
                                 <h4 className="font-black text-lg tracking-tight">Cloud Engine v2.0</h4>
                                 <div className="bg-[#00c875] text-white px-3 py-1 rounded-lg text-[10px] font-black mt-1 inline-block uppercase tracking-wider">
-                                   {isSyncing ? "SYNCING..." : "ACTIVE"}
+                                  {isSyncing ? "SYNCING..." : "ACTIVE"}
                                 </div>
                                 <p className="text-[10px] font-bold text-zinc-400 mt-2">Last Cloud Sync: {lastSyncedTime}</p>
                               </div>
                               <RefreshCw className={`h-8 w-8 text-zinc-100 dark:text-zinc-700 ${isSyncing ? 'animate-spin text-orange-500' : ''}`} />
                             </div>
-                            <Button 
-                              onClick={syncAllData} 
+                            <Button
+                              onClick={syncAllData}
                               disabled={isSyncing}
                               className="w-full h-16 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-sm uppercase tracking-widest shadow-lg shadow-blue-500/20 active:scale-95 transition-all mt-4"
                             >
                               {isSyncing ? "SYNCING..." : "MANUAL SYNC NOW"}
                             </Button>
-                            
+
                             <div className="bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 p-4 rounded-2xl text-left text-[10px] text-zinc-500 dark:text-zinc-400 font-mono mt-4 space-y-1">
                               <div>
                                 <span className="font-bold text-zinc-500">Active Ad Network:</span> <span className="text-orange-500 font-bold uppercase">
-                                  {adProvider === "admob" 
-                                    ? (isAdMobBannerFailed ? "Web Ads (Monetag) [Backup Active]" : "Google AdMob + Meta Ads") 
+                                  {adProvider === "admob"
+                                    ? (isAdMobBannerFailed ? "Web Ads (Monetag) [Backup Active]" : "Google AdMob + Meta Ads")
                                     : adProvider === "web" ? "Web Ads (Monetag)" : "None / Disabled"}
                                 </span>
                               </div>
@@ -9642,14 +9750,14 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                   <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest leading-none">Bluetooth / USB</p>
                                 </div>
                               </div>
-                              <button 
+                              <button
                                 onClick={() => setIsThermalPrinterEnabled(!isThermalPrinterEnabled)}
                                 className={`w-16 h-9 rounded-2xl transition-all flex items-center px-1.5 ${isThermalPrinterEnabled ? 'bg-orange-500 justify-end' : 'bg-zinc-200 dark:bg-zinc-700 justify-start'}`}
                               >
                                 <div className="w-6 h-6 bg-white rounded-full shadow-lg" />
                               </button>
                             </div>
-                            
+
                             {isThermalPrinterEnabled && (
                               <div className="mt-4 p-5 bg-orange-50/50 dark:bg-orange-900/10 rounded-3xl border border-orange-100 dark:border-orange-900/20 flex items-center gap-4">
                                 <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" />
@@ -9669,13 +9777,13 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                     <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest leading-none">Audio Soundbox</p>
                                   </div>
                                 </div>
-                                <button 
+                                <button
                                   onClick={() => {
                                     const nextVal = !isVoiceAnnouncerEnabled;
                                     setIsVoiceAnnouncerEnabled(nextVal);
                                     if (nextVal) {
-                                      const testText = voiceAnnouncerLanguage === "hi" 
-                                        ? "इंस्टामुनिम वॉइस कैशियर चालू है" 
+                                      const testText = voiceAnnouncerLanguage === "hi"
+                                        ? "इंस्टामुनिम वॉइस कैशियर चालू है"
                                         : "InstaMunim voice cashier is active";
                                       setTimeout(() => {
                                         announceVoice(testText, voiceAnnouncerLanguage);
@@ -9709,8 +9817,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                     </div>
                                     <button
                                       onClick={() => {
-                                        const testText = voiceAnnouncerLanguage === "hi" 
-                                          ? "यह एक परीक्षण आवाज संदेश है।" 
+                                        const testText = voiceAnnouncerLanguage === "hi"
+                                          ? "यह एक परीक्षण आवाज संदेश है।"
                                           : "This is a test voice announcement.";
                                         announceVoice(testText);
                                       }}
@@ -9758,7 +9866,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   </div>
                 ))}
 
-                <button 
+                <button
                   onClick={handleLogout}
                   className="w-full bg-white dark:bg-zinc-900 p-5 rounded-2xl flex items-center justify-between border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all active:scale-95 group mt-4"
                 >
@@ -9787,8 +9895,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                   <p className="text-[9px] font-bold text-zinc-400 mt-0.5 uppercase tracking-tighter">Get unlimited billing, rent tracker, barcode scanner & no ads!</p>
                 </div>
               </div>
-              <Button 
-                onClick={() => setShowUpgradeModal(true)} 
+              <Button
+                onClick={() => setShowUpgradeModal(true)}
                 className="h-8 px-4 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-black text-[9px] uppercase tracking-wider shrink-0 active:scale-95 transition-all shadow-md shadow-orange-500/20"
               >
                 Remove Ads
@@ -9804,12 +9912,12 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
           <div className={`p-1.5 rounded-xl ${activeTab === 'Dashboard' ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><LayoutDashboard className="h-5 w-5" /></div>
           <span className="text-[8px] font-bold uppercase tracking-tighter">{t("Dashboard")}</span>
         </button>
- 
+
         <button onClick={() => handleTabNavigation("Menu")} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'Menu' ? 'text-orange-600 scale-105' : 'text-zinc-400 hover:text-zinc-600'}`}>
           <div className={`p-1.5 rounded-xl ${activeTab === 'Menu' ? 'bg-orange-50 dark:bg-orange-900/20' : ''}`}><ShoppingCart className="h-5 w-5" /></div>
           <span className="text-[8px] font-bold uppercase tracking-tighter">{t("Menus")}</span>
         </button>
- 
+
         <button onClick={() => setIsSaleOpen(true)} className="flex flex-col items-center -mt-8 group">
           <div className="w-16 h-16 bg-orange-600 rounded-xl flex items-center justify-center shadow-xl shadow-orange-600/30 border-4 border-[#fafafa] dark:border-zinc-950 group-active:scale-90 transition-all">
             <PlusCircle className="h-8 w-8 text-white" />
@@ -9869,8 +9977,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
             <span className="text-xl font-black text-purple-650">₹{Math.round(totalExpenses)}</span>
           </div>
 
-          <Button 
-            onClick={() => setShowExpenseBreakdown(false)} 
+          <Button
+            onClick={() => setShowExpenseBreakdown(false)}
             className="w-full h-12 bg-purple-650 hover:bg-purple-700 text-white rounded-xl font-black text-xs uppercase tracking-widest mt-4 border-0"
           >
             Close
@@ -9894,7 +10002,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               <Button onClick={async () => {
                 await handleLogout();
                 try {
-                  
+
                   await App.exitApp();
                 } catch (e: any) {
                   window.close();
@@ -9921,20 +10029,20 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
             <div className="space-y-4 pt-4">
               {lastOrderDetails?.mobile && lastOrderDetails.mobile !== "N/A" && lastOrderDetails.mobile !== "" && (
-                <Button 
+                <Button
                   onClick={() => {
                     sendWhatsAppReceipt();
                     setTimeout(() => setShowSuccessDialog(false), 1000);
-                  }} 
+                  }}
                   className="w-full h-16 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-black text-lg shadow-xl shadow-orange-600/20 active:scale-95 transition-all flex items-center justify-center gap-3"
                 >
                   <MessageCircle className="h-6 w-6" /> SEND RECEIPT
                 </Button>
               )}
-              <Button 
-                onClick={() => setShowSuccessDialog(false)} 
-                className={lastOrderDetails?.mobile && lastOrderDetails.mobile !== "N/A" && lastOrderDetails.mobile !== "" 
-                  ? "w-full h-12 text-zinc-400 font-black uppercase tracking-[0.2em] text-[10px] hover:text-zinc-600" 
+              <Button
+                onClick={() => setShowSuccessDialog(false)}
+                className={lastOrderDetails?.mobile && lastOrderDetails.mobile !== "N/A" && lastOrderDetails.mobile !== ""
+                  ? "w-full h-12 text-zinc-400 font-black uppercase tracking-[0.2em] text-[10px] hover:text-zinc-600"
                   : "w-full h-16 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-lg shadow-xl shadow-emerald-600/20 active:scale-95 transition-all flex items-center justify-center gap-3 border-0"
                 }
                 variant={lastOrderDetails?.mobile && lastOrderDetails.mobile !== "N/A" && lastOrderDetails.mobile !== "" ? "ghost" : "default"}
@@ -9966,22 +10074,20 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               <button
                 type="button"
                 onClick={() => setTermsModalTab('privacy')}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                  termsModalTab === 'privacy'
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${termsModalTab === 'privacy'
                     ? 'bg-orange-500 text-white shadow-sm'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
-                }`}
+                  }`}
               >
                 Privacy Policy
               </button>
               <button
                 type="button"
                 onClick={() => setTermsModalTab('terms')}
-                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                  termsModalTab === 'terms'
+                className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${termsModalTab === 'terms'
                     ? 'bg-orange-500 text-white shadow-sm'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100'
-                }`}
+                  }`}
               >
                 Terms of Service
               </button>
@@ -10074,12 +10180,12 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
       </Dialog>
 
       {/* BARCODE SCANNER DIALOG */}
-      <Dialog open={showScanner} onOpenChange={(open) => { if(!open) closeScanner(); }}>
+      <Dialog open={showScanner} onOpenChange={(open) => { if (!open) closeScanner(); }}>
         <DialogContent className="p-0 border-0 w-screen h-screen max-w-none m-0 bg-zinc-950 text-white rounded-none flex flex-col justify-between overflow-hidden">
           {/* Full Screen Camera Viewport */}
           <div className="relative w-full h-full flex flex-col justify-between">
             <div id="reader" className="absolute inset-0 w-full h-full [&_video]:object-cover [&_video]:w-full [&_video]:h-full" />
-            
+
             {/* 1. Translucent Top Header bar */}
             <div className="relative z-10 w-full bg-zinc-950/75 backdrop-blur-md px-6 py-4 flex justify-between items-center border-b border-zinc-800/50">
               <div className="space-y-0.5">
@@ -10097,7 +10203,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 {/* Scanning Laser */}
                 <div className="absolute left-3 right-3 h-[2px] bg-red-500 shadow-lg shadow-red-500 top-1/2 -translate-y-1/2 animate-pulse" />
               </div>
-              
+
               <div className="mt-4 bg-zinc-950/80 backdrop-blur-sm px-4 py-1.5 rounded-full border border-zinc-800/50">
                 <p className="text-white text-[9px] font-black uppercase tracking-widest text-center">
                   Align ONLY ONE barcode in target
@@ -10122,14 +10228,14 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     <span>Magnify / Zoom</span>
                     <span className="text-orange-500 font-mono font-black">{currentZoom.toFixed(1)}x</span>
                   </div>
-                  
+
                   {/* Slider */}
-                  <input 
-                    type="range" 
-                    min={zoomRange.min} 
-                    max={zoomRange.max} 
-                    step={zoomRange.step} 
-                    value={currentZoom} 
+                  <input
+                    type="range"
+                    min={zoomRange.min}
+                    max={zoomRange.max}
+                    step={zoomRange.step}
+                    value={currentZoom}
                     onChange={(e) => handleZoomChange(parseFloat(e.target.value))}
                     className="w-full accent-orange-600 cursor-pointer h-1.5 bg-zinc-850 rounded-lg appearance-none"
                   />
@@ -10142,11 +10248,10 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                           <button
                             key={val}
                             onClick={() => handleZoomChange(val)}
-                            className={`px-3 py-1 text-[9px] font-black rounded-lg transition-all border ${
-                              currentZoom === val 
-                                ? "bg-orange-600 text-white border-orange-500 shadow-sm" 
+                            className={`px-3 py-1 text-[9px] font-black rounded-lg transition-all border ${currentZoom === val
+                                ? "bg-orange-600 text-white border-orange-500 shadow-sm"
                                 : "bg-zinc-800/80 text-zinc-400 border-zinc-700/50 hover:bg-zinc-700/80 hover:text-white"
-                            }`}
+                              }`}
                           >
                             {val}x
                           </button>
@@ -10196,7 +10301,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                               canvas.toBlob(async (blob) => {
                                 if (blob) {
                                   const optimizedFile = new File([blob], file.name, { type: "image/jpeg" });
-                                  
+
                                   // Native Barcode Detector check
                                   try {
                                     if ('BarcodeDetector' in window) {
@@ -10257,9 +10362,9 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               <div className="space-y-1">
                 <Label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Scanned Barcode</Label>
                 <div className="relative flex items-center">
-                  <Input 
+                  <Input
                     readOnly
-                    value={scannedBarcode} 
+                    value={scannedBarcode}
                     className="h-10 rounded-xl font-mono font-bold text-xs bg-zinc-50 dark:bg-zinc-850 text-zinc-650 pr-10 border-0 w-full"
                   />
                   <button
@@ -10283,10 +10388,10 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                     <span className="text-zinc-400 text-xs font-bold italic">Fetching name...</span>
                   </div>
                 ) : (
-                  <Input 
-                    placeholder="e.g. Good Day Biscuits" 
-                    value={newScannedName} 
-                    onChange={e => setNewScannedName(e.target.value)} 
+                  <Input
+                    placeholder="e.g. Good Day Biscuits"
+                    value={newScannedName}
+                    onChange={e => setNewScannedName(e.target.value)}
                     className="h-10 rounded-xl font-bold text-xs"
                   />
                 )}
@@ -10295,21 +10400,21 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <Label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Price (₹)</Label>
-                  <Input 
+                  <Input
                     id="new-scanned-price-input"
                     type="number"
-                    placeholder="e.g. 10" 
-                    value={newScannedPrice} 
-                    onChange={e => setNewScannedPrice(e.target.value)} 
+                    placeholder="e.g. 10"
+                    value={newScannedPrice}
+                    onChange={e => setNewScannedPrice(e.target.value)}
                     className="h-10 rounded-xl font-black text-xs"
                   />
                 </div>
                 <div className="space-y-1">
                   <Label className="text-[10px] font-black uppercase text-zinc-400 tracking-wider">Quantity</Label>
-                  <Input 
+                  <Input
                     type="number"
-                    value={newScannedQty} 
-                    onChange={e => setNewScannedQty(e.target.value)} 
+                    value={newScannedQty}
+                    onChange={e => setNewScannedQty(e.target.value)}
                     className="h-10 rounded-xl font-black text-xs"
                   />
                 </div>
@@ -10317,15 +10422,15 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
             </div>
 
             <div className="flex gap-2.5 pt-2">
-              <Button 
-                onClick={handleAddNewScannedProduct} 
+              <Button
+                onClick={handleAddNewScannedProduct}
                 className="flex-1 h-12 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-black text-xs active:scale-95 transition-all"
               >
                 ADD TO SALE
               </Button>
-              <Button 
-                onClick={() => setShowNewProductModal(false)} 
-                variant="outline" 
+              <Button
+                onClick={() => setShowNewProductModal(false)}
+                variant="outline"
                 className="h-12 rounded-xl font-black text-xs active:scale-95 transition-all"
               >
                 CANCEL
@@ -10502,18 +10607,18 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               </Button>
 
               <div className="flex gap-2.5 w-full sm:w-auto">
-                <Button 
+                <Button
                   onClick={() => {
                     setShowEditStockModal(false);
                     setEditingItem(null);
-                  }} 
-                  variant="outline" 
+                  }}
+                  variant="outline"
                   className="flex-1 sm:flex-none h-10 px-5 rounded-xl font-black text-xs"
                 >
                   CANCEL
                 </Button>
-                <Button 
-                  onClick={handleSaveEditStock} 
+                <Button
+                  onClick={handleSaveEditStock}
                   disabled={isLoading}
                   className="flex-1 sm:flex-none h-10 px-7 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md"
                 >
@@ -10786,12 +10891,12 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
         <DialogContent className="p-8 border-0 max-w-[340px] bg-gradient-to-br from-zinc-900 to-black text-white rounded-3xl shadow-2xl relative overflow-hidden">
           <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:20px_20px]" />
           <div className="absolute -left-10 -top-10 w-32 h-32 bg-orange-500/10 rounded-full blur-2xl animate-pulse" />
-          
+
           <div className="text-center space-y-6 relative z-10 animate-in zoom-in-95 duration-500">
             <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-amber-600 rounded-2xl flex items-center justify-center mx-auto shadow-xl shadow-orange-500/20">
               <Lock className="h-8 w-8 text-white" />
             </div>
-            
+
             <div className="space-y-2">
               <DialogTitle className="text-2xl font-black tracking-tight text-center uppercase">Premium Feature</DialogTitle>
               <DialogDescription className="text-zinc-400 font-bold text-xs leading-relaxed text-center">
@@ -10820,13 +10925,13 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
             </div>
 
             <div className="space-y-3 pt-2">
-              <Button 
+              <Button
                 onClick={() => window.open(`https://wa.me/917838229178?text=${encodeURIComponent(`Hi Admin, I want to upgrade to the Paid Plan for: ${restaurantName} (${ownerMobile}). Please activate my account.`)}`, "_blank")}
                 className="w-full h-14 bg-[#00c875] hover:bg-[#00b067] text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-3 active:scale-95 transition-all"
               >
                 <MessageCircle className="h-5 w-5" /> UPGRADE NOW
               </Button>
-              <button 
+              <button
                 onClick={() => setShowUpgradeModal(false)}
                 className="text-[10px] font-black text-zinc-500 hover:text-white uppercase tracking-widest transition-colors py-1 block w-full text-center"
               >
@@ -10890,7 +10995,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 A critical update is available. Please update the app to continue.
               </p>
             </div>
-            <button 
+            <button
               onClick={() => window.open(updateStoreUrl, "_blank")}
               style={{
                 width: '100%', height: '56px', background: '#3b82f6', color: '#ffffff',
@@ -11054,7 +11159,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
             <div className="w-20 h-20 bg-red-500/10 border-2 border-red-500/40 text-red-500 rounded-3xl flex items-center justify-center mx-auto shadow-inner">
               <ShieldAlert className="w-10 h-10 animate-pulse" />
             </div>
-            
+
             <div className="space-y-2">
               <span className="bg-red-500/20 text-red-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest border border-red-500/30">
                 Account Suspended
@@ -11168,7 +11273,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
       )}
 
       {/* DESKTOP SHORTCUTS LAUNCHER BUTTON */}
-      <button 
+      <button
         onClick={() => setShowShortcutsModal(true)}
         className="hidden md:flex fixed bottom-6 right-6 z-40 items-center gap-2 bg-zinc-900/90 dark:bg-zinc-100/90 hover:bg-orange-600 dark:hover:bg-orange-500 text-white dark:text-zinc-900 hover:text-white px-3.5 py-2.5 rounded-2xl shadow-2xl backdrop-blur-md text-xs font-black tracking-wider transition-all duration-300 group border border-zinc-700/50 dark:border-zinc-300/50 cursor-pointer active:scale-95"
         title="Press F1 for POS Keyboard Shortcuts"

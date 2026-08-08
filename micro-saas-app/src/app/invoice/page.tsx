@@ -1251,7 +1251,7 @@ function InvoiceContent() {
                 </ul>
               </div>
 
-              {/* AUTHORISED SIGNATURE BOX (EXACT RED CIRCLE LOCATION) */}
+              {/* AUTHORISED SIGNATURE BOX */}
               {(() => {
                 const activeSig = sigFromUrl || cloudSignature || (typeof window !== 'undefined' ? (localStorage.getItem('saas_store_signature') || null) : null);
                 return (
@@ -1259,7 +1259,7 @@ function InvoiceContent() {
                     {activeSig ? (
                       <img src={activeSig} alt="Authorised Signature" className="max-h-12 max-w-[130px] object-contain mb-1" />
                     ) : (
-                      <div className="h-9 w-24 flex items-center justify-center text-[8px] font-bold text-zinc-300 italic">No Signature</div>
+                      <div className="h-10 w-32" />
                     )}
                     <div className="border-t border-zinc-400 pt-1 w-32 text-center">
                       <span className="text-[9px] font-black uppercase text-zinc-700 tracking-wider">Authorised Signatory</span>

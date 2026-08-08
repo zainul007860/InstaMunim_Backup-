@@ -298,7 +298,7 @@ export default function AdminDashboard() {
 
   const handleAdminLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (adminPass === "munim@admin") {
+    if (adminPass === "MMustafa@_=2025") {
       setIsAdminLoggedIn(true);
     } else {
       alert("Unauthorized Access!");

@@ -1,480 +1,637 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
 import { supabase } from "@/lib/supabase";
-import { Plus, Moon, CheckCircle2, Save, ShoppingCart } from "lucide-react";
+import { Plus, Package, AlertTriangle, CheckCircle2, TrendingUp, RefreshCw, Trash2, Search, Building2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-type StockItem = {
-  id: string;
+type MenuItem = {
+  id: string | number;
   name: string;
-  unit: string; // kg, pc, pkt
-  openingStock: number; // Kal ka bacha hua
-  addedToday: number; // Aaj kharida hua
-  closingStock: string; // Raat ko bacha hua (string to allow decimal typing)
+  price: number;
+  category: string;
 };
 
-export const INVENTORY_CATEGORY_CONFIGS: Record<string, {
-  title: string;
-  subtext: string;
-  sourceTitle: string;
-  placeholder: string;
-  presets: { name: string; unit: string; openingStock: number; addedToday: number; closingStock: string }[];
-}> = {
-  "Restaurant/Cafe": {
-    title: "Stock Diary",
-    subtext: "Track your store raw items and recipe stock.",
-    sourceTitle: "Add New Stock (Mandi/Supplier)",
-    placeholder: "Item Name (e.g. Paneer)",
-    presets: [
-      { name: "Paneer", unit: "kg", openingStock: 5, addedToday: 0, closingStock: "" },
-      { name: "Milk", unit: "pkt", openingStock: 10, addedToday: 0, closingStock: "" },
-      { name: "Potatoes", unit: "kg", openingStock: 15, addedToday: 0, closingStock: "" }
-    ]
-  },
-  "Kirana/Grocery": {
-    title: "Inventory Diary",
-    subtext: "Track your store daily inventory and product stock.",
-    sourceTitle: "Add New Stock (Mandi/Supplier)",
-    placeholder: "Product Name (e.g. Basmati Rice)",
-    presets: [
-      { name: "Basmati Rice", unit: "kg", openingStock: 50, addedToday: 0, closingStock: "" },
-      { name: "Mustard Oil", unit: "pc", openingStock: 12, addedToday: 0, closingStock: "" },
-      { name: "Sugar", unit: "kg", openingStock: 20, addedToday: 0, closingStock: "" }
-    ]
-  },
-  "Saloon/Spa": {
-    title: "Supplies Diary",
-    subtext: "Track your saloon cosmetics, supplies and styling items.",
-    sourceTitle: "Add New Stock (Supplier/Vendor)",
-    placeholder: "Item Name (e.g. Hair Shampoo)",
-    presets: [
-      { name: "Hair Color (Black)", unit: "pkt", openingStock: 8, addedToday: 0, closingStock: "" },
-      { name: "Shampoo Bottle", unit: "pc", openingStock: 6, addedToday: 0, closingStock: "" },
-      { name: "Face Scrub", unit: "pc", openingStock: 4, addedToday: 0, closingStock: "" }
-    ]
-  },
-  "Clothing/Retail": {
-    title: "Inventory Diary",
-    subtext: "Track your clothing inventory, apparel stock and accessories.",
-    sourceTitle: "Add New Stock (Wholesaler/Supplier)",
-    placeholder: "Item Name (e.g. Cotton T-Shirt)",
-    presets: [
-      { name: "Cotton T-Shirt (M)", unit: "pc", openingStock: 15, addedToday: 0, closingStock: "" },
-      { name: "Blue Jeans (32)", unit: "pc", openingStock: 10, addedToday: 0, closingStock: "" },
-      { name: "Socks Pairs", unit: "pc", openingStock: 25, addedToday: 0, closingStock: "" }
-    ]
-  },
-  "Laundry": {
-    title: "Supplies Diary",
-    subtext: "Track your cleaning agents, detergents and packaging supplies.",
-    sourceTitle: "Add New Stock (Supplier/Vendor)",
-    placeholder: "Item Name (e.g. Detergent Powder)",
-    presets: [
-      { name: "Detergent Powder", unit: "kg", openingStock: 10, addedToday: 0, closingStock: "" },
-      { name: "Liquid Bleach", unit: "pc", openingStock: 5, addedToday: 0, closingStock: "" },
-      { name: "Plastic Hangers", unit: "pc", openingStock: 100, addedToday: 0, closingStock: "" }
-    ]
-  },
-  "Electric": {
-    title: "Inventory Diary",
-    subtext: "Track your electrical components, fittings and appliances stock.",
-    sourceTitle: "Add New Stock (Distributor/Supplier)",
-    placeholder: "Component Name (e.g. LED Bulb 9W)",
-    presets: [
-      { name: "LED Bulb 9W", unit: "pc", openingStock: 30, addedToday: 0, closingStock: "" },
-      { name: "Extension Board", unit: "pc", openingStock: 8, addedToday: 0, closingStock: "" },
-      { name: "Copper Wire 1.5mm", unit: "pkt", openingStock: 5, addedToday: 0, closingStock: "" }
-    ]
-  },
-  "Automobile": {
-    title: "Spares Diary",
-    subtext: "Track your vehicle parts, oils and spare inventory.",
-    sourceTitle: "Add New Stock (Distributor/Supplier)",
-    placeholder: "Part Name (e.g. Engine Oil 1L)",
-    presets: [
-      { name: "Engine Oil 1L", unit: "pc", openingStock: 12, addedToday: 0, closingStock: "" },
-      { name: "Spark Plug", unit: "pc", openingStock: 20, addedToday: 0, closingStock: "" },
-      { name: "Brake Pads Set", unit: "pc", openingStock: 6, addedToday: 0, closingStock: "" }
-    ]
-  },
-  "Gym": {
-    title: "Supplies Diary",
-    subtext: "Track your gym supplements, energy drinks and workout gear.",
-    sourceTitle: "Add New Stock (Supplier/Distributor)",
-    placeholder: "Item Name (e.g. Whey Protein)",
-    presets: [
-      { name: "Whey Protein 1kg", unit: "pc", openingStock: 10, addedToday: 0, closingStock: "" },
-      { name: "BCAA Powder", unit: "pc", openingStock: 5, addedToday: 0, closingStock: "" },
-      { name: "Shaker Bottles", unit: "pc", openingStock: 15, addedToday: 0, closingStock: "" }
-    ]
-  },
-  "Cosmetic": {
-    title: "Cosmetics Diary",
-    subtext: "Track your cosmetics, skin care items and display stock.",
-    sourceTitle: "Add New Stock (Distributor/Supplier)",
-    placeholder: "Item Name (e.g. Matte Lipstick)",
-    presets: [
-      { name: "Matte Lipstick (Red)", unit: "pc", openingStock: 12, addedToday: 0, closingStock: "" },
-      { name: "Black Eyeliner", unit: "pc", openingStock: 15, addedToday: 0, closingStock: "" },
-      { name: "Nail Polish (Pink)", unit: "pc", openingStock: 20, addedToday: 0, closingStock: "" }
-    ]
-  },
-  "Stationary": {
-    title: "Inventory Diary",
-    subtext: "Track your paper reams, writing items and books stock.",
-    sourceTitle: "Add New Stock (Publisher/Supplier)",
-    placeholder: "Item Name (e.g. Classmate Notebook)",
-    presets: [
-      { name: "Classmate Notebook", unit: "pc", openingStock: 40, addedToday: 0, closingStock: "" },
-      { name: "Reynolds Gel Pen (Blue)", unit: "pc", openingStock: 100, addedToday: 0, closingStock: "" },
-      { name: "A4 Paper Reams", unit: "pc", openingStock: 15, addedToday: 0, closingStock: "" }
-    ]
+export const INVENTORY_CATEGORY_CONFIGS: any = {};
+
+const getDisplayCategory = (cat: string) => {
+  if (!cat) return "General";
+  let clean = cat;
+  if (clean.includes("|Barcode:")) clean = clean.split("|Barcode:")[0];
+  if (clean.includes("|IMEIs:")) clean = clean.split("|IMEIs:")[0];
+  if (clean.includes("|Qty:")) clean = clean.split("|Qty:")[0];
+  if (clean.includes("|Supplier:")) clean = clean.split("|Supplier:")[0];
+  if (clean.includes("|Cost:")) clean = clean.split("|Cost:")[0];
+  if (clean.includes("|LowLimit:")) clean = clean.split("|LowLimit:")[0];
+  if (clean.startsWith("Barcode:")) return "General";
+  return clean || "General";
+};
+
+const getItemStockMeta = (cat: string) => {
+  if (!cat) return { cleanCat: "General", qty: 0, cost: null, supplier: "", lowLimit: 5 };
+  let cleanCat = cat;
+
+  let qty: number | null = null;
+  let cost: number | null = null;
+  let supplier = "";
+  let lowLimit = 5;
+
+  if (cleanCat.includes("|Qty:")) {
+    const parts = cleanCat.split("|Qty:");
+    cleanCat = parts[0];
+    const rest = parts[1].split("|")[0];
+    const parsed = parseInt(rest, 10);
+    if (!isNaN(parsed)) qty = parsed;
   }
+  if (cleanCat.includes("|Cost:")) {
+    const parts = cleanCat.split("|Cost:");
+    const rest = parts[1].split("|")[0];
+    const parsed = parseFloat(rest);
+    if (!isNaN(parsed)) cost = parsed;
+  }
+  if (cleanCat.includes("|Supplier:")) {
+    const parts = cleanCat.split("|Supplier:");
+    supplier = parts[1].split("|")[0];
+  }
+  if (cleanCat.includes("|LowLimit:")) {
+    const parts = cleanCat.split("|LowLimit:");
+    const parsed = parseInt(parts[1].split("|")[0], 10);
+    if (!isNaN(parsed)) lowLimit = parsed;
+  }
+
+  cleanCat = getDisplayCategory(cleanCat);
+  if (qty === null) {
+    qty = 0;
+  }
+  return { cleanCat, qty, cost, supplier, lowLimit };
 };
 
-export default function InventoryDiary({ businessType = "Restaurant/Cafe" }: { businessType?: string }) {
-  const [activeView, setActiveView] = useState<"Morning" | "Closing" | "Report">("Morning");
-  const [inventory, setInventory] = useState<StockItem[]>([]);
-  const [loading, setLoading] = useState(true);
+const buildCategoryString = (cleanCat: string, qty?: number | null, supplier?: string, cost?: number | null, lowLimit?: number | null) => {
+  let res = cleanCat || "General";
+  if (qty !== undefined && qty !== null && !isNaN(qty)) {
+    res += `|Qty:${qty}`;
+  }
+  if (supplier && supplier.trim()) {
+    res += `|Supplier:${supplier.trim()}`;
+  }
+  if (cost !== undefined && cost !== null && !isNaN(cost)) {
+    res += `|Cost:${cost}`;
+  }
+  if (lowLimit !== undefined && lowLimit !== null && !isNaN(lowLimit)) {
+    res += `|LowLimit:${lowLimit}`;
+  }
+  return res;
+};
+
+type InventoryDiaryProps = {
+  businessType?: string;
+  itemsProp?: MenuItem[];
+  setItemsProp?: any;
+  storeId?: string | number;
+};
+
+export default function InventoryDiary({
+  businessType = "Kirana/Grocery",
+  itemsProp,
+  setItemsProp,
+  storeId
+}: InventoryDiaryProps) {
+  const [localItems, setLocalItems] = useState<MenuItem[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  // Active store items only (from page.tsx or filtered DB fetch)
+  const items = itemsProp || localItems;
+
+  const updateItemsState = (updater: (prev: MenuItem[]) => MenuItem[]) => {
+    if (setItemsProp) {
+      setItemsProp(updater);
+    }
+    setLocalItems(updater);
+  };
+
+  const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editPrice, setEditPrice] = useState("");
+  const [editQty, setEditQty] = useState("");
+  const [editCost, setEditCost] = useState("");
+  const [editSupplier, setEditSupplier] = useState("");
+  const [editLowLimit, setEditLowLimit] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterMode, setFilterMode] = useState<"all" | "low" | "out">("all");
+  const [selectedRestockId, setSelectedRestockId] = useState("");
+  const [customRefillInput, setCustomRefillInput] = useState("");
+
+  const handleOpenEditModal = (item: MenuItem) => {
+    const meta = getItemStockMeta(item.category);
+    setEditingItem(item);
+    setEditName(item.name);
+    setEditPrice(item.price ? String(item.price) : "0");
+    setEditQty(meta.qty !== null ? String(meta.qty) : "0");
+    setEditCost(meta.cost !== null ? String(meta.cost) : "");
+    setEditSupplier(meta.supplier || "");
+    setEditLowLimit(String(meta.lowLimit || 5));
+  };
+
+  const handleSaveEditModal = async () => {
+    if (!editingItem) return;
+    const q = Number(editQty);
+    const finalQty = isNaN(q) ? 0 : q;
+    const finalCost = editCost ? Number(editCost) : null;
+    const finalSupplier = editSupplier.trim() || null;
+    const finalLowLimit = editLowLimit ? Number(editLowLimit) : 5;
+    const meta = getItemStockMeta(editingItem.category);
+    const newCatStr = buildCategoryString(meta.cleanCat, finalQty, finalSupplier, finalCost, finalLowLimit);
+
+    const updatedItem = {
+      ...editingItem,
+      name: editName.trim() || editingItem.name,
+      price: Number(editPrice) || editingItem.price,
+      category: newCatStr
+    };
+
+    updateItemsState(prev => prev.map(i => i.id === editingItem.id ? updatedItem : i));
+    setEditingItem(null);
+
+    try {
+      await supabase.from("menu_items").update({
+        name: updatedItem.name,
+        price: updatedItem.price,
+        category: updatedItem.category
+      }).eq("id", editingItem.id);
+    } catch (err) {
+      console.error("Failed to update item stock details:", err);
+    }
+  };
 
   useEffect(() => {
-    fetchInventory();
-  }, [businessType]);
+    if (!itemsProp) {
+      fetchMenuItems();
+    }
+  }, [itemsProp, storeId]);
 
-  const fetchInventory = async () => {
+  const fetchMenuItems = async () => {
+    setLoading(true);
     try {
-      const { data, error } = await supabase.from('inventory_items').select('*');
-      if (error) throw error;
-      if (data && data.length > 0) {
-        // Find default presets of ALL OTHER categories to clean them up if present
-        const currentConfig = INVENTORY_CATEGORY_CONFIGS[businessType] || INVENTORY_CATEGORY_CONFIGS["Restaurant/Cafe"];
-        const currentPresetNames = currentConfig.presets.map(p => p.name.toLowerCase());
-        
-        // Define all default preset names across all categories
-        const allOtherPresets = [
-          "paneer", "milk", "potatoes", "potato", "bread (white)", "water bottle", // Restaurant
-          "basmati rice", "mustard oil", "sugar", // Kirana
-          "hair color (black)", "shampoo bottle", "face scrub", // Saloon
-          "cotton t-shirt (m)", "blue jeans (32)", "socks pairs", // Clothing
-          "detergent powder", "liquid bleach", "plastic hangers", // Laundry
-          "led bulb 9w", "extension board", "copper wire 1.5mm", // Electric
-          "engine oil 1l", "spark plug", "brake pads set", // Automobile
-          "whey protein 1kg", "bcaa powder", "shaker bottles", // Gym
-          "matte lipstick (red)", "black eyeliner", "nail polish (pink)", // Cosmetic
-          "classmate notebook", "reynolds gel pen (blue)", "a4 paper reams" // Stationary
-        ];
-        
-        const filteredData = data.filter(d => {
-          const lowerName = d.name.toLowerCase();
-          // If this item is in the default list of other categories, but not in current category's presets, delete it from Supabase
-          if (allOtherPresets.includes(lowerName) && !currentPresetNames.includes(lowerName)) {
-            supabase.from('inventory_items').delete().eq('id', d.id).then(() => {});
-            return false;
-          }
-          return true;
-        });
-
-        if (filteredData.length > 0) {
-          setInventory(filteredData.map(d => ({
-            id: d.id,
-            name: d.name,
-            unit: d.unit,
-            openingStock: Number(d.opening_stock) || 0,
-            addedToday: Number(d.added_today) || 0,
-            closingStock: d.closing_stock || ""
-          })));
-        } else {
-          // If no items left (all default restaurant items deleted), load current category presets
-          const config = INVENTORY_CATEGORY_CONFIGS[businessType] || INVENTORY_CATEGORY_CONFIGS["Restaurant/Cafe"];
-          setInventory(config.presets.map((p, idx) => ({
-            id: String(idx + 1),
-            name: p.name,
-            unit: p.unit,
-            openingStock: p.openingStock,
-            addedToday: p.addedToday,
-            closingStock: p.closingStock
-          })));
-        }
-      } else {
-        const config = INVENTORY_CATEGORY_CONFIGS[businessType] || INVENTORY_CATEGORY_CONFIGS["Restaurant/Cafe"];
-        setInventory(config.presets.map((p, idx) => ({
-          id: String(idx + 1),
-          name: p.name,
-          unit: p.unit,
-          openingStock: p.openingStock,
-          addedToday: p.addedToday,
-          closingStock: p.closingStock
-        })));
+      let query = supabase.from("menu_items").select("*");
+      if (storeId) {
+        query = query.eq("store_id", storeId);
+      }
+      const { data, error } = await query;
+      if (!error && data) {
+        setLocalItems(data);
       }
     } catch (e) {
-      console.log("Supabase error (table likely missing), using local fallback data.");
-      const config = INVENTORY_CATEGORY_CONFIGS[businessType] || INVENTORY_CATEGORY_CONFIGS["Restaurant/Cafe"];
-      setInventory(config.presets.map((p, idx) => ({
-        id: String(idx + 1),
-        name: p.name,
-        unit: p.unit,
-        openingStock: p.openingStock,
-        addedToday: p.addedToday,
-        closingStock: p.closingStock
-      })));
+      console.error("Error fetching menu items:", e);
     } finally {
       setLoading(false);
     }
   };
 
-  const [newItemName, setNewItemName] = useState("");
-  const [newItemQty, setNewItemQty] = useState("");
-  const [newItemUnit, setNewItemUnit] = useState("pc");
+  const handleRestock = async (itemId: string | number, addQty: number) => {
+    const target = items.find(i => i.id === itemId);
+    if (!target) return;
 
-  const today = format(new Date(), "dd MMM yyyy");
+    const meta = getItemStockMeta(target.category);
+    const currentQty = meta.qty !== null ? meta.qty : 0;
+    const newQty = Math.max(0, currentQty + addQty);
+    const newCatStr = buildCategoryString(meta.cleanCat, newQty, meta.supplier, meta.cost, meta.lowLimit);
 
-  const handleAddItem = async () => {
-    if (!newItemName || !newItemQty) return;
-    
-    const existing = inventory.find(i => i.name.toLowerCase() === newItemName.toLowerCase());
-    if (existing) {
-      const newAdded = existing.addedToday + Number(newItemQty);
-      setInventory(inventory.map(i => 
-        i.id === existing.id ? { ...i, addedToday: newAdded } : i
-      ));
-      
-      // Update DB in background
-      await supabase.from('inventory_items').update({ added_today: newAdded }).eq('id', existing.id);
-    } else {
-      const tempId = Date.now().toString();
-      const newItem = {
-        id: tempId,
-        name: newItemName,
-        unit: newItemUnit,
-        openingStock: 0,
-        addedToday: Number(newItemQty),
-        closingStock: ""
-      };
-      setInventory([...inventory, newItem]);
+    updateItemsState(prev => prev.map(i => i.id === itemId ? { ...i, category: newCatStr } : i));
 
-      // Insert into DB
-      const { data, error } = await supabase.from('inventory_items').insert([{
-        name: newItemName,
-        unit: newItemUnit,
-        opening_stock: 0,
-        added_today: Number(newItemQty),
-        closing_stock: null
-      }]).select();
-      
-      if (data && data[0]) {
-        // Replace temp ID with actual Supabase UUID
-        setInventory(prev => prev.map(i => i.id === tempId ? { ...i, id: data[0].id } : i));
-      }
-    }
-    setNewItemName("");
-    setNewItemQty("");
-  };
-
-  const handleClosingInput = (id: string, val: string) => {
-    setInventory(inventory.map(i => 
-      i.id === id ? { ...i, closingStock: val } : i
-    ));
-  };
-
-  const handleSaveClosing = () => {
-    // Auto-fill empty fields with "0" so the user isn't blocked
-    setInventory(inventory.map(i => ({
-      ...i,
-      closingStock: i.closingStock === "" ? "0" : i.closingStock
-    })));
-    setActiveView("Report");
-  };
-
-  const handleFinishClosing = async () => {
-    const updatedInventory = inventory.map(i => ({
-      ...i,
-      openingStock: parseFloat(i.closingStock || "0"),
-      addedToday: 0,
-      closingStock: ""
-    }));
-
-    setInventory(updatedInventory);
-    setActiveView("Morning");
-
-    // Persist rollover to DB
-    for (const item of updatedInventory) {
-      if (item.id.length > 10) { // Check if it's a real Supabase UUID (not our dummy ID "1" or "2")
-        await supabase.from('inventory_items').update({
-          opening_stock: item.openingStock,
-          added_today: 0,
-          closing_stock: null
-        }).eq('id', item.id);
-      }
+    try {
+      await supabase.from("menu_items").update({ category: newCatStr }).eq("id", itemId);
+    } catch (err) {
+      console.error("Failed to update stock:", err);
     }
   };
 
-  if (loading) {
-    return <div className="p-10 text-center font-bold text-zinc-400">Loading Inventory...</div>;
-  }
+  const handleDelete = async (itemId: string | number) => {
+    if (!confirm("Are you sure you want to delete this item?")) return;
+    updateItemsState(prev => prev.filter(i => i.id !== itemId));
+    try {
+      await supabase.from("menu_items").delete().eq("id", itemId);
+    } catch (err) {
+      console.error("Failed to delete item:", err);
+    }
+  };
 
-  const config = INVENTORY_CATEGORY_CONFIGS[businessType] || INVENTORY_CATEGORY_CONFIGS["Restaurant/Cafe"];
+  // All store items are stock controllable (default presets, custom, AI scan, CSV)
+  const stockTrackedItems = items;
+
+  // Calculations
+  const totalProducts = stockTrackedItems.length;
+  const totalUnits = stockTrackedItems.reduce((acc, item) => acc + (getItemStockMeta(item.category).qty || 0), 0);
+  const totalValuation = stockTrackedItems.reduce((acc, item) => {
+    const meta = getItemStockMeta(item.category);
+    const q = meta.qty || 0;
+    return acc + (q * Number(item.price || 0));
+  }, 0);
+
+  const lowStockCount = stockTrackedItems.filter(item => {
+    const meta = getItemStockMeta(item.category);
+    return meta.qty !== null && meta.qty > 0 && meta.qty <= meta.lowLimit;
+  }).length;
+
+  const outOfStockCount = stockTrackedItems.filter(item => {
+    const meta = getItemStockMeta(item.category);
+    return meta.qty !== null && meta.qty <= 0;
+  }).length;
+
+  // Filtered List (Real Stock Tracked Items Only)
+  const filteredList = stockTrackedItems.filter(item => {
+    const nameMatch = item.name.toLowerCase().includes(searchQuery.toLowerCase().trim());
+    if (!nameMatch) return false;
+
+    const meta = getItemStockMeta(item.category);
+    if (filterMode === "low") {
+      return meta.qty !== null && meta.qty > 0 && meta.qty <= meta.lowLimit;
+    }
+    if (filterMode === "out") {
+      return meta.qty !== null && meta.qty <= 0;
+    }
+    return true;
+  });
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-28 px-1">
-      <header className="px-2">
-        <h2 className="text-4xl font-black tracking-tight text-zinc-900 dark:text-white">{config.title}</h2>
-        <p className="text-orange-600 font-bold mt-1 text-sm">{today}</p>
+    <div className="space-y-5 pb-28 max-w-4xl mx-auto px-3 sm:px-4 animate-in fade-in duration-500 pt-3">
+      {/* HEADER SECTION */}
+      <header className="space-y-1">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            <h2 className="text-xl sm:text-3xl font-black tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
+              <Package className="h-6 w-6 sm:h-7 sm:w-7 text-blue-600 shrink-0" />
+              <span>Inventory & Stock Control</span>
+            </h2>
+            <p className="text-[11px] sm:text-xs font-bold text-zinc-400 mt-0.5">
+              Track stock counts, valuation & quick refills.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            onClick={fetchMenuItems}
+            variant="outline"
+            className="h-9 px-2.5 rounded-xl font-bold text-[11px] gap-1 shrink-0 border-zinc-200 dark:border-zinc-800"
+          >
+            <RefreshCw className="h-3.5 w-3.5" /> Refresh
+          </Button>
+        </div>
       </header>
 
-      {/* Tabs */}
-      <div className="flex gap-2 bg-zinc-100 p-1.5 rounded-full overflow-x-auto scrollbar-hide">
-        <button 
-          onClick={() => setActiveView("Morning")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-full text-xs font-bold transition-all whitespace-nowrap ${activeView === "Morning" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500"}`}
-        >
-          <ShoppingCart className="w-4 h-4" /> Aaj ka Maal (Add)
-        </button>
-        <button 
-          onClick={() => setActiveView("Closing")}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-full text-xs font-bold transition-all whitespace-nowrap ${activeView === "Closing" ? "bg-zinc-900 text-white shadow-sm" : "text-zinc-500"}`}
-        >
-          <Moon className="w-4 h-4" /> Night Closing
-        </button>
+      {/* TOP STOCK SUMMARY DASHBOARD */}
+      <div className="p-3.5 sm:p-4 bg-gradient-to-br from-blue-50/90 to-indigo-50/60 dark:from-zinc-900 dark:to-zinc-800 rounded-3xl border border-blue-100/60 dark:border-zinc-800 shadow-sm space-y-3.5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div className="p-3 bg-white dark:bg-zinc-900 rounded-2xl border border-blue-50 dark:border-zinc-800 shadow-sm">
+            <p className="text-[9px] font-black uppercase text-zinc-400 tracking-wider">Total Products</p>
+            <p className="text-lg sm:text-2xl font-black text-zinc-900 dark:text-white mt-0.5">{totalProducts}</p>
+          </div>
+
+          <div className="p-3 bg-white dark:bg-zinc-900 rounded-2xl border border-blue-50 dark:border-zinc-800 shadow-sm">
+            <p className="text-[9px] font-black uppercase text-zinc-400 tracking-wider">Total Stock Units</p>
+            <p className="text-lg sm:text-2xl font-black text-blue-600 dark:text-blue-400 mt-0.5">{totalUnits} Pcs</p>
+          </div>
+
+          <div className="p-3 bg-white dark:bg-zinc-900 rounded-2xl border border-blue-50 dark:border-zinc-800 shadow-sm">
+            <p className="text-[9px] font-black uppercase text-zinc-400 tracking-wider">Stock Valuation</p>
+            <p className="text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-0.5">₹{totalValuation.toLocaleString('en-IN')}</p>
+          </div>
+
+          <div className="p-3 bg-white dark:bg-zinc-900 rounded-2xl border border-blue-50 dark:border-zinc-800 shadow-sm">
+            <p className="text-[9px] font-black uppercase text-amber-500 tracking-wider">Low Stock Alerts</p>
+            <p className="text-lg sm:text-2xl font-black text-amber-500 mt-0.5">{lowStockCount} Items</p>
+          </div>
+        </div>
+
+        {/* QUICK REFILL HEADER BAR */}
+        <div className="pt-3 border-t border-blue-100/60 dark:border-zinc-800 space-y-2.5">
+          <div className="flex flex-col gap-1.5 w-full">
+            <span className="text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+              ⚡ Quick Stock Refill / Adjust
+            </span>
+            <select
+              value={selectedRestockId}
+              onChange={(e) => setSelectedRestockId(e.target.value)}
+              className="w-full h-10 rounded-xl bg-white dark:bg-zinc-900 border border-blue-100 dark:border-zinc-800 text-xs font-bold px-3 text-zinc-800 dark:text-zinc-200 focus:outline-none shadow-sm truncate"
+            >
+              <option value="">Select Item to Refill / Adjust...</option>
+              {stockTrackedItems.length === 0 ? (
+                <option value="" disabled>No stock items added yet (Add items with Stock Qty first)</option>
+              ) : (
+                stockTrackedItems.map(item => {
+                  const meta = getItemStockMeta(item.category);
+                  return (
+                    <option key={item.id} value={item.id}>
+                      {item.name} ({meta.qty} Pcs)
+                    </option>
+                  );
+                })
+              )}
+            </select>
+          </div>
+
+          {selectedRestockId && (
+            <div className="space-y-2 pt-1 animate-in fade-in duration-300">
+              <div className="grid grid-cols-4 gap-1.5 w-full">
+                <button
+                  onClick={() => handleRestock(selectedRestockId, -1)}
+                  className="h-10 rounded-xl bg-red-100 hover:bg-red-200 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-black text-xs shadow-sm transition-all active:scale-95 flex items-center justify-center border border-red-200 dark:border-red-900/30"
+                  title="Minus 1 Unit"
+                >
+                  - 1 Pc
+                </button>
+                <button
+                  onClick={() => handleRestock(selectedRestockId, 1)}
+                  className="h-10 rounded-xl bg-emerald-100 hover:bg-emerald-200 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 font-black text-xs shadow-sm transition-all active:scale-95 flex items-center justify-center border border-emerald-200 dark:border-emerald-900/30"
+                  title="Add 1 Unit"
+                >
+                  + 1 Pc
+                </button>
+                <button
+                  onClick={() => handleRestock(selectedRestockId, 10)}
+                  className="h-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-sm transition-all active:scale-95 flex items-center justify-center"
+                >
+                  +10
+                </button>
+                <button
+                  onClick={() => handleRestock(selectedRestockId, 50)}
+                  className="h-10 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs shadow-sm transition-all active:scale-95 flex items-center justify-center"
+                >
+                  +50
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <Input
+                  type="number"
+                  placeholder="Custom qty (+5, -2, 15, etc)..."
+                  value={customRefillInput}
+                  onChange={e => setCustomRefillInput(e.target.value)}
+                  className="h-10 rounded-xl bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-xs font-bold px-3 flex-1"
+                />
+                <Button
+                  size="sm"
+                  disabled={!customRefillInput || isNaN(Number(customRefillInput))}
+                  onClick={() => {
+                    const val = Number(customRefillInput);
+                    if (!isNaN(val) && val !== 0) {
+                      handleRestock(selectedRestockId, val);
+                      setCustomRefillInput("");
+                    }
+                  }}
+                  className="h-10 px-4 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-extrabold text-xs active:scale-95"
+                >
+                  Update Qty
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {activeView === "Morning" && (
-        <div className="space-y-6">
-          <Card className="p-4 rounded-3xl border-0 shadow-sm bg-white">
-            <h3 className="font-bold text-sm mb-4">{config.sourceTitle}</h3>
-            <div className="flex gap-2 mb-3">
-              <Input 
-                placeholder={config.placeholder}
-                value={newItemName}
-                onChange={e => setNewItemName(e.target.value)}
-                className="bg-zinc-50 border-0 h-12 rounded-2xl"
-              />
-              <Input 
-                type="number"
-                placeholder="Qty" 
-                value={newItemQty}
-                onChange={e => setNewItemQty(e.target.value)}
-                className="w-20 bg-zinc-50 border-0 h-12 rounded-2xl"
-              />
-            </div>
-            <div className="flex gap-2">
-              <select 
-                value={newItemUnit}
-                onChange={e => setNewItemUnit(e.target.value)}
-                className="w-24 bg-zinc-50 border-0 h-12 rounded-2xl px-3 text-sm font-medium focus:outline-none"
-              >
-                <option value="kg">KG</option>
-                <option value="pc">Pieces</option>
-                <option value="pkt">Packet</option>
-              </select>
-              <Button onClick={handleAddItem} className="flex-1 h-12 bg-orange-100 text-orange-600 hover:bg-orange-200 rounded-2xl font-bold shadow-none">
-                <Plus className="w-5 h-5 mr-1" /> Add
-              </Button>
-            </div>
-          </Card>
-
-          <div className="space-y-3 px-2">
-            <h3 className="font-black text-lg">Total Available Today</h3>
-            {inventory.length === 0 ? (
-              <p className="text-zinc-400 text-sm italic">No items in stock.</p>
-            ) : (
-              inventory.map(item => (
-                <div key={item.id} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-zinc-100 shadow-sm">
-                  <div>
-                    <h4 className="font-bold text-zinc-900">{item.name}</h4>
-                    <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-1">
-                      Kal: {item.openingStock} | Aaj laya: <span className="text-green-500">+{item.addedToday}</span>
-                    </p>
-                  </div>
-                  <div className="text-xl font-black text-orange-500">
-                    {item.openingStock + item.addedToday} <span className="text-xs text-zinc-500 font-bold uppercase">{item.unit}</span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+      {/* FILTER CHIPS & SEARCH */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+        <div className="relative w-full sm:w-72">
+          <Search className="absolute left-3.5 top-3.5 h-4 w-4 text-zinc-400" />
+          <Input
+            placeholder="Search stock items..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="h-11 pl-10 rounded-2xl bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 font-bold text-xs shadow-sm"
+          />
         </div>
-      )}
 
-      {activeView === "Closing" && (
-        <div className="space-y-6">
-          <div className="bg-orange-50 p-4 rounded-3xl border border-orange-100">
-            <h3 className="font-black text-orange-800 text-lg flex items-center gap-2 mb-2"><Moon className="w-5 h-5" /> Store Closing</h3>
-            <p className="text-xs font-bold text-orange-600/70">Check your physical stock and enter what is REMAINING right now.</p>
-          </div>
+        <div className="flex items-center gap-1.5 w-full sm:w-auto justify-start sm:justify-end overflow-x-auto pb-1">
+          <button
+            onClick={() => setFilterMode("all")}
+            className={`h-9 px-4 rounded-xl text-xs font-extrabold transition-all ${
+              filterMode === "all"
+                ? "bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 shadow-md"
+                : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-900"
+            }`}
+          >
+            All ({stockTrackedItems.length})
+          </button>
+          <button
+            onClick={() => setFilterMode("low")}
+            className={`h-9 px-4 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1 ${
+              filterMode === "low"
+                ? "bg-amber-500 text-white shadow-md"
+                : "bg-amber-50 dark:bg-amber-950/40 text-amber-600 hover:bg-amber-100"
+            }`}
+          >
+            <AlertTriangle className="h-3.5 w-3.5" /> Low Stock ({lowStockCount})
+          </button>
+          <button
+            onClick={() => setFilterMode("out")}
+            className={`h-9 px-4 rounded-xl text-xs font-extrabold transition-all ${
+              filterMode === "out"
+                ? "bg-red-500 text-white shadow-md"
+                : "bg-red-50 dark:bg-red-950/40 text-red-600 hover:bg-red-100"
+            }`}
+          >
+            Out of Stock ({outOfStockCount})
+          </button>
+        </div>
+      </div>
 
-          <div className="space-y-3">
-            {inventory.map(item => (
-              <div key={item.id} className="p-4 bg-white rounded-2xl border border-zinc-100 shadow-sm flex flex-col gap-3">
-                <div className="flex justify-between items-center">
-                  <h4 className="font-bold text-zinc-900">{item.name}</h4>
-                  <span className="text-[10px] font-bold bg-zinc-100 px-2 py-1 rounded-lg">Total Today: {item.openingStock + item.addedToday}</span>
+      {/* PRODUCT LIST */}
+      <Card className="rounded-3xl border-0 shadow-sm bg-white dark:bg-zinc-900 overflow-hidden">
+        <div className="p-4 sm:p-5 border-b dark:border-zinc-800 grid grid-cols-12 text-[10px] font-bold text-zinc-400 uppercase tracking-widest px-6">
+          <div className="col-span-6 sm:col-span-7">Product Details</div>
+          <div className="col-span-3 text-center">Selling Price</div>
+          <div className="col-span-3 sm:col-span-2 text-right">Quick Stock / Action</div>
+        </div>
+
+        <div className="divide-y dark:divide-zinc-800">
+          {loading ? (
+            <div className="p-12 text-center text-xs font-bold text-zinc-400 animate-pulse">
+              Loading Inventory Stock...
+            </div>
+          ) : filteredList.length === 0 ? (
+            <div className="p-12 text-center space-y-2">
+              <Package className="h-10 w-10 text-zinc-300 mx-auto" />
+              <p className="text-sm font-bold text-zinc-400">No stock items match your filter.</p>
+            </div>
+          ) : (
+            filteredList.map(item => {
+              const meta = getItemStockMeta(item.category);
+              return (
+                <div
+                  key={item.id}
+                  className="p-4 sm:p-5 grid grid-cols-12 items-center hover:bg-zinc-50/80 dark:hover:bg-zinc-800/40 transition-colors px-6"
+                >
+                  <div className="col-span-6 sm:col-span-7 space-y-1">
+                    <p className="font-bold text-sm text-zinc-900 dark:text-white leading-snug">{item.name}</p>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-wider">{meta.cleanCat}</span>
+                      
+                      {meta.qty === null ? (
+                        <span className="text-[9px] font-black text-indigo-600 bg-indigo-50 dark:bg-indigo-950/20 px-2 py-0.5 rounded-md">
+                          ♾️ Unlimited
+                        </span>
+                      ) : meta.qty < 0 ? (
+                        <span className="text-[9px] font-black text-red-600 bg-red-100 dark:bg-red-950/40 px-2 py-0.5 rounded-md animate-pulse border border-red-200 dark:border-red-900/50">
+                          🔴 Negative Stock: {meta.qty} Pcs
+                        </span>
+                      ) : meta.qty === 0 ? (
+                        <span className="text-[9px] font-black text-red-500 bg-red-50 dark:bg-red-950/20 px-2 py-0.5 rounded-md">
+                          🔴 Out of Stock (0 Pcs)
+                        </span>
+                      ) : meta.qty <= meta.lowLimit ? (
+                        <span className="text-[9px] font-black text-amber-600 bg-amber-50 dark:bg-amber-950/20 px-2 py-0.5 rounded-md">
+                          ⚠️ Low Stock: {meta.qty} Pcs
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded-md">
+                          🟢 In Stock: {meta.qty} Pcs
+                        </span>
+                      )}
+
+                      {meta.supplier && (
+                        <span className="text-[9px] font-bold text-zinc-500 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded-md">
+                          🏪 {meta.supplier}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="col-span-3 text-center">
+                    <p className="font-extrabold text-base tracking-tight text-zinc-900 dark:text-white">₹{item.price}</p>
+                  </div>
+
+                  <div className="col-span-3 sm:col-span-2 text-right flex justify-end items-center gap-1">
+                    <button
+                      onClick={() => handleRestock(item.id, -1)}
+                      className="w-7 h-7 rounded-lg bg-red-50 hover:bg-red-100 dark:bg-red-950/30 text-red-600 font-black text-xs flex items-center justify-center transition-all active:scale-90 border border-red-200/50"
+                      title="Minus 1 Pc"
+                    >
+                      -1
+                    </button>
+                    <button
+                      onClick={() => handleRestock(item.id, 1)}
+                      className="w-7 h-7 rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-950/30 text-emerald-600 font-black text-xs flex items-center justify-center transition-all active:scale-90 border border-emerald-200/50"
+                      title="Plus 1 Pc"
+                    >
+                      +1
+                    </button>
+                    <button
+                      onClick={() => handleOpenEditModal(item)}
+                      className="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/30 text-blue-600 hover:bg-blue-600 hover:text-white transition-all active:scale-90 flex items-center justify-center border border-blue-200/50"
+                      title="Edit Stock & Supplier details"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      className="w-7 h-7 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-400 hover:bg-red-500 hover:text-white transition-all active:scale-90 ml-0.5 flex items-center justify-center"
+                      title="Delete item"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-xs font-bold text-zinc-400 w-16">Remaining:</div>
-                  <Input 
+              );
+            })
+          )}
+        </div>
+      </Card>
+
+      {/* QUICK STOCK EDIT MODAL */}
+      {editingItem && (
+        <Dialog open={!!editingItem} onOpenChange={(open) => { if (!open) setEditingItem(null); }}>
+          <DialogContent className="sm:max-w-[420px] rounded-3xl p-6 bg-white dark:bg-zinc-950 space-y-4">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-black text-zinc-900 dark:text-white flex items-center gap-2">
+                <Pencil className="h-5 w-5 text-blue-600" />
+                <span>Edit Stock & Details</span>
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-3 pt-2">
+              <div className="space-y-1">
+                <Label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">Product Name</Label>
+                <Input
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  className="h-10 rounded-xl font-bold text-xs"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">Selling Price (₹)</Label>
+                  <Input
                     type="number"
-                    step="any"
-                    placeholder={`Left in ${item.unit}`}
-                    value={item.closingStock}
-                    onChange={e => handleClosingInput(item.id, e.target.value)}
-                    className="flex-1 bg-white border-2 border-orange-300 focus-visible:ring-orange-500 focus-visible:border-orange-500 h-14 rounded-xl text-xl font-black shadow-[0_4px_10px_rgba(249,115,22,0.1)] transition-all placeholder:font-medium placeholder:text-zinc-300"
+                    value={editPrice}
+                    onChange={e => setEditPrice(e.target.value)}
+                    className="h-10 rounded-xl font-bold text-xs"
                   />
-                  <span className="text-xs font-bold uppercase text-zinc-400">{item.unit}</span>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">Current Stock (Pcs)</Label>
+                  <Input
+                    type="number"
+                    value={editQty}
+                    onChange={e => setEditQty(e.target.value)}
+                    className="h-10 rounded-xl font-bold text-xs"
+                  />
                 </div>
               </div>
-            ))}
-          </div>
 
-          <Button onClick={handleSaveClosing} className="w-full h-14 bg-zinc-900 text-white rounded-2xl font-black text-lg active:scale-95 shadow-xl">
-            <Save className="w-5 h-5 mr-2" /> SAVE CLOSING
-          </Button>
-        </div>
-      )}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">Cost Price / Purchase (₹)</Label>
+                  <Input
+                    type="number"
+                    placeholder="e.g. 380"
+                    value={editCost}
+                    onChange={e => setEditCost(e.target.value)}
+                    className="h-10 rounded-xl font-bold text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">Low Limit Alert (Pcs)</Label>
+                  <Input
+                    type="number"
+                    placeholder="e.g. 5"
+                    value={editLowLimit}
+                    onChange={e => setEditLowLimit(e.target.value)}
+                    className="h-10 rounded-xl font-bold text-xs"
+                  />
+                </div>
+              </div>
 
-      {activeView === "Report" && (
-        <div className="space-y-6">
-          <div className="bg-emerald-50 p-6 rounded-3xl border border-emerald-100 text-center">
-            <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
-            <h3 className="font-black text-emerald-800 text-2xl">Closing Saved!</h3>
-            <p className="text-sm font-bold text-emerald-600/70 mt-1">Tomorrow's opening stock has been updated.</p>
-          </div>
-
-          <div className="space-y-3 px-2">
-            <h3 className="font-black text-lg">Today's Consumption</h3>
-            <div className="bg-white rounded-3xl shadow-sm border border-zinc-100 overflow-hidden">
-              <table className="w-full text-left">
-                <thead className="bg-zinc-50 border-b border-zinc-100">
-                  <tr>
-                    <th className="p-4 text-[10px] font-black uppercase text-zinc-400">Item</th>
-                    <th className="p-4 text-[10px] font-black uppercase text-zinc-400 text-right">Used/Sold Today</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-50">
-                  {inventory.map(item => {
-                    const total = item.openingStock + item.addedToday;
-                    const used = total - (parseFloat(item.closingStock || "0"));
-                    return (
-                      <tr key={item.id}>
-                        <td className="p-4 font-bold text-sm text-zinc-800">{item.name}</td>
-                        <td className="p-4 font-black text-lg text-right text-red-500">
-                          {used} <span className="text-[10px] text-red-400">{item.unit}</span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <div className="space-y-1">
+                <Label className="text-xs font-bold text-zinc-600 dark:text-zinc-400">Supplier Name</Label>
+                <Input
+                  placeholder="e.g. Gupta Wholesalers"
+                  value={editSupplier}
+                  onChange={e => setEditSupplier(e.target.value)}
+                  className="h-10 rounded-xl font-bold text-xs"
+                />
+              </div>
             </div>
-          </div>
-          
-          <Button onClick={handleFinishClosing} className="w-full h-12 bg-zinc-100 text-zinc-900 hover:bg-zinc-200 rounded-2xl font-bold shadow-none">
-            Start Next Day
-          </Button>
-        </div>
+
+            <div className="flex items-center justify-end gap-2 pt-3">
+              <Button
+                variant="outline"
+                onClick={() => setEditingItem(null)}
+                className="h-10 px-4 rounded-xl font-bold text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveEditModal}
+                className="h-10 px-5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-extrabold text-xs shadow-md"
+              >
+                Save Details
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
