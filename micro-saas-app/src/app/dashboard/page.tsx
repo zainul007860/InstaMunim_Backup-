@@ -5933,6 +5933,12 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
   if (!isLoggedIn) {
     return (
       <div className={`min-h-screen flex flex-col items-center justify-center p-4 sm:p-10 selection:bg-orange-500/30 overflow-y-auto transition-colors duration-700 ${isDarkMode ? 'bg-[#000000]' : 'bg-[#f8f9fa]'}`}>
+        {/* PERMANENT TOP ADMOB / WEB AD BANNER ON LOGIN SCREEN */}
+        {webAdScriptUrl && (
+          <div className="w-full max-w-2xl flex justify-center mb-2 z-50">
+            <WebAdBanner scriptUrl={webAdScriptUrl} adKey={webAdKey} />
+          </div>
+        )}
         <div className="w-full max-w-2xl space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 my-auto py-8">
           <Card className={`border-0 rounded-2xl p-8 overflow-hidden transition-all duration-700 ${isDarkMode ? 'bg-transparent shadow-none border-none' : 'bg-white shadow-2xl shadow-zinc-200'}`}>
             <div className="flex flex-col items-center text-center mb-6 pt-14 sm:pt-16">
