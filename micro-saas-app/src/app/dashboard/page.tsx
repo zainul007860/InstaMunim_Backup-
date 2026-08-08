@@ -18,7 +18,6 @@ import { App } from '@capacitor/app';
 import { trackEvent } from "@/lib/firebase";
 import { EnquiriesView } from "./EnquiriesView";
 import { sendDiscordAlert } from "@/lib/discord";
-import InventoryDiary, { INVENTORY_CATEGORY_CONFIGS, getItemStockMeta, buildCategoryString } from "./InventoryDiary";
 
 const getDisplayCategory = (cat: string) => {
   if (!cat) return "General";
@@ -583,7 +582,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
-import InventoryDiary, { INVENTORY_CATEGORY_CONFIGS } from "./InventoryDiary";
+import InventoryDiary, { INVENTORY_CATEGORY_CONFIGS, getItemStockMeta, buildCategoryString } from "./InventoryDiary";
 
 export function WebAdBanner({ scriptUrl, adKey }: { scriptUrl: string; adKey: string }) {
   const containerRef = useRef<HTMLDivElement>(null);
