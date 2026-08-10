@@ -11238,7 +11238,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
             </div>
 
             <a
-              href="https://wa.me/919876543210?text=Hi%20InstaMunim%20Admin,%20my%20store%20account%20has%20been%20suspended.%20Please%20verify%20and%20unfreeze."
+              href="https://wa.me/917838229178?text=Hi%20InstaMunim%20Admin,%20my%20store%20account%20has%20been%20suspended.%20Please%20verify%20and%20unfreeze."
               target="_blank"
               rel="noopener noreferrer"
               className="w-full inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 px-6 rounded-2xl font-black text-sm shadow-lg shadow-emerald-900/30 transition-all active:scale-95"
