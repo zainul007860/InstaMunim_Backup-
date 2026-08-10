@@ -681,6 +681,21 @@ export default function Dashboard() {
   const [remoteAlertText, setRemoteAlertText] = useState("");
   const [admobBannerId, setAdmobBannerId] = useState("ca-app-pub-6433517681109667/2890562844");
   const [admobInterstitialId, setAdmobInterstitialId] = useState("ca-app-pub-6433517681109667/4211760677");
+  const [adminSupportMobile, setAdminSupportMobile] = useState("7838229178");
+
+  useEffect(() => {
+    supabase
+      .from('app_config')
+      .select('value')
+      .eq('key', 'admin_support_whatsapp')
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value) {
+          setAdminSupportMobile(data.value.trim().replace(/\D/g, ""));
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const [mounted, setMounted] = useState(false);
   const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-01"));
@@ -11238,7 +11253,7 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
             </div>
 
             <a
-              href="https://wa.me/917838229178?text=Hi%20InstaMunim%20Admin,%20my%20store%20account%20has%20been%20suspended.%20Please%20verify%20and%20unfreeze."
+              href={`https://wa.me/91${adminSupportMobile || '7838229178'}?text=Hi%20InstaMunim%20Admin,%20my%20store%20account%20has%20been%20suspended.%20Please%20verify%20and%20unfreeze.`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 px-6 rounded-2xl font-black text-sm shadow-lg shadow-emerald-900/30 transition-all active:scale-95"
