@@ -4,7 +4,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { 
   Camera, Upload, Search, Plus, Trash2, Edit2, Check, X, 
   Sparkles, FileSpreadsheet, Loader2, CheckCircle2, AlertCircle, 
-  RefreshCw, Utensils, Eye, ArrowRight, Download, Filter, Store
+  RefreshCw, Utensils, Eye, ArrowRight, Download, Filter, Store,
+  Key, ShieldCheck, Cpu, EyeOff, CheckCheck, HelpCircle
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -34,12 +35,22 @@ interface ScannedItem {
   selected: boolean;
 }
 
+type AiProvider = "gemini" | "openai" | "claude";
+
 export default function MerchantMenuSection({ stores }: { stores: StoreItem[] }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [menuCounts, setMenuCounts] = useState<{ [storeId: string]: number }>({});
   const [isLoadingCounts, setIsLoadingCounts] = useState(true);
-  const [geminiApiKey, setGeminiApiKey] = useState("");
+
+  // AI Configuration State (Custom Dynamic Key & Provider)
+  const [aiProvider, setAiProvider] = useState<AiProvider>("gemini");
+  const [aiModel, setAiModel] = useState("gemini-2.5-flash");
+  const [apiKeyInput, setApiKeyInput] = useState("");
+  const [activeApiKey, setActiveApiKey] = useState("");
+  const [showApiKey, setShowApiKey] = useState(false);
+  const [isSavingKey, setIsSavingKey] = useState(false);
+  const [showConfigPanel, setShowConfigPanel] = useState(true);
 
   // Modals state
   const [selectedStoreForScan, setSelectedStoreForScan] = useState<StoreItem | null>(null);
@@ -85,13 +96,28 @@ export default function MerchantMenuSection({ stores }: { stores: StoreItem[] })
   };
 
   useEffect(() => {
+    loadSavedAiConfig();
     fetchCountsAndConfig();
   }, [stores]);
 
-  const fetchCountsAndConfig = async () => {
-    setIsLoadingCounts(true);
+  const loadSavedAiConfig = async () => {
+    // 1. Try local storage first for user custom key
+    if (typeof window !== 'undefined') {
+      const localKey = localStorage.getItem('instamunim_admin_ai_key');
+      const localProvider = (localStorage.getItem('instamunim_admin_ai_provider') as AiProvider) || "gemini";
+      const localModel = localStorage.getItem('instamunim_admin_ai_model') || "gemini-2.5-flash";
+
+      if (localKey) {
+        setApiKeyInput(localKey);
+        setActiveApiKey(localKey);
+        setAiProvider(localProvider);
+        setAiModel(localModel);
+        return;
+      }
+    }
+
+    // 2. Fallback to Supabase app_config
     try {
-      // Fetch Gemini API Key
       const { data: configData } = await supabase
         .from('app_config')
         .select('value')
@@ -99,12 +125,66 @@ export default function MerchantMenuSection({ stores }: { stores: StoreItem[] })
         .single();
       
       if (configData?.value) {
-        setGeminiApiKey(configData.value);
-      } else {
-        setGeminiApiKey('AIzaSyBANS_ZwsUFS0d6mSpSxA4GmvX2RE2U5YE');
+        setApiKeyInput(configData.value);
+        setActiveApiKey(configData.value);
+        setAiProvider("gemini");
+        setAiModel("gemini-2.5-flash");
+      }
+    } catch (e) {}
+  };
+
+  const saveAiConfig = async () => {
+    if (!apiKeyInput.trim()) {
+      alert("Please paste a valid API key!");
+      return;
+    }
+    setIsSavingKey(true);
+    try {
+      const cleanKey = apiKeyInput.trim();
+      setActiveApiKey(cleanKey);
+
+      // Save to localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('instamunim_admin_ai_key', cleanKey);
+        localStorage.setItem('instamunim_admin_ai_provider', aiProvider);
+        localStorage.setItem('instamunim_admin_ai_model', aiModel);
       }
 
-      // Fetch all menu items store_id to count per merchant
+      // If Gemini, also update Supabase app_config for sync
+      if (aiProvider === 'gemini') {
+        await supabase
+          .from('app_config')
+          .upsert({ key: 'gemini_api_key', value: cleanKey }, { onConflict: 'key' });
+      }
+
+      showToast(`⚡ ${aiProvider.toUpperCase()} (${aiModel}) Key Saved & Activated!`);
+    } catch (err: any) {
+      console.error(err);
+      showToast("Key saved locally!");
+    } finally {
+      setIsSavingKey(false);
+    }
+  };
+
+  const handleKeyInputChange = (val: string) => {
+    setApiKeyInput(val);
+    const trimmed = val.trim();
+    // Auto-detect provider by prefix
+    if (trimmed.startsWith("AIza")) {
+      setAiProvider("gemini");
+      setAiModel("gemini-2.5-flash");
+    } else if (trimmed.startsWith("sk-ant-")) {
+      setAiProvider("claude");
+      setAiModel("claude-3-5-sonnet-20241022");
+    } else if (trimmed.startsWith("sk-") && !trimmed.startsWith("sk-ant-")) {
+      setAiProvider("openai");
+      setAiModel("gpt-4o-mini");
+    }
+  };
+
+  const fetchCountsAndConfig = async () => {
+    setIsLoadingCounts(true);
+    try {
       const { data: items, error } = await supabase
         .from('menu_items')
         .select('id, store_id');
@@ -152,17 +232,23 @@ export default function MerchantMenuSection({ stores }: { stores: StoreItem[] })
 
   const processAiMenuScan = async () => {
     if (!scanImage) return;
+    const effectiveKey = activeApiKey || apiKeyInput.trim();
+    if (!effectiveKey) {
+      setScanError("API Key is missing! Please enter your API Key in the top configuration bar.");
+      setShowConfigPanel(true);
+      return;
+    }
+
     setIsScanning(true);
     setScanError(null);
     setScannedItems([]);
 
     try {
-      const apiKey = geminiApiKey || 'AIzaSyBANS_ZwsUFS0d6mSpSxA4GmvX2RE2U5YE';
       const base64Data = scanImage.split(',')[1];
       const mimeType = scanImage.split(';')[0].split(':')[1] || 'image/jpeg';
 
-      const prompt = `You are an expert menu & price list parser AI. 
-Analyze this menu card / price list / catalogue / bill image and extract ALL items, services, or products with their prices.
+      const systemPrompt = `You are an expert menu, rate list, and catalog parser AI. 
+Analyze this menu card / price list / catalog / bill photo and extract ALL items, dishes, products, or services with their prices.
 
 CRITICAL RULES FOR MULTIPLE PRICES/SIZES/OPTIONS (e.g. Half, Full, Quarter, Small, Medium, Large, Single, Double, 500g, 1kg):
 If an item has multiple prices based on size/portion, split them into distinct separate items with the option in parentheses.
@@ -171,46 +257,128 @@ Example 1: "Chicken Biryani" (Half: 120, Full: 220) ->
 Example 2: "Haircut" (Adult: 150, Child: 80) -> 
 [{"name": "Haircut (Adult)", "price": 150, "category": "Hair"}, {"name": "Haircut (Child)", "price": 80, "category": "Hair"}]
 
-Extract EVERY single item visible. If price is not visible or free, use 0. Guess an appropriate short category name (e.g. Beverages, Fast Food, Main Course, Groceries, Services, General).
-Return ONLY a minified valid JSON array of objects without markdown fences, comments, or extra text:
+Extract EVERY single item visible. If price is not visible or free, use 0. Guess an appropriate category name.
+Return ONLY a minified valid JSON array of objects without markdown formatting or backticks:
 [{"name":"Item Name","price":100,"category":"Category"}]`;
 
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [
-                { text: prompt },
-                {
-                  inline_data: {
-                    mime_type: mimeType,
-                    data: base64Data
-                  }
-                }
-              ]
-            }],
-            generationConfig: { temperature: 0.1, maxOutputTokens: 8192 }
-          })
-        }
-      );
+      let rawResponseText = "";
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error?.message || "Failed to analyze image with AI.");
+      // 1. GOOGLE GEMINI
+      if (aiProvider === 'gemini') {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${aiModel}:generateContent?key=${effectiveKey}`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  { text: systemPrompt },
+                  {
+                    inline_data: {
+                      mime_type: mimeType,
+                      data: base64Data
+                    }
+                  }
+                ]
+              }],
+              generationConfig: { temperature: 0.1, maxOutputTokens: 8192 }
+            })
+          }
+        );
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error?.message || `Gemini API Error (${response.status})`);
+        }
+        rawResponseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      } 
+      // 2. OPENAI (CHATGPT GPT-4o / GPT-4o-mini)
+      else if (aiProvider === 'openai') {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${effectiveKey}`
+          },
+          body: JSON.stringify({
+            model: aiModel || "gpt-4o-mini",
+            messages: [
+              {
+                role: "user",
+                content: [
+                  { type: "text", text: systemPrompt },
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: scanImage
+                    }
+                  }
+                ]
+              }
+            ],
+            temperature: 0.1,
+            max_tokens: 4096
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error?.message || `OpenAI API Error (${response.status})`);
+        }
+        rawResponseText = data.choices?.[0]?.message?.content || "";
+      }
+      // 3. ANTHROPIC CLAUDE
+      else if (aiProvider === 'claude') {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': effectiveKey,
+            'anthropic-version': '2023-06-01',
+            'dangerously-allow-browser': 'true'
+          },
+          body: JSON.stringify({
+            model: aiModel || "claude-3-5-sonnet-20241022",
+            max_tokens: 4096,
+            messages: [
+              {
+                role: "user",
+                content: [
+                  {
+                    type: "image",
+                    source: {
+                      type: "base64",
+                      media_type: mimeType,
+                      data: base64Data
+                    }
+                  },
+                  {
+                    type: "text",
+                    text: systemPrompt
+                  }
+                ]
+              }
+            ]
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error?.message || `Claude API Error (${response.status})`);
+        }
+        rawResponseText = data.content?.[0]?.text || "";
       }
 
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      // Clean and parse JSON
+      const jsonMatch = rawResponseText.match(/\[[\s\S]*\]/);
       if (!jsonMatch) {
-        throw new Error("Could not detect any menu items in the image. Please try a clearer picture.");
+        throw new Error("Could not detect any structured menu items from this image. Please verify your photo or try a clearer image.");
       }
 
       const parsed: any[] = JSON.parse(jsonMatch[0]);
       if (!Array.isArray(parsed) || parsed.length === 0) {
-        throw new Error("No valid menu items found in image. Please try a different photo.");
+        throw new Error("No items found. Please try a different photo.");
       }
 
       const mapped: ScannedItem[] = parsed.map((item, idx) => ({
@@ -222,6 +390,7 @@ Return ONLY a minified valid JSON array of objects without markdown fences, comm
       }));
 
       setScannedItems(mapped);
+      showToast(`✨ Extracted ${mapped.length} items with ${aiProvider.toUpperCase()}!`);
     } catch (err: any) {
       setScanError(err.message || "An error occurred during AI scanning.");
     } finally {
@@ -288,12 +457,10 @@ Return ONLY a minified valid JSON array of objects without markdown fences, comm
 
         for (let i = 0; i < lines.length; i++) {
           const line = lines[i];
-          // Skip header if matches Name, Price, etc.
           if (i === 0 && (line.toLowerCase().includes("item") || line.toLowerCase().includes("name") || line.toLowerCase().includes("price"))) {
             continue;
           }
 
-          // Split by comma, tab, or semicolon
           const parts = line.includes('\t') ? line.split('\t') : (line.includes(';') ? line.split(';') : line.split(','));
           if (parts.length >= 1) {
             const name = parts[0]?.replace(/^["']|["']$/g, '').trim();
@@ -348,7 +515,6 @@ Return ONLY a minified valid JSON array of objects without markdown fences, comm
 
       if (error) throw error;
 
-      // Update local count
       setMenuCounts(prev => ({
         ...prev,
         [selectedStoreForUpload.id]: (prev[selectedStoreForUpload.id] || 0) + (data?.length || recordsToInsert.length)
@@ -547,6 +713,197 @@ Return ONLY a minified valid JSON array of objects without markdown fences, comm
           {toastMessage}
         </div>
       )}
+
+      {/* ========================================================================= */}
+      {/* ⚡ SECURE MULTI-AI ENGINE & API KEY CONFIGURATION BAR                     */}
+      {/* ========================================================================= */}
+      <div style={{
+        background: '#ffffff',
+        border: '1px solid var(--border)',
+        borderRadius: '24px',
+        padding: '20px 24px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '16px',
+        boxShadow: '0 4px 20px rgba(24,24,27,0.03)'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '12px',
+              background: 'linear-gradient(135deg, #f97316, #ea580c)',
+              color: 'white',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Cpu size={22} />
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 900, color: 'var(--text)' }}>
+                  AI Vision Engine & Custom API Key
+                </h4>
+                {activeApiKey ? (
+                  <span style={{
+                    padding: '2px 8px', borderRadius: '6px', background: 'rgba(16, 185, 129, 0.1)',
+                    color: '#10b981', fontSize: '10px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '4px'
+                  }}>
+                    <CheckCheck size={12} /> {aiProvider.toUpperCase()} ACTIVE
+                  </span>
+                ) : (
+                  <span style={{
+                    padding: '2px 8px', borderRadius: '6px', background: 'rgba(239, 68, 68, 0.1)',
+                    color: '#ef4444', fontSize: '10px', fontWeight: 900
+                  }}>
+                    ⚠️ KEY REQUIRED
+                  </span>
+                )}
+              </div>
+              <p style={{ margin: 0, fontSize: '11px', color: '#71717a' }}>
+                Paste your Gemini / OpenAI ChatGPT / Claude API Key here — 100% private and protected from code leaks!
+              </p>
+            </div>
+          </div>
+
+          <button 
+            onClick={() => setShowConfigPanel(!showConfigPanel)}
+            style={{
+              padding: '6px 12px', borderRadius: '8px', border: '1px solid var(--border)',
+              background: '#f8fafc', color: 'var(--text)', fontSize: '11px', fontWeight: 800,
+              cursor: 'pointer'
+            }}
+          >
+            {showConfigPanel ? "Hide Key Box" : "Edit / Change API Key"}
+          </button>
+        </div>
+
+        {showConfigPanel && (
+          <div style={{
+            display: 'flex',
+            gap: '12px',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            paddingTop: '12px',
+            borderTop: '1px solid #f1f5f9'
+          }}>
+            {/* AI Provider Dropdown */}
+            <div style={{ minWidth: '160px' }}>
+              <label style={{ display: 'block', fontSize: '10px', fontWeight: 800, color: '#71717a', marginBottom: '4px', textTransform: 'uppercase' }}>
+                AI Provider
+              </label>
+              <select
+                value={aiProvider}
+                onChange={(e) => {
+                  const prov = e.target.value as AiProvider;
+                  setAiProvider(prov);
+                  if (prov === 'gemini') setAiModel('gemini-2.5-flash');
+                  else if (prov === 'openai') setAiModel('gpt-4o-mini');
+                  else if (prov === 'claude') setAiModel('claude-3-5-sonnet-20241022');
+                }}
+                style={{
+                  width: '100%', height: '42px', borderRadius: '12px',
+                  border: '1px solid var(--border)', padding: '0 10px',
+                  fontSize: '12px', fontWeight: 700, color: 'var(--text)', background: '#f9fafb', outline: 'none'
+                }}
+              >
+                <option value="gemini">🌟 Google Gemini (Fast & Free)</option>
+                <option value="openai">🤖 OpenAI ChatGPT (GPT-4o)</option>
+                <option value="claude">🟣 Anthropic Claude (3.5 Sonnet)</option>
+              </select>
+            </div>
+
+            {/* Model Selector */}
+            <div style={{ minWidth: '160px' }}>
+              <label style={{ display: 'block', fontSize: '10px', fontWeight: 800, color: '#71717a', marginBottom: '4px', textTransform: 'uppercase' }}>
+                Vision Model
+              </label>
+              <select
+                value={aiModel}
+                onChange={(e) => setAiModel(e.target.value)}
+                style={{
+                  width: '100%', height: '42px', borderRadius: '12px',
+                  border: '1px solid var(--border)', padding: '0 10px',
+                  fontSize: '12px', fontWeight: 700, color: 'var(--text)', background: '#f9fafb', outline: 'none'
+                }}
+              >
+                {aiProvider === 'gemini' && (
+                  <>
+                    <option value="gemini-2.5-flash">gemini-2.5-flash (Recommended)</option>
+                    <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                    <option value="gemini-1.5-pro">gemini-1.5-pro (High Accuracy)</option>
+                  </>
+                )}
+                {aiProvider === 'openai' && (
+                  <>
+                    <option value="gpt-4o-mini">gpt-4o-mini (Fast & Cheap)</option>
+                    <option value="gpt-4o">gpt-4o (Max Precision)</option>
+                  </>
+                )}
+                {aiProvider === 'claude' && (
+                  <>
+                    <option value="claude-3-5-sonnet-20241022">claude-3-5-sonnet-20241022</option>
+                    <option value="claude-3-haiku-20240307">claude-3-haiku-20240307</option>
+                  </>
+                )}
+              </select>
+            </div>
+
+            {/* API Key Input Box */}
+            <div style={{ flex: 1, minWidth: '260px', position: 'relative' }}>
+              <label style={{ display: 'block', fontSize: '10px', fontWeight: 800, color: '#71717a', marginBottom: '4px', textTransform: 'uppercase' }}>
+                Paste API Key ({aiProvider === 'gemini' ? 'AIza...' : aiProvider === 'openai' ? 'sk-...' : 'sk-ant-...'})
+              </label>
+              <div style={{ position: 'relative' }}>
+                <Key size={15} color="#71717a" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+                <input 
+                  type={showApiKey ? "text" : "password"}
+                  value={apiKeyInput}
+                  onChange={(e) => handleKeyInputChange(e.target.value)}
+                  placeholder={aiProvider === 'gemini' ? "AIzaSy..." : aiProvider === 'openai' ? "sk-..." : "sk-ant-..."}
+                  style={{
+                    width: '100%', height: '42px', borderRadius: '12px',
+                    border: '1px solid var(--border)', paddingLeft: '36px', paddingRight: '40px',
+                    fontSize: '13px', fontFamily: 'monospace', fontWeight: 600, color: 'var(--text)', background: '#f9fafb', outline: 'none'
+                  }}
+                />
+                <button 
+                  type="button"
+                  onClick={() => setShowApiKey(!showApiKey)}
+                  style={{
+                    position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', color: '#71717a', cursor: 'pointer', padding: '4px'
+                  }}
+                  title={showApiKey ? "Hide Key" : "Show Key"}
+                >
+                  {showApiKey ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Apply & Save Button */}
+            <div style={{ display: 'flex', alignItems: 'flex-end', marginTop: 'auto' }}>
+              <button 
+                onClick={saveAiConfig}
+                disabled={isSavingKey || !apiKeyInput.trim()}
+                style={{
+                  height: '42px', padding: '0 20px', borderRadius: '12px', border: 'none',
+                  background: 'linear-gradient(135deg, #f97316, #ea580c)', color: 'white',
+                  fontWeight: 900, fontSize: '12px', cursor: (isSavingKey || !apiKeyInput.trim()) ? 'not-allowed' : 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  boxShadow: '0 2px 10px rgba(249, 115, 22, 0.25)',
+                  opacity: (isSavingKey || !apiKeyInput.trim()) ? 0.6 : 1
+                }}
+              >
+                {isSavingKey ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={15} />}
+                Apply & Save Key
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* TOP STATS CARDS */}
       <div className="stats-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
@@ -830,7 +1187,7 @@ Return ONLY a minified valid JSON array of objects without markdown fences, comm
                           boxShadow: '0 2px 8px rgba(249, 115, 22, 0.25)',
                           transition: 'transform 0.15s ease'
                         }}
-                        title="Scan Menu Card Photo with Gemini AI"
+                        title={`Scan Menu Card Photo with ${aiProvider.toUpperCase()}`}
                       >
                         <Camera size={14} /> AI Scan
                       </button>
@@ -926,7 +1283,7 @@ Return ONLY a minified valid JSON array of objects without markdown fences, comm
                     AI Menu & Rate List Scanner
                   </h3>
                   <p style={{ margin: 0, fontSize: '11px', color: '#71717a' }}>
-                    Auto-extract dishes & prices for: <strong style={{ color: '#f97316' }}>{selectedStoreForScan.store_name}</strong>
+                    Model: <strong style={{ color: '#3b82f6' }}>{aiProvider.toUpperCase()} ({aiModel})</strong> • For: <strong style={{ color: '#f97316' }}>{selectedStoreForScan.store_name}</strong>
                   </p>
                 </div>
               </div>
@@ -1024,9 +1381,11 @@ Return ONLY a minified valid JSON array of objects without markdown fences, comm
                   }}>
                     <Sparkles size={32} color="#3b82f6" />
                     <div>
-                      <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 900, color: 'var(--text)' }}>Ready for AI Scan</h4>
+                      <h4 style={{ margin: 0, fontSize: '14px', fontWeight: 900, color: 'var(--text)' }}>
+                        Process with {aiProvider.toUpperCase()}
+                      </h4>
                       <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#71717a' }}>
-                        Gemini 2.5 Flash will detect all items, sizes, and price variations.
+                        {aiModel} will extract dish names, portion sizes, and prices.
                       </p>
                     </div>
                     <button 
@@ -1041,7 +1400,7 @@ Return ONLY a minified valid JSON array of objects without markdown fences, comm
                       }}
                     >
                       {isScanning ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
-                      {isScanning ? 'AI Scanning...' : 'Start AI Scan'}
+                      {isScanning ? 'AI Scanning...' : 'Start AI Extraction'}
                     </button>
                   </div>
                 )}

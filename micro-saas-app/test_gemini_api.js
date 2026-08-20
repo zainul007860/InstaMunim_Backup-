@@ -1,6 +1,6 @@
 // Test Gemini call using standard global fetch
 async function test() {
-  const geminiApiKey = 'AIzaSyBANS_ZwsUFS0d6mSpSxA4GmvX2RE2U5YE';
+  const geminiApiKey = process.env.GEMINI_API_KEY || '';
   const restaurantName = 'Zainul Mobile';
   const businessType = 'Mobile/Electronics';
   const offerTitle = 'Sunday offer';
