@@ -8,10 +8,11 @@ import {
   CreditCard, Smartphone, Zap, RefreshCw, Trash2, Filter,
   Send, Megaphone, Loader2, MessageSquare, Copy, ExternalLink,
   Download, Calendar, AlertTriangle, IndianRupee, FileText, X,
-  Eye, EyeOff
+  Eye, EyeOff, Utensils
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { format, addDays, isAfter, isBefore, differenceInDays, differenceInHours, differenceInMinutes, startOfDay, endOfDay, subDays } from "date-fns";
+import MerchantMenuSection from "./MerchantMenuSection";
 
 export default function AdminDashboard() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
@@ -576,10 +577,11 @@ export default function AdminDashboard() {
           <img src="/assets/logo-light.png" alt="InstaMunim" style={{ width: '100%', height: 'auto', maxHeight: '150px', objectFit: 'contain' }} />
         </div>
         <nav className="nav-links">
-          {["Dashboard", "Merchants", "Sales", "Broadcast", "Subscriptions", "Settings"].map(tab => (
+          {["Dashboard", "Merchants", "Merchant Menus", "Sales", "Broadcast", "Subscriptions", "Settings"].map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} className={`nav-item ${activeTab === tab ? "active" : ""}`}>
               {tab === "Dashboard" && <LayoutDashboard size={19} />}
               {tab === "Merchants" && <Users size={19} />}
+              {tab === "Merchant Menus" && <Utensils size={19} />}
               {tab === "Sales" && <Globe size={19} />}
               {tab === "Broadcast" && <Megaphone size={19} />}
               {tab === "Subscriptions" && <CreditCard size={19} />}
@@ -640,6 +642,10 @@ export default function AdminDashboard() {
             />
           </div>
         </header>
+
+        {activeTab === "Merchant Menus" && (
+          <MerchantMenuSection stores={stores} />
+        )}
 
         {activeTab === "Dashboard" && (
           <div className="animate-fade-in">
@@ -1133,6 +1139,29 @@ export default function AdminDashboard() {
                             >
                               <Eye size={15} />
                               <span>{isExpanded ? "HIDE" : "INSPECT"}</span>
+                            </button>
+                            <button 
+                              onClick={() => {
+                                setActiveTab("Merchant Menus");
+                                setSearchQuery(s.store_name);
+                              }}
+                              style={{ 
+                                padding: '8px 10px', 
+                                background: 'rgba(59, 130, 246, 0.1)', 
+                                color: '#2563eb', 
+                                border: '1px solid #3b82f6', 
+                                borderRadius: '10px', 
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                fontSize: '11px',
+                                fontWeight: 800
+                              }}
+                              title="Manage & Upload Menu for this Merchant"
+                            >
+                              <Utensils size={14} />
+                              <span>MENU</span>
                             </button>
                             <button onClick={() => openWhatsApp(s.owner_mobile)} style={{ padding: '8px', background: 'rgba(249, 115, 22, 0.1)', color: '#f97316', border: '1px solid #f97316', borderRadius: '10px', cursor: 'pointer' }} title="WhatsApp Merchant"><MessageSquare size={16} /></button>
                             <button 
