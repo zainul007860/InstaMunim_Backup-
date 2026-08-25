@@ -249,6 +249,19 @@ export default function PartnerApp() {
 
   // Logout
   const handleLogout = () => {
+    // Trigger Discord Alert for Logout
+    if (currentAgent) {
+      sendDiscordAlert(
+        "🚪 Field Executive Logged Out",
+        `Executive **${currentAgent.name}** logged out of Partner App.`,
+        [
+          { name: "Executive", value: currentAgent.name, inline: true },
+          { name: "Mobile", value: currentAgent.mobile, inline: true },
+          { name: "Time", value: format(new Date(), "hh:mm a, dd MMM yyyy"), inline: true }
+        ],
+        10066329
+      );
+    }
     localStorage.removeItem("instamunim_partner_agent");
     setIsLoggedIn(false);
     setCurrentAgent(null);
@@ -500,22 +513,6 @@ export default function PartnerApp() {
     setLeadMobile("");
     setLeadNotes("");
     setShowAddLeadModal(false);
-
-    // Trigger Discord Alert for Lead
-    sendDiscordAlert(
-      "🔥 New Store Lead Captured!",
-      `Executive **${currentAgent?.name || "Executive"}** added a **${leadInterest}** lead for **${leadStoreName}**.`,
-      [
-        { name: "Shop Name", value: leadStoreName, inline: true },
-        { name: "Contact", value: `${leadOwnerName ? leadOwnerName + ' - ' : ''}${leadMobile}`, inline: true },
-        { name: "Interest Level", value: leadInterest, inline: true },
-        { name: "Revisit Date", value: leadRevisitDate || "Not Set", inline: true },
-        { name: "Executive", value: currentAgent?.name || "N/A", inline: true },
-        { name: "Notes", value: leadNotes || "No notes", inline: false }
-      ],
-      16753920
-    );
-
     alert("🎉 Lead Saved Successfully!");
   };
 
