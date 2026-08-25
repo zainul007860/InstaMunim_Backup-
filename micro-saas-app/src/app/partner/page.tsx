@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
+import { sendDiscordAlert } from "@/lib/discord";
 
 export default function PartnerApp() {
   // =========================================================================
@@ -226,6 +227,19 @@ export default function PartnerApp() {
       setCurrentAgent(matchedAgent);
       setIsLoggedIn(true);
       localStorage.setItem("instamunim_partner_agent", JSON.stringify(matchedAgent));
+
+      // Trigger Discord Alert for Executive Login
+      sendDiscordAlert(
+        "👤 Field Executive Logged In",
+        `Sales Executive **${matchedAgent.name}** logged into Partner App.`,
+        [
+          { name: "Executive Name", value: matchedAgent.name, inline: true },
+          { name: "Mobile", value: matchedAgent.mobile, inline: true },
+          { name: "City", value: matchedAgent.city || "N/A", inline: true },
+          { name: "Daily Target", value: `${matchedAgent.target_daily || 2} Stores/Day`, inline: true }
+        ],
+        15105570
+      );
     } catch (err: any) {
       setAuthError(err.message || "Failed to log in.");
     } finally {
@@ -248,10 +262,35 @@ export default function PartnerApp() {
       captureLiveGPS();
       setPunchInTime(format(new Date(), "hh:mm a"));
       setIsOnDuty(true);
+
+      // Trigger Discord Alert
+      sendDiscordAlert(
+        "⚡ Field Executive Punched In (Duty Started)",
+        `Executive **${currentAgent?.name}** started field duty. Status: **ON DUTY (IN FIELD)**.`,
+        [
+          { name: "Executive", value: currentAgent?.name || "N/A", inline: true },
+          { name: "Mobile", value: currentAgent?.mobile || "N/A", inline: true },
+          { name: "Location", value: liveLocationText || "GPS Area", inline: false },
+          { name: "Time", value: format(new Date(), "hh:mm a, dd MMM yyyy"), inline: true }
+        ],
+        3447003
+      );
       alert("🎉 Day Started! You are now ON DUTY. Best of luck with today's targets! 🚀");
     } else {
       if (confirm("Are you sure you want to punch out and end your field day?")) {
         setIsOnDuty(false);
+
+        // Trigger Discord Alert
+        sendDiscordAlert(
+          "🛑 Field Executive Punched Out (Duty Ended)",
+          `Executive **${currentAgent?.name}** ended field duty. Status: **OFF DUTY**.`,
+          [
+            { name: "Executive", value: currentAgent?.name || "N/A", inline: true },
+            { name: "Mobile", value: currentAgent?.mobile || "N/A", inline: true },
+            { name: "Time", value: format(new Date(), "hh:mm a, dd MMM yyyy"), inline: true }
+          ],
+          15548997
+        );
         alert("Day Completed! Great work today! 👍");
       }
     }
@@ -395,6 +434,23 @@ export default function PartnerApp() {
       };
       setOnboardingSuccess(successData);
 
+      // Trigger Instant Discord Alert for New Store Onboarded
+      sendDiscordAlert(
+        "🛍️ New Store Onboarded by Field Executive!",
+        `Executive **${currentAgent?.name || "Field Executive"}** has onboarded **${storeName.trim()}**! 🎉`,
+        [
+          { name: "Store Name", value: storeName.trim(), inline: true },
+          { name: "Owner Mobile", value: cleanMobile, inline: true },
+          { name: "Login Password", value: generatedPass, inline: true },
+          { name: "Onboarded By", value: `${currentAgent?.name || "Executive"} (${currentAgent?.mobile || ""})`, inline: true },
+          { name: "Onboarding Fee", value: `₹500 (${paymentMode})`, inline: true },
+          { name: "Monthly Plan", value: "₹250/Month", inline: true },
+          { name: "Category", value: businessCategory, inline: true },
+          { name: "Location", value: liveLocationText || "GPS Captured", inline: false }
+        ],
+        5763719
+      );
+
       // Reset form
       setStoreName("");
       setOwnerName("");
@@ -444,6 +500,22 @@ export default function PartnerApp() {
     setLeadMobile("");
     setLeadNotes("");
     setShowAddLeadModal(false);
+
+    // Trigger Discord Alert for Lead
+    sendDiscordAlert(
+      "🔥 New Store Lead Captured!",
+      `Executive **${currentAgent?.name || "Executive"}** added a **${leadInterest}** lead for **${leadStoreName}**.`,
+      [
+        { name: "Shop Name", value: leadStoreName, inline: true },
+        { name: "Contact", value: `${leadOwnerName ? leadOwnerName + ' - ' : ''}${leadMobile}`, inline: true },
+        { name: "Interest Level", value: leadInterest, inline: true },
+        { name: "Revisit Date", value: leadRevisitDate || "Not Set", inline: true },
+        { name: "Executive", value: currentAgent?.name || "N/A", inline: true },
+        { name: "Notes", value: leadNotes || "No notes", inline: false }
+      ],
+      16753920
+    );
+
     alert("🎉 Lead Saved Successfully!");
   };
 

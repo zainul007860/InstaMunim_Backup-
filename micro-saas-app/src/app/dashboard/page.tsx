@@ -4007,21 +4007,19 @@ Stay safe & eat healthy! 🍕
           setStoreCreatedAt(storeData.created_at);
           setSubscriptionExpiry(storeData.subscription_expiry);
           localStorage.setItem("saas_store_created_at", storeData.created_at || "");
-          localStorage.setItem("saas_store_expiry", storeData.subscription_expiry || "");
-
-          await fetchStoreData(storeData.id);
-
-          // Send Discord Alert for Merchant Login / Session Active
+          // Send Instant Discord Alert for Merchant Login
           sendDiscordAlert(
             "🔑 Merchant Logged In / App Opened",
             `Merchant **${storeData.store_name}** has logged into InstaMunim POS.`,
             [
               { name: "Store Name", value: storeData.store_name || "N/A", inline: true },
-              { name: "Owner Mobile", value: storeData.owner_mobile || "N/A", inline: true },
+              { name: "Owner Mobile", value: loginMobile || storeData.owner_mobile || "N/A", inline: true },
               { name: "Store ID", value: String(storeData.id), inline: true }
             ],
             3447003
           );
+
+          await fetchStoreData(storeData.id);
         }
       } else {
         // Create initial config JSON packet to store in database store_logo column
