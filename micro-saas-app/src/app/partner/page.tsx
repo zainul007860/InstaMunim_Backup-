@@ -675,7 +675,7 @@ export default function PartnerApp() {
           </form>
 
           <p style={{ textAlign: 'center', fontSize: '11px', color: '#64748b', marginTop: '24px' }}>
-            Account credentials are created by <strong>Zainul Sir (Admin)</strong>.
+            Account credentials are created by <strong>Admin</strong>.
           </p>
 
         </div>
@@ -960,7 +960,7 @@ export default function PartnerApp() {
             }}>
               <div>
                 <p style={{ fontSize: '11px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>
-                  Cash to Submit (Zainul Sir)
+                  Cash to Submit (Admin)
                 </p>
                 <h3 style={{ fontSize: '24px', fontWeight: 900, color: pendingCashInHand > 0 ? '#dc2626' : '#16a34a', marginTop: '2px' }}>
                   ₹{pendingCashInHand.toLocaleString()}
@@ -1225,7 +1225,7 @@ export default function PartnerApp() {
                           style={{ width: '150px', height: '150px', display: 'block' }}
                         />
                       </div>
-                      <p style={{ fontSize: '11px', color: '#16a34a', fontWeight: 800, marginTop: '8px' }}>✓ Money directly goes to Zainul Sir's Account</p>
+                      <p style={{ fontSize: '11px', color: '#16a34a', fontWeight: 800, marginTop: '8px' }}>✓ Money directly goes to Admin Account</p>
                     </div>
                   )}
                 </div>
@@ -1689,7 +1689,7 @@ export default function PartnerApp() {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: '#64748b' }}>Admin Contact (Zainul Sir):</span>
+                  <span style={{ color: '#64748b' }}>Admin Contact:</span>
                   <a href="tel:+917838229178" style={{ color: '#2563eb', fontWeight: 800, textDecoration: 'none' }}>+91 7838229178</a>
                 </div>
               </div>
