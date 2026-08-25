@@ -8,11 +8,12 @@ import {
   CreditCard, Smartphone, Zap, RefreshCw, Trash2, Filter,
   Send, Megaphone, Loader2, MessageSquare, Copy, ExternalLink,
   Download, Calendar, AlertTriangle, IndianRupee, FileText, X,
-  Eye, EyeOff, Utensils
+  Eye, EyeOff, Utensils, Award
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { format, addDays, isAfter, isBefore, differenceInDays, differenceInHours, differenceInMinutes, startOfDay, endOfDay, subDays } from "date-fns";
 import MerchantMenuSection from "./MerchantMenuSection";
+import FieldSalesSection from "./FieldSalesSection";
 
 export default function AdminDashboard() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
@@ -577,11 +578,12 @@ export default function AdminDashboard() {
           <img src="/assets/logo-light.png" alt="InstaMunim" style={{ width: '100%', height: 'auto', maxHeight: '150px', objectFit: 'contain' }} />
         </div>
         <nav className="nav-links">
-          {["Dashboard", "Merchants", "Merchant Menus", "Sales", "Broadcast", "Subscriptions", "Settings"].map(tab => (
+          {["Dashboard", "Merchants", "Merchant Menus", "Field Sales Team", "Sales", "Broadcast", "Subscriptions", "Settings"].map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)} className={`nav-item ${activeTab === tab ? "active" : ""}`}>
               {tab === "Dashboard" && <LayoutDashboard size={19} />}
               {tab === "Merchants" && <Users size={19} />}
               {tab === "Merchant Menus" && <Utensils size={19} />}
+              {tab === "Field Sales Team" && <Award size={19} color={activeTab === tab ? "#ffffff" : "#f97316"} />}
               {tab === "Sales" && <Globe size={19} />}
               {tab === "Broadcast" && <Megaphone size={19} />}
               {tab === "Subscriptions" && <CreditCard size={19} />}
@@ -645,6 +647,10 @@ export default function AdminDashboard() {
 
         {activeTab === "Merchant Menus" && (
           <MerchantMenuSection stores={stores} />
+        )}
+
+        {activeTab === "Field Sales Team" && (
+          <FieldSalesSection stores={stores} allSales={allSales} onRefreshStores={fetchAdminData} />
         )}
 
         {activeTab === "Dashboard" && (
@@ -905,6 +911,7 @@ export default function AdminDashboard() {
                   let logoUrl: string | null = null;
                   let rent = s.monthly_rent || 0;
                   let businessType = s.business_type || "Restaurant/Cafe";
+                  let onboardedBy: string | null = null;
 
                   // Super Admin Remote Flags for Store
                   let isSuspended = false;
@@ -926,6 +933,7 @@ export default function AdminDashboard() {
                       if (cfg.storeAddress) address = cfg.storeAddress;
                       if (cfg.monthlyRent) rent = cfg.monthlyRent;
                       if (cfg.businessType) businessType = cfg.businessType;
+                      if (cfg.onboardedAgentName || cfg.onboardedBy) onboardedBy = cfg.onboardedAgentName || cfg.onboardedBy;
                       if (cfg.logo) logoUrl = cfg.logo;
 
                       // Flags
@@ -1009,9 +1017,20 @@ export default function AdminDashboard() {
                                 s.store_name?.charAt(0)?.toUpperCase() || "S"
                               )}
                             </div>
-                            <span style={{ color: isSuspended ? '#ef4444' : 'inherit', textDecoration: isSuspended ? 'line-through' : 'none' }}>
-                              {s.store_name} {isSuspended ? " (SUSPENDED 🛑)" : ""}
-                            </span>
+                            <div>
+                              <span style={{ color: isSuspended ? '#ef4444' : 'inherit', textDecoration: isSuspended ? 'line-through' : 'none', display: 'block' }}>
+                                {s.store_name} {isSuspended ? " (SUSPENDED 🛑)" : ""}
+                              </span>
+                              {onboardedBy ? (
+                                <span style={{ display: 'inline-block', marginTop: '2px', fontSize: '10px', color: '#f97316', fontWeight: 800, background: 'rgba(249, 115, 22, 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                                  👤 Onboarded by: {onboardedBy}
+                                </span>
+                              ) : (
+                                <span style={{ display: 'inline-block', marginTop: '2px', fontSize: '9px', color: '#71717a' }}>
+                                  🌐 Self Registered
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </td>
                         <td>{s.owner_mobile}</td>
