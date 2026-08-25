@@ -4,7 +4,7 @@ android {
     namespace = "com.zainul.instamunimpos"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.zainul.instamunimpos"
+        applicationId "com.instamunim.partner"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 13
