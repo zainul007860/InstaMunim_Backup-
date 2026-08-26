@@ -246,7 +246,7 @@ export default function FieldSalesSection({ stores, allSales, onRefreshStores }:
     if (s.store_logo && s.store_logo.startsWith("JSON_CFG:")) {
       try {
         const parsed = JSON.parse(s.store_logo.substring(9));
-        return parsed.isFSEOnboarded === true || parsed.onboardedByAgent;
+        return parsed.isFSEOnboarded === true || parsed.onboardedByAgent || parsed.onboardedAgentMobile || parsed.onboardedBy;
       } catch (e) {
         return false;
       }
@@ -260,14 +260,56 @@ export default function FieldSalesSection({ stores, allSales, onRefreshStores }:
 
     return {
       ...s,
-      agentName: parsedCfg.agentName || "Direct Partner",
-      agentMobile: parsedCfg.agentMobile || "N/A",
-      onboardingFee: parsedCfg.onboardingFee || 500,
+      agentName: parsedCfg.onboardedAgentName || parsedCfg.agentName || parsedCfg.onboardedBy || "Direct Partner",
+      agentMobile: parsedCfg.onboardedAgentMobile || parsedCfg.agentMobile || "N/A",
+      onboardingFee: typeof parsedCfg.onboardingFee === "number" ? parsedCfg.onboardingFee : (Number(parsedCfg.onboardingFee) || 500),
       paymentMode: parsedCfg.paymentMode || "UPI",
       shopPhoto: parsedCfg.shopPhoto || null,
+      selectedPlan: parsedCfg.selectedPlan || "Starter",
       onboardingDate: parsedCfg.onboardingDate || s.created_at || new Date().toISOString()
     };
   });
+
+  // Admin Handler to Modify / Discount Onboarded Store Collection Amount (Live Sync with Agent Ledger)
+  const handleUpdateStoreFee = async (store: any) => {
+    const currentFee = store.onboardingFee;
+    const input = prompt(`Modify Collection / Apply Discount for "${store.store_name}":\n\nCurrent Fee: ₹${currentFee}\nEnter new amount (e.g. 250, 0, etc.):`, String(currentFee));
+    if (input === null) return;
+    
+    const newFee = Number(input.trim());
+    if (isNaN(newFee) || newFee < 0) {
+      alert("Please enter a valid numeric amount (>= 0)!");
+      return;
+    }
+
+    try {
+      let cfg: any = {};
+      if (store.store_logo && store.store_logo.startsWith("JSON_CFG:")) {
+        try {
+          cfg = JSON.parse(store.store_logo.substring(9));
+        } catch (e) {}
+      }
+
+      cfg.onboardingFee = newFee;
+      cfg.discountModifiedByAdmin = true;
+      cfg.discountModifiedAt = new Date().toISOString();
+
+      const { error } = await supabase
+        .from('stores')
+        .update({
+          store_logo: 'JSON_CFG:' + JSON.stringify(cfg)
+        })
+        .eq('id', store.id);
+
+      if (error) throw error;
+
+      alert(`✅ Updated! Collection for "${store.store_name}" is now ₹${newFee}.\n\nThis amount is now LIVE and synced with the field agent's Cash-in-Hand ledger.`);
+      onRefreshStores();
+    } catch (err: any) {
+      console.error(err);
+      alert("Failed to update fee: " + (err.message || err));
+    }
+  };
 
   const todayOnboardings = onboardedStores.filter(s => {
     return format(new Date(s.onboardingDate), "yyyy-MM-dd") === todayStr;
@@ -600,8 +642,10 @@ export default function FieldSalesSection({ stores, allSales, onRefreshStores }:
                     const incentiveEligibleCount = Math.max(0, totalMonthCount - 40);
                     const incentiveEarned = incentiveEligibleCount * 100;
                     
-                    // Cash calculation
-                    const totalCashCollected = agentStores.filter(s => s.paymentMode === "Cash").length * 500;
+                    // Cash calculation based on dynamic onboarding fee (supporting discounts & modifications)
+                    const totalCashCollected = agentStores
+                      .filter(s => s.paymentMode === "Cash")
+                      .reduce((sum, s) => sum + (Number(s.onboardingFee) || 0), 0);
                     const totalCashSettled = settlements.filter(set => set.agent_mobile === agent.mobile).reduce((sum, set) => sum + (Number(set.amount) || 0), 0);
                     const pendingCash = Math.max(0, totalCashCollected - totalCashSettled);
 
@@ -860,7 +904,33 @@ export default function FieldSalesSection({ stores, allSales, onRefreshStores }:
                         </span>
                       </td>
                       <td>
-                        <strong style={{ color: '#16a34a', fontSize: '14px' }}>₹{store.onboardingFee}</strong>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <strong style={{ color: '#16a34a', fontSize: '14px' }}>₹{store.onboardingFee}</strong>
+                          <button
+                            onClick={() => handleUpdateStoreFee(store)}
+                            style={{ 
+                              padding: '2px 6px', 
+                              background: '#f8fafc', 
+                              border: '1px solid #cbd5e1', 
+                              borderRadius: '6px', 
+                              color: '#ea580c', 
+                              fontSize: '10px', 
+                              fontWeight: 800, 
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '2px'
+                            }}
+                            title="Edit / Discount Fee"
+                          >
+                            <Edit3 size={10} /> Edit
+                          </button>
+                        </div>
+                        {store.selectedPlan && (
+                          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                            {store.selectedPlan.includes("Year") || store.selectedPlan.includes("2,500") ? "💎 1-Yr Plan" : "⚡ Starter"}
+                          </div>
+                        )}
                       </td>
                       <td>
                         <span style={{ 
@@ -891,13 +961,23 @@ export default function FieldSalesSection({ stores, allSales, onRefreshStores }:
                         )}
                       </td>
                       <td>
-                        <button 
-                          onClick={() => handleDeleteStore(store.id, store.store_name)}
-                          style={{ padding: '4px 8px', background: '#fee2e2', border: '1px solid #fca5a5', color: '#dc2626', borderRadius: '6px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
-                          title="Delete Store Record"
-                        >
-                          <Trash2 size={12} />
-                        </button>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                          <button 
+                            onClick={() => handleUpdateStoreFee(store)}
+                            style={{ padding: '4px 8px', background: '#eff6ff', border: '1px solid #bfdbfe', color: '#2563eb', borderRadius: '6px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
+                            title="Edit / Discount Fee"
+                          >
+                            <IndianRupee size={12} />
+                          </button>
+
+                          <button 
+                            onClick={() => handleDeleteStore(store.id, store.store_name)}
+                            style={{ padding: '4px 8px', background: '#fee2e2', border: '1px solid #fca5a5', color: '#dc2626', borderRadius: '6px', fontSize: '11px', fontWeight: 800, cursor: 'pointer' }}
+                            title="Delete Store Record"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

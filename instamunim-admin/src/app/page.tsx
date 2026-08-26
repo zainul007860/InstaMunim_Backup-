@@ -320,30 +320,33 @@ export default function AdminDashboard() {
 
   const getDefaultPlanId = (store: any) => {
     const rent = Number(store.monthly_rent);
-    if (rent === 199) return 'starter_monthly';
-    if (rent === 2000) return 'starter_yearly';
-    if (rent === 399) return 'pro_monthly';
-    if (rent === 3500) return 'pro_yearly';
-    if (rent === 999) return 'vip_monthly';
-    if (rent === 7500) return 'vip_yearly';
-    if (rent === 1999) return 'pro_yearly';
-    return 'starter_monthly';
+    if (rent === 2500 || rent === 2000 || rent === 3500 || rent === 7500 || rent === 1999) return 'yearly';
+    if (rent === 250 || rent === 199 || rent === 399 || rent === 999) return 'monthly';
+    return 'monthly';
   };
 
   const applyPlanToStore = async (store: any) => {
     const planKey = selectedPlanPerStore[store.id] || getDefaultPlanId(store);
     
     let days = 30;
-    let price = 199;
-    let planTitle = "Starter Monthly (₹199)";
+    let price = 250;
+    let planTitle = "Monthly Plan (₹250 / mo)";
 
-    if (planKey === 'starter_monthly') { days = 30; price = 199; planTitle = "Starter Monthly (₹199 / mo)"; }
-    else if (planKey === 'starter_yearly') { days = 365; price = 2000; planTitle = "Starter Yearly (₹2,000 / yr)"; }
-    else if (planKey === 'pro_monthly') { days = 30; price = 399; planTitle = "Pro Business Monthly (₹399 / mo)"; }
-    else if (planKey === 'pro_yearly') { days = 365; price = 3500; planTitle = "Pro Business Yearly (₹3,500 / yr)"; }
-    else if (planKey === 'vip_monthly') { days = 30; price = 999; planTitle = "Enterprise VIP Monthly (₹999 / mo)"; }
-    else if (planKey === 'vip_yearly') { days = 365; price = 7500; planTitle = "Enterprise VIP Yearly (₹7,500 / yr)"; }
-    else if (planKey === 'freemium') { days = 0; price = 0; planTitle = "Freemium / Deactive (₹0)"; }
+    if (planKey === 'monthly' || planKey === 'starter_monthly' || planKey === 'pro_monthly' || planKey === 'vip_monthly') { 
+      days = 30; 
+      price = 250; 
+      planTitle = "Monthly Plan (₹250 / mo - 30 Days)"; 
+    }
+    else if (planKey === 'yearly' || planKey === 'starter_yearly' || planKey === 'pro_yearly' || planKey === 'vip_yearly') { 
+      days = 365; 
+      price = 2500; 
+      planTitle = "Yearly Plan (₹2,500 / yr - 365 Days)"; 
+    }
+    else if (planKey === 'freemium') { 
+      days = 0; 
+      price = 0; 
+      planTitle = "Freemium / Deactivated (₹0)"; 
+    }
 
     if (!confirm(`Confirm Action: Activate "${planTitle}" for store "${store.store_name}"?`)) return;
 
@@ -740,20 +743,10 @@ export default function AdminDashboard() {
                       <td>{s.store_name}</td>
                       <td>
                         {isPaidActive ? (
-                          s.monthly_rent === 199 ? (
-                            <span style={{ color: '#3b82f6', fontWeight: 800 }}>Starter Monthly (₹199)</span>
-                          ) : s.monthly_rent === 2000 ? (
-                            <span style={{ color: '#2563eb', fontWeight: 800 }}>Starter Yearly (₹2,000)</span>
-                          ) : s.monthly_rent === 399 ? (
-                            <span style={{ color: '#f97316', fontWeight: 800 }}>Pro Business (₹399)</span>
-                          ) : s.monthly_rent === 3500 ? (
-                            <span style={{ color: '#ea580c', fontWeight: 800 }}>Pro Yearly (₹3,500)</span>
-                          ) : s.monthly_rent === 999 ? (
-                            <span style={{ color: '#8b5cf6', fontWeight: 800 }}>Enterprise VIP (₹999)</span>
-                          ) : s.monthly_rent === 7500 ? (
-                            <span style={{ color: '#7c3aed', fontWeight: 800 }}>Enterprise VIP (₹7,500)</span>
+                          Number(s.monthly_rent) === 2500 || Number(s.monthly_rent) === 2000 || Number(s.monthly_rent) === 3500 || Number(s.monthly_rent) === 7500 || Number(s.monthly_rent) === 1999 ? (
+                            <span style={{ color: '#ea580c', fontWeight: 800 }}>💎 Yearly Active (₹2,500 / yr)</span>
                           ) : (
-                            <span style={{ color: '#10b981', fontWeight: 800 }}>Active (₹{s.monthly_rent})</span>
+                            <span style={{ color: '#16a34a', fontWeight: 800 }}>⚡ Monthly Active (₹250 / mo)</span>
                           )
                         ) : (
                           <span style={{ color: '#a1a1aa', fontWeight: 800 }}>Freemium</span>
@@ -788,37 +781,30 @@ export default function AdminDashboard() {
                               cursor: 'pointer'
                             }}
                           >
-                            <option value="starter_monthly">Starter Monthly (₹199 / mo - 30 Days)</option>
-                            <option value="starter_yearly">Starter Yearly (₹2,000 / yr - 365 Days)</option>
-                            <option value="pro_monthly">Pro Business Monthly (₹399 / mo - 30 Days)</option>
-                            <option value="pro_yearly">Pro Business Yearly (₹3,500 / yr - 365 Days)</option>
-                            <option value="vip_monthly">Enterprise VIP Monthly (₹999 / mo - 30 Days)</option>
-                            <option value="vip_yearly">Enterprise VIP Yearly (₹7,500 / yr - 365 Days)</option>
+                            <option value="monthly">Monthly Active (₹250 / mo - 30 Days)</option>
+                            <option value="yearly">Yearly Active (₹2,500 / yr - 365 Days)</option>
                             <option value="freemium">Deactivate / Freemium (₹0)</option>
                           </select>
 
                           {/* Execute / Apply Plan Button */}
-                          <button 
+                          <button
+                            onClick={() => applyPlanToStore(s)}
                             disabled={updatingStoreId === s.id}
-                            onClick={() => applyPlanToStore(s)} 
-                            style={{ 
-                              padding: '8px 14px', 
-                              background: 'linear-gradient(135deg, #f97316, #ea580c)', 
-                              color: 'white', 
-                              borderRadius: '8px', 
-                              border: 'none', 
-                              fontWeight: 900, 
-                              cursor: 'pointer', 
-                              fontSize: '10px', 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              gap: '6px', 
-                              opacity: updatingStoreId === s.id ? 0.5 : 1,
-                              whiteSpace: 'nowrap'
+                            style={{
+                              padding: '6px 12px',
+                              background: '#f97316',
+                              color: '#ffffff',
+                              border: 'none',
+                              borderRadius: '8px',
+                              fontWeight: 800,
+                              fontSize: '11px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
                             }}
                           >
-                            {updatingStoreId === s.id ? <Loader2 className="animate-spin" size={12} /> : null}
-                            {updatingStoreId === s.id ? 'SAVING...' : 'ACTIVATE PLAN'}
+                            {updatingStoreId === s.id ? "SAVING..." : "ACTIVATE"}
                           </button>
 
                           {/* Quick +30 Days Button */}
@@ -827,14 +813,14 @@ export default function AdminDashboard() {
                             onClick={() => addSubscriptionDays(s, 30)} 
                             title="Quick extend 30 days"
                             style={{ 
-                              padding: '8px 10px', 
+                              padding: '6px 10px', 
                               background: '#10b981', 
                               color: 'white', 
                               borderRadius: '8px', 
                               border: 'none', 
                               fontWeight: 900, 
                               cursor: 'pointer', 
-                              fontSize: '10px', 
+                              fontSize: '11px', 
                               opacity: updatingStoreId === s.id ? 0.5 : 1,
                               whiteSpace: 'nowrap'
                             }}
@@ -847,14 +833,14 @@ export default function AdminDashboard() {
                             disabled={updatingStoreId === s.id}
                             onClick={() => deleteStore(s)} 
                             style={{ 
-                              padding: '8px 10px', 
+                              padding: '6px 10px', 
                               background: '#ef4444', 
                               color: 'white', 
                               borderRadius: '8px', 
                               border: 'none', 
                               fontWeight: 900, 
                               cursor: 'pointer', 
-                              fontSize: '10px', 
+                              fontSize: '11px', 
                               opacity: updatingStoreId === s.id ? 0.5 : 1,
                               whiteSpace: 'nowrap'
                             }}

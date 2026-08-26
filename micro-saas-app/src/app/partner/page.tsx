@@ -15,6 +15,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
 import { sendDiscordAlert } from "@/lib/discord";
+import { App as CapacitorApp } from "@capacitor/app";
 
 export default function PartnerApp() {
   // =========================================================================
@@ -48,6 +49,7 @@ export default function PartnerApp() {
   const [ownerName, setOwnerName] = useState("");
   const [ownerMobile, setOwnerMobile] = useState("");
   const [businessCategory, setBusinessCategory] = useState("Mobile & Electronics");
+  const [selectedPlan, setSelectedPlan] = useState<"starter" | "yearly">("starter");
   const [paymentMode, setPaymentMode] = useState<"UPI" | "Cash">("UPI");
   const [shopPhoto, setShopPhoto] = useState<string | null>(null);
   const [isOnboarding, setIsOnboarding] = useState(false);
@@ -65,7 +67,7 @@ export default function PartnerApp() {
   // Profile Uploading
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
 
-  // Load saved credentials & login session
+  // Load saved credentials & login session & Register Android Back button
   useEffect(() => {
     // 1. Saved session
     const savedAgent = localStorage.getItem("instamunim_partner_agent");
@@ -84,6 +86,29 @@ export default function PartnerApp() {
     const savedPass = localStorage.getItem("instamunim_partner_saved_pass");
     if (savedMobile) setLoginMobile(savedMobile);
     if (savedPass) setLoginPassword(savedPass);
+
+    // 3. Register Native Back Button to Exit App
+    let backListener: any = null;
+    const registerBack = async () => {
+      try {
+        backListener = await CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+          if (!canGoBack) {
+            CapacitorApp.exitApp();
+          } else {
+            window.history.back();
+          }
+        });
+      } catch (e) {
+        // Fallback in web/desktop environment
+      }
+    };
+    registerBack();
+
+    return () => {
+      if (backListener && typeof backListener.remove === 'function') {
+        backListener.remove();
+      }
+    };
   }, []);
 
   // Fetch FSE & Stores Data
@@ -391,13 +416,18 @@ export default function PartnerApp() {
     try {
       const generatedPass = cleanMobile.slice(-4);
       const now = new Date();
-      const expiry = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const isYearly = selectedPlan === "yearly";
+      const planDays = isYearly ? 365 : 30;
+      const planFee = isYearly ? 2500 : 500;
+      const monthlyRent = isYearly ? 2500 : 250;
+      const expiry = new Date(now.getTime() + planDays * 24 * 60 * 60 * 1000);
 
       const storeConfig = {
         onboardedBy: currentAgent?.name || "Field Executive",
         onboardedAgentName: currentAgent?.name || "Field Executive",
         onboardedAgentMobile: currentAgent?.mobile || "",
-        onboardingFee: 500,
+        onboardingFee: planFee,
+        selectedPlan: isYearly ? "Annual Super Saver (₹2,500 / Year)" : "Starter Onboarding (₹500 / 1st Month)",
         paymentMode: paymentMode,
         businessType: businessCategory,
         shopPhoto: shopPhoto || null,
@@ -424,7 +454,7 @@ export default function PartnerApp() {
         owner_mobile: cleanMobile,
         store_name: storeName.trim(),
         password: generatedPass,
-        monthly_rent: 250,
+        monthly_rent: monthlyRent,
         subscription_expiry: expiry.toISOString(),
         store_logo: 'JSON_CFG:' + JSON.stringify(storeConfig)
       };
@@ -443,7 +473,9 @@ export default function PartnerApp() {
         owner_mobile: cleanMobile,
         password: generatedPass,
         payment_mode: paymentMode,
-        fee: 500
+        fee: planFee,
+        plan_name: isYearly ? "Annual Super Saver (1 Full Year)" : "Starter (1st Month Active)",
+        expiry_date: format(expiry, "dd MMM yyyy")
       };
       setOnboardingSuccess(successData);
 
@@ -456,8 +488,8 @@ export default function PartnerApp() {
           { name: "Owner Mobile", value: cleanMobile, inline: true },
           { name: "Login Password", value: generatedPass, inline: true },
           { name: "Onboarded By", value: `${currentAgent?.name || "Executive"} (${currentAgent?.mobile || ""})`, inline: true },
-          { name: "Onboarding Fee", value: `₹500 (${paymentMode})`, inline: true },
-          { name: "Monthly Plan", value: "₹250/Month", inline: true },
+          { name: "Plan & Fee", value: `₹${planFee} (${isYearly ? "Yearly" : "Monthly"} - ${paymentMode})`, inline: true },
+          { name: "Validity", value: format(expiry, "dd MMM yyyy"), inline: true },
           { name: "Category", value: businessCategory, inline: true },
           { name: "Location", value: liveLocationText || "GPS Captured", inline: false }
         ],
@@ -524,7 +556,7 @@ export default function PartnerApp() {
     setActiveTab("onboard");
   };
 
-  // Filter Agent's Stores
+  // Filter Agent's Stores with dynamic collected fee
   const myStores = allStores.filter(s => {
     if (!s.store_logo || !s.store_logo.startsWith("JSON_CFG:")) return false;
     try {
@@ -538,8 +570,9 @@ export default function PartnerApp() {
     return {
       ...s,
       paymentMode: cfg.paymentMode || "UPI",
-      onboardingFee: cfg.onboardingFee || 500,
-      onboardingDate: cfg.onboardingDate || s.created_at
+      onboardingFee: typeof cfg.onboardingFee === "number" ? cfg.onboardingFee : (Number(cfg.onboardingFee) || 500),
+      onboardingDate: cfg.onboardingDate || s.created_at,
+      selectedPlan: cfg.selectedPlan || "Starter"
     };
   });
 
@@ -554,8 +587,10 @@ export default function PartnerApp() {
   const bonusStores = Math.max(0, totalMonthCount - 40);
   const milestoneIncentiveEarned = bonusStores * 100;
 
-  // Cash in Hand
-  const totalCashCollected = myStores.filter(s => s.paymentMode === "Cash").length * 500;
+  // Real-time Cash in Hand based on dynamic fee per store (supporting discounts & changes)
+  const totalCashCollected = myStores
+    .filter(s => s.paymentMode === "Cash")
+    .reduce((sum: number, s: any) => sum + (Number(s.onboardingFee) || 0), 0);
   const mySettlements = (fseConfig.settlements || []).filter((set: any) => set.agent_mobile === currentAgent?.mobile);
   const totalCashSettled = mySettlements.reduce((sum: number, set: any) => sum + (Number(set.amount) || 0), 0);
   const pendingCashInHand = Math.max(0, totalCashCollected - totalCashSettled);
@@ -1086,6 +1121,14 @@ export default function PartnerApp() {
                     <span style={{ color: '#64748b' }}>Password:</span>
                     <strong style={{ color: '#ea580c', fontFamily: 'monospace', fontSize: '15px' }}>{onboardingSuccess.password}</strong>
                   </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ color: '#64748b' }}>Plan Activated:</span>
+                    <strong style={{ color: '#0f172a' }}>{onboardingSuccess.plan_name}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <span style={{ color: '#64748b' }}>Plan Expiry:</span>
+                    <strong style={{ color: '#16a34a' }}>{onboardingSuccess.expiry_date}</strong>
+                  </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ color: '#64748b' }}>Fee Paid:</span>
                     <strong style={{ color: '#16a34a' }}>₹{onboardingSuccess.fee} ({onboardingSuccess.payment_mode})</strong>
@@ -1094,7 +1137,7 @@ export default function PartnerApp() {
 
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <a 
-                    href={`https://wa.me/91${onboardingSuccess.owner_mobile}?text=${encodeURIComponent(`Namaste ${onboardingSuccess.store_name}! 🎉\n\nAapka InstaMunim Smart POS account active ho gaya hai!\n\n📱 Login Mobile: ${onboardingSuccess.owner_mobile}\n🔑 Password: ${onboardingSuccess.password}\n\n👉 Download App: https://play.google.com/store/apps/details?id=com.zainul.instamunimpos\n👉 Web POS: https://www.instamunim.com`)}`}
+                    href={`https://wa.me/91${onboardingSuccess.owner_mobile}?text=${encodeURIComponent(`Namaste ${onboardingSuccess.store_name}! 🎉\n\nAapka InstaMunim Smart POS account successfully active ho gaya hai!\n\n📋 Plan: ${onboardingSuccess.plan_name}\n📅 Valid Till: ${onboardingSuccess.expiry_date}\n\n📱 Login Mobile: ${onboardingSuccess.owner_mobile}\n🔑 Password: ${onboardingSuccess.password}\n\n👉 Download Android App: https://play.google.com/store/apps/details?id=com.zainul.instamunimpos\n👉 Web POS: https://www.instamunim.com\n\nSupport Helpline: +91 7838229178`)}`}
                     target="_blank"
                     rel="noreferrer"
                     style={{ flex: 1, height: '46px', background: '#25D366', color: '#ffffff', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontWeight: 900, textDecoration: 'none', fontSize: '13px' }}
@@ -1227,15 +1270,37 @@ export default function PartnerApp() {
                   </div>
                 </div>
 
+                {/* PLAN SELECTION DROPDOWN */}
+                <div>
+                  <label style={{ fontSize: '11px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', marginBottom: '6px', display: 'block' }}>
+                    Select Subscription & Onboarding Plan *
+                  </label>
+                  <select 
+                    value={selectedPlan}
+                    onChange={e => setSelectedPlan(e.target.value as "starter" | "yearly")}
+                    style={{ width: '100%', height: '52px', background: '#f8fafc', border: '2px solid #ea580c', borderRadius: '12px', padding: '0 16px', color: '#0f172a', fontSize: '14px', fontWeight: 800, outline: 'none' }}
+                  >
+                    <option value="starter">⚡ Starter Plan — ₹500 (Includes 1st Month + Full Setup)</option>
+                    <option value="yearly">💎 Annual Super Saver — ₹2,500 / 1 Year (FREE Setup • Save ₹1,000)</option>
+                  </select>
+                </div>
+
                 {/* PAYMENT SECTION */}
                 <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                     <div>
-                      <span style={{ fontSize: '11px', fontWeight: 800, color: '#16a34a', textTransform: 'uppercase' }}>Plan: Standard Onboarding</span>
-                      <h4 style={{ fontSize: '20px', fontWeight: 900, color: '#0f172a' }}>₹500 <span style={{ fontSize: '12px', color: '#64748b' }}>(Includes 1st Month)</span></h4>
+                      <span style={{ fontSize: '11px', fontWeight: 800, color: '#16a34a', textTransform: 'uppercase' }}>
+                        {selectedPlan === "yearly" ? "Plan: Annual Full Year" : "Plan: Starter Onboarding"}
+                      </span>
+                      <h4 style={{ fontSize: '22px', fontWeight: 900, color: '#0f172a' }}>
+                        {selectedPlan === "yearly" ? "₹2,500" : "₹500"} 
+                        <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
+                          {selectedPlan === "yearly" ? " (Valid 365 Days)" : " (Includes 1st Month)"}
+                        </span>
+                      </h4>
                     </div>
-                    <span style={{ fontSize: '10px', color: '#0284c7', fontWeight: 800, background: '#e0f2fe', padding: '4px 8px', borderRadius: '6px' }}>
-                      ₹250/Mo Thereafter
+                    <span style={{ fontSize: '10px', color: selectedPlan === "yearly" ? '#15803d' : '#0284c7', fontWeight: 800, background: selectedPlan === "yearly" ? '#dcfce7' : '#e0f2fe', padding: '4px 8px', borderRadius: '6px' }}>
+                      {selectedPlan === "yearly" ? "✓ ₹0 Renewal for 1 Yr" : "₹250/Mo Thereafter"}
                     </span>
                   </div>
 
@@ -1286,10 +1351,12 @@ export default function PartnerApp() {
                   {/* QR CODE IF UPI SELECTED */}
                   {paymentMode === "UPI" && (
                     <div style={{ marginTop: '14px', background: '#ffffff', padding: '16px', borderRadius: '12px', textAlign: 'center', border: '1px solid #e2e8f0' }}>
-                      <p style={{ fontSize: '12px', fontWeight: 800, color: '#334155', marginBottom: '8px' }}>Ask Shopkeeper to Scan & Pay ₹500:</p>
+                      <p style={{ fontSize: '12px', fontWeight: 800, color: '#334155', marginBottom: '8px' }}>
+                        Ask Shopkeeper to Scan & Pay {selectedPlan === "yearly" ? "₹2,500" : "₹500"}:
+                      </p>
                       <div style={{ display: 'inline-block', background: '#ffffff', padding: '10px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                         <img 
-                          src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa=7838229178@ptaxis&pn=InstaMunim&am=500&cu=INR" 
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=upi://pay?pa=7838229178@ptaxis&pn=InstaMunim&am=${selectedPlan === "yearly" ? "2500" : "500"}&cu=INR`} 
                           alt="Admin UPI QR" 
                           style={{ width: '150px', height: '150px', display: 'block' }}
                         />
@@ -1764,13 +1831,88 @@ export default function PartnerApp() {
               </div>
             </div>
 
-            {/* LOGOUT BUTTON */}
-            <button 
-              onClick={handleLogout}
-              style={{ height: '48px', background: '#fee2e2', color: '#dc2626', borderRadius: '14px', border: 'none', fontWeight: 900, fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-            >
-              <LogOut size={16} /> Logout from Executive Account
-            </button>
+            {/* SOCIAL COMMUNITY & OFFICIAL LINKS */}
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '20px', padding: '16px 20px' }}>
+              <h4 style={{ fontSize: '13px', fontWeight: 900, color: '#0f172a', marginBottom: '12px' }}>Official Social Handles</h4>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                
+                {/* FACEBOOK BUTTON */}
+                <a 
+                  href="https://facebook.com" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '8px', 
+                    padding: '10px 14px', 
+                    borderRadius: '12px', 
+                    background: '#1877F2', 
+                    color: '#ffffff', 
+                    textDecoration: 'none', 
+                    fontWeight: 800, 
+                    fontSize: '12px',
+                    boxShadow: '0 4px 10px rgba(24, 119, 242, 0.25)' 
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                  Facebook
+                </a>
+
+                {/* INSTAGRAM BUTTON */}
+                <a 
+                  href="https://instagram.com" 
+                  target="_blank" 
+                  rel="noreferrer"
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    gap: '8px', 
+                    padding: '10px 14px', 
+                    borderRadius: '12px', 
+                    background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)', 
+                    color: '#ffffff', 
+                    textDecoration: 'none', 
+                    fontWeight: 800, 
+                    fontSize: '12px',
+                    boxShadow: '0 4px 10px rgba(220, 39, 67, 0.25)' 
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                  </svg>
+                  Instagram
+                </a>
+
+              </div>
+            </div>
+
+            {/* EXIT APP & LOGOUT ACTIONS */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <button 
+                onClick={async () => {
+                  try {
+                    await CapacitorApp.exitApp();
+                  } catch {
+                    window.close();
+                  }
+                }}
+                style={{ height: '48px', background: '#0f172a', color: '#ffffff', borderRadius: '14px', border: 'none', fontWeight: 900, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+              >
+                <Power size={15} /> Exit App
+              </button>
+
+              <button 
+                onClick={handleLogout}
+                style={{ height: '48px', background: '#fee2e2', color: '#dc2626', borderRadius: '14px', border: 'none', fontWeight: 900, fontSize: '13px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
+              >
+                <LogOut size={15} /> Logout
+              </button>
+            </div>
 
           </div>
         )}
