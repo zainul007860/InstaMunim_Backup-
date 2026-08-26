@@ -48,7 +48,7 @@ export default function PartnerApp() {
   const [storeName, setStoreName] = useState("");
   const [ownerName, setOwnerName] = useState("");
   const [ownerMobile, setOwnerMobile] = useState("");
-  const [businessCategory, setBusinessCategory] = useState("Mobile & Electronics");
+  const [businessCategory, setBusinessCategory] = useState("Restaurant/Cafe");
   const [selectedPlan, setSelectedPlan] = useState<"starter" | "yearly">("starter");
   const [paymentMode, setPaymentMode] = useState<"UPI" | "Cash">("UPI");
   const [shopPhoto, setShopPhoto] = useState<string | null>(null);
@@ -1228,13 +1228,17 @@ export default function PartnerApp() {
                     onChange={e => setBusinessCategory(e.target.value)}
                     style={{ width: '100%', height: '50px', background: '#f8fafc', border: '1px solid #cbd5e1', borderRadius: '12px', padding: '0 16px', color: '#0f172a', fontSize: '14px', fontWeight: 600, outline: 'none' }}
                   >
-                    <option value="Mobile & Electronics">Mobile & Electronics</option>
-                    <option value="Restaurant & Cafe">Restaurant & Cafe</option>
-                    <option value="Kirana & Grocery">Kirana & Grocery</option>
-                    <option value="Clothing & Footwear">Clothing & Footwear</option>
-                    <option value="Bakery & Sweet Shop">Bakery & Sweet Shop</option>
-                    <option value="Saloon & Spa">Saloon & Spa</option>
-                    <option value="General Retail">General Retail</option>
+                    <option value="Restaurant/Cafe">Restaurant / Cafe / Food Stall</option>
+                    <option value="Kirana/Grocery">Kirana / Grocery / General Store</option>
+                    <option value="Saloon/Spa">Saloon / Spa / Beauty Parlour</option>
+                    <option value="Clothing/Retail">Clothing / Footwear / Retail Shop</option>
+                    <option value="Laundry">Laundry Business</option>
+                    <option value="Electric">Electric Shop</option>
+                    <option value="Automobile">Automobile Parts Shop</option>
+                    <option value="Gym">GYM / Fitness Center</option>
+                    <option value="Cosmetic">Cosmetic Shop</option>
+                    <option value="Stationary">Stationary & Book Shop</option>
+                    <option value="Mobile/Electronics">Mobile & Electronics Shop</option>
                   </select>
                 </div>
 
