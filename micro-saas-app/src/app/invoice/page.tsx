@@ -995,10 +995,43 @@ function InvoiceContent() {
     <div className="h-screen bg-zinc-100 flex justify-center py-0 sm:py-10 px-0 sm:px-4 font-sans print:bg-white print:p-0 print:h-auto print:overflow-visible overflow-y-auto">
       <style dangerouslySetInnerHTML={{__html: `
         @media print {
-          @page { margin: 0; }
-          html, body { height: auto !important; overflow: visible !important; }
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; overflow: visible !important; }
+          @page { margin: 0; size: auto; }
+          html, body { 
+            height: auto !important; 
+            overflow: visible !important; 
+            background: #fff !important; 
+            color: #000 !important;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Courier New", monospace !important;
+          }
+          body { 
+            -webkit-print-color-adjust: exact; 
+            print-color-adjust: exact; 
+            overflow: visible !important; 
+            padding: 0 !important;
+            margin: 0 !important;
+          }
           .print-hide { display: none !important; }
+          .thermal-print-container {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 8px 12px !important;
+            box-shadow: none !important;
+            border: none !important;
+          }
+          .thermal-total-box {
+            background: #fff !important;
+            color: #000 !important;
+            border: 2px dashed #000 !important;
+            border-radius: 8px !important;
+            padding: 10px !important;
+            box-shadow: none !important;
+          }
+          .thermal-total-box * {
+            color: #000 !important;
+          }
+          .thermal-dashed {
+            border-bottom: 1px dashed #000 !important;
+          }
         }
         .dotted-border {
           background-image: linear-gradient(to right, #e4e4e7 33%, rgba(255,255,255,0) 0%);
@@ -1008,7 +1041,7 @@ function InvoiceContent() {
         }
       `}} />
       
-      <div className="bg-white w-full max-w-[550px] shadow-2xl flex flex-col relative print:shadow-none print:max-w-full print:h-auto print:min-h-0 h-fit min-h-full">
+      <div className="bg-white w-full max-w-[550px] shadow-2xl flex flex-col relative print:shadow-none print:max-w-full print:h-auto print:min-h-0 h-fit min-h-full thermal-print-container">
         
         {/* Print Bar */}
         <div className="bg-zinc-900 text-white p-4 flex justify-between items-center print:hidden print-hide sticky top-0 z-50">
@@ -1017,11 +1050,11 @@ function InvoiceContent() {
             <span className="font-bold text-[10px] uppercase tracking-widest">Digital Tax Invoice</span>
           </div>
           <Button size="sm" onClick={() => window.print()} className="bg-white text-zinc-900 hover:bg-zinc-200 h-8 text-[10px] font-black uppercase tracking-widest px-4">
-            <Printer className="w-3 h-3 mr-2" /> Save PDF
+            <Printer className="w-3 h-3 mr-2" /> Save PDF / Print
           </Button>
         </div>
 
-        <div className="p-8 sm:p-14 print:p-6 flex-1 flex flex-col space-y-10 print:space-y-4">
+        <div className="p-8 sm:p-14 print:p-2 flex-1 flex flex-col space-y-10 print:space-y-4">
           
           {/* Brand Header */}
           <div className="text-center space-y-4 print:space-y-1">
@@ -1112,7 +1145,7 @@ function InvoiceContent() {
           </div>
 
           {/* Totals Section */}
-          <div className="bg-zinc-900 text-white rounded-[2.5rem] print:rounded-2xl p-8 print:p-4 space-y-4 print:space-y-1 shadow-2xl shadow-zinc-200">
+          <div className="bg-zinc-900 text-white rounded-[2.5rem] print:rounded-xl p-8 print:p-4 space-y-4 print:space-y-1 shadow-2xl shadow-zinc-200 thermal-total-box">
             <div className="flex justify-between text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
               <span>Subtotal (Net)</span>
               <span>₹{subtotal}</span>

@@ -10102,27 +10102,50 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
               </DialogDescription>
             </div>
 
-            <div className="space-y-4 pt-4">
+            <div className="space-y-3 pt-4">
+              {/* WhatsApp Receipt Button */}
               {lastOrderDetails?.mobile && lastOrderDetails.mobile !== "N/A" && lastOrderDetails.mobile !== "" && (
                 <Button
                   onClick={() => {
                     sendWhatsAppReceipt();
                     setTimeout(() => setShowSuccessDialog(false), 1000);
                   }}
-                  className="w-full h-16 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-black text-lg shadow-xl shadow-orange-600/20 active:scale-95 transition-all flex items-center justify-center gap-3"
+                  className="w-full h-14 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-black text-sm shadow-xl shadow-orange-600/20 active:scale-95 transition-all flex items-center justify-center gap-2"
                 >
-                  <MessageCircle className="h-6 w-6" /> SEND RECEIPT
+                  <MessageCircle className="h-5 w-5" /> SEND RECEIPT (WHATSAPP)
                 </Button>
               )}
+
+              {/* Direct Instant Print Button */}
+              <Button
+                onClick={() => {
+                  if (lastOrderDetails) {
+                    const invoiceUrl = getInvoiceUrlForSale({
+                      ...lastOrderDetails,
+                      price: lastOrderDetails.price,
+                      date: lastOrderDetails.date
+                    });
+                    const printWin = window.open(invoiceUrl, "_blank");
+                    if (printWin) {
+                      setTimeout(() => {
+                        try { printWin.print(); } catch (e) {}
+                      }, 800);
+                    }
+                  }
+                  setShowSuccessDialog(false);
+                }}
+                className="w-full h-14 bg-zinc-900 hover:bg-black text-white rounded-xl font-black text-sm shadow-xl shadow-zinc-900/20 active:scale-95 transition-all flex items-center justify-center gap-2 border border-zinc-700"
+              >
+                <Printer className="h-5 w-5 text-emerald-400" /> PRINT BILL (THERMAL) 🖨️
+              </Button>
+
+              {/* Done / Close Button */}
               <Button
                 onClick={() => setShowSuccessDialog(false)}
-                className={lastOrderDetails?.mobile && lastOrderDetails.mobile !== "N/A" && lastOrderDetails.mobile !== ""
-                  ? "w-full h-12 text-zinc-400 font-black uppercase tracking-[0.2em] text-[10px] hover:text-zinc-600"
-                  : "w-full h-16 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-lg shadow-xl shadow-emerald-600/20 active:scale-95 transition-all flex items-center justify-center gap-3 border-0"
-                }
-                variant={lastOrderDetails?.mobile && lastOrderDetails.mobile !== "N/A" && lastOrderDetails.mobile !== "" ? "ghost" : "default"}
+                className="w-full h-10 text-zinc-400 font-black uppercase tracking-[0.2em] text-[10px] hover:text-zinc-600"
+                variant="ghost"
               >
-                {lastOrderDetails?.mobile && lastOrderDetails.mobile !== "N/A" && lastOrderDetails.mobile !== "" ? "Done" : "OK"}
+                Done / Next Order
               </Button>
             </div>
           </div>
