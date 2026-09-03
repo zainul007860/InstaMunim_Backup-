@@ -93,3 +93,46 @@
 - **Root Backups**:
   - Full Backup Folder: `backups/Full_Backup_2026-08-25_Partner_Complete/`
   - Compressed ZIP: `InstaMunim_FULL_BACKUP_25_AUG_2026_WIN.zip` (2.05 GB)
+
+---
+
+## 🍽️ 6. Smart QR Table Ordering System (Restaurant/Cafe Only)
+- **Customer Public Menu & Ordering Page (`micro-saas-app/src/app/order/page.tsx`)**:
+  - **Live URL**: `https://www.instamunim.com/order?store=<owner_mobile>&table=<table_no>`
+  - **Design**: Swiggy / Zomato inspired modern mobile UI with Veg/Non-veg badges, live search filter, category scroller, and sticky floating cart.
+  - **Payment Flow**: Direct UPI intent deep links (`upi://pay?pa=...`) + Dynamic UPI QR generator.
+  - **Database Integration**: On order confirmation, automatically inserts into `sales` table (`type: "Table QR UPI"`, tagged with `[TABLE:<num>]`), updating store daily gross revenue immediately.
+- **Merchant POS Integration (`micro-saas-app/src/app/dashboard/page.tsx`)**:
+  - **Supabase Realtime Listener**: Listens to `sales` table inserts on the merchant's `store_id`.
+  - **Soundbox Voice Announcer**: Speaks loud voice alert: *"नया टेबल आर्डर! टेबल नंबर X से ₹Y प्राप्त हुए!"*.
+  - **Incoming Order Popup**: Fullscreen bold green modal with customer name, phone, item breakdown, and 1-Click "ACCEPT & PRINT KOT 🖨️" button.
+  - **Table QR Generator Desk**: Accessible under Settings > Store Profile for `businessType === "Restaurant/Cafe"`. Allows generating and printing A4 sheet standees for tables (1..N).
+
+---
+
+## 📌 7. Session Continuity & Memory Rule (CRITICAL)
+- **Mandatory Memory Update**:
+  - Whenever user discusses anything, tests a feature, reports an issue, or ends a session, the assistant **MUST IMMEDIATELY** record the exact state, exact topic discussed, user remarks, and next pending tasks in **Section 8 (Live Conversation Log)** below.
+- **New Window Resume Protocol**:
+  - Whenever user asks to "load last conversation" or opens a new session, the assistant MUST read Section 8 first and instantly summarize:
+    1. Last discussed topic & user's exact thoughts/testing remarks.
+    2. Exact state of code/database.
+    3. Pending next action items without needing the user to repeat anything.
+
+---
+
+## 📝 8. Live Conversation & Session Log
+
+### 🗓️ Session: 03-SEP-2026
+- **Last Active Topic**: Smart QR Table Ordering System (`/order` page + Dashboard Soundbox & KOT alert modal).
+- **User's Remarks & Context**:
+  - User stated that they would test the Table QR ordering section at home in a real restaurant scenario.
+  - User requested a persistent memory system so whenever a new window/chat opens, the assistant resumes exactly where things were left off.
+- **Current Technical State**:
+  - Table QR flow fully coded in `micro-saas-app/src/app/order/page.tsx` & `micro-saas-app/src/app/dashboard/page.tsx`.
+  - Google Play Developer Signing & Package verification verified & green-checked for `com.zainul.instamunimpos` and `com.sahidawa.app`.
+- **Pending / Next Action**:
+  - Review testing results/feedback of Table QR ordering.
+  - Any UI/UX refinements or new feature requests from the user.
+
+
