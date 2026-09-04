@@ -143,8 +143,12 @@
     - Intermediary bill edits and pending table order initiation alerts completely removed.
   - `micro-saas-app/src/app/order/page.tsx`:
     - Removed initiation alert; diner placements remain quiet until officially verified/accepted as a sale.
+- **Backup & Production Deployment**:
+  - Full local backup created at: `backups/Full_Backup_2026-09-04_TableQR_Complete/`
+  - Committed with clear descriptive message and pushed to both `origin` (backup) and `production` (live Vercel `www.instamunim.com`): `9c266b5`.
+  - Guard enforced: Table QR live ordering listener and incoming popup strictly restricted to `businessType === "Restaurant/Cafe"`.
 - **Pending / Next Action**:
-  - Verify live webhook alerts on sales billing.
+  - Verify live deployment on `www.instamunim.com`.
 
 
 
