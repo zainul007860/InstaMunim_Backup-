@@ -6,7 +6,7 @@ import jsQR from "jsqr";
 import {
   LayoutDashboard, FileText, Settings, LogOut, Search,
   PlusCircle, Loader2, Book, Trash2, Send, ShoppingCart, Package,
-  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera, Volume2, Globe, Wand2, Copy, Keyboard, Megaphone, MessageSquare, AlertTriangle, ExternalLink, Zap
+  TrendingUp, Users, Smartphone, PieChart, ArrowUpRight, CheckCircle2, Mic, MessageCircle, ArrowRight, Sun, Moon, Cloud, RefreshCw, Lock, ShieldCheck, ShieldAlert, Eye, EyeOff, LayoutPanelLeft, Clock, History, CreditCard, ChevronRight, Download, Upload, Filter, Share2, Printer, X, ChevronDown, Plus, Minus, Check, Camera, Volume2, Globe, Wand2, Copy, Keyboard, Megaphone, MessageSquare, AlertTriangle, ExternalLink, Zap, QrCode
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Filesystem, Directory } from '@capacitor/filesystem';
@@ -2272,6 +2272,190 @@ Requirements for the generated image prompt:
   const [storeLogo, setStoreLogo] = useState<string | null>(null);
   const [storeSignature, setStoreSignature] = useState<string | null>(null);
   const [currentStoreId, setCurrentStoreId] = useState<string>("");
+  const [incomingTableOrder, setIncomingTableOrder] = useState<any | null>(null);
+  const seenTableOrderIdsRef = useRef<Set<string>>(new Set());
+
+  // Realtime Supabase listener & Fast Polling for Incoming Table QR Orders (Strictly Restaurant/Cafe only)
+  useEffect(() => {
+    // Only Restaurant/Cafe business type receives Table QR live orders
+    if (businessType !== "Restaurant/Cafe") return;
+
+    const activeOwner = ownerMobile || localStorage.getItem("saas_owner_mobile") || "7838229178";
+    if (!activeOwner) return;
+
+    // 1. Supabase Realtime Listener
+    const channel = supabase
+      .channel('table-order-pos-listener')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'sales' },
+        (payload: any) => {
+          const newOrder = payload.new;
+          if (!newOrder) return;
+          
+          if (newOrder.payment_type === "PENDING_VERIFICATION") {
+            // Also append to local sales array so it is immediately visible in Transaction History table
+            setSales(prev => {
+              if (prev.some(s => s.id === newOrder.id)) return prev;
+              const commMatch = newOrder.items?.match(/\[COMM:(\d+(\.\d+)?)\]/);
+              return [{
+                id: newOrder.id,
+                name: newOrder.customer_name,
+                item: newOrder.items?.replace(/\[COMM:(\d+(\.\d+)?)\]/, "").trim(),
+                mobile: newOrder.mobile,
+                price: newOrder.total_price,
+                type: "PENDING_VERIFICATION",
+                payment_type: "PENDING_VERIFICATION",
+                date: new Date(newOrder.sale_date || new Date()),
+                commission: commMatch ? Number(commMatch[1]) : 0
+              }, ...prev];
+            });
+
+            if (!seenTableOrderIdsRef.current.has(newOrder.id)) {
+              seenTableOrderIdsRef.current.add(newOrder.id);
+              setIncomingTableOrder(newOrder);
+
+              // 🔊 Voice Cashier Soundbox Alert
+              if (typeof window !== "undefined" && "speechSynthesis" in window) {
+                try {
+                  const custName = newOrder.customer_name || "Customer";
+                  const price = newOrder.total_price || 0;
+                  const utterance = new SpeechSynthesisUtterance(`नया टेबल आर्डर! ${custName} से ${price} रुपये स्वीकार करने के लिए पेंडिंग है।`);
+                  utterance.lang = "hi-IN";
+                  utterance.rate = 0.95;
+                  window.speechSynthesis.speak(utterance);
+                } catch (e) {
+                  console.warn("Soundbox TTS failed:", e);
+                }
+              }
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    // 2. Fallback Fast Poll every 2 seconds for any un-accepted PENDING_VERIFICATION orders
+    const pollInterval = setInterval(async () => {
+      try {
+        let q = supabase
+          .from("sales")
+          .select("*")
+          .eq("payment_type", "PENDING_VERIFICATION")
+          .order("sale_date", { ascending: false })
+          .limit(1);
+
+        if (currentStoreId) {
+          q = q.eq("store_id", currentStoreId);
+        }
+
+        const { data, error } = await q;
+        if (!error && data && data.length > 0) {
+          const latestPending = data[0];
+
+          // Ensure it's in local sales state
+          setSales(prev => {
+            if (prev.some(s => s.id === latestPending.id)) return prev;
+            const commMatch = latestPending.items?.match(/\[COMM:(\d+(\.\d+)?)\]/);
+            return [{
+              id: latestPending.id,
+              name: latestPending.customer_name,
+              item: latestPending.items?.replace(/\[COMM:(\d+(\.\d+)?)\]/, "").trim(),
+              mobile: latestPending.mobile,
+              price: latestPending.total_price,
+              type: "PENDING_VERIFICATION",
+              payment_type: "PENDING_VERIFICATION",
+              date: new Date(latestPending.sale_date || new Date()),
+              commission: commMatch ? Number(commMatch[1]) : 0
+            }, ...prev];
+          });
+
+          if (!seenTableOrderIdsRef.current.has(latestPending.id)) {
+            seenTableOrderIdsRef.current.add(latestPending.id);
+            setIncomingTableOrder(latestPending);
+
+            // Soundbox Alert
+            if (typeof window !== "undefined" && "speechSynthesis" in window) {
+              try {
+                const custName = latestPending.customer_name || "Customer";
+                const price = latestPending.total_price || 0;
+                const utterance = new SpeechSynthesisUtterance(`नया टेबल आर्डर! ${custName} से ${price} रुपये स्वीकार करने के लिए पेंडिंग है।`);
+                utterance.lang = "hi-IN";
+                utterance.rate = 0.95;
+                window.speechSynthesis.speak(utterance);
+              } catch (e) {}
+            }
+          }
+        }
+      } catch (e) {
+        // silent
+      }
+    }, 2000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(pollInterval);
+    };
+  }, [ownerMobile, currentStoreId, businessType]);
+
+  // Accept and mark table order as PAID in 1-Click + Send WhatsApp Bill
+  const handleAcceptTableOrder = async (order: any) => {
+    try {
+      if (!order?.id) return;
+      await supabase
+        .from("sales")
+        .update({ payment_type: "Table QR UPI" })
+        .eq("id", order.id);
+
+      // Update local sales list
+      setSales(prev => prev.map(s => s.id === order.id ? { ...s, payment_type: "Table QR UPI", type: "Table QR UPI" } : s));
+
+      // Voice confirmation
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        try {
+          const utterance = new SpeechSynthesisUtterance(`टेबल आर्डर स्वीकार कर लिया गया है। ${order.total_price || 0} रुपये प्राप्त हुए।`);
+          utterance.lang = "hi-IN";
+          window.speechSynthesis.speak(utterance);
+        } catch (e) {}
+      }
+
+      setIncomingTableOrder(null);
+
+      // Auto Send Full WhatsApp Invoice with Link to Customer
+      const custMobile = (order.mobile || "").replace(/\D/g, "").slice(-10);
+      const saleObj = {
+        id: order.id,
+        name: order.customer_name || "Guest",
+        item: order.items || "Dining Order",
+        mobile: custMobile,
+        price: order.total_price,
+        type: "Table QR UPI",
+        date: new Date(order.sale_date || new Date()),
+        commission: 0
+      };
+
+      if (custMobile && custMobile.length === 10) {
+        handleResendWhatsAppInvoice(saleObj);
+      }
+
+      // Send Discord Notification for Table QR Sale
+      sendDiscordAlert(
+        "💰 New Sale Billing Recorded!",
+        `Merchant **${restaurantName || 'InstaMunim Merchant'}** has recorded a new sale (Table QR).`,
+        [
+          { name: "Store Name", value: restaurantName || "N/A", inline: true },
+          { name: "Owner Mobile", value: ownerMobile || "N/A", inline: true },
+          { name: "Sale Amount", value: `₹${Number(order.total_price || 0).toLocaleString('en-IN')}`, inline: true },
+          { name: "Payment Mode", value: "Table QR UPI", inline: true },
+          { name: "Customer Name", value: order.customer_name || "Guest", inline: true },
+          { name: "Items Billed", value: order.items || "N/A", inline: false }
+        ],
+        5763719
+      );
+
+    } catch (e: any) {
+      alert("Error confirming order: " + e.message);
+    }
+  };
 
   const uploadToSupabaseStorage = async (file: File, folderName: 'logo' | 'signature') => {
     try {
@@ -2490,6 +2674,11 @@ Stay safe & eat healthy! 🍕
   const recognitionRef = useRef<any>(null);
   const lastAddedRef = useRef<{ name: string, time: number }>({ name: "", time: 0 });
   const mobileDigitsRef = useRef<string>("");
+
+  // RESTAURANT SPECIFIC: TABLE QR GENERATOR
+  const [showTableOrderModal, setShowTableOrderModal] = useState(false);
+  const [showTableQrGeneratorModal, setShowTableQrGeneratorModal] = useState(false);
+  const [tableCountToGen, setTableCountToGen] = useState("10");
 
   // Global Keyboard Shortcuts Event Listener (Conflict-Free Web POS Hotkeys)
   useEffect(() => {
@@ -3839,6 +4028,65 @@ Stay safe & eat healthy! 🍕
     return () => window.removeEventListener("popstate", handleBackButton);
   }, [isLoggedIn, activeTab]);
 
+  // REALTIME SUPABASE LISTENER FOR INCOMING TABLE QR ORDERS (RESTAURANT/CAFE SPECIFIC)
+  useEffect(() => {
+    if (!isLoggedIn || !currentStoreId) return;
+
+    const channel = supabase
+      .channel(`table_orders_${currentStoreId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'sales',
+          filter: `store_id=eq.${currentStoreId}`
+        },
+        (payload: any) => {
+          const newOrder = payload.new;
+          if (!newOrder) return;
+
+          // Check if this is a Table QR order
+          const isTableOrder = (newOrder.payment_type === "Table QR UPI") || (newOrder.item && newOrder.item.includes("[TABLE:"));
+          
+          // Re-fetch store sales in background
+          fetchStoreData(currentStoreId);
+
+          if (isTableOrder && (businessType === "Restaurant/Cafe" || !businessType)) {
+            // Extract table number safely
+            const itemStr = newOrder.items || newOrder.item || "";
+            const nameStr = newOrder.customer_name || newOrder.name || "";
+            const tableMatch = itemStr.match(/\[TABLE:(\d+)\]/i);
+            const tableNum = tableMatch ? tableMatch[1] : (nameStr.match(/T-(\d+)/)?.[1] || "1");
+
+            setIncomingTableOrder({
+              id: newOrder.id,
+              customerName: nameStr || "Guest",
+              mobile: newOrder.mobile,
+              price: newOrder.total_price || newOrder.price || 0,
+              items: itemStr,
+              tableNo: tableNum,
+              date: new Date(newOrder.sale_date || newOrder.date || Date.now())
+            });
+            setShowTableOrderModal(true);
+
+            // Announce in Soundbox loud voice
+            try {
+              const voiceMsg = `नया टेबल आर्डर! टेबल नंबर ${tableNum} से ₹${newOrder.total_price} प्राप्त हुए!`;
+              announceVoice(voiceMsg, lang || "hi");
+            } catch (vErr) {
+              console.error("Table order voice announcement error:", vErr);
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isLoggedIn, currentStoreId, businessType, lang]);
+
   // 10 MINUTE INACTIVITY BACKGROUND AUTO-LOGOUT
   useEffect(() => {
     let appStateListener: any;
@@ -5105,19 +5353,23 @@ Stay safe & eat healthy! 🍕
     const dpSplitMatch = rawItemString.match(/\[FINANCE_DP_SPLIT:Cash:(\d+(?:\.\d+)?):UPI:(\d+(?:\.\d+)?)\]/);
 
     if (!isSplitPayment && !financeMatch) {
+      const isPendingVerif = s.type === "PENDING_VERIFICATION" || s.payment_type === "PENDING_VERIFICATION";
+      const isTableQr = s.type === "Table QR UPI" || s.payment_type === "Table QR UPI";
       const isUdhaar = s.type === "Udhaar";
       const isOnline = s.type === "Online";
       const isSwiggy = s.type === "Swiggy";
       const isZomato = s.type === "Zomato";
       let badgeStyle = "bg-emerald-100 text-emerald-600";
-      if (isUdhaar) badgeStyle = "bg-red-100 text-red-600";
+      if (isPendingVerif) badgeStyle = "bg-amber-100 text-amber-700 font-black border border-amber-300 animate-pulse";
+      else if (isTableQr) badgeStyle = "bg-teal-100 text-teal-700 font-black border border-teal-200";
+      else if (isUdhaar) badgeStyle = "bg-red-100 text-red-600";
       else if (isOnline) badgeStyle = "bg-blue-100 text-blue-600";
       else if (isSwiggy || isZomato) badgeStyle = "bg-orange-100 text-orange-600";
       else if (s.type !== "Cash") badgeStyle = "bg-zinc-100 text-zinc-600";
 
       return (
         <Badge className={`text-[8px] font-bold px-2 py-0.5 rounded-lg border-0 ${badgeStyle}`}>
-          {getPartnerName(businessType, s.type).toUpperCase()}
+          {isPendingVerif ? "⏳ PENDING VERIFY" : isTableQr ? "🍽️ TABLE QR UPI" : getPartnerName(businessType, s.type).toUpperCase()}
         </Badge>
       );
     }
@@ -5389,6 +5641,7 @@ Stay safe & eat healthy! 🍕
 
       setShowEditSaleModal(false);
       setEditingSale(null);
+
       alert("✅ Bill updated successfully!");
     } catch (err: any) {
       alert("Failed to update bill: " + (err.message || "Unknown error"));
@@ -5399,6 +5652,10 @@ Stay safe & eat healthy! 🍕
 
   const filteredSales = useMemo(() => {
     return sales.filter(s => {
+      // Exclude unconfirmed Table QR orders from sales calculations
+      const pType = s.type || s.payment_type || "";
+      if (pType === "PENDING_VERIFICATION") return false;
+
       try {
         const saleDateStr = format(new Date(s.date), "yyyy-MM-dd");
         return saleDateStr >= startDate && saleDateStr <= endDate;
@@ -5408,9 +5665,18 @@ Stay safe & eat healthy! 🍕
     });
   }, [sales, startDate, endDate]);
   const searchedSales = useMemo(() => {
-    if (!salesSearchQuery.trim()) return filteredSales;
     const query = salesSearchQuery.toLowerCase().trim();
-    return filteredSales.filter(s => {
+    // In Transaction History, show all sales matching date filter (including PENDING_VERIFICATION)
+    const baseList = sales.filter(s => {
+      try {
+        const saleDateStr = format(new Date(s.date), "yyyy-MM-dd");
+        return saleDateStr >= startDate && saleDateStr <= endDate;
+      } catch (err) {
+        return false;
+      }
+    });
+    if (!query) return baseList;
+    return baseList.filter(s => {
       const name = (s.name || "").toLowerCase();
       const mobile = (s.mobile || "").toLowerCase();
       const items = (s.item || "").toLowerCase();
@@ -5418,7 +5684,7 @@ Stay safe & eat healthy! 🍕
       const price = String(s.price || "");
       return name.includes(query) || mobile.includes(query) || items.includes(query) || type.includes(query) || price.includes(query);
     });
-  }, [filteredSales, salesSearchQuery]);
+  }, [sales, startDate, endDate, salesSearchQuery]);
   const filteredExpenses = useMemo(() => {
     return expenses.filter(e => {
       try {
@@ -5455,7 +5721,7 @@ Stay safe & eat healthy! 🍕
 
   const netProfit = useMemo(() => totalSales - totalExpenses - soldBuybackCost - totalCommissions, [totalSales, totalExpenses, soldBuybackCost, totalCommissions]);
 
-  const uniqueCustomers = useMemo(() => Array.from(new Set(sales.filter(s => s.mobile !== "N/A").map(s => s.mobile))), [sales]);
+  const uniqueCustomers = useMemo(() => Array.from(new Set(sales.filter(s => s.mobile !== "N/A" && s.type !== "PENDING_VERIFICATION").map(s => s.mobile))), [sales]);
 
   const crmList = useMemo(() => {
     // Extract unique customers from sales & walk-in enquiries
@@ -5497,8 +5763,9 @@ Stay safe & eat healthy! 🍕
       console.warn("Failed reading enquiries for CRM list:", err);
     }
 
-    // 2. Read customers from sales
+    // 2. Read customers from sales (excluding unverified table orders)
     sales.forEach(s => {
+      if (s.type === "PENDING_VERIFICATION" || s.payment_type === "PENDING_VERIFICATION") return;
       if (s.mobile && s.mobile !== "N/A" && s.mobile.length >= 10) {
         const cleanPhone = s.mobile.replace(/\D/g, "").slice(-10);
         const existing = customersMap.get(cleanPhone);
@@ -5602,7 +5869,7 @@ Stay safe & eat healthy! 🍕
     const daysPassed = today.getDate();
 
     const monthSalesToDate = sales
-      .filter(s => new Date(s.date) >= startOfMonth && new Date(s.date) < today)
+      .filter(s => s.type !== "PENDING_VERIFICATION" && s.payment_type !== "PENDING_VERIFICATION" && new Date(s.date) >= startOfMonth && new Date(s.date) < today)
       .reduce((sum, s) => sum + s.price, 0);
 
     const targetToDate = dailyBase * daysPassed;
@@ -5610,7 +5877,7 @@ Stay safe & eat healthy! 🍕
     const todaysTarget = dailyBase + (carryOver > 0 ? carryOver : 0);
 
     const todayActual = sales
-      .filter(s => format(new Date(s.date), "yyyy-MM-dd") === format(today, "yyyy-MM-dd"))
+      .filter(s => s.type !== "PENDING_VERIFICATION" && s.payment_type !== "PENDING_VERIFICATION" && format(new Date(s.date), "yyyy-MM-dd") === format(today, "yyyy-MM-dd"))
       .reduce((sum, s) => sum + s.price, 0);
 
     return { dailyBase, carryOver, todaysTarget, todayActual, remaining: Math.max(0, todaysTarget - todayActual) };
@@ -7163,10 +7430,10 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 <p className="text-sm font-bold text-zinc-400 mt-2 leading-relaxed">Comprehensive view of your store's performance.</p>
               </header>
 
-              <div className="flex flex-col sm:flex-row gap-4 w-full px-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 w-full px-2">
                 <Button
                   onClick={handleExportSalesToExcel}
-                  className="flex-1 h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-full text-xs shadow-xl flex items-center justify-center gap-2 uppercase tracking-widest active:scale-95 transition-all border-0 cursor-pointer"
+                  className="h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-full text-xs shadow-xl flex items-center justify-center gap-2 uppercase tracking-widest active:scale-95 transition-all border-0 cursor-pointer"
                 >
                   <FileText className="h-4 w-4" /> EXPORT TO EXCEL
                 </Button>
@@ -7178,9 +7445,85 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                       alert("Printing not supported in this view.");
                     }
                   }}
-                  className="flex-1 h-14 bg-zinc-900 hover:bg-black text-white font-black rounded-full text-xs shadow-xl flex items-center justify-center gap-2 uppercase tracking-widest active:scale-95 transition-all border-0 cursor-pointer"
+                  className="h-14 bg-zinc-900 hover:bg-black text-white font-black rounded-full text-xs shadow-xl flex items-center justify-center gap-2 uppercase tracking-widest active:scale-95 transition-all border-0 cursor-pointer"
                 >
                   <Printer className="h-4 w-4" /> PRINT REPORT
+                </Button>
+                <Button
+                  onClick={() => {
+                    const todayStr = format(new Date(), "yyyy-MM-dd");
+                    const todaySalesList = sales.filter((s: any) => {
+                      try {
+                        const sDate = new Date(s.date);
+                        return format(sDate, "yyyy-MM-dd") === todayStr;
+                      } catch {
+                        return false;
+                      }
+                    });
+
+                    const todayRevenue = todaySalesList.reduce((sum: number, s: any) => sum + (Number(s.price) || 0), 0);
+                    const todayCash = todaySalesList
+                      .filter((s: any) => (s.type || "Cash").toLowerCase().includes("cash"))
+                      .reduce((sum: number, s: any) => sum + (Number(s.price) || 0), 0);
+                    const todayOnline = todaySalesList
+                      .filter((s: any) => !(s.type || "Cash").toLowerCase().includes("cash") && !(s.type || "").toLowerCase().includes("udhaar"))
+                      .reduce((sum: number, s: any) => sum + (Number(s.price) || 0), 0);
+                    const todayUdhaar = todaySalesList
+                      .filter((s: any) => (s.type || "").toLowerCase().includes("udhaar"))
+                      .reduce((sum: number, s: any) => sum + (Number(s.price) || 0), 0);
+
+                    const totalBills = todaySalesList.length;
+
+                    // Parse top selling item for today
+                    const itemCounts: Record<string, number> = {};
+                    todaySalesList.forEach((s: any) => {
+                      const lines = (s.item || "").split("\n");
+                      lines.forEach((line: string) => {
+                        const m = line.match(/^(\d+)\s*x\s*(.+?)(?:\s*\(|$)/i);
+                        if (m) {
+                          const qty = parseInt(m[1]) || 1;
+                          const name = m[2].trim();
+                          itemCounts[name] = (itemCounts[name] || 0) + qty;
+                        } else if (line.trim()) {
+                          const clean = line.replace(/\[.*?\]/g, '').trim();
+                          if (clean) itemCounts[clean] = (itemCounts[clean] || 0) + 1;
+                        }
+                      });
+                    });
+
+                    let topItemStr = "N/A";
+                    let topItemQty = 0;
+                    Object.entries(itemCounts).forEach(([name, qty]) => {
+                      if (qty > topItemQty) {
+                        topItemQty = qty;
+                        topItemStr = `${name} (${qty} Sold)`;
+                      }
+                    });
+
+                    const auditMsg = `━━━━━━━━━━━━━━━━━━━━━
+📊 *INSTAMUNIM DAILY CLOSING AUDIT*
+━━━━━━━━━━━━━━━━━━━━━
+🏪 *Store:* ${restaurantName || "My Store"}
+📅 *Date:* ${format(new Date(), "dd MMM yyyy | hh:mm a")}
+👤 *Owner Mob:* +91 ${ownerMobile}
+
+💰 *TOTAL REVENUE:* ₹${todayRevenue.toLocaleString('en-IN')}
+─────────────────────
+💵 *Cash in Counter:*  ₹${todayCash.toLocaleString('en-IN')}
+📱 *UPI / Online:*      ₹${todayOnline.toLocaleString('en-IN')}
+🔴 *Udhaar Khata:*     ₹${todayUdhaar.toLocaleString('en-IN')}
+🧾 *Total Invoices:*    ${totalBills} Orders
+🏆 *Top Seller Item:*   ${topItemStr}
+─────────────────────
+🔒 *Status:* 100% Cloud Verified & Audited
+🚀 *Powered by InstaMunim Smart POS*
+━━━━━━━━━━━━━━━━━━━━━`;
+
+                    launchWhatsApp(ownerMobile, auditMsg);
+                  }}
+                  className="h-14 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black rounded-full text-xs shadow-xl flex items-center justify-center gap-2 uppercase tracking-widest active:scale-95 transition-all border-0 cursor-pointer"
+                >
+                  <MessageCircle className="h-4 w-4" /> WHATSAPP CLOSING AUDIT
                 </Button>
               </div>
 
@@ -9436,6 +9779,35 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                                 </div>
                               )}
                             </div>
+
+                            {/* SMART TABLE QR ORDERING GENERATOR (FOR RESTAURANT / CAFE) */}
+                            {(businessType === "Restaurant/Cafe" || !businessType) && (
+                              <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800 space-y-4">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <h4 className="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-wider pl-1">Smart Table QR Standees</h4>
+                                    <p className="text-[10px] text-zinc-400 font-bold pl-1 mt-0.5">Generate printable QR standees for your restaurant tables.</p>
+                                  </div>
+                                  <Badge className="bg-orange-500/10 text-orange-600 dark:text-orange-400 font-black text-[9px] uppercase px-3 py-1 border-0">
+                                    Restaurant Only
+                                  </Badge>
+                                </div>
+
+                                <div className="p-5 bg-gradient-to-br from-orange-500/10 via-amber-500/5 to-transparent rounded-3xl border border-orange-500/20 flex flex-col sm:flex-row items-center justify-between gap-4">
+                                  <div className="space-y-1 text-left">
+                                    <p className="font-black text-xs uppercase tracking-tight text-zinc-900 dark:text-white">Printable Table QRs</p>
+                                    <p className="text-[10px] text-zinc-500 font-medium">Customer table par baith ke scan karega, UPI se pay karega, aur order seedha aapke POS counter par aayega.</p>
+                                  </div>
+                                  <Button
+                                    type="button"
+                                    onClick={() => setShowTableQrGeneratorModal(true)}
+                                    className="h-12 px-6 bg-zinc-900 hover:bg-black text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-lg active:scale-95 transition-all shrink-0"
+                                  >
+                                    <QrCode className="h-4 w-4 mr-2 text-orange-400" /> Generate Table QRs
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
 
@@ -10152,6 +10524,216 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
         </DialogContent>
       </Dialog>
 
+      {/* LIVE INCOMING TABLE ORDER MODAL (BOLD NOTIFICATION) */}
+      <Dialog open={showTableOrderModal} onOpenChange={setShowTableOrderModal}>
+        <DialogContent className="p-8 border-0 max-w-[420px] bg-zinc-950 text-white rounded-[2.5rem] shadow-2xl overflow-hidden border-2 border-emerald-500/40 animate-in zoom-in-95">
+          <div className="text-center space-y-6">
+            {/* Header Badge */}
+            <div className="inline-flex items-center gap-2 bg-emerald-500/20 text-emerald-400 px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest border border-emerald-500/30 animate-pulse">
+              <div className="w-2 h-2 rounded-full bg-emerald-400" /> New Table Order
+            </div>
+
+            {/* Table Number & Amount */}
+            <div className="space-y-1">
+              <h2 className="text-4xl font-black text-white uppercase tracking-tight">
+                Table #{incomingTableOrder?.tableNo || "1"}
+              </h2>
+              <p className="text-3xl font-black text-emerald-400">
+                ₹{incomingTableOrder?.price} <span className="text-xs text-zinc-400 uppercase tracking-widest font-bold">(Paid via UPI)</span>
+              </p>
+            </div>
+
+            {/* Customer Info */}
+            <div className="bg-zinc-900/90 p-4 rounded-2xl border border-zinc-800 text-left space-y-1">
+              <div className="flex justify-between text-xs font-bold text-zinc-400">
+                <span>Customer</span>
+                <span className="text-white font-black">{incomingTableOrder?.customerName}</span>
+              </div>
+              <div className="flex justify-between text-xs font-bold text-zinc-400">
+                <span>Contact</span>
+                <span className="text-white font-mono">{incomingTableOrder?.mobile ? `+91 ${incomingTableOrder.mobile}` : "N/A"}</span>
+              </div>
+            </div>
+
+            {/* Ordered Items Breakdown */}
+            <div className="bg-zinc-900/90 p-4 rounded-2xl border border-zinc-800 text-left space-y-2 max-h-48 overflow-y-auto">
+              <p className="text-[10px] font-black uppercase tracking-widest text-orange-400">Kitchen Order Items:</p>
+              <div className="text-xs font-bold text-zinc-200 whitespace-pre-line leading-relaxed">
+                {(incomingTableOrder?.items || "")
+                  .split("[TABLE:")[0]
+                  .split("[COMM:")[0]
+                  .trim()}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-2 pt-2">
+              <Button
+                onClick={() => {
+                  if (incomingTableOrder) {
+                    const invoiceUrl = getInvoiceUrlForSale({
+                      ...incomingTableOrder,
+                      name: incomingTableOrder.customerName,
+                      item: incomingTableOrder.items,
+                      price: incomingTableOrder.price,
+                      type: "Table QR UPI",
+                      date: incomingTableOrder.date
+                    });
+                    const printWin = window.open(invoiceUrl, "_blank");
+                    if (printWin) {
+                      setTimeout(() => {
+                        try { printWin.print(); } catch (e) {}
+                      }, 800);
+                    }
+                  }
+                  setShowTableOrderModal(false);
+                }}
+                className="w-full h-14 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl font-black text-sm uppercase tracking-wider shadow-xl shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 border-0"
+              >
+                <Printer className="h-5 w-5" /> ACCEPT & PRINT KOT 🖨️
+              </Button>
+
+              <Button
+                onClick={() => setShowTableOrderModal(false)}
+                className="w-full h-11 text-zinc-400 font-bold uppercase tracking-widest text-xs hover:text-white"
+                variant="ghost"
+              >
+                Dismiss / Order Accepted
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* TABLE QR CODE STANDEE GENERATOR MODAL */}
+      <Dialog open={showTableQrGeneratorModal} onOpenChange={setShowTableQrGeneratorModal}>
+        <DialogContent className="max-w-2xl w-[94%] max-h-[88vh] bg-white dark:bg-zinc-950 rounded-[2.5rem] p-6 sm:p-8 overflow-y-auto border border-zinc-200 dark:border-zinc-800 shadow-2xl">
+          <DialogHeader className="space-y-2 text-left pb-4 border-b border-zinc-100 dark:border-zinc-800">
+            <DialogTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-2">
+              <QrCode className="h-6 w-6 text-orange-500" /> Printable Table QR Standees
+            </DialogTitle>
+            <DialogDescription className="text-xs font-bold text-zinc-500">
+              Print and place these QR cards on your dining tables. Customers scan with their phone camera to browse menu & pay.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 pt-4">
+            {/* Table Count Selector & Print Action */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-zinc-50 dark:bg-zinc-900 p-4 rounded-2xl">
+              <div className="flex items-center gap-3">
+                <Label className="text-xs font-black uppercase tracking-wider text-zinc-600 dark:text-zinc-300">Total Tables:</Label>
+                <select
+                  value={tableCountToGen}
+                  onChange={e => setTableCountToGen(e.target.value)}
+                  className="h-10 px-3 bg-white dark:bg-zinc-800 rounded-xl border border-zinc-200 dark:border-zinc-700 font-black text-xs"
+                >
+                  {[5, 10, 15, 20, 30, 50].map(n => (
+                    <option key={n} value={n}>{n} Tables</option>
+                  ))}
+                </select>
+              </div>
+
+              <Button
+                onClick={() => {
+                  const printWin = window.open('', '_blank');
+                  if (!printWin) return alert("Pop-up blocked. Please allow popups.");
+
+                  const count = parseInt(tableCountToGen) || 10;
+                  const baseUrl = typeof window !== 'undefined' && window.location.port === '3000'
+                    ? "http://localhost:3000"
+                    : "https://www.instamunim.com";
+
+                  let cardsHtml = "";
+                  for (let i = 1; i <= count; i++) {
+                    const tableOrderUrl = `${baseUrl}/order?store=${ownerMobile}&table=${i}`;
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(tableOrderUrl)}`;
+
+                    cardsHtml += `
+                      <div class="table-card">
+                        <div class="card-header">
+                          <div class="shop-name">${restaurantName || "RESTAURANT"}</div>
+                          <div class="table-tag">TABLE #${i}</div>
+                        </div>
+                        <img class="qr-code" src="${qrUrl}" alt="Table ${i} QR" />
+                        <div class="instructions">
+                          <strong>SCAN TO ORDER & PAY</strong>
+                          <span>Open Camera or Google Pay</span>
+                        </div>
+                        <div class="powered">Powered by InstaMunim Smart POS</div>
+                      </div>
+                    `;
+                  }
+
+                  printWin.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                      <title>${restaurantName || "Store"} - Table QR Standees</title>
+                      <style>
+                        @page { margin: 10mm; size: A4 portrait; }
+                        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #fff; color: #000; margin: 0; padding: 10px; }
+                        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+                        .table-card { border: 2px dashed #000; border-radius: 16px; padding: 20px; text-align: center; page-break-inside: avoid; display: flex; flex-direction: column; align-items: center; justify-content: space-between; height: 360px; box-sizing: border-box; }
+                        .card-header { width: 100%; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 12px; }
+                        .shop-name { font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
+                        .table-tag { display: inline-block; background: #000; color: #fff; font-size: 14px; font-weight: 900; padding: 4px 12px; border-radius: 20px; margin-top: 6px; }
+                        .qr-code { width: 180px; height: 180px; object-fit: contain; }
+                        .instructions { margin-top: 10px; display: flex; flex-direction: column; gap: 2px; }
+                        .instructions strong { font-size: 13px; font-weight: 900; letter-spacing: 0.5px; }
+                        .instructions span { font-size: 10px; color: #444; font-weight: 700; }
+                        .powered { font-size: 8px; font-weight: 800; color: #777; text-transform: uppercase; margin-top: 8px; }
+                        @media print {
+                          .no-print { display: none; }
+                        }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="no-print" style="margin-bottom: 20px; text-align: right;">
+                        <button onclick="window.print()" style="padding: 10px 24px; font-size: 14px; font-weight: 900; background: #ea580c; color: #fff; border: none; border-radius: 8px; cursor: pointer;">PRINT ALL STANDEES 🖨️</button>
+                      </div>
+                      <div class="grid">
+                        ${cardsHtml}
+                      </div>
+                    </body>
+                    </html>
+                  `);
+                  printWin.document.close();
+                }}
+                className="h-11 px-6 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-black text-xs uppercase tracking-wider shadow-md active:scale-95 transition-all flex items-center gap-2"
+              >
+                <Printer className="h-4 w-4" /> Print {tableCountToGen} Standees Sheet
+              </Button>
+            </div>
+
+            {/* PREVIEW SAMPLE CARDS */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[1, 2].map(tNum => {
+                const sampleUrl = `${typeof window !== 'undefined' && window.location.port === '3000' ? "http://localhost:3000" : "https://www.instamunim.com"}/order?store=${ownerMobile}&table=${tNum}`;
+                const sampleQr = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(sampleUrl)}`;
+
+                return (
+                  <div key={tNum} className="border-2 border-dashed border-zinc-300 dark:border-zinc-700 rounded-3xl p-5 text-center flex flex-col items-center justify-between space-y-3 bg-zinc-50 dark:bg-zinc-900/50">
+                    <div className="w-full pb-2 border-b border-zinc-200 dark:border-zinc-800">
+                      <p className="text-xs font-black uppercase text-zinc-900 dark:text-white truncate">{restaurantName || "MY RESTAURANT"}</p>
+                      <span className="inline-block bg-zinc-900 text-white text-[10px] font-black px-3 py-1 rounded-full mt-1 uppercase">
+                        Table #{tNum}
+                      </span>
+                    </div>
+
+                    <img src={sampleQr} alt="QR" className="w-36 h-36 object-contain rounded-xl bg-white p-2 shadow-sm" />
+
+                    <div className="space-y-0.5">
+                      <p className="text-[11px] font-black text-zinc-900 dark:text-white uppercase tracking-wider">SCAN TO ORDER & PAY</p>
+                      <p className="text-[8px] text-zinc-400 font-bold uppercase">Powered by InstaMunim Smart POS</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* TERMS & PRIVACY POLICY MODAL */}
       <Dialog open={showTermsModal} onOpenChange={setShowTermsModal}>
         <DialogContent className="max-w-2xl w-[92%] max-h-[85vh] bg-white dark:bg-zinc-950 rounded-2xl p-0 overflow-hidden border border-zinc-200 dark:border-zinc-800 flex flex-col shadow-2xl">
@@ -10731,8 +11313,8 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
 
       {/* EDIT BILL MODAL */}
       <Dialog open={showEditSaleModal} onOpenChange={setShowEditSaleModal}>
-        <DialogContent className="w-[95vw] sm:max-w-lg rounded-[2rem] p-5 sm:p-7 bg-white dark:bg-zinc-900 border border-indigo-100 dark:border-indigo-950 shadow-2xl">
-          <DialogHeader className="space-y-1 text-left border-b border-zinc-100 dark:border-zinc-800 pb-3">
+        <DialogContent className="w-[95vw] sm:max-w-lg max-h-[90vh] flex flex-col rounded-[2rem] p-5 sm:p-7 bg-white dark:bg-zinc-900 border border-indigo-100 dark:border-indigo-950 shadow-2xl overflow-hidden">
+          <DialogHeader className="space-y-1 text-left border-b border-zinc-100 dark:border-zinc-800 pb-3 shrink-0">
             <DialogTitle className="text-xl font-black tracking-tight text-zinc-900 dark:text-white flex items-center gap-2">
               <FileText className="h-5 w-5 text-indigo-600" />
               Edit Bill & Transaction Details
@@ -10743,97 +11325,122 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
           </DialogHeader>
 
           {editingSale && (
-            <div className="space-y-4 my-4">
-              {/* Customer Name */}
-              <div className="space-y-1 text-left">
-                <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
-                  Customer Name *
-                </Label>
-                <Input
-                  value={editingSale.name}
-                  onChange={e => setEditingSale({ ...editingSale, name: e.target.value })}
-                  placeholder="e.g. Rahul Sharma"
-                  className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border border-zinc-300 dark:border-zinc-700 shadow-sm focus:border-indigo-500 px-3.5"
-                />
-              </div>
-
-              {/* Mobile Number */}
-              <div className="space-y-1 text-left">
-                <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
-                  Mobile Number (WhatsApp)
-                </Label>
-                <Input
-                  value={editingSale.mobile}
-                  onChange={e => setEditingSale({ ...editingSale, mobile: e.target.value })}
-                  placeholder="e.g. 9876543210"
-                  className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border border-zinc-300 dark:border-zinc-700 shadow-sm focus:border-indigo-500 px-3.5"
-                />
-              </div>
-
-              {/* Order Items / Details */}
-              <div className="space-y-1 text-left">
-                <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
-                  Order Details / Items
-                </Label>
-                <Input
-                  value={editingSale.item}
-                  onChange={e => setEditingSale({ ...editingSale, item: e.target.value })}
-                  placeholder="e.g. iPhone 15 128GB (Black)"
-                  className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border border-zinc-300 dark:border-zinc-700 shadow-sm focus:border-indigo-500 px-3.5"
-                />
-              </div>
-
-              {/* Amount & Discount */}
-              <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col flex-1 overflow-hidden min-h-0">
+              <div className="flex-1 overflow-y-auto space-y-4 py-3 pr-1">
+                {/* Customer Name */}
                 <div className="space-y-1 text-left">
                   <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
-                    Total Amount (₹) *
+                    Customer Name *
                   </Label>
                   <Input
-                    type="number"
-                    value={editingSale.price}
-                    onChange={e => setEditingSale({ ...editingSale, price: e.target.value })}
-                    placeholder="0"
+                    value={editingSale.name}
+                    onChange={e => setEditingSale({ ...editingSale, name: e.target.value })}
+                    placeholder="e.g. Rahul Sharma"
                     className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border border-zinc-300 dark:border-zinc-700 shadow-sm focus:border-indigo-500 px-3.5"
                   />
                 </div>
 
+                {/* Mobile Number */}
                 <div className="space-y-1 text-left">
                   <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
-                    Discount / Commission (₹)
+                    Mobile Number (WhatsApp)
                   </Label>
                   <Input
-                    type="number"
-                    value={editingSale.discount}
-                    onChange={e => setEditingSale({ ...editingSale, discount: e.target.value })}
-                    placeholder="0"
+                    value={editingSale.mobile}
+                    onChange={e => setEditingSale({ ...editingSale, mobile: e.target.value })}
+                    placeholder="e.g. 9876543210"
                     className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border border-zinc-300 dark:border-zinc-700 shadow-sm focus:border-indigo-500 px-3.5"
                   />
                 </div>
-              </div>
 
-              {/* Payment Mode */}
-              <div className="space-y-1 text-left">
-                <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
-                  Payment Mode / Type
-                </Label>
-                <select
-                  value={editingSale.type}
-                  onChange={e => setEditingSale({ ...editingSale, type: e.target.value })}
-                  className="w-full h-11 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-300 dark:border-zinc-700 shadow-sm focus:border-indigo-500 font-bold text-xs px-3.5 text-zinc-900 dark:text-white"
-                >
-                  <option value="Cash">Cash Payment</option>
-                  <option value="Online">Online / UPI</option>
-                  <option value="Credit Card">Credit Card / Card EMI</option>
-                  <option value="Card">Card / POS Machine</option>
-                  <option value="Udhaar">Udhaar (Credit)</option>
-                  <option value="Finance">Finance / EMI</option>
-                  <option value="Split">Split Payment</option>
-                </select>
+                {/* Order Items / Details */}
+                <div className="space-y-1 text-left">
+                  <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                    Order Details / Items
+                  </Label>
+                  <Input
+                    value={editingSale.item}
+                    onChange={e => setEditingSale({ ...editingSale, item: e.target.value })}
+                    placeholder="e.g. iPhone 15 128GB (Black)"
+                    className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border border-zinc-300 dark:border-zinc-700 shadow-sm focus:border-indigo-500 px-3.5"
+                  />
+                </div>
+
+                {/* Amount & Discount */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1 text-left">
+                    <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                      Total Amount (₹) *
+                    </Label>
+                    <Input
+                      type="number"
+                      value={editingSale.price}
+                      onChange={e => setEditingSale({ ...editingSale, price: e.target.value })}
+                      placeholder="0"
+                      className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border border-zinc-300 dark:border-zinc-700 shadow-sm focus:border-indigo-500 px-3.5"
+                    />
+                  </div>
+
+                  <div className="space-y-1 text-left">
+                    <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                      Discount / Commission (₹)
+                    </Label>
+                    <Input
+                      type="number"
+                      value={editingSale.discount}
+                      onChange={e => setEditingSale({ ...editingSale, discount: e.target.value })}
+                      placeholder="0"
+                      className="h-11 rounded-xl bg-white dark:bg-zinc-900 text-xs font-bold border border-zinc-300 dark:border-zinc-700 shadow-sm focus:border-indigo-500 px-3.5"
+                    />
+                  </div>
+                </div>
+
+                {/* Payment Mode & Table Verification Status */}
+                <div className="space-y-1 text-left">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                      Payment Mode / Verification Status
+                    </Label>
+                    {editingSale.type === "PENDING_VERIFICATION" && (
+                      <span className="text-[9px] font-black bg-amber-500 text-white px-2 py-0.5 rounded-full uppercase animate-pulse">
+                        Pending Table Verification
+                      </span>
+                    )}
+                    {editingSale.type === "Table QR UPI" && (
+                      <span className="text-[9px] font-black bg-teal-500 text-white px-2 py-0.5 rounded-full uppercase">
+                        Verified Table Order
+                      </span>
+                    )}
+                  </div>
+                  <select
+                    value={editingSale.type}
+                    onChange={e => setEditingSale({ ...editingSale, type: e.target.value })}
+                    className={`w-full h-11 rounded-xl bg-white dark:bg-zinc-900 border text-xs font-bold px-3.5 shadow-sm focus:border-indigo-500 text-zinc-900 dark:text-white transition-all ${
+                      editingSale.type === "PENDING_VERIFICATION"
+                        ? "border-amber-400 bg-amber-50/40 dark:bg-amber-950/20 text-amber-900 dark:text-amber-300"
+                        : "border-zinc-300 dark:border-zinc-700"
+                    }`}
+                  >
+                    <option value="Cash">Cash Payment</option>
+                    <option value="Online">Online / UPI</option>
+                    <option value="Table QR UPI">✅ Confirm & Accept (Table QR UPI)</option>
+                    <option value="PENDING_VERIFICATION">⏳ Pending Verification (Table QR)</option>
+                    <option value="Credit Card">Credit Card / Card EMI</option>
+                    <option value="Card">Card / POS Machine</option>
+                    <option value="Udhaar">Udhaar (Credit)</option>
+                    <option value="Finance">Finance / EMI</option>
+                    <option value="Split">Split Payment</option>
+                  </select>
+                  {editingSale.type === "PENDING_VERIFICATION" && (
+                    <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400 pt-0.5">
+                      💡 Tip: Change to <strong>"Confirm & Accept (Table QR UPI)"</strong> to verify payment, add amount to daily sales, and confirm diner screen!
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-2.5 pt-3 border-t border-zinc-100 dark:border-zinc-800">
+              <div className="flex gap-2.5 pt-3 border-t border-zinc-100 dark:border-zinc-800 shrink-0">
                 <Button
                   onClick={() => {
                     setShowEditSaleModal(false);
@@ -11365,6 +11972,72 @@ Extract every single item you can see. Return ONLY a minified valid JSON array w
                 <span>Request Access</span>
                 <MessageSquare className="w-3.5 h-3.5" />
               </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🔔 LIVE INCOMING TABLE ORDER POPUP MODAL */}
+      {incomingTableOrder && (
+        <div className="fixed inset-0 z-[10000] bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-in zoom-in-95">
+          <div className="max-w-md w-full bg-white dark:bg-zinc-900 border-2 border-emerald-500 rounded-3xl p-6 shadow-2xl space-y-5 text-center relative overflow-hidden">
+            
+            {/* Top Glowing Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-100 dark:border-zinc-800">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-emerald-500 animate-ping" />
+                <span className="text-xs font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                  New Live Table Order
+                </span>
+              </div>
+              <button
+                onClick={() => setIncomingTableOrder(null)}
+                className="w-8 h-8 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 text-zinc-500 flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Table & Customer Badges */}
+            <div className="space-y-1">
+              <div className="inline-block px-4 py-1.5 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 text-white font-black text-sm uppercase shadow-lg shadow-orange-600/30">
+                🍽️ {incomingTableOrder.customer_name || "TABLE ORDER"}
+              </div>
+              <p className="text-xs font-bold text-zinc-500 dark:text-zinc-400 mt-1">
+                Mobile: {incomingTableOrder.mobile || "Customer Mobile"}
+              </p>
+            </div>
+
+            {/* Order Items List */}
+            <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 text-left space-y-2 max-h-48 overflow-y-auto">
+              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Order Items / KOT</p>
+              <pre className="text-xs font-bold text-zinc-900 dark:text-zinc-100 whitespace-pre-wrap font-sans">
+                {incomingTableOrder.items || "General Order"}
+              </pre>
+            </div>
+
+            {/* Total Amount Pill */}
+            <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between">
+              <span className="text-xs font-black uppercase text-emerald-800 dark:text-emerald-300">Total Amount</span>
+              <span className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
+                ₹{incomingTableOrder.total_price}
+              </span>
+            </div>
+
+            {/* 1-Click Action Buttons */}
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => setIncomingTableOrder(null)}
+                className="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 py-4 rounded-2xl font-black text-xs uppercase tracking-wider transition-colors"
+              >
+                Dismiss
+              </button>
+              <button
+                onClick={() => handleAcceptTableOrder(incomingTableOrder)}
+                className="flex-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white py-4 px-4 rounded-2xl font-black text-xs uppercase tracking-wider shadow-xl shadow-emerald-600/30 flex items-center justify-center gap-2 active:scale-95 transition-all"
+              >
+                <span>YES, ACCEPT & SEND BILL 💬</span>
+              </button>
             </div>
           </div>
         </div>

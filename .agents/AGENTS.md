@@ -123,16 +123,28 @@
 
 ## 📝 8. Live Conversation & Session Log
 
-### 🗓️ Session: 03-SEP-2026
-- **Last Active Topic**: Smart QR Table Ordering System (`/order` page + Dashboard Soundbox & KOT alert modal).
+### 🗓️ Session: 04-SEP-2026
+- **Last Active Topic**: 
+  1. Smart QR Table Ordering System verification workflow & live invoice delivery.
+  2. Revenue exclusion for unverified/pending table orders.
+  3. Edit Bill modal scroll fix on mobile screens.
+  4. Table QR `/order` customer waiting screen bottom scrolling fix.
+  5. Discord webhook notifications strictly for REAL SALES only.
 - **User's Remarks & Context**:
-  - User stated that they would test the Table QR ordering section at home in a real restaurant scenario.
-  - User requested a persistent memory system so whenever a new window/chat opens, the assistant resumes exactly where things were left off.
+  - User explicitly specified: *"no only sales required no extra things"*.
+  - All intermediary alerts (order initiation, unverified pending orders, and bill edit modifications) must NOT spam Discord.
+  - ONLY completed sales transactions must trigger a Discord alert.
 - **Current Technical State**:
-  - Table QR flow fully coded in `micro-saas-app/src/app/order/page.tsx` & `micro-saas-app/src/app/dashboard/page.tsx`.
-  - Google Play Developer Signing & Package verification verified & green-checked for `com.zainul.instamunimpos` and `com.sahidawa.app`.
+  - `micro-saas-app/src/lib/discord.ts`:
+    - Central Discord webhook alert engine.
+  - `micro-saas-app/src/app/dashboard/page.tsx`:
+    - Normal cashier POS billing generates alert: `💰 New Sale Billing Recorded!`.
+    - Table QR order accepted by merchant generates alert: `💰 New Sale Billing Recorded!` (Table QR UPI).
+    - Intermediary bill edits and pending table order initiation alerts completely removed.
+  - `micro-saas-app/src/app/order/page.tsx`:
+    - Removed initiation alert; diner placements remain quiet until officially verified/accepted as a sale.
 - **Pending / Next Action**:
-  - Review testing results/feedback of Table QR ordering.
-  - Any UI/UX refinements or new feature requests from the user.
+  - Verify live webhook alerts on sales billing.
+
 
 
