@@ -88,10 +88,12 @@
 ---
 
 ## 📱 5. Android APKs & Build Artifacts
+- **Merchant POS Production AAB (Play Store)**: `InstaMunim_v2.0_Production.aab` (Package: `com.zainul.instamunimpos`, Version Code: 14, Version Name: 2.0, 21.4 MB)
 - **Merchant POS APK**: `InstaMunim_v1.9_Production.apk` (Package: `com.zainul.instamunimpos`)
 - **Partner Field Sales APK**: `InstaMunim_Partner_v1.0.apk` (Package: `com.instamunim.partner`, 24.3 MB)
 - **Root Backups**:
-  - Full Backup Folder: `backups/Full_Backup_2026-08-25_Partner_Complete/`
+  - Full Backup Folder: `backups/Full_Backup_2026-09-04_TableQR_Complete/`
+  - Partner Backup Folder: `backups/Full_Backup_2026-08-25_Partner_Complete/`
   - Compressed ZIP: `InstaMunim_FULL_BACKUP_25_AUG_2026_WIN.zip` (2.05 GB)
 
 ---

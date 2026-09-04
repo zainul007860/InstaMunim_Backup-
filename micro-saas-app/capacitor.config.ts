@@ -1,11 +1,11 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.instamunim.partner',
-  appName: 'InstaMunim Partner',
+  appId: 'com.zainul.instamunimpos',
+  appName: 'InstaMunim',
   webDir: 'out',
   server: {
-    url: 'https://www.instamunim.com/partner',
+    url: 'https://www.instamunim.com',
     cleartext: true
   },
   plugins: {
